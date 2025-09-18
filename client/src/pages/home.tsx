@@ -11,10 +11,10 @@ export default function Home() {
   return (
     <div className="flex flex-col">
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-gray-900 to-gray-800 text-white overflow-hidden">
-        <div className="absolute inset-0 bg-black/40"></div>
+      <section className="relative bg-gradient-to-br from-purple-900 to-purple-800 text-white overflow-hidden">
+        <div className="absolute inset-0 bg-black/50"></div>
         <div 
-          className="absolute inset-0 bg-cover bg-center" 
+          className="absolute inset-0 bg-cover bg-center opacity-60" 
           style={{
             backgroundImage: `url(${femaleFighterImage})`
           }}
@@ -22,22 +22,22 @@ export default function Home() {
         
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 lg:py-32">
           <div className="text-center">
-            <h1 className="text-4xl md:text-6xl font-bold mb-6">
+            <h1 className="text-4xl md:text-6xl font-bold mb-6 drop-shadow-lg">
               Empower Yourself Through<br/>
-              <span className="text-primary">Women's Brazilian Jiu-Jitsu</span>
+              <span className="text-purple-300">Women's Brazilian Jiu-Jitsu</span>
             </h1>
-            <p className="text-xl md:text-2xl mb-8 text-gray-300 max-w-3xl mx-auto">
+            <p className="text-xl md:text-2xl mb-8 text-white max-w-3xl mx-auto drop-shadow-lg">
               Build strength, discipline, and confidence in our safe, women-only environment at Ground Up BJJ. 
               Led by female instructors who understand your journey.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button asChild size="lg" className="text-lg px-8 py-4" data-testid="button-book-training">
+              <Button asChild size="lg" className="text-lg px-8 py-4 shadow-lg" data-testid="button-book-training">
                 <Link href="/personal-training">Book Personal Training</Link>
               </Button>
               <Button 
                 variant="outline" 
                 size="lg" 
-                className="text-lg px-8 py-4 border-2 border-white text-white hover:bg-white hover:text-gray-900"
+                className="text-lg px-8 py-4 border-2 border-white text-white hover:bg-white hover:text-purple-900 shadow-lg bg-white/10 backdrop-blur-sm"
                 data-testid="button-free-intro"
               >
                 Free Intro Class
