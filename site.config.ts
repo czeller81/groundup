@@ -1,17 +1,17 @@
 export const siteConfig = {
   name: "Ground Up BJJ",
-  description: "Empower yourself through Brazilian Jiu-Jitsu in our safe, women-only environment. Led by expert female instructors who understand your journey.",
+  description: "Personal training gym specializing in 1-on-1 jiu-jitsu and strength & conditioning for female athletes. Perfect for weight loss, building muscle, and overall growth in Oxnard, CA.",
   
   // Contact Information
   address: {
-    street: "123 Training Street",
-    city: "Downtown",
-    state: "ST",
-    zip: "12345"
+    street: "",
+    city: "Oxnard",
+    state: "CA",
+    zip: ""
   },
   
-  phone: "(555) 123-4567",
-  email: "info@groundupbjj.com",
+  phone: "(786) 757-1175",
+  email: "raymin33@gmail.com",
   
   // Business Hours
   hours: {
@@ -90,7 +90,7 @@ export const siteConfig = {
   
   // Admin Settings
   admin: {
-    defaultEmail: "admin@groundupbjj.com",
+    defaultEmail: "raymin33@gmail.com",
     maxBookingsPerDay: 50,
     exportFormats: ["csv", "pdf"]
   }
