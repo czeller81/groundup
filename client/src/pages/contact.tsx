@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { MapPin, Phone, Mail, Clock, Facebook, Instagram, Youtube } from "lucide-react";
-import { siteConfig } from "../../site.config";
+import { siteConfig } from "../../../site.config";
 
 const contactSchema = z.object({
   firstName: z.string().min(1, "First name is required"),

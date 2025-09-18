@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import { Facebook, Instagram, Youtube } from "lucide-react";
-import { siteConfig } from "../../../site.config";
+import { siteConfig } from "../../../../site.config";
 
 export default function Footer() {
   return (
