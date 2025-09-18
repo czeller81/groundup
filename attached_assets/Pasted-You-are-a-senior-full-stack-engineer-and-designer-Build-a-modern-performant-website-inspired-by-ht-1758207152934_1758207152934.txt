@@ -1,0 +1,165 @@
+You are a senior full-stack engineer and designer. Build a modern, performant website inspired by https://groundupbjj.com/
+ for a Brazilian Jiu-Jitsu academy named “Ground Up BJJ.” The site must support personal training appointment booking + online payment.
+
+Tech stack
+
+Next.js 14 (App Router) + TypeScript
+
+Tailwind CSS for styling (clean, modern, mobile-first)
+
+Prisma + SQLite (switchable to Postgres via DATABASE_URL)
+
+Stripe for payments (Stripe Checkout + Webhooks)
+
+NextAuth (Credentials provider) for an admin user to manage bookings
+
+Resend (or Nodemailer SMTP) for email confirmations
+
+Core requirements
+
+Pages / sitemap
+
+/ Home: hero, value props (self-defense, conditioning, discipline), CTA buttons: “Book Personal Training” + “Free Intro”
+
+/personal-training Booking page with calendar, session options, pricing, trainer bio, FAQs, testimonials.
+
+/coaches Coach bios (photo, belt rank, specialties).
+
+/pricing Clear plans (drop-in, 5-pack, 10-pack, monthly PT).
+
+/contact Contact form (send email), map embed, hours, phone, address.
+
+/admin Protected dashboard for viewing/updating bookings + exporting CSV.
+
+Booking flow (PT only)
+
+Session types:
+
+60-min 1:1 ($120),
+
+90-min 1:1 ($160),
+
+Small group (2–4) 60-min ($180 total).
+
+Calendar with trainer availability (simple availability table; prevent double-booking).
+
+Select date/time → collect name, email, phone, notes → Stripe Checkout payment.
+
+After successful payment, create Booking record, send email receipt + confirmation with ICS calendar invite.
+
+Admin can manually add/edit/cancel bookings; cancellations trigger refund flow stub (no automatic refunds, just admin note).
+
+Data models (Prisma)
+
+model Trainer {
+  id        String   @id @default(cuid())
+  name      String
+  bio       String
+  photoUrl  String
+  specialties String[]
+  availability Json   // e.g. { "Mon":[ "10:00","12:00" ], "Wed":[ "18:00" ] }
+  createdAt DateTime @default(now())
+}
+
+model Booking {
+  id           String   @id @default(cuid())
+  customerName String
+  customerEmail String
+  customerPhone String
+  notes        String?
+  sessionType  String   // "PT60" | "PT90" | "GROUP60"
+  start        DateTime
+  end          DateTime
+  trainerId    String
+  trainer      Trainer  @relation(fields: [trainerId], references: [id])
+  amountCents  Int
+  currency     String   @default("usd")
+  stripeSessionId String
+  status       String   // "pending","paid","canceled","refunded"
+  createdAt    DateTime @default(now())
+}
+
+model AdminUser {
+  id       String @id @default(cuid())
+  email    String @unique
+  password String
+  createdAt DateTime @default(now())
+}
+
+
+Payments
+
+Use Stripe Checkout Session API; line item based on sessionType.
+
+Success page updates Booking.status = "paid".
+
+Webhook (/api/stripe/webhook) verifies signature and finalizes booking if user closes browser early.
+
+Email + calendar
+
+On successful payment, send a confirmation email with session details and attach an .ics invite (generate on the fly).
+
+Admin gets a new-booking notification.
+
+Design & UX
+
+Brand vibe: clean, modern, athletic. Use Tailwind with large typography, ample whitespace, rounded cards, subtle shadows.
+
+Color palette: deep charcoal, off-white, accent color (electric blue) for CTAs.
+
+Responsive nav with sticky header; footer with socials, address, hours, quick links.
+
+SEO: <Metadata>, OpenGraph, structured data for LocalBusiness.
+
+Performance: image optimization, proper font loading, form validation with Zod/React Hook Form.
+
+Admin dashboard
+
+Auth gate with NextAuth (seed one admin user).
+
+Calendar view of bookings, filters by trainer/date/status.
+
+Edit/cancel buttons (update DB), export CSV.
+
+Availability editor (write JSON availability for each trainer).
+
+Content
+
+Create tasteful placeholder copy/imagery. Provide easy content editing via:
+
+content/ markdown files for About, Coaches bios, FAQs.
+
+site.config.ts for address, phone, hours, social links.
+
+Put a prominent CTA to “Book Personal Training” on hero and in multiple sections.
+
+Environment & scripts
+
+.env.example with:
+
+DATABASE_URL="file:./dev.db"
+STRIPE_SECRET_KEY=""
+STRIPE_WEBHOOK_SECRET=""
+NEXTAUTH_SECRET=""
+ADMIN_EMAIL="admin@groundupbjj.com"
+ADMIN_PASSWORD="ChangeMe123!"
+RESEND_API_KEY=""
+
+
+npm run db:push (Prisma), seed script for one trainer + sample availability.
+
+npm run dev to start; include README with setup steps.
+
+Include instructions for switching to Postgres.
+
+Acceptance criteria
+
+I can choose a session, pick a time, pay via Stripe, receive an email + ICS, and see the booking in /admin.
+
+Prevents double-booking for the same trainer/time.
+
+Mobile experience is excellent.
+
+Code is clean, commented, and deploy-ready on Replit.
+
+Implement all of the above now. If something is ambiguous, choose sensible defaults and proceed.
