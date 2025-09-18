@@ -17,9 +17,8 @@ const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SEC
 
 // Session types and pricing
 const SESSION_TYPES = {
-  PT60: { name: "60-Minute 1:1 Training", duration: 60, price: 120 },
-  PT90: { name: "90-Minute 1:1 Training", duration: 90, price: 160 },
-  GROUP60: { name: "Small Group (2-4 people) 60-Min", duration: 60, price: 180 }
+  PT60: { name: "60-Minute 1:1 Training", duration: 60, price: 20 },
+  UNLIMITED: { name: "Monthly Unlimited", duration: 0, price: 280 }
 };
 
 // Simple admin auth middleware (in production, use proper session management)

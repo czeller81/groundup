@@ -6,59 +6,33 @@ import { Check } from "lucide-react";
 export default function Pricing() {
   const pricingPlans = [
     {
-      id: "drop-in",
-      title: "Drop-in Sessions",
-      prices: ["$120/60min", "$160/90min"],
+      id: "hourly",
+      title: "Hourly Sessions",
+      prices: ["$20/hour"],
       features: [
         "One-on-one instruction",
         "Personalized curriculum",
         "All equipment provided",
-        "Flexible scheduling"
-      ],
-      popular: false,
-    },
-    {
-      id: "5-pack",
-      title: "5-Session Pack",
-      prices: ["$550"],
-      savings: "Save $50 ($110 per session)",
-      badge: "Most Popular",
-      features: [
-        "Five 60-minute sessions",
-        "3-month expiration",
-        "Progress tracking",
-        "Technique videos included"
+        "Flexible scheduling",
+        "Pay as you go"
       ],
       popular: true,
+      badge: "Most Popular"
     },
     {
-      id: "10-pack",
-      title: "10-Session Pack",
-      prices: ["$1000"],
-      savings: "Save $200 ($100 per session)",
-      badge: "Best Value",
+      id: "unlimited",
+      title: "Monthly Unlimited",
+      prices: ["$280/month"],
       features: [
-        "Ten 60-minute sessions",
-        "6-month expiration",
-        "Detailed progress reports",
-        "Priority scheduling",
-        "Free gi included"
+        "Unlimited training sessions",
+        "Priority booking",
+        "Technique videos included",
+        "Progress tracking",
+        "Competition prep included"
       ],
       popular: false,
       bestValue: true,
-    },
-    {
-      id: "monthly",
-      title: "Monthly Unlimited",
-      prices: ["$800/month"],
-      features: [
-        "Unlimited 60-min sessions",
-        "Competition prep included",
-        "Nutrition guidance",
-        "Recovery protocols",
-        "Seminar access"
-      ],
-      popular: false,
+      badge: "Best Value"
     },
   ];
 
@@ -79,7 +53,7 @@ export default function Pricing() {
       {/* Pricing Cards */}
       <section className="py-16 bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             {pricingPlans.map((plan) => (
               <Card 
                 key={plan.id}
@@ -105,9 +79,6 @@ export default function Pricing() {
                     </div>
                   ))}
                   
-                  {plan.savings && (
-                    <div className="text-sm text-muted-foreground mb-4">{plan.savings}</div>
-                  )}
                   
                   {plan.popular && !plan.bestValue && (
                     <div className="bg-muted px-3 py-1 rounded-full text-sm font-medium mb-6">
@@ -132,15 +103,12 @@ export default function Pricing() {
             ))}
           </div>
 
-          {/* Small Group Pricing */}
+          {/* Special Note */}
           <div className="mt-16 max-w-2xl mx-auto">
-            <Card className="shadow-lg" data-testid="small-group-pricing">
+            <Card className="shadow-lg" data-testid="special-pricing-note">
               <CardContent className="p-8 text-center">
-                <h3 className="text-2xl font-bold mb-4">Small Group Training</h3>
-                <div className="text-4xl font-bold text-primary mb-4">
-                  $180<span className="text-lg text-muted-foreground"> total/60min</span>
-                </div>
-                <p className="text-muted-foreground mb-6">Perfect for couples, families, or training partners (2-4 people)</p>
+                <h3 className="text-2xl font-bold mb-4">Simple & Affordable</h3>
+                <p className="text-muted-foreground mb-6">Our straightforward pricing makes BJJ accessible to everyone. Train at your own pace with our hourly rate, or get unlimited access with our monthly plan.</p>
                 <div className="grid md:grid-cols-2 gap-4 text-left mb-8">
                   <ul className="space-y-3">
                     <li className="flex items-center">

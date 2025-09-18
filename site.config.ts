@@ -56,20 +56,14 @@ export const siteConfig = {
         PT60: {
           name: "60-Minute 1:1 Training",
           duration: 60,
-          price: 120,
+          price: 20,
           description: "Perfect for focused skill development"
         },
-        PT90: {
-          name: "90-Minute 1:1 Training", 
-          duration: 90,
-          price: 160,
-          description: "Extended session for deep technique work"
-        },
-        GROUP60: {
-          name: "Small Group (2-4 people) 60-Min",
-          duration: 60,
-          price: 180,
-          description: "Train with friends or family"
+        UNLIMITED: {
+          name: "Monthly Unlimited",
+          duration: 0,
+          price: 280,
+          description: "Unlimited monthly training sessions"
         }
       }
     },

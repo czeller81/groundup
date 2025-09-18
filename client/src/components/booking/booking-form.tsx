@@ -18,13 +18,12 @@ import CheckoutForm from "@/components/stripe/checkout-form";
 import { addMinutes, format, parseISO } from "date-fns";
 
 const SESSION_TYPES = {
-  PT60: { name: "60-Minute 1:1 Training", description: "Perfect for focused skill development", price: 120 },
-  PT90: { name: "90-Minute 1:1 Training", description: "Extended session for deep technique work", price: 160 },
-  GROUP60: { name: "Small Group (2-4 people) 60-Min", description: "Train with friends or family", price: 180 }
+  PT60: { name: "60-Minute 1:1 Training", description: "Perfect for focused skill development", price: 20 },
+  UNLIMITED: { name: "Monthly Unlimited", description: "Unlimited monthly training sessions", price: 280 }
 };
 
 const bookingSchema = z.object({
-  sessionType: z.enum(["PT60", "PT90", "GROUP60"]),
+  sessionType: z.enum(["PT60", "UNLIMITED"]),
   trainerId: z.string().min(1, "Please select a trainer"),
   date: z.string().min(1, "Please select a date"),
   time: z.string().min(1, "Please select a time"),
