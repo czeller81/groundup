@@ -3,15 +3,16 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle } from "lucide-react";
 import BookingForm from "@/components/booking/booking-form";
+import type { Trainer } from "@shared/schema";
 
 export default function PersonalTraining() {
   const [selectedTrainerId, setSelectedTrainerId] = useState<string>("");
 
-  const { data: trainers, isLoading } = useQuery({
+  const { data: trainers, isLoading } = useQuery<Trainer[]>({
     queryKey: ["/api/trainers"],
   });
 
-  const featuredTrainer = trainers?.find((t: any) => t.name === "Marcus Silva") || trainers?.[0];
+  const featuredTrainer = trainers?.find((t: Trainer) => t.name === "Raymi Gonzalez") || trainers?.[0];
 
   return (
     <div className="flex flex-col">
@@ -33,7 +34,7 @@ export default function PersonalTraining() {
           <div className="grid lg:grid-cols-2 gap-12">
             {/* Booking Form */}
             <div>
-              <BookingForm trainers={trainers || []} />
+              <BookingForm trainers={trainers as Trainer[] || []} />
             </div>
 
             {/* Trainer Info & Benefits */}

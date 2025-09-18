@@ -207,9 +207,28 @@ export class MemStorage implements IStorage {
       createdAt: new Date()
     };
 
+    const trainer4: Trainer = {
+      id: "trainer-4",
+      name: "Raymi Gonzalez",
+      bio: "Purple belt 3rd degree with 5 years of experience. Leads the women's only program at Gracie Barra Ventura and specializes in strength and conditioning fitness classes. Offers the best 1-on-1 for BJJ training.",
+      photoUrl: "https://images.unsplash.com/photo-1594381898411-846e7d193883?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=400",
+      specialties: ["1-on-1 BJJ Training", "Strength & Conditioning", "Women's Program Leadership", "Fitness Classes"],
+      beltRank: "Purple Belt 3rd Degree",
+      availability: {
+        "Monday": ["08:00", "10:00", "12:00", "14:00", "16:00", "18:00"],
+        "Tuesday": ["08:00", "10:00", "12:00", "14:00", "16:00", "18:00"],
+        "Wednesday": ["08:00", "10:00", "12:00", "14:00", "16:00", "18:00"],
+        "Thursday": ["08:00", "10:00", "12:00", "14:00", "16:00", "18:00"],
+        "Friday": ["08:00", "10:00", "12:00", "14:00", "16:00"],
+        "Saturday": ["09:00", "11:00", "13:00", "15:00"]
+      },
+      createdAt: new Date()
+    };
+
     this.trainersMap.set(trainer1.id, trainer1);
     this.trainersMap.set(trainer2.id, trainer2);
     this.trainersMap.set(trainer3.id, trainer3);
+    this.trainersMap.set(trainer4.id, trainer4);
 
     // Seed admin user
     const admin: AdminUser = {
