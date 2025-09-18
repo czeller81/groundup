@@ -2,7 +2,7 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Shield, Dumbbell, Brain, Star } from "lucide-react";
-import femaleFighterImage from "@assets/stock_images/female_brazilian_jiu_cfa563c5.jpg";
+import femaleFighterImage from "@assets/stock_images/female_mma_fighters__f5fccfa4.jpg";
 
 export default function Home() {
   return (
