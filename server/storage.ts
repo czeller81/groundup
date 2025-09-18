@@ -234,6 +234,7 @@ export class MemStorage implements IStorage {
     const newTrainer: Trainer = {
       ...trainer,
       id,
+      specialties: trainer.specialties || [],
       createdAt: new Date()
     };
     this.trainersMap.set(id, newTrainer);
@@ -272,6 +273,10 @@ export class MemStorage implements IStorage {
     const newBooking: Booking = {
       ...booking,
       id,
+      status: booking.status || "pending",
+      stripeSessionId: booking.stripeSessionId || null,
+      notes: booking.notes || null,
+      currency: booking.currency || "usd",
       createdAt: new Date()
     };
     this.bookingsMap.set(id, newBooking);
