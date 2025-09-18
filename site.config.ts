@@ -1,6 +1,6 @@
 export const siteConfig = {
   name: "Ground Up BJJ",
-  description: "Master Brazilian Jiu-Jitsu with personalized training from world-class instructors. Building champions from the ground up.",
+  description: "Empower yourself through Brazilian Jiu-Jitsu in our safe, women-only environment. Led by expert female instructors who understand your journey.",
   
   // Contact Information
   address: {
@@ -31,13 +31,13 @@ export const siteConfig = {
   // SEO and Meta
   seo: {
     keywords: [
-      "Brazilian Jiu-Jitsu",
-      "BJJ Training",
-      "Personal Training",
-      "Martial Arts",
-      "Self Defense",
-      "Downtown BJJ",
-      "BJJ Classes"
+      "Women's Brazilian Jiu-Jitsu",
+      "Female BJJ Training",
+      "Women's Self Defense",
+      "Female Martial Arts",
+      "Women-only BJJ",
+      "Female Empowerment",
+      "Women's Personal Training"
     ],
     ogImage: "/og-image.jpg", // You would need to add this image
   },
@@ -73,7 +73,8 @@ export const siteConfig = {
       founded: "2020",
       affiliations: ["IBJJF", "UAEJJF"],
       lineage: "Gracie Barra",
-      headInstructor: "Marcus Silva"
+      headInstructor: "Sofia Martinez",
+      specialization: "Women-only BJJ training and empowerment"
     }
   },
   

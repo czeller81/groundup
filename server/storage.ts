@@ -162,7 +162,7 @@ export class MemStorage implements IStorage {
       id: "trainer-1",
       name: "Sofia Martinez",
       bio: "Head instructor and founder with 12+ years of teaching experience. Multiple-time World Champion specializing in women's self-defense and technical development.",
-      photoUrl: "@assets/stock_images/female_bjj_martial_a_dc8c6615.jpg",
+      photoUrl: "https://images.unsplash.com/photo-1544717297-fa95b6ee9643?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=400",
       specialties: ["Women's Self-Defense", "Competition Training", "Fundamentals"],
       beltRank: "3rd Degree Black Belt",
       availability: {
@@ -178,7 +178,7 @@ export class MemStorage implements IStorage {
       id: "trainer-2", 
       name: "Isabella Chen",
       bio: "Advanced instructor and women's empowerment advocate. Pan Am medalist specializing in technical precision, guard play, and building confidence in female athletes.",
-      photoUrl: "@assets/stock_images/female_bjj_martial_a_f7167aea.jpg",
+      photoUrl: "https://images.unsplash.com/photo-1594381898411-846e7d193883?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=400",
       specialties: ["Women's Empowerment", "Guard Play", "Technical Development"],
       beltRank: "2nd Degree Black Belt",
       availability: {
@@ -194,7 +194,7 @@ export class MemStorage implements IStorage {
       id: "trainer-3",
       name: "Carmen Delgado", 
       bio: "Former competitive athlete and fitness specialist. Focuses on strength training for women, conditioning, and practical self-defense applications in a supportive environment.",
-      photoUrl: "@assets/stock_images/female_bjj_martial_a_a12da0db.jpg",
+      photoUrl: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=400",
       specialties: ["Women's Conditioning", "Self-Defense", "No-Gi"],
       beltRank: "1st Degree Brown Belt",
       availability: {

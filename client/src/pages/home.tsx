@@ -3,6 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Shield, Dumbbell, Brain, Star } from "lucide-react";
 import femaleFighterImage from "@assets/stock_images/female_women_martial_65702319.jpg";
+import femaleStudent1 from "@assets/stock_images/female_bjj_students__456d0e30.jpg";
+import femaleStudent2 from "@assets/stock_images/female_bjj_students__0fe74900.jpg";
+import femaleStudent3 from "@assets/stock_images/female_bjj_students__65085ad5.jpg";
 
 export default function Home() {
   return (
@@ -20,12 +23,12 @@ export default function Home() {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 lg:py-32">
           <div className="text-center">
             <h1 className="text-4xl md:text-6xl font-bold mb-6">
-              Master the Art of<br/>
-              <span className="text-primary">Brazilian Jiu-Jitsu</span>
+              Empower Yourself Through<br/>
+              <span className="text-primary">Women's Brazilian Jiu-Jitsu</span>
             </h1>
             <p className="text-xl md:text-2xl mb-8 text-gray-300 max-w-3xl mx-auto">
-              Build strength, discipline, and confidence through personalized training at Ground Up BJJ. 
-              From beginners to advanced practitioners, we meet you where you are.
+              Build strength, discipline, and confidence in our safe, women-only environment at Ground Up BJJ. 
+              Led by female instructors who understand your journey.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button asChild size="lg" className="text-lg px-8 py-4" data-testid="button-book-training">
@@ -48,8 +51,8 @@ export default function Home() {
       <section className="py-16 bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Why Choose Ground Up BJJ?</h2>
-            <p className="text-xl text-muted-foreground">Transform your body, mind, and spirit through the art of Brazilian Jiu-Jitsu</p>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Why Choose Our Women's BJJ Program?</h2>
+            <p className="text-xl text-muted-foreground">Transform your body, mind, and spirit in our empowering, females-only environment</p>
           </div>
           
           <div className="grid md:grid-cols-3 gap-8">
@@ -58,9 +61,9 @@ export default function Home() {
                 <div className="text-primary text-4xl mb-6 flex justify-center">
                   <Shield className="h-10 w-10" />
                 </div>
-                <h3 className="text-2xl font-bold mb-4">Self-Defense</h3>
+                <h3 className="text-2xl font-bold mb-4">Women's Self-Defense</h3>
                 <p className="text-muted-foreground">
-                  Learn practical self-defense techniques that work in real-world situations. Build confidence and situational awareness.
+                  Learn practical self-defense techniques designed specifically for women. Build confidence and situational awareness in a supportive environment.
                 </p>
               </CardContent>
             </Card>
@@ -95,8 +98,8 @@ export default function Home() {
       {/* CTA Section */}
       <section className="py-16 bg-primary text-primary-foreground">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to Start Your Journey?</h2>
-          <p className="text-xl mb-8 opacity-90">Book a personal training session with one of our expert coaches today</p>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to Empower Yourself?</h2>
+          <p className="text-xl mb-8 opacity-90">Book a personal training session with one of our expert female instructors today</p>
           <Button 
             asChild 
             variant="secondary" 
@@ -113,7 +116,7 @@ export default function Home() {
       <section className="py-16 bg-muted">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">What Our Students Say</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">What Our Female Students Say</h2>
           </div>
           
           <div className="grid md:grid-cols-3 gap-8">
@@ -127,24 +130,24 @@ export default function Home() {
                   </div>
                 </div>
                 <p className="text-muted-foreground mb-6">
-                  "The personal training sessions have completely transformed my approach to BJJ. 
-                  Coach Marcus breaks down complex techniques in a way that's easy to understand."
+                  "The personal training sessions have completely transformed my confidence and technique. 
+                  Coach Sofia breaks down complex moves in such a supportive, empowering way."
                 </p>
                 <div className="flex items-center">
                   <img 
-                    src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&h=100" 
-                    alt="Sarah Johnson" 
-                    className="w-12 h-12 rounded-full mr-4"
+                    src={femaleStudent1} 
+                    alt="Maria Gonzalez" 
+                    className="w-12 h-12 rounded-full mr-4 object-cover"
                   />
                   <div>
-                    <div className="font-semibold">Sarah Johnson</div>
+                    <div className="font-semibold">Maria Gonzalez</div>
                     <div className="text-sm text-muted-foreground">Blue Belt</div>
                   </div>
                 </div>
               </CardContent>
             </Card>
             
-            <Card className="p-8 shadow-lg" data-testid="testimonial-mike">
+            <Card className="p-8 shadow-lg" data-testid="testimonial-jessica">
               <CardContent className="pt-6">
                 <div className="flex items-center mb-4">
                   <div className="text-yellow-400 text-lg flex">
@@ -154,17 +157,17 @@ export default function Home() {
                   </div>
                 </div>
                 <p className="text-muted-foreground mb-6">
-                  "I started as a complete beginner and the coaches made me feel welcome from day one. 
-                  The one-on-one attention in personal training is invaluable."
+                  "I started as a complete beginner and the female instructors made me feel safe and welcome from day one. 
+                  This women-only environment is exactly what I needed to build my confidence."
                 </p>
                 <div className="flex items-center">
                   <img 
-                    src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&h=100" 
-                    alt="Mike Chen" 
-                    className="w-12 h-12 rounded-full mr-4"
+                    src={femaleStudent2} 
+                    alt="Jessica Wu" 
+                    className="w-12 h-12 rounded-full mr-4 object-cover"
                   />
                   <div>
-                    <div className="font-semibold">Mike Chen</div>
+                    <div className="font-semibold">Jessica Wu</div>
                     <div className="text-sm text-muted-foreground">White Belt</div>
                   </div>
                 </div>
@@ -181,17 +184,17 @@ export default function Home() {
                   </div>
                 </div>
                 <p className="text-muted-foreground mb-6">
-                  "Ground Up BJJ has the best coaching staff in the city. 
-                  Their personal training program helped me prepare for my first competition."
+                  "Ground Up BJJ has the best female coaching staff in the city. 
+                  Their empowering, women-focused approach helped me prepare for my first competition with confidence."
                 </p>
                 <div className="flex items-center">
                   <img 
-                    src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&h=100" 
-                    alt="Emma Rodriguez" 
-                    className="w-12 h-12 rounded-full mr-4"
+                    src={femaleStudent3} 
+                    alt="Priya Patel" 
+                    className="w-12 h-12 rounded-full mr-4 object-cover"
                   />
                   <div>
-                    <div className="font-semibold">Emma Rodriguez</div>
+                    <div className="font-semibold">Priya Patel</div>
                     <div className="text-sm text-muted-foreground">Purple Belt</div>
                   </div>
                 </div>
