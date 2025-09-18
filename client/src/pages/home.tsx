@@ -2,6 +2,7 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Shield, Dumbbell, Brain, Star } from "lucide-react";
+import femaleFighterImage from "@assets/stock_images/female_brazilian_jiu_cfa563c5.jpg";
 
 export default function Home() {
   return (
@@ -12,7 +13,7 @@ export default function Home() {
         <div 
           className="absolute inset-0 bg-cover bg-center" 
           style={{
-            backgroundImage: "url('https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&h=1080')"
+            backgroundImage: `url(${femaleFighterImage})`
           }}
         ></div>
         
