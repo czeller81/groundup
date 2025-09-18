@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import logoImage from "@assets/ground up logo_1758214430976.png";
 
 export default function Navbar() {
   const [location] = useLocation();
@@ -21,8 +22,13 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
-            <Link href="/" className="text-2xl font-bold text-foreground">
-              Ground Up BJJ
+            <Link href="/" className="flex items-center space-x-2" data-testid="navbar-logo">
+              <img 
+                src={logoImage} 
+                alt="Ground Up BJJ Logo" 
+                className="h-10 w-10" 
+              />
+              <span className="text-xl font-bold text-foreground">Ground Up BJJ</span>
             </Link>
           </div>
           
