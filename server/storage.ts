@@ -160,10 +160,10 @@ export class MemStorage implements IStorage {
     // Seed trainers
     const trainer1: Trainer = {
       id: "trainer-1",
-      name: "Marcus Silva",
-      bio: "Head instructor with 15+ years of teaching experience. IBJJF World Champion and passionate about developing both competitive athletes and recreational practitioners.",
-      photoUrl: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=400",
-      specialties: ["Competition Training", "Fundamentals", "Self-Defense"],
+      name: "Sofia Martinez",
+      bio: "Head instructor and founder with 12+ years of teaching experience. Multiple-time World Champion specializing in women's self-defense and technical development.",
+      photoUrl: "@assets/stock_images/female_bjj_martial_a_dc8c6615.jpg",
+      specialties: ["Women's Self-Defense", "Competition Training", "Fundamentals"],
       beltRank: "3rd Degree Black Belt",
       availability: {
         "Monday": ["09:00", "10:30", "12:00", "14:00", "16:00", "18:00"],
@@ -176,11 +176,11 @@ export class MemStorage implements IStorage {
 
     const trainer2: Trainer = {
       id: "trainer-2", 
-      name: "Ana Rodriguez",
-      bio: "Women's program coordinator and kids' instructor. Multiple-time Pan Am medalist specializing in technical precision and guard play.",
-      photoUrl: "https://images.unsplash.com/photo-1594381898411-846e7d193883?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=400",
-      specialties: ["Women's Program", "Guard Play", "Kids Classes"],
-      beltRank: "2nd Degree Brown Belt",
+      name: "Isabella Chen",
+      bio: "Advanced instructor and women's empowerment advocate. Pan Am medalist specializing in technical precision, guard play, and building confidence in female athletes.",
+      photoUrl: "@assets/stock_images/female_bjj_martial_a_f7167aea.jpg",
+      specialties: ["Women's Empowerment", "Guard Play", "Technical Development"],
+      beltRank: "2nd Degree Black Belt",
       availability: {
         "Monday": ["14:00", "16:00", "18:00", "20:00"],
         "Tuesday": ["14:00", "16:00", "18:00", "20:00"],
@@ -192,11 +192,11 @@ export class MemStorage implements IStorage {
 
     const trainer3: Trainer = {
       id: "trainer-3",
-      name: "Jake Thompson", 
-      bio: "Former MMA fighter and conditioning specialist. Focuses on strength training integration and practical self-defense applications.",
-      photoUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=400",
-      specialties: ["MMA Integration", "Conditioning", "No-Gi"],
-      beltRank: "1st Degree Purple Belt",
+      name: "Carmen Delgado", 
+      bio: "Former competitive athlete and fitness specialist. Focuses on strength training for women, conditioning, and practical self-defense applications in a supportive environment.",
+      photoUrl: "@assets/stock_images/female_bjj_martial_a_a12da0db.jpg",
+      specialties: ["Women's Conditioning", "Self-Defense", "No-Gi"],
+      beltRank: "1st Degree Brown Belt",
       availability: {
         "Monday": ["06:00", "07:30", "09:00", "10:30"],
         "Tuesday": ["06:00", "07:30", "09:00", "10:30"], 
