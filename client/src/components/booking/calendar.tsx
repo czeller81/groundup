@@ -16,8 +16,15 @@ export default function Calendar({ selectedTrainerId, selectedDate, selectedTime
   const [currentMonth, setCurrentMonth] = useState(new Date());
   
   const { data: availability } = useQuery({
-    queryKey: ["/api/trainers", selectedTrainerId, "availability", { date: selectedDate }],
+    queryKey: ["/api/trainers", selectedTrainerId, "availability", selectedDate],
     enabled: !!selectedTrainerId && !!selectedDate,
+    queryFn: async () => {
+      const response = await fetch(`/api/trainers/${selectedTrainerId}/availability?date=${selectedDate}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch availability');
+      }
+      return response.json();
+    }
   });
 
   const monthStart = startOfMonth(currentMonth);

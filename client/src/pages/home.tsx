@@ -2,7 +2,7 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Shield, Dumbbell, Brain, Star } from "lucide-react";
-import femaleFighterImage from "@assets/stock_images/female_women_martial_65702319.jpg";
+import femaleFighterImage from "@assets/stock_images/woman_training_bjj_m_bb6c5084.jpg";
 import femaleStudent1 from "@assets/stock_images/female_bjj_students__456d0e30.jpg";
 import femaleStudent2 from "@assets/stock_images/female_bjj_students__0fe74900.jpg";
 import femaleStudent3 from "@assets/stock_images/female_bjj_students__65085ad5.jpg";
