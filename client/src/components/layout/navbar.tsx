@@ -28,7 +28,7 @@ export default function Navbar() {
                 alt="Ground Up BJJ Logo" 
                 className="h-10 w-10" 
               />
-              <span className="text-xl font-bold text-foreground">Ground Up BJJ</span>
+              <span className="text-xl font-bold text-foreground">Ground Up </span>
             </Link>
           </div>
           
