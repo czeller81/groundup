@@ -1,15 +1,21 @@
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { usePortalAuth } from "@/lib/portal-auth";
-import { FileText, Calendar, CheckCircle, Clock, AlertCircle, LogOut, Settings } from "lucide-react";
-import { format, isPast, isFuture } from "date-fns";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { FileText, Calendar, CheckCircle, Clock, AlertCircle, LogOut, Settings, X, Loader2 } from "lucide-react";
+import { format, isPast, isFuture, isToday, startOfDay, isSameDay } from "date-fns";
 
 export default function PortalDashboard() {
   const [, setLocation] = useLocation();
   const { user, logout, isLoading: authLoading, isAuthenticated, isAdmin } = usePortalAuth();
+  const { toast } = useToast();
+  const [cancelDialog, setCancelDialog] = useState<{ open: boolean; booking: any | null }>({ open: false, booking: null });
 
   const { data: forms = [] } = useQuery<any[]>({
     queryKey: ["/api/portal/forms"],
@@ -20,6 +26,25 @@ export default function PortalDashboard() {
     queryKey: ["/api/portal/bookings"],
     enabled: isAuthenticated,
   });
+
+  const cancelMutation = useMutation({
+    mutationFn: async (bookingId: string) => {
+      const res = await apiRequest("PUT", `/api/portal/bookings/${bookingId}/cancel`, {});
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/portal/bookings"] });
+      toast({ title: "Booking Cancelled", description: "Your session has been cancelled." });
+      setCancelDialog({ open: false, booking: null });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message || "Failed to cancel booking", variant: "destructive" });
+    },
+  });
+
+  const isSameDayBooking = (bookingDate: Date) => {
+    return isSameDay(new Date(), bookingDate);
+  };
 
   if (authLoading) {
     return (
@@ -139,11 +164,22 @@ export default function PortalDashboard() {
               ) : (
                 <div className="space-y-3">
                   {upcomingBookings.slice(0, 3).map((booking: any) => (
-                    <div key={booking.id} className="p-3 bg-muted rounded-lg">
-                      <p className="font-medium">{format(new Date(booking.start), "EEEE, MMM d")}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {format(new Date(booking.start), "h:mm a")} with {booking.trainer?.name}
-                      </p>
+                    <div key={booking.id} className="p-3 bg-muted rounded-lg flex justify-between items-center">
+                      <div>
+                        <p className="font-medium">{format(new Date(booking.start), "EEEE, MMM d")}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {format(new Date(booking.start), "h:mm a")} with {booking.trainer?.name}
+                        </p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                        onClick={() => setCancelDialog({ open: true, booking })}
+                        data-testid={`button-cancel-booking-${booking.id}`}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
                     </div>
                   ))}
                   <Button variant="outline" className="w-full" asChild>
@@ -202,6 +238,44 @@ export default function PortalDashboard() {
           </Card>
         )}
       </main>
+
+      <Dialog open={cancelDialog.open} onOpenChange={(open) => setCancelDialog({ open, booking: open ? cancelDialog.booking : null })}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Cancel Booking</DialogTitle>
+            <DialogDescription>
+              {cancelDialog.booking && (
+                <>
+                  Are you sure you want to cancel your session on{" "}
+                  <strong>{format(new Date(cancelDialog.booking.start), "EEEE, MMMM d")}</strong> at{" "}
+                  <strong>{format(new Date(cancelDialog.booking.start), "h:mm a")}</strong>?
+                  {isSameDayBooking(new Date(cancelDialog.booking.start)) && (
+                    <div className="mt-3 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg text-amber-800 dark:text-amber-200">
+                      <strong>Same-day cancellation fee:</strong> A $10 fee will be charged for cancelling on the same day as your scheduled session.
+                    </div>
+                  )}
+                </>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setCancelDialog({ open: false, booking: null })}>
+              Keep Booking
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => cancelDialog.booking && cancelMutation.mutate(cancelDialog.booking.id)}
+              disabled={cancelMutation.isPending}
+              data-testid="button-confirm-cancel"
+            >
+              {cancelMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              {cancelDialog.booking && isSameDayBooking(new Date(cancelDialog.booking.start))
+                ? "Cancel ($10 Fee)"
+                : "Cancel Booking"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
