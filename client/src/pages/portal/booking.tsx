@@ -1,11 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
 import { usePortalAuth } from "@/lib/portal-auth";
@@ -30,10 +29,16 @@ export default function PortalBooking() {
   const [notes, setNotes] = useState("");
   const [bookingComplete, setBookingComplete] = useState(false);
 
-  const { data: trainers = [] } = useQuery({
+  const { data: trainers = [] } = useQuery<any[]>({
     queryKey: ["/api/trainers"],
     enabled: isAuthenticated,
   });
+
+  useEffect(() => {
+    if (trainers.length > 0 && !trainerId) {
+      setTrainerId(trainers[0].id);
+    }
+  }, [trainers, trainerId]);
 
   const bookMutation = useMutation({
     mutationFn: async () => {
@@ -145,27 +150,7 @@ export default function PortalBooking() {
 
           <Card>
             <CardHeader>
-              <CardTitle>2. Select Trainer</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Select value={trainerId} onValueChange={setTrainerId}>
-                <SelectTrigger data-testid="select-trainer">
-                  <SelectValue placeholder="Choose a trainer" />
-                </SelectTrigger>
-                <SelectContent>
-                  {(trainers as any[]).map((trainer) => (
-                    <SelectItem key={trainer.id} value={trainer.id}>
-                      {trainer.name} - {trainer.beltRank}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>3. Select Date & Time</CardTitle>
+              <CardTitle>2. Select Date & Time</CardTitle>
             </CardHeader>
             <CardContent>
               <Calendar
@@ -183,7 +168,7 @@ export default function PortalBooking() {
 
           <Card>
             <CardHeader>
-              <CardTitle>4. Additional Notes (Optional)</CardTitle>
+              <CardTitle>3. Additional Notes (Optional)</CardTitle>
             </CardHeader>
             <CardContent>
               <Textarea
