@@ -241,13 +241,6 @@ export class DatabaseStorage implements IStorage {
     
     if (!booking) return undefined;
     
-    // Check 12-hour cancellation policy
-    const now = new Date();
-    const hoursUntilStart = (booking.start.getTime() - now.getTime()) / (1000 * 60 * 60);
-    if (hoursUntilStart < 12) {
-      throw new Error("Cannot cancel booking less than 12 hours before start time");
-    }
-    
     const [updated] = await db
       .update(bookings)
       .set({ status: "canceled" })
@@ -517,9 +510,6 @@ export class MemStorage implements IStorage {
   async cancelUserBooking(userId: string, bookingId: string): Promise<Booking | undefined> {
     const booking = this.bookingsMap.get(bookingId);
     if (!booking || booking.userId !== userId) return undefined;
-    const now = new Date();
-    const hoursUntilStart = (booking.start.getTime() - now.getTime()) / (1000 * 60 * 60);
-    if (hoursUntilStart < 12) throw new Error("Cannot cancel booking less than 12 hours before start time");
     const updated = { ...booking, status: "canceled" };
     this.bookingsMap.set(bookingId, updated);
     return updated;
