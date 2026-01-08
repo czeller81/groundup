@@ -777,5 +777,29 @@ async function seedFormsData() {
   }
 }
 
+// Seed trainer if none exists
+async function seedTrainerData() {
+  const existingTrainers = await storage.getTrainers();
+  if (existingTrainers.length === 0) {
+    await storage.createTrainer({
+      name: "Raymi Gonzalez",
+      bio: "Purple belt 3rd degree with 5 years of experience. Leads the women's only program at Gracie Barra Ventura and specializes in strength and conditioning fitness classes. Offers the best 1-on-1 for BJJ training.",
+      photoUrl: "https://images.unsplash.com/photo-1594381898411-846e7d193883?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=400",
+      specialties: ["1-on-1 BJJ Training", "Strength & Conditioning", "Women's Program Leadership", "Fitness Classes"],
+      beltRank: "Purple Belt 3rd Degree",
+      availability: {
+        "Monday": ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00"],
+        "Tuesday": ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00"],
+        "Wednesday": ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00"],
+        "Thursday": ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00"],
+        "Friday": ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00"],
+        "Saturday": ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00"]
+      }
+    });
+    console.log("Trainer seeded successfully");
+  }
+}
+
 // Run seed on module load
 seedFormsData().catch(console.error);
+seedTrainerData().catch(console.error);

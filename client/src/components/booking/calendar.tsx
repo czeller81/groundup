@@ -121,23 +121,29 @@ export default function Calendar({ selectedTrainerId, selectedDate, selectedTime
         <div>
           <div className="text-sm font-medium mb-3">Available Times for {selectedDate}</div>
           {!selectedTrainerId ? (
-            <div className="text-sm text-muted-foreground p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800" data-testid="select-trainer-message">
-              Please select a trainer above to see available times
+            <div className="text-sm text-muted-foreground p-3 bg-muted rounded-lg" data-testid="loading-times">
+              Loading available times...
             </div>
           ) : availability?.availableTimes?.length > 0 ? (
-            <div className="grid grid-cols-3 gap-2" data-testid="available-times">
-              {availability.availableTimes.map((time: string) => (
-                <Button
-                  key={time}
-                  variant={selectedTime === time ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => handleTimeClick(time)}
-                  className="transition-all"
-                  data-testid={`time-slot-${time}`}
-                >
-                  {time}
-                </Button>
-              ))}
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2" data-testid="available-times">
+              {availability.availableTimes.map((time: string) => {
+                const hour = parseInt(time.split(':')[0]);
+                const displayTime = hour >= 12 
+                  ? `${hour === 12 ? 12 : hour - 12}:00 PM` 
+                  : `${hour}:00 AM`;
+                return (
+                  <Button
+                    key={time}
+                    variant={selectedTime === time ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => handleTimeClick(time)}
+                    className="transition-all"
+                    data-testid={`time-slot-${time}`}
+                  >
+                    {displayTime}
+                  </Button>
+                );
+              })}
             </div>
           ) : (
             <div className="text-sm text-muted-foreground" data-testid="no-times-available">
