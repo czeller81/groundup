@@ -14,7 +14,7 @@ export default function Navbar() {
     { path: "/coaches", label: "Coaches" },
     { path: "/pricing", label: "Pricing" },
     { path: "/contact", label: "Contact" },
-    { path: "/admin", label: "Admin" },
+    { path: "/portal/login", label: "Member Portal", highlight: true },
   ];
 
   return (
@@ -43,7 +43,7 @@ export default function Navbar() {
                     location === item.path
                       ? "text-primary"
                       : "text-foreground hover:text-primary"
-                  } ${item.path === "/admin" ? "text-muted-foreground" : ""}`}
+                  } ${(item as any).highlight ? "bg-primary text-white rounded-md hover:bg-primary/90 hover:text-white" : ""}`}
                   data-testid={`nav-link-${item.path.slice(1) || "home"}`}
                 >
                   {item.label}
@@ -77,7 +77,7 @@ export default function Navbar() {
                     location === item.path
                       ? "text-primary"
                       : "text-foreground hover:text-primary"
-                  } ${item.path === "/admin" ? "text-muted-foreground" : ""}`}
+                  } ${(item as any).highlight ? "bg-primary text-white rounded-md" : ""}`}
                   onClick={() => setMobileMenuOpen(false)}
                   data-testid={`mobile-nav-link-${item.path.slice(1) || "home"}`}
                 >

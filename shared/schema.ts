@@ -3,6 +3,41 @@ import { pgTable, text, varchar, integer, timestamp, jsonb, boolean } from "driz
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// Users table (for portal authentication)
+export const users = pgTable("users", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  email: text("email").notNull().unique(),
+  passwordHash: text("password_hash").notNull(),
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name").notNull(),
+  phone: text("phone"),
+  role: text("role").notNull().default("user"), // "user" | "admin"
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Forms table (form definitions)
+export const forms = pgTable("forms", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  slug: text("slug").notNull().unique(), // "personal-training-intake", "health-parq", "goals-preferences"
+  title: text("title").notNull(),
+  description: text("description"),
+  fields: jsonb("fields").notNull(), // Array of field definitions
+  isRequired: boolean("is_required").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Form responses table
+export const formResponses = pgTable("form_responses", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  formId: varchar("form_id").notNull().references(() => forms.id),
+  answers: jsonb("answers").notNull().default(sql`'{}'::jsonb`), // JSON object with field answers
+  status: text("status").notNull().default("not_started"), // "not_started" | "draft" | "submitted"
+  submittedAt: timestamp("submitted_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // Trainers table
 export const trainers = pgTable("trainers", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -18,6 +53,7 @@ export const trainers = pgTable("trainers", {
 // Bookings table
 export const bookings = pgTable("bookings", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id), // Optional: link to portal user
   customerName: text("customer_name").notNull(),
   customerEmail: text("customer_email").notNull(),
   customerPhone: text("customer_phone").notNull(),
@@ -42,6 +78,26 @@ export const adminUsers = pgTable("admin_users", {
 });
 
 // Relations
+export const usersRelations = relations(users, ({ many }) => ({
+  bookings: many(bookings),
+  formResponses: many(formResponses),
+}));
+
+export const formsRelations = relations(forms, ({ many }) => ({
+  responses: many(formResponses),
+}));
+
+export const formResponsesRelations = relations(formResponses, ({ one }) => ({
+  user: one(users, {
+    fields: [formResponses.userId],
+    references: [users.id],
+  }),
+  form: one(forms, {
+    fields: [formResponses.formId],
+    references: [forms.id],
+  }),
+}));
+
 export const trainersRelations = relations(trainers, ({ many }) => ({
   bookings: many(bookings),
 }));
@@ -51,9 +107,29 @@ export const bookingsRelations = relations(bookings, ({ one }) => ({
     fields: [bookings.trainerId],
     references: [trainers.id],
   }),
+  user: one(users, {
+    fields: [bookings.userId],
+    references: [users.id],
+  }),
 }));
 
 // Insert schemas
+export const insertUserSchema = createInsertSchema(users).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertFormSchema = createInsertSchema(forms).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertFormResponseSchema = createInsertSchema(formResponses).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export const insertTrainerSchema = createInsertSchema(trainers).omit({
   id: true,
   createdAt: true,
@@ -70,6 +146,15 @@ export const insertAdminUserSchema = createInsertSchema(adminUsers).omit({
 });
 
 // Types
+export type InsertUser = z.infer<typeof insertUserSchema>;
+export type User = typeof users.$inferSelect;
+
+export type InsertForm = z.infer<typeof insertFormSchema>;
+export type Form = typeof forms.$inferSelect;
+
+export type InsertFormResponse = z.infer<typeof insertFormResponseSchema>;
+export type FormResponse = typeof formResponses.$inferSelect;
+
 export type InsertTrainer = z.infer<typeof insertTrainerSchema>;
 export type Trainer = typeof trainers.$inferSelect;
 
@@ -83,3 +168,11 @@ export type AdminUser = typeof adminUsers.$inferSelect;
 export type BookingWithTrainer = Booking & {
   trainer: Trainer;
 };
+
+// Form response with form relation
+export type FormResponseWithForm = FormResponse & {
+  form: Form;
+};
+
+// User without password
+export type SafeUser = Omit<User, 'passwordHash'>;

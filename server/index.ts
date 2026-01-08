@@ -1,10 +1,28 @@
 import express, { type Request, Response, NextFunction } from "express";
+import session from "express-session";
+import MemoryStore from "memorystore";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+
+const MemStore = MemoryStore(session);
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+app.use(session({
+  secret: process.env.SESSION_SECRET || "ground-up-bjj-secret-key-change-in-production",
+  resave: false,
+  saveUninitialized: false,
+  store: new MemStore({
+    checkPeriod: 86400000
+  }),
+  cookie: {
+    secure: process.env.NODE_ENV === "production",
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000
+  }
+}));
 
 app.use((req, res, next) => {
   const start = Date.now();
