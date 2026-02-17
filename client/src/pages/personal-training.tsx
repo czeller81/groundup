@@ -1,204 +1,168 @@
 import { Link } from "wouter";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, Users, Target, Clock, Award, ArrowRight } from "lucide-react";
+import { motion, useInView } from "framer-motion";
+import { useRef } from "react";
+import { ArrowRight, Zap, Target, Clock, Users, Dumbbell, Shield } from "lucide-react";
+import trainingImage from "@assets/stock_images/female_bjj_martial_a_a12da0db.jpg";
+import sparringImage from "@assets/stock_images/female_women_martial_65702319.jpg";
+
+function Section({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-80px" });
+  return (
+    <motion.section
+      ref={ref}
+      initial={{ opacity: 0, y: 40 }}
+      animate={isInView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+      className={className}
+    >
+      {children}
+    </motion.section>
+  );
+}
 
 export default function PersonalTraining() {
   return (
-    <div className="flex flex-col">
-      <section className="bg-gradient-to-br from-purple-900 via-purple-800 to-purple-700 text-white py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-3xl mx-auto">
-            <h1 className="text-4xl md:text-5xl font-bold mb-6">Personal Training</h1>
-            <p className="text-xl text-purple-100 mb-8">
-              Accelerate your BJJ journey with personalized one-on-one instruction tailored specifically for women. 
-              Train in a safe, supportive environment designed to help you reach your goals.
-            </p>
-            <Button size="lg" className="bg-white text-purple-900 hover:bg-purple-100" asChild data-testid="button-signup-hero">
-              <Link href="/portal/login">
-                Sign Up to Get Started
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
-            </Button>
-          </div>
-        </div>
-      </section>
-
-      <section className="py-16 bg-background">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Why Choose Personal Training?</h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              Get the focused attention and customized instruction you need to build confidence, 
-              strength, and real-world self-defense skills.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-            <Card className="text-center" data-testid="benefit-personalized">
-              <CardContent className="pt-6">
-                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Target className="h-6 w-6 text-primary" />
-                </div>
-                <h3 className="font-bold mb-2">Personalized Instruction</h3>
-                <p className="text-sm text-muted-foreground">
-                  Techniques tailored to your body type, goals, and learning style
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="text-center" data-testid="benefit-progress">
-              <CardContent className="pt-6">
-                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Award className="h-6 w-6 text-primary" />
-                </div>
-                <h3 className="font-bold mb-2">Faster Progress</h3>
-                <p className="text-sm text-muted-foreground">
-                  Accelerated learning with focused one-on-one attention
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="text-center" data-testid="benefit-scheduling">
-              <CardContent className="pt-6">
-                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Clock className="h-6 w-6 text-primary" />
-                </div>
-                <h3 className="font-bold mb-2">Flexible Scheduling</h3>
-                <p className="text-sm text-muted-foreground">
-                  Book sessions from 8am-5pm that fit your busy lifestyle
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="text-center" data-testid="benefit-women">
-              <CardContent className="pt-6">
-                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Users className="h-6 w-6 text-primary" />
-                </div>
-                <h3 className="font-bold mb-2">Women-Only Environment</h3>
-                <p className="text-sm text-muted-foreground">
-                  Train comfortably in a supportive, female-focused space
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      <section className="py-16 bg-muted/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <h2 className="text-3xl font-bold mb-6">Meet Your Trainer</h2>
-              <div className="flex items-start space-x-4 mb-6">
-                <img 
-                  src="https://images.unsplash.com/photo-1594381898411-846e7d193883?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=400" 
-                  alt="Raymi Gonzalez" 
-                  className="w-24 h-24 rounded-full object-cover border-4 border-primary"
-                />
-                <div>
-                  <h3 className="text-xl font-bold">Raymi Gonzalez</h3>
-                  <p className="text-primary font-semibold">Purple Belt 3rd Degree</p>
-                </div>
-              </div>
-              <p className="text-muted-foreground mb-4">
-                With 5 years of experience, Raymi leads the women's only program at Gracie Barra Ventura 
-                and specializes in strength and conditioning fitness classes. She offers the best 1-on-1 
-                BJJ training tailored specifically for women.
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {["1-on-1 BJJ Training", "Strength & Conditioning", "Women's Program", "Fitness Classes"].map((specialty) => (
-                  <span key={specialty} className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm">
-                    {specialty}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            <Card className="shadow-lg">
-              <CardHeader>
-                <CardTitle>What's Included</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {[
-                    "60-minute personalized training sessions",
-                    "Technique instruction tailored to your level",
-                    "Strength & conditioning exercises",
-                    "Self-defense fundamentals",
-                    "Flexible booking through member portal",
-                    "Progress tracking and goal setting"
-                  ].map((item) => (
-                    <div key={item} className="flex items-start space-x-3">
-                      <CheckCircle className="text-primary h-5 w-5 mt-0.5 flex-shrink-0" />
-                      <span>{item}</span>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      <section className="py-16 bg-background">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Card className="shadow-lg">
-            <CardHeader>
-              <CardTitle>Frequently Asked Questions</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                <div>
-                  <h4 className="font-semibold mb-2">What should I bring to my session?</h4>
-                  <p className="text-muted-foreground">
-                    Just comfortable athletic wear. We provide all necessary equipment including gis, belts, and mats.
-                  </p>
-                </div>
-                <div>
-                  <h4 className="font-semibold mb-2">Can I cancel or reschedule?</h4>
-                  <p className="text-muted-foreground">
-                    Yes! You can cancel anytime through the member portal. Same-day cancellations have a $10 fee.
-                  </p>
-                </div>
-                <div>
-                  <h4 className="font-semibold mb-2">Is personal training suitable for beginners?</h4>
-                  <p className="text-muted-foreground">
-                    Absolutely! Personal training is perfect for beginners as it allows for personalized instruction 
-                    at your own pace in a comfortable environment.
-                  </p>
-                </div>
-                <div>
-                  <h4 className="font-semibold mb-2">How do I book a session?</h4>
-                  <p className="text-muted-foreground">
-                    Sign up for a member account, complete your intake forms, and book directly through the member portal.
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </section>
-
-      <section className="py-16 bg-gradient-to-r from-purple-900 to-purple-800 text-white">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-bold mb-4">Ready to Start Your Journey?</h2>
-          <p className="text-purple-100 mb-8">
-            Join our women's training community and take the first step toward building confidence, 
-            strength, and real self-defense skills.
+    <div className="flex flex-col bg-[#0B0F14]">
+      <section className="relative pt-32 pb-20 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-[#121826] to-[#0B0F14]" />
+        <div
+          className="absolute inset-0 bg-cover bg-center opacity-10"
+          style={{ backgroundImage: `url(${trainingImage})` }}
+        />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-[#5EEBFF]/5 rounded-full blur-3xl" />
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h1 className="text-5xl md:text-7xl font-bold text-white mb-6" style={{ fontFamily: 'var(--font-display)' }}>
+            PERSONAL <span className="gradient-text-cyan">TRAINING</span>
+          </h1>
+          <p className="text-gray-300 max-w-2xl mx-auto text-lg mb-10">
+            1-on-1 BJJ instruction and strength & conditioning tailored specifically for women.
+            Train at your pace, on your schedule.
           </p>
-          <Button size="lg" className="bg-white text-purple-900 hover:bg-purple-100" asChild data-testid="button-signup-cta">
+          <Button
+            asChild
+            size="lg"
+            className="bg-[#FFB199] text-[#0B0F14] font-bold uppercase tracking-wider hover:bg-[#FFB199]/90 text-base px-10 h-14"
+          >
             <Link href="/portal/login">
-              Sign Up Now
+              Book Your Session
               <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
           </Button>
-          <p className="text-purple-200 text-sm mt-4">
-            Sessions just $20 per hour | Flexible scheduling 8am-5pm
-          </p>
         </div>
       </section>
+
+      <Section className="py-24 bg-[#0B0F14]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-white mb-4" style={{ fontFamily: 'var(--font-display)' }}>
+              WHY <span className="gradient-text-cyan">1-ON-1</span> TRAINING?
+            </h2>
+            <p className="text-gray-400 max-w-2xl mx-auto">
+              Get focused attention and customized instruction to accelerate your progress.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[
+              { icon: Target, title: "Personalized", desc: "Every session is tailored to your body type, goals, and skill level.", accent: "#5EEBFF" },
+              { icon: Dumbbell, title: "Strength + BJJ", desc: "Combined martial arts training with strength and conditioning.", accent: "#B06CFF" },
+              { icon: Clock, title: "Flexible Hours", desc: "Book sessions 8am–5pm, Monday through Saturday.", accent: "#FFB199" },
+              { icon: Users, title: "Women Only", desc: "Train in a safe, comfortable, women-only environment.", accent: "#5EEBFF" },
+              { icon: Shield, title: "Self-Defense", desc: "Learn real-world techniques that build confidence and safety.", accent: "#B06CFF" },
+              { icon: Zap, title: "Fast Results", desc: "See progress faster with dedicated 1-on-1 attention.", accent: "#FFB199" },
+            ].map((item, i) => (
+              <motion.div
+                key={item.title}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1, duration: 0.5 }}
+                className="rounded-2xl border border-white/5 bg-[#121826] p-6 hover:border-white/10 transition-all"
+              >
+                <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-4" style={{ backgroundColor: `${item.accent}15` }}>
+                  <item.icon className="h-5 w-5" style={{ color: item.accent }} />
+                </div>
+                <h3 className="text-lg font-bold text-white mb-2" style={{ fontFamily: 'var(--font-display)' }}>{item.title}</h3>
+                <p className="text-gray-400 text-sm">{item.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </Section>
+
+      <Section className="py-24 bg-[#121826] grain-texture belt-stripe relative">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+            <div className="relative">
+              <div className="absolute -inset-4 bg-gradient-to-br from-[#5EEBFF]/10 to-[#B06CFF]/10 rounded-2xl blur-xl" />
+              <img
+                src={sparringImage}
+                alt="Training session"
+                className="relative rounded-2xl w-full aspect-[4/3] object-cover border border-white/10"
+              />
+            </div>
+            <div>
+              <h2 className="text-4xl font-bold text-white mb-6" style={{ fontFamily: 'var(--font-display)' }}>
+                WHAT'S <span className="gradient-text-purple">INCLUDED</span>
+              </h2>
+              <ul className="space-y-4 mb-8">
+                {[
+                  "60-minute personalized training sessions",
+                  "Technique instruction at your level",
+                  "Strength & conditioning exercises",
+                  "Self-defense fundamentals",
+                  "All equipment provided (gis, belts, mats)",
+                  "Flexible booking through member portal",
+                  "Progress tracking and goal setting",
+                ].map((item) => (
+                  <li key={item} className="flex items-center gap-3 text-gray-300">
+                    <Zap className="h-4 w-4 text-[#B06CFF] flex-shrink-0" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+              <div className="flex items-baseline gap-2 mb-6">
+                <span className="text-4xl font-bold text-[#5EEBFF]" style={{ fontFamily: 'var(--font-display)' }}>$20</span>
+                <span className="text-gray-400">per session</span>
+              </div>
+              <Button
+                asChild
+                className="bg-[#FFB199] text-[#0B0F14] font-bold uppercase tracking-wider hover:bg-[#FFB199]/90"
+              >
+                <Link href="/portal/login">
+                  Sign Up to Book
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </Section>
+
+      <Section className="py-24 bg-[#0B0F14] relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-[#5EEBFF]/5 via-transparent to-[#B06CFF]/5" />
+        <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6" style={{ fontFamily: 'var(--font-display)' }}>
+            YOUR FIRST SESSION IS <span className="gradient-text-warm">FREE</span>
+          </h2>
+          <p className="text-gray-300 text-lg mb-10">
+            No commitment required. Come try a session, meet your coach, and see if Ground Up BJJ is right for you.
+          </p>
+          <Button
+            asChild
+            size="lg"
+            className="bg-[#FFB199] text-[#0B0F14] font-bold uppercase tracking-wider hover:bg-[#FFB199]/90 text-base px-10 h-14"
+          >
+            <Link href="/portal/login">
+              Book Your Free Trial
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Link>
+          </Button>
+          <p className="text-gray-500 text-sm mt-6">No credit card required · Cancel anytime</p>
+        </div>
+      </Section>
     </div>
   );
 }

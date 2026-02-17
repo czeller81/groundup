@@ -1,92 +1,129 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { motion, AnimatePresence } from "framer-motion";
 import logoImage from "@assets/ground up logo_1758214430976.png";
 
 export default function Navbar() {
   const [location] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const navItems = [
     { path: "/", label: "Home" },
-    { path: "/personal-training", label: "Personal Training" },
+    { path: "/personal-training", label: "Training" },
     { path: "/coaches", label: "Coaches" },
     { path: "/pricing", label: "Pricing" },
     { path: "/contact", label: "Contact" },
-    { path: "/portal/login", label: "Member Portal", highlight: true },
   ];
 
   return (
-    <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-border">
+    <nav
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        scrolled
+          ? "bg-[#0B0F14]/95 backdrop-blur-md border-b border-white/5 shadow-lg"
+          : "bg-transparent"
+      }`}
+      data-testid="navbar"
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          <div className="flex items-center">
-            <Link href="/" className="flex items-center space-x-2" data-testid="navbar-logo">
-              <img 
-                src={logoImage} 
-                alt="Ground Up BJJ Logo" 
-                className="h-10 w-10" 
-              />
-              <span className="text-xl font-bold text-foreground">Ground Up </span>
+        <div className="flex justify-between items-center h-16 md:h-20">
+          <Link href="/" className="flex items-center space-x-3 group" data-testid="navbar-logo">
+            <img src={logoImage} alt="Ground Up BJJ Logo" className="h-10 w-10 transition-transform group-hover:scale-110" />
+            <span className="text-lg font-bold text-white tracking-wider" style={{ fontFamily: 'var(--font-display)' }}>
+              GROUND UP
+            </span>
+          </Link>
+
+          <div className="hidden md:flex items-center space-x-1">
+            {navItems.map((item) => (
+              <Link
+                key={item.path}
+                href={item.path}
+                className={`relative px-4 py-2 text-sm font-medium tracking-wide uppercase transition-colors ${
+                  location === item.path
+                    ? "text-[#5EEBFF]"
+                    : "text-gray-300 hover:text-white"
+                }`}
+                data-testid={`nav-link-${item.path.slice(1) || "home"}`}
+              >
+                {item.label}
+                {location === item.path && (
+                  <motion.div
+                    layoutId="nav-indicator"
+                    className="absolute bottom-0 left-4 right-4 h-0.5 bg-[#5EEBFF]"
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                  />
+                )}
+              </Link>
+            ))}
+            <Link href="/portal/login">
+              <Button
+                size="sm"
+                className="ml-4 bg-[#FFB199] text-[#0B0F14] font-semibold hover:bg-[#FFB199]/90 uppercase tracking-wider text-xs"
+                data-testid="nav-link-portal"
+              >
+                Member Portal
+              </Button>
             </Link>
           </div>
-          
-          {/* Desktop Navigation */}
-          <div className="hidden md:block">
-            <div className="ml-10 flex items-baseline space-x-8">
-              {navItems.map((item) => (
-                <Link
-                  key={item.path}
-                  href={item.path}
-                  className={`px-3 py-2 text-sm font-medium transition-colors ${
-                    location === item.path
-                      ? "text-primary"
-                      : "text-foreground hover:text-primary"
-                  } ${(item as any).highlight ? "bg-primary text-white rounded-md hover:bg-primary/90 hover:text-white" : ""}`}
-                  data-testid={`nav-link-${item.path.slice(1) || "home"}`}
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </div>
-          </div>
-          
-          {/* Mobile menu button */}
+
           <div className="md:hidden">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="text-white hover:bg-white/10"
               data-testid="mobile-menu-toggle"
             >
               {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </Button>
           </div>
         </div>
-        
-        {/* Mobile Navigation */}
-        {mobileMenuOpen && (
-          <div className="md:hidden bg-white border-t border-border" data-testid="mobile-menu">
-            <div className="px-2 pt-2 pb-3 space-y-1">
-              {navItems.map((item) => (
+
+        <AnimatePresence>
+          {mobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="md:hidden overflow-hidden bg-[#121826] border-t border-white/5 rounded-b-xl"
+              data-testid="mobile-menu"
+            >
+              <div className="px-2 pt-2 pb-3 space-y-1">
+                {navItems.map((item) => (
+                  <Link
+                    key={item.path}
+                    href={item.path}
+                    className={`block px-4 py-3 text-sm font-medium tracking-wide uppercase transition-colors rounded-lg ${
+                      location === item.path
+                        ? "text-[#5EEBFF] bg-white/5"
+                        : "text-gray-300 hover:text-white hover:bg-white/5"
+                    }`}
+                    onClick={() => setMobileMenuOpen(false)}
+                    data-testid={`mobile-nav-link-${item.path.slice(1) || "home"}`}
+                  >
+                    {item.label}
+                  </Link>
+                ))}
                 <Link
-                  key={item.path}
-                  href={item.path}
-                  className={`block px-3 py-2 text-base font-medium transition-colors ${
-                    location === item.path
-                      ? "text-primary"
-                      : "text-foreground hover:text-primary"
-                  } ${(item as any).highlight ? "bg-primary text-white rounded-md" : ""}`}
+                  href="/portal/login"
+                  className="block px-4 py-3 text-sm font-semibold tracking-wide uppercase text-[#0B0F14] bg-[#FFB199] rounded-lg text-center mt-2"
                   onClick={() => setMobileMenuOpen(false)}
-                  data-testid={`mobile-nav-link-${item.path.slice(1) || "home"}`}
                 >
-                  {item.label}
+                  Member Portal
                 </Link>
-              ))}
-            </div>
-          </div>
-        )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </nav>
   );

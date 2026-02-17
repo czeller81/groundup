@@ -1,108 +1,164 @@
-import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
+import { Button } from "@/components/ui/button";
+import { motion, useInView } from "framer-motion";
+import { useRef } from "react";
+import { ArrowRight, Award, Shield, BookOpen } from "lucide-react";
+import trainerImage from "@assets/stock_images/female_brazilian_jiu_cfa563c5.jpg";
+import trainingImage from "@assets/stock_images/female_bjj_martial_a_f7167aea.jpg";
+
+function Section({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-80px" });
+  return (
+    <motion.section
+      ref={ref}
+      initial={{ opacity: 0, y: 40 }}
+      animate={isInView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+      className={className}
+    >
+      {children}
+    </motion.section>
+  );
+}
 
 export default function Coaches() {
-  const { data: trainers, isLoading } = useQuery({
-    queryKey: ["/api/trainers"],
-  });
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
-      </div>
-    );
-  }
-
   return (
-    <div className="flex flex-col">
-      {/* Hero Section */}
-      <section className="bg-gradient-to-r from-gray-900 to-gray-800 text-white py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h1 className="text-4xl md:text-5xl font-bold mb-6">Our Expert Coaches</h1>
-            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-              Learn from world-class instructors with decades of combined experience in Brazilian Jiu-Jitsu.
-            </p>
-          </div>
+    <div className="flex flex-col bg-[#0B0F14]">
+      <section className="relative pt-32 pb-20 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-[#121826] to-[#0B0F14]" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-[#B06CFF]/5 rounded-full blur-3xl" />
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h1 className="text-5xl md:text-6xl font-bold text-white mb-6" style={{ fontFamily: 'var(--font-display)' }}>
+            YOUR <span className="gradient-text-purple">COACH</span>
+          </h1>
+          <p className="text-gray-400 max-w-2xl mx-auto text-lg">
+            Expert instruction from an experienced female BJJ practitioner dedicated to women's training.
+          </p>
         </div>
       </section>
 
-      {/* Coaches Grid */}
-      <section className="py-16 bg-background">
+      <Section className="py-24 bg-[#0B0F14] relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {trainers?.map((trainer: any) => (
-              <Card key={trainer.id} className="shadow-lg overflow-hidden" data-testid={`coach-card-${trainer.id}`}>
-                <img 
-                  src={trainer.photoUrl} 
-                  alt={trainer.name} 
-                  className="w-full h-64 object-cover"
-                />
-                <CardContent className="p-6">
-                  <h3 className="text-xl font-bold mb-2">{trainer.name}</h3>
-                  <div className="text-primary font-semibold mb-3">{trainer.beltRank}</div>
-                  <p className="text-muted-foreground mb-4 text-sm">{trainer.bio}</p>
-                  <div className="mb-4">
-                    <div className="text-sm font-semibold mb-2">Specialties:</div>
-                    <div className="flex flex-wrap gap-2">
-                      {trainer.specialties.map((specialty: string) => (
-                        <span 
-                          key={specialty}
-                          className="inline-block bg-muted text-muted-foreground px-2 py-1 rounded text-xs"
-                        >
-                          {specialty}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                  <Button asChild className="w-full" data-testid={`book-session-${trainer.id}`}>
-                    <Link href="/personal-training">Book Session</Link>
-                  </Button>
-                </CardContent>
-              </Card>
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+            <div className="relative">
+              <div className="absolute -inset-4 bg-gradient-to-br from-[#B06CFF]/20 to-[#5EEBFF]/10 rounded-2xl blur-xl" />
+              <img
+                src={trainerImage}
+                alt="Raymi Gonzalez"
+                className="relative rounded-2xl w-full aspect-[3/4] object-cover border border-white/10"
+              />
+            </div>
+
+            <div>
+              <span className="inline-block px-3 py-1 text-sm rounded-full bg-[#B06CFF]/20 text-[#B06CFF] border border-[#B06CFF]/30 mb-4">
+                Head Coach
+              </span>
+              <h2 className="text-4xl md:text-5xl font-bold text-white mb-2" style={{ fontFamily: 'var(--font-display)' }}>
+                RAYMI GONZALEZ
+              </h2>
+              <p className="text-[#5EEBFF] font-semibold mb-6">Purple Belt 3rd Degree · 5 Years Experience</p>
+
+              <p className="text-gray-300 leading-relaxed mb-6">
+                Raymi leads the women's-only program at Gracie Barra Ventura, specializing in 1-on-1 BJJ training
+                and strength & conditioning fitness classes. Her approach combines technical precision with a deep
+                understanding of how women learn and progress in martial arts.
+              </p>
+              <p className="text-gray-300 leading-relaxed mb-8">
+                Whether you're a complete beginner looking to build confidence or an experienced practitioner
+                preparing for competition, Raymi tailors every session to meet you exactly where you are and
+                push you toward your goals.
+              </p>
+
+              <div className="flex flex-wrap gap-2 mb-8">
+                {["1-on-1 BJJ Training", "Strength & Conditioning", "Women's Program", "Competition Prep", "Self-Defense"].map((tag) => (
+                  <span key={tag} className="px-3 py-1.5 text-xs rounded-full border border-white/10 text-gray-300 bg-white/5">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+
+              <Button
+                asChild
+                className="bg-[#FFB199] text-[#0B0F14] font-bold uppercase tracking-wider hover:bg-[#FFB199]/90"
+              >
+                <Link href="/portal/login">
+                  Book a Session
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </Section>
+
+      <Section className="py-24 bg-[#121826] grain-texture belt-stripe relative">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-4xl font-bold text-white mb-12 text-center" style={{ fontFamily: 'var(--font-display)' }}>
+            TEACHING <span className="gradient-text-cyan">PHILOSOPHY</span>
+          </h2>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {[
+              {
+                icon: Shield,
+                title: "Safety First",
+                desc: "Every session prioritizes proper technique and injury prevention so you can train consistently for years to come.",
+                accent: "#5EEBFF",
+              },
+              {
+                icon: Award,
+                title: "Individual Attention",
+                desc: "Every athlete learns differently. Training is adapted to your body, learning style, and personal pace.",
+                accent: "#B06CFF",
+              },
+              {
+                icon: BookOpen,
+                title: "Continuous Growth",
+                desc: "Regular training updates and competition attendance ensure the latest techniques and teaching methods.",
+                accent: "#FFB199",
+              },
+            ].map((item, i) => (
+              <motion.div
+                key={item.title}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.15, duration: 0.5 }}
+                className="rounded-2xl border border-white/5 bg-[#0B0F14] p-8 hover:border-white/10 transition-all"
+              >
+                <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-4" style={{ backgroundColor: `${item.accent}15` }}>
+                  <item.icon className="h-6 w-6" style={{ color: item.accent }} />
+                </div>
+                <h3 className="text-xl font-bold text-white mb-3" style={{ fontFamily: 'var(--font-display)' }}>{item.title}</h3>
+                <p className="text-gray-400 text-sm leading-relaxed">{item.desc}</p>
+              </motion.div>
             ))}
           </div>
         </div>
-      </section>
+      </Section>
 
-      {/* Coach Philosophy */}
-      <section className="py-16 bg-muted">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Our Teaching Philosophy</h2>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              We believe in creating a supportive environment where every student can thrive, regardless of their starting point or goals.
-            </p>
-          </div>
-          
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div>
-              <img 
-                src="https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400" 
-                alt="Coaching philosophy" 
-                className="rounded-xl shadow-lg w-full"
-              />
-            </div>
-            <div className="space-y-6">
-              <div data-testid="philosophy-individual">
-                <h3 className="text-xl font-bold mb-3">Individual Attention</h3>
-                <p className="text-muted-foreground">Every student learns differently. Our coaches adapt their teaching style to match your learning preferences and pace.</p>
-              </div>
-              <div data-testid="philosophy-safety">
-                <h3 className="text-xl font-bold mb-3">Safety First</h3>
-                <p className="text-muted-foreground">We prioritize proper technique and injury prevention, ensuring you can train consistently for years to come.</p>
-              </div>
-              <div data-testid="philosophy-learning">
-                <h3 className="text-xl font-bold mb-3">Continuous Learning</h3>
-                <p className="text-muted-foreground">Our coaches regularly attend seminars and competitions to stay current with evolving techniques and teaching methods.</p>
-              </div>
-            </div>
-          </div>
+      <Section className="py-24 bg-[#0B0F14] relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-[#5EEBFF]/5 via-transparent to-[#B06CFF]/5" />
+        <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-4xl font-bold text-white mb-6" style={{ fontFamily: 'var(--font-display)' }}>
+            TRAIN WITH <span className="gradient-text-warm">RAYMI</span>
+          </h2>
+          <p className="text-gray-300 text-lg mb-10">
+            Start your journey today with personalized 1-on-1 training designed just for you.
+          </p>
+          <Button
+            asChild
+            size="lg"
+            className="bg-[#FFB199] text-[#0B0F14] font-bold uppercase tracking-wider hover:bg-[#FFB199]/90 text-base px-10 h-14"
+          >
+            <Link href="/portal/login">
+              Book Your Free Trial
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Link>
+          </Button>
         </div>
-      </section>
+      </Section>
     </div>
   );
 }

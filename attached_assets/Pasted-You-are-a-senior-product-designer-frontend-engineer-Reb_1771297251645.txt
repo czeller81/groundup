@@ -1,0 +1,90 @@
+You are a senior product designer + frontend engineer. Rebuild the website for “Ground Up Women’s BJJ” as a modern, trend-forward, animated experience that loads fast, feels premium, and converts visitors into booked trial classes.
+
+GOALS
+1) Create a high-end animated marketing site + fully working booking system (customers can book, reschedule, cancel).
+2) Booking must trigger automated confirmations + reminders + easy reschedule/cancel links.
+3) The site must be responsive, accessible, and very fast (Lighthouse best practices).
+4) The visual identity must feel: confident, modern, feminine-but-not-girly, athletic, and community-focused.
+
+DESIGN DIRECTION
+- Use Palette A “Midnight Neon”:
+  Base: #0B0F14 and #121826
+  Accents: #5EEBFF (primary), #B06CFF (secondary)
+  Warm pop: #FFB199 (CTA highlights)
+- Typography: a bold condensed display font for headlines + a clean sans for body.
+- Visual motifs: subtle “gi texture” grain, diagonal belt-stripe lines, soft neon glow accents.
+- Animations: tasteful, smooth, not cheesy. Use Framer Motion (or CSS + Motion) for:
+  - hero entrance
+  - scroll-based section reveals
+  - hover microinteractions on cards/buttons
+  - animated belt-stripe divider
+  - parallax or subtle background gradient movement
+
+INFORMATION ARCHITECTURE (PAGES / SECTIONS)
+1) Home (single-page sections are OK):
+   - Hero: “Ground Up Women’s BJJ” + subheadline + 2 CTAs (“Book a Free Trial”, “View Schedule”)
+   - Trust strip: beginner-friendly, women-led/community, safe + supportive, skill-building
+   - Program cards: Fundamentals / All Levels / Open Mat / Competition Training
+   - Instructor spotlight + story
+   - Testimonials (carousel)
+   - Pricing (simple)
+   - FAQ (accordion)
+   - Final CTA + footer (social, address, email, phone)
+2) Schedule / Booking page:
+   - Embedded booking UI that matches branding
+   - Show class types + durations + limited capacity
+   - Customer can create booking, reschedule, cancel
+3) About page (optional)
+4) Contact page (optional)
+
+BOOKING SYSTEM (IMPLEMENTATION REQUIREMENTS)
+Choose one:
+A) Cal.com self-hosted integration (preferred for full brand control)
+   - Use Cal.com API/embed for booking UI
+   - Support reschedule/cancel
+   - Add automated reminders (email + optional SMS)
+   - Optional: Stripe deposits / no-show fee logic
+OR
+B) Calendly embed integration (fallback if Cal.com is too heavy)
+   - Embed Calendly with branded styling
+   - Confirm reschedule/cancel flows
+   - Payments optional via Stripe
+
+AUTOMATION REQUIREMENTS
+- On booking: send confirmation email instantly with calendar invite + reschedule/cancel link
+- Reminder: 24h before + 2h before (email; SMS optional)
+- On reschedule/cancel: send updated confirmation
+- Admin notifications: email the owner when a booking is created/changed/canceled
+- Store booking data in a database (Postgres or SQLite) with:
+  bookings, customers, class_types
+- Prevent double-booking; handle capacity limits per class session.
+
+TECH STACK
+- Use Next.js (App Router) + TypeScript
+- Styling: Tailwind
+- Animations: Framer Motion
+- Forms: react-hook-form + zod
+- DB: Postgres (prefer Supabase) or Prisma + local DB if needed
+- Email: Resend or SendGrid (use environment variables)
+- SMS (optional): Twilio
+- Payments (optional): Stripe
+- Deployment target: Replit (must run end-to-end in Replit)
+
+DELIVERABLES
+1) Implement the full site with the color system, components, and animations.
+2) Implement booking end-to-end (create/reschedule/cancel), including automated emails and admin notifications.
+3) Provide a clear README with:
+   - env vars needed
+   - how to run locally in Replit
+   - how to connect Cal.com OR Calendly
+   - how to configure email/SMS
+4) Include sample seed data for class types + schedule.
+
+QUALITY BAR
+- Looks like a 2026 boutique fitness brand site.
+- Motion feels intentional and premium.
+- Booking is reliable and polished.
+- No broken links. No placeholder lorem ipsum.
+- Add error states, loading states, success toasts, and a customer-friendly UX.
+
+Start by scanning the existing project at https://ground-up-bjj.replit.app and reusing any working pieces, but improve everything to match the above.
