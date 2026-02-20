@@ -81,11 +81,15 @@ export default function PortalLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 to-purple-800 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md" data-testid="portal-login-card">
+    <div className="min-h-screen bg-[#0B0F14] flex items-center justify-center p-4 relative overflow-hidden">
+      <div className="absolute top-1/4 -left-32 w-96 h-96 bg-[#B06CFF]/10 rounded-full blur-3xl" />
+      <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-[#5EEBFF]/10 rounded-full blur-3xl" />
+      <Card className="w-full max-w-md relative z-10 bg-[#121826] border-white/10" data-testid="portal-login-card">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Member Portal</CardTitle>
-          <CardDescription>Ground Up BJJ - Women's Training Center</CardDescription>
+          <CardTitle className="text-2xl text-white" style={{ fontFamily: 'var(--font-display)' }}>
+            MEMBER <span className="gradient-text-purple">PORTAL</span>
+          </CardTitle>
+          <CardDescription className="text-gray-400">Ground Up BJJ — Women's Training Center</CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="login" className="w-full">

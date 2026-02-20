@@ -206,17 +206,17 @@ export default function PortalForm() {
   const fields = form.fields as any[];
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="bg-primary text-primary-foreground py-4 px-6">
+    <div className="min-h-screen bg-[#0B0F14]">
+      <header className="bg-[#121826] border-b border-white/5 py-4 px-6">
         <div className="max-w-3xl mx-auto">
-          <Button variant="ghost" size="sm" className="mb-2" asChild>
+          <Button variant="ghost" size="sm" className="mb-2 text-gray-400 hover:text-white hover:bg-white/5" asChild>
             <Link href="/portal/dashboard">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Dashboard
             </Link>
           </Button>
-          <h1 className="text-xl font-bold">{form.title}</h1>
-          {form.description && <p className="text-sm opacity-90">{form.description}</p>}
+          <h1 className="text-xl font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>{form.title}</h1>
+          {form.description && <p className="text-sm text-gray-400">{form.description}</p>}
         </div>
       </header>
 

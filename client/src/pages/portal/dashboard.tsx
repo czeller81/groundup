@@ -83,23 +83,25 @@ export default function PortalDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="bg-primary text-primary-foreground py-4 px-6">
+    <div className="min-h-screen bg-[#0B0F14]">
+      <header className="bg-[#121826] border-b border-white/5 py-4 px-6">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div>
-            <h1 className="text-xl font-bold">Member Portal</h1>
-            <p className="text-sm opacity-90">Welcome, {user?.firstName}!</p>
+            <h1 className="text-xl font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>
+              MEMBER <span className="gradient-text-purple">PORTAL</span>
+            </h1>
+            <p className="text-sm text-gray-400">Welcome, {user?.firstName}!</p>
           </div>
           <div className="flex items-center gap-4">
             {isAdmin && (
-              <Button variant="secondary" size="sm" asChild data-testid="button-admin">
+              <Button size="sm" className="bg-[#B06CFF] text-white hover:bg-[#B06CFF]/90" asChild data-testid="button-admin">
                 <Link href="/portal/admin">
                   <Settings className="h-4 w-4 mr-2" />
                   Admin
                 </Link>
               </Button>
             )}
-            <Button variant="outline" size="sm" onClick={handleLogout} data-testid="button-logout">
+            <Button variant="outline" size="sm" onClick={handleLogout} className="border-white/10 text-gray-300 hover:text-white hover:bg-white/5" data-testid="button-logout">
               <LogOut className="h-4 w-4 mr-2" />
               Logout
             </Button>
@@ -157,7 +159,7 @@ export default function PortalDashboard() {
               {upcomingBookings.length === 0 ? (
                 <div className="text-center py-4">
                   <p className="text-muted-foreground mb-4">No upcoming sessions</p>
-                  <Button asChild data-testid="button-book-session">
+                  <Button asChild className="bg-[#B06CFF] text-white hover:bg-[#B06CFF]/90" data-testid="button-book-session">
                     <Link href="/portal/booking">Book a Session</Link>
                   </Button>
                 </div>
@@ -195,7 +197,7 @@ export default function PortalDashboard() {
               <CardTitle>Quick Actions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Button className="w-full" asChild data-testid="button-new-booking">
+              <Button className="w-full bg-[#B06CFF] text-white hover:bg-[#B06CFF]/90" asChild data-testid="button-new-booking">
                 <Link href="/portal/booking">
                   <Calendar className="h-4 w-4 mr-2" />
                   Book New Session
