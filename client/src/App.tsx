@@ -15,6 +15,7 @@ import PortalLogin from "@/pages/portal/login";
 import PortalDashboard from "@/pages/portal/dashboard";
 import PortalForm from "@/pages/portal/form";
 import PortalBooking from "@/pages/portal/booking";
+import PortalAdminMembers from "@/pages/portal/admin";
 import Navbar from "@/components/layout/navbar";
 import Footer from "@/components/layout/footer";
 
@@ -54,6 +55,7 @@ function Router() {
       <Route path="/portal/dashboard" component={PortalDashboard} />
       <Route path="/portal/forms/:slug" component={PortalForm} />
       <Route path="/portal/booking" component={PortalBooking} />
+      <Route path="/portal/admin" component={PortalAdminMembers} />
       
       <Route>
         <MainLayout><NotFound /></MainLayout>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { usePortalAuth } from "@/lib/portal-auth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { FileText, Calendar, CheckCircle, Clock, AlertCircle, LogOut, Settings, X, Loader2 } from "lucide-react";
+import { FileText, Calendar, CheckCircle, Clock, AlertCircle, LogOut, Settings, X, Loader2, Eye } from "lucide-react";
 import { format, isPast, isFuture, isToday, startOfDay, isSameDay } from "date-fns";
 
 export default function PortalDashboard() {
@@ -16,6 +16,7 @@ export default function PortalDashboard() {
   const { user, logout, isLoading: authLoading, isAuthenticated, isAdmin } = usePortalAuth();
   const { toast } = useToast();
   const [cancelDialog, setCancelDialog] = useState<{ open: boolean; booking: any | null }>({ open: false, booking: null });
+  const [formViewDialog, setFormViewDialog] = useState<{ open: boolean; slug: string | null }>({ open: false, slug: null });
 
   const { data: forms = [] } = useQuery<any[]>({
     queryKey: ["/api/portal/forms"],
@@ -25,6 +26,11 @@ export default function PortalDashboard() {
   const { data: bookings = [] } = useQuery<any[]>({
     queryKey: ["/api/portal/bookings"],
     enabled: isAuthenticated,
+  });
+
+  const { data: formDetail } = useQuery<any>({
+    queryKey: ["/api/portal/forms", formViewDialog.slug],
+    enabled: !!formViewDialog.slug && formViewDialog.open,
   });
 
   const cancelMutation = useMutation({
@@ -46,6 +52,12 @@ export default function PortalDashboard() {
     return isSameDay(new Date(), bookingDate);
   };
 
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      setLocation("/portal/login");
+    }
+  }, [authLoading, isAuthenticated, setLocation]);
+
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -55,7 +67,6 @@ export default function PortalDashboard() {
   }
 
   if (!isAuthenticated) {
-    setLocation("/portal/login");
     return null;
   }
 
@@ -131,7 +142,17 @@ export default function PortalDashboard() {
                     </div>
                     <div className="flex items-center gap-2">
                       {getStatusBadge(form.responseStatus)}
-                      {form.responseStatus !== "submitted" && (
+                      {form.responseStatus === "submitted" ? (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="text-[#5EEBFF] hover:text-[#5EEBFF]/80 hover:bg-[#5EEBFF]/10"
+                          onClick={() => setFormViewDialog({ open: true, slug: form.slug })}
+                          data-testid={`view-form-${form.slug}`}
+                        >
+                          <Eye className="h-3 w-3 mr-1" /> View
+                        </Button>
+                      ) : (
                         <Button size="sm" variant="outline" asChild>
                           <Link href={`/portal/forms/${form.slug}`}>
                             {form.responseStatus === "draft" ? "Continue" : "Start"}
@@ -276,6 +297,37 @@ export default function PortalDashboard() {
                 : "Cancel Booking"}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={formViewDialog.open} onOpenChange={(open) => setFormViewDialog({ open, slug: open ? formViewDialog.slug : null })}>
+        <DialogContent className="bg-[#121826] border-white/10 text-white max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-white" style={{ fontFamily: 'var(--font-display)' }}>
+              {formDetail?.form?.title || "Form Details"}
+            </DialogTitle>
+            {formDetail?.response?.submittedAt && (
+              <p className="text-xs text-gray-400">
+                Submitted {format(new Date(formDetail.response.submittedAt), "MMMM d, yyyy 'at' h:mm a")}
+              </p>
+            )}
+          </DialogHeader>
+          <div className="mt-4 space-y-3">
+            {formDetail?.form?.fields && formDetail?.response?.answers && (
+              (Array.isArray(formDetail.form.fields) ? formDetail.form.fields : []).map((field: any) => {
+                const answer = formDetail.response.answers[field.name || field.id];
+                if (answer === undefined || answer === null || answer === "") return null;
+                return (
+                  <div key={field.name || field.id} className="border-b border-white/5 pb-2">
+                    <p className="text-xs text-gray-400 uppercase tracking-wide">{field.label || field.name}</p>
+                    <p className="text-sm text-white mt-1">
+                      {typeof answer === "boolean" ? (answer ? "Yes" : "No") : String(answer)}
+                    </p>
+                  </div>
+                );
+              })
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </div>

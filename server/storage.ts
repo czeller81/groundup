@@ -66,6 +66,10 @@ export interface IStorage {
   cancelBooking(id: string): Promise<Booking | undefined>;
   getTrainerBookings(trainerId: string, startDate: Date, endDate: Date): Promise<Booking[]>;
   
+  // Admin: Member Management
+  getAllUsers(): Promise<SafeUser[]>;
+  getUserProfile(userId: string): Promise<{ user: SafeUser; formResponses: (FormResponse & { form: Form })[]; bookings: BookingWithTrainer[] } | undefined>;
+  
   // Admin Users
   getAdminUser(email: string): Promise<AdminUser | undefined>;
   createAdminUser(adminUser: InsertAdminUser): Promise<AdminUser>;
@@ -345,6 +349,24 @@ export class DatabaseStorage implements IStorage {
           eq(bookings.status, "paid")
         )
       );
+  }
+
+  // Admin: Member Management
+  async getAllUsers(): Promise<SafeUser[]> {
+    const allUsers = await db.select().from(users).orderBy(desc(users.createdAt));
+    return allUsers.map(u => {
+      const { passwordHash: _, ...safeUser } = u;
+      return safeUser;
+    });
+  }
+
+  async getUserProfile(userId: string): Promise<{ user: SafeUser; formResponses: (FormResponse & { form: Form })[]; bookings: BookingWithTrainer[] } | undefined> {
+    const user = await this.getUserById(userId);
+    if (!user) return undefined;
+    const { passwordHash: _, ...safeUser } = user;
+    const userFormResponses = await this.getUserFormResponses(userId);
+    const userBookings = await this.getUserBookings(userId);
+    return { user: safeUser, formResponses: userFormResponses, bookings: userBookings };
   }
 
   // Admin Users
@@ -686,6 +708,22 @@ export class MemStorage implements IStorage {
       booking.end <= endDate &&
       booking.status === "paid"
     );
+  }
+
+  async getAllUsers(): Promise<SafeUser[]> {
+    return Array.from(this.usersMap.values()).map(u => {
+      const { passwordHash: _, ...safeUser } = u;
+      return safeUser;
+    });
+  }
+
+  async getUserProfile(userId: string): Promise<{ user: SafeUser; formResponses: (FormResponse & { form: Form })[]; bookings: BookingWithTrainer[] } | undefined> {
+    const user = this.usersMap.get(userId);
+    if (!user) return undefined;
+    const { passwordHash: _, ...safeUser } = user;
+    const userFormResponses = await this.getUserFormResponses(userId);
+    const userBookings = await this.getUserBookings(userId);
+    return { user: safeUser, formResponses: userFormResponses, bookings: userBookings };
   }
 
   async getAdminUser(email: string): Promise<AdminUser | undefined> {

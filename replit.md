@@ -53,8 +53,11 @@ Preferred communication style: Simple, everyday language.
 - Session-based authentication via cookies
 - Required intake forms: Personal Training Intake, Health/PAR-Q, Goals & Preferences
 - Auto-save every 2 seconds on forms
+- Members can view their submitted form answers from the dashboard
 - Booking system: sessions 8am–5pm, auto-selected trainer (Raymi Gonzalez)
 - Same-day cancellations allowed with $10 fee warning
+- Admin members page (/portal/admin): search members, view full profiles with forms & bookings
+- Admin credentials: admin@groundupbjj.com (role=admin in users table)
 
 ## Payment Integration
 - **Stripe** integration (configured via integration)

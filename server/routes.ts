@@ -655,6 +655,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all members (admin)
+  app.get("/api/portal/admin/members", portalAdminAuth, async (req, res) => {
+    try {
+      const allUsers = await storage.getAllUsers();
+      res.json(allUsers);
+    } catch (error) {
+      console.error("Get members error:", error);
+      res.status(500).json({ message: "Failed to get members" });
+    }
+  });
+
+  // Get member profile with forms and bookings (admin)
+  app.get("/api/portal/admin/members/:id", portalAdminAuth, async (req, res) => {
+    try {
+      const profile = await storage.getUserProfile(req.params.id);
+      if (!profile) {
+        return res.status(404).json({ message: "Member not found" });
+      }
+      res.json(profile);
+    } catch (error) {
+      console.error("Get member profile error:", error);
+      res.status(500).json({ message: "Failed to get member profile" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
