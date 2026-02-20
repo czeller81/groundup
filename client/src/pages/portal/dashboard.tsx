@@ -13,7 +13,7 @@ import { format, isPast, isFuture, isToday, startOfDay, isSameDay } from "date-f
 
 export default function PortalDashboard() {
   const [, setLocation] = useLocation();
-  const { user, logout, isLoading: authLoading, isAuthenticated, isAdmin } = usePortalAuth();
+  const { user, logout, isLoading: authLoading, isAuthenticated, isAdmin, isCoach, isStaff } = usePortalAuth();
   const { toast } = useToast();
   const [cancelDialog, setCancelDialog] = useState<{ open: boolean; booking: any | null }>({ open: false, booking: null });
   const [formViewDialog, setFormViewDialog] = useState<{ open: boolean; slug: string | null }>({ open: false, slug: null });
@@ -104,6 +104,14 @@ export default function PortalDashboard() {
             <p className="text-sm text-gray-400">Welcome, {user?.firstName}!</p>
           </div>
           <div className="flex items-center gap-4">
+            {isCoach && !isAdmin && (
+              <Button size="sm" className="bg-[#5EEBFF] text-black hover:bg-[#5EEBFF]/90" asChild data-testid="button-coach">
+                <Link href="/portal/coach">
+                  <Settings className="h-4 w-4 mr-2" />
+                  Coach Center
+                </Link>
+              </Button>
+            )}
             {isAdmin && (
               <Button size="sm" className="bg-[#B06CFF] text-white hover:bg-[#B06CFF]/90" asChild data-testid="button-admin">
                 <Link href="/portal/admin">

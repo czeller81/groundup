@@ -3,7 +3,6 @@ import { pgTable, text, varchar, integer, timestamp, jsonb, boolean } from "driz
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-// Users table (for portal authentication)
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   email: text("email").notNull().unique(),
@@ -11,34 +10,35 @@ export const users = pgTable("users", {
   firstName: text("first_name").notNull(),
   lastName: text("last_name").notNull(),
   phone: text("phone"),
-  role: text("role").notNull().default("user"), // "user" | "admin"
+  role: text("role").notNull().default("member"),
+  beltRank: text("belt_rank"),
+  attendanceCount: integer("attendance_count").notNull().default(0),
+  assignedCoachId: varchar("assigned_coach_id"),
+  adminNotes: text("admin_notes"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-// Forms table (form definitions)
 export const forms = pgTable("forms", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  slug: text("slug").notNull().unique(), // "personal-training-intake", "health-parq", "goals-preferences"
+  slug: text("slug").notNull().unique(),
   title: text("title").notNull(),
   description: text("description"),
-  fields: jsonb("fields").notNull(), // Array of field definitions
+  fields: jsonb("fields").notNull(),
   isRequired: boolean("is_required").notNull().default(true),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-// Form responses table
 export const formResponses = pgTable("form_responses", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id),
   formId: varchar("form_id").notNull().references(() => forms.id),
-  answers: jsonb("answers").notNull().default(sql`'{}'::jsonb`), // JSON object with field answers
-  status: text("status").notNull().default("not_started"), // "not_started" | "draft" | "submitted"
+  answers: jsonb("answers").notNull().default(sql`'{}'::jsonb`),
+  status: text("status").notNull().default("not_started"),
   submittedAt: timestamp("submitted_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-// Trainers table
 export const trainers = pgTable("trainers", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name").notNull(),
@@ -46,30 +46,30 @@ export const trainers = pgTable("trainers", {
   photoUrl: text("photo_url").notNull(),
   specialties: text("specialties").array().notNull().default(sql`ARRAY[]::text[]`),
   beltRank: text("belt_rank").notNull(),
-  availability: jsonb("availability").notNull(), // { "Mon":[ "10:00","12:00" ], "Wed":[ "18:00" ] }
+  availability: jsonb("availability").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-// Bookings table
 export const bookings = pgTable("bookings", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").references(() => users.id), // Optional: link to portal user
+  userId: varchar("user_id").references(() => users.id),
   customerName: text("customer_name").notNull(),
   customerEmail: text("customer_email").notNull(),
   customerPhone: text("customer_phone").notNull(),
   notes: text("notes"),
-  sessionType: text("session_type").notNull(), // "PT60" | "PT90" | "GROUP60"
+  sessionType: text("session_type").notNull(),
   start: timestamp("start").notNull(),
   end: timestamp("end").notNull(),
   trainerId: varchar("trainer_id").notNull().references(() => trainers.id),
   amountCents: integer("amount_cents").notNull(),
   currency: text("currency").notNull().default("usd"),
   stripeSessionId: text("stripe_session_id"),
-  status: text("status").notNull().default("pending"), // "pending","paid","canceled","refunded"
+  calendlyEventId: text("calendly_event_id"),
+  paymentStatus: text("payment_status"),
+  status: text("status").notNull().default("pending"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-// Admin users table
 export const adminUsers = pgTable("admin_users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   email: text("email").notNull().unique(),
@@ -77,10 +77,32 @@ export const adminUsers = pgTable("admin_users", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-// Relations
-export const usersRelations = relations(users, ({ many }) => ({
+export const memberships = pgTable("memberships", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  type: text("type").notNull().default("per_session"),
+  status: text("status").notNull().default("active"),
+  startDate: timestamp("start_date").defaultNow().notNull(),
+  endDate: timestamp("end_date"),
+  priceCents: integer("price_cents").notNull().default(2000),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const sessionNotes = pgTable("session_notes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  coachId: varchar("coach_id").notNull().references(() => users.id),
+  notes: text("notes").notNull(),
+  sessionDate: timestamp("session_date").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const usersRelations = relations(users, ({ many, one }) => ({
   bookings: many(bookings),
   formResponses: many(formResponses),
+  memberships: many(memberships),
+  sessionNotes: many(sessionNotes, { relationName: "userNotes" }),
+  coachNotes: many(sessionNotes, { relationName: "coachNotes" }),
 }));
 
 export const formsRelations = relations(forms, ({ many }) => ({
@@ -113,7 +135,26 @@ export const bookingsRelations = relations(bookings, ({ one }) => ({
   }),
 }));
 
-// Insert schemas
+export const membershipsRelations = relations(memberships, ({ one }) => ({
+  user: one(users, {
+    fields: [memberships.userId],
+    references: [users.id],
+  }),
+}));
+
+export const sessionNotesRelations = relations(sessionNotes, ({ one }) => ({
+  user: one(users, {
+    fields: [sessionNotes.userId],
+    references: [users.id],
+    relationName: "userNotes",
+  }),
+  coach: one(users, {
+    fields: [sessionNotes.coachId],
+    references: [users.id],
+    relationName: "coachNotes",
+  }),
+}));
+
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   createdAt: true,
@@ -145,7 +186,16 @@ export const insertAdminUserSchema = createInsertSchema(adminUsers).omit({
   createdAt: true,
 });
 
-// Types
+export const insertMembershipSchema = createInsertSchema(memberships).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertSessionNoteSchema = createInsertSchema(sessionNotes).omit({
+  id: true,
+  createdAt: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 
@@ -164,15 +214,18 @@ export type Booking = typeof bookings.$inferSelect;
 export type InsertAdminUser = z.infer<typeof insertAdminUserSchema>;
 export type AdminUser = typeof adminUsers.$inferSelect;
 
-// Booking with trainer relation
+export type InsertMembership = z.infer<typeof insertMembershipSchema>;
+export type Membership = typeof memberships.$inferSelect;
+
+export type InsertSessionNote = z.infer<typeof insertSessionNoteSchema>;
+export type SessionNote = typeof sessionNotes.$inferSelect;
+
 export type BookingWithTrainer = Booking & {
   trainer: Trainer;
 };
 
-// Form response with form relation
 export type FormResponseWithForm = FormResponse & {
   form: Form;
 };
 
-// User without password
 export type SafeUser = Omit<User, 'passwordHash'>;

@@ -1,6 +1,6 @@
 # Overview
 
-Ground Up Women's BJJ — a premium, modern website for a females-only personal training gym in Oxnard, CA. Features 1-on-1 jiu-jitsu and strength & conditioning training for female athletes. Includes a complete member portal with authentication, intake forms, and session booking.
+Ground Up Women's BJJ — a premium, modern website for a females-only personal training gym in Oxnard, CA. Features 1-on-1 jiu-jitsu and strength & conditioning training for female athletes. Includes a complete member portal with authentication, intake forms, session booking, and a comprehensive admin + coach management system.
 
 # User Preferences
 
@@ -46,18 +46,51 @@ Preferred communication style: Simple, everyday language.
 ## Backend Architecture
 - **Express.js** with TypeScript
 - **Drizzle ORM** + PostgreSQL (Neon)
-- RESTful API endpoints for trainers, bookings, portal auth, contact
+- RESTful API endpoints for trainers, bookings, portal auth, contact, admin, coach, session notes
 
 ## Member Portal
 - Email/password auth with bcrypt password hashing
 - Session-based authentication via cookies
+- Role-based access control: admin, coach, member
 - Required intake forms: Personal Training Intake, Health/PAR-Q, Goals & Preferences
 - Auto-save every 2 seconds on forms
 - Members can view their submitted form answers from the dashboard
 - Booking system: sessions 8am–5pm, auto-selected trainer (Raymi Gonzalez)
 - Same-day cancellations allowed with $10 fee warning
-- Admin members page (/portal/admin): search members, view full profiles with forms & bookings
-- Admin credentials: admin@groundupbjj.com (role=admin in users table)
+
+## Admin Dashboard (/portal/admin)
+- Stats cards: Total Users, New Users (30d), Active Memberships, Upcoming Sessions (7d), Monthly Revenue
+- Member list with search and pagination (15 per page)
+- Full member profiles with tabbed interface: Forms, Bookings, Session Notes, Admin Settings
+- Role management (admin/coach/member), belt rank, attendance count
+- Admin internal notes per member
+- Session notes CRUD (visible to admin and coach)
+- Form response viewer with detailed answers
+
+## Coach Center (/portal/coach)
+- View assigned members (members with assignedCoachId matching coach's userId)
+- Add session notes for members
+- Update belt rank and attendance count
+- Admins see all members in coach view
+
+## Calendly Integration
+- Webhook endpoint: POST /webhook/calendly
+- Supports native Calendly invitee.created events
+- Auto-creates users by email if they don't exist
+- Creates bookings with default trainer
+
+## Database Tables
+- users: id, email, passwordHash, firstName, lastName, phone, role (admin/coach/member), beltRank, attendanceCount, assignedCoachId, adminNotes, createdAt
+- memberships: id, userId, type, status, priceCents, startDate, endDate, createdAt
+- session_notes: id, userId, coachId, notes, sessionDate, createdAt
+- bookings: id, userId, trainerId, customerName/Email/Phone, sessionType, start, end, status, amountCents, currency, stripeSessionId, calendlyEventId, paymentStatus, notes, createdAt
+- trainers: id, name, bio, photoUrl, specialties, beltRank, availability
+- forms: id, slug, title, description, fields, isRequired
+- form_responses: id, userId, formId, answers, status, submittedAt, updatedAt, createdAt
+- admin_users: legacy admin auth table
+
+## Admin Credentials
+- admin@groundupbjj.com (role=admin in users table)
 
 ## Payment Integration
 - **Stripe** integration (configured via integration)
@@ -68,7 +101,7 @@ Preferred communication style: Simple, everyday language.
 - Coaches (Raymi Gonzalez spotlight)
 - Pricing (per-session $20 + monthly unlimited $280)
 - Contact (form + info)
-- Portal: Login, Dashboard, Forms, Booking
+- Portal: Login, Dashboard, Forms, Booking, Admin, Coach
 
 ## Business Info
 - Phone: (786) 757-1175

@@ -9,6 +9,10 @@ interface User {
   lastName: string;
   phone: string | null;
   role: string;
+  beltRank: string | null;
+  attendanceCount: number;
+  assignedCoachId: string | null;
+  adminNotes: string | null;
   createdAt: string;
 }
 
@@ -17,6 +21,8 @@ interface AuthContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
   isAdmin: boolean;
+  isCoach: boolean;
+  isStaff: boolean;
   login: (email: string, password: string) => Promise<void>;
   signup: (data: SignupData) => Promise<void>;
   logout: () => Promise<void>;
@@ -35,7 +41,7 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export function PortalAuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading } = useQuery<{ user: User }>({
     queryKey: ["/api/portal/me"],
     retry: false,
     staleTime: 5 * 60 * 1000,
@@ -44,6 +50,8 @@ export function PortalAuthProvider({ children }: { children: ReactNode }) {
   const user = data?.user || null;
   const isAuthenticated = !!user;
   const isAdmin = user?.role === "admin";
+  const isCoach = user?.role === "coach";
+  const isStaff = isAdmin || isCoach;
 
   const loginMutation = useMutation({
     mutationFn: async ({ email, password }: { email: string; password: string }) => {
@@ -94,6 +102,8 @@ export function PortalAuthProvider({ children }: { children: ReactNode }) {
         isLoading,
         isAuthenticated,
         isAdmin,
+        isCoach,
+        isStaff,
         login,
         signup,
         logout,

@@ -13,7 +13,6 @@ declare module "express-session" {
   }
 }
 
-// Initialize Stripe
 if (!process.env.STRIPE_SECRET_KEY) {
   console.warn('STRIPE_SECRET_KEY not found. Stripe functionality will be disabled.');
 }
@@ -22,25 +21,38 @@ const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SEC
   apiVersion: "2025-08-27.basil",
 }) : null;
 
-// Session types and pricing
-const SESSION_TYPES = {
+const SESSION_TYPES: Record<string, { name: string; duration: number; price: number }> = {
   PT60: { name: "60-Minute 1:1 Training", duration: 60, price: 20 },
   UNLIMITED: { name: "Monthly Unlimited", duration: 0, price: 280 }
 };
 
-// Simple admin auth middleware (in production, use proper session management)
-const adminAuth = (req: any, res: any, next: any) => {
-  const { email, password } = req.body || req.query;
-  if (email === "admin@groundupbjj.com" && password === "ChangeMe123!") {
-    next();
-  } else {
-    res.status(401).json({ message: "Unauthorized" });
+const requireAuth = (req: Request, res: Response, next: NextFunction) => {
+  const userId = req.session?.userId;
+  if (!userId) {
+    return res.status(401).json({ message: "Not authenticated" });
   }
+  next();
+};
+
+const requireRole = (...roles: string[]) => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    const userId = req.session?.userId;
+    const userRole = req.session?.userRole;
+    if (!userId) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+    if (!roles.includes(userRole || "")) {
+      return res.status(403).json({ message: "Insufficient permissions" });
+    }
+    next();
+  };
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
   
-  // Trainers endpoints
+  // ============================================
+  // TRAINER ROUTES
+  // ============================================
   app.get("/api/trainers", async (req, res) => {
     try {
       const trainers = await storage.getTrainers();
@@ -59,12 +71,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       res.json(trainer);
     } catch (error) {
-      console.error("Error fetching trainer:", error);
       res.status(500).json({ message: "Failed to fetch trainer" });
     }
   });
 
-  // Get trainer availability for a specific date
   app.get("/api/trainers/:id/availability", async (req, res) => {
     try {
       const { date } = req.query;
@@ -79,60 +89,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const selectedDate = parseISO(date);
       const dayName = format(selectedDate, 'EEEE');
+      const dayAvailability = (trainer.availability as Record<string, string[]>)[dayName] || [];
       
-      // Get trainer's availability for that day
-      const dayAvailability = trainer.availability[dayName] || [];
-      
-      // Get existing bookings for that day
       const startOfDay = new Date(selectedDate);
       startOfDay.setHours(0, 0, 0, 0);
       const endOfDay = new Date(selectedDate);
       endOfDay.setHours(23, 59, 59, 999);
       
-      const existingBookings = await storage.getTrainerBookings(
-        req.params.id, 
-        startOfDay, 
-        endOfDay
-      );
-
-      // Filter out booked slots
-      const bookedTimes = existingBookings.map(booking => 
-        format(booking.start, 'HH:mm')
-      );
-
-      const availableTimes = dayAvailability.filter(time => 
-        !bookedTimes.includes(time)
-      );
+      const existingBookings = await storage.getTrainerBookings(req.params.id, startOfDay, endOfDay);
+      const bookedTimes = existingBookings.map(booking => format(booking.start, 'HH:mm'));
+      const availableTimes = dayAvailability.filter((time: string) => !bookedTimes.includes(time));
 
       res.json({ availableTimes });
     } catch (error) {
-      console.error("Error fetching trainer availability:", error);
       res.status(500).json({ message: "Failed to fetch availability" });
     }
   });
 
-  // Bookings endpoints
+  // ============================================
+  // BOOKING ROUTES
+  // ============================================
   app.get("/api/bookings", async (req, res) => {
     try {
-      const bookings = await storage.getBookings();
-      res.json(bookings);
+      const bookingsList = await storage.getBookings();
+      res.json(bookingsList);
     } catch (error) {
-      console.error("Error fetching bookings:", error);
       res.status(500).json({ message: "Failed to fetch bookings" });
     }
   });
 
   app.post("/api/bookings", async (req, res) => {
     try {
-      // Validate request body
       const bookingData = insertBookingSchema.parse(req.body);
       
-      // Validate session type
-      if (!SESSION_TYPES[bookingData.sessionType as keyof typeof SESSION_TYPES]) {
+      if (!SESSION_TYPES[bookingData.sessionType]) {
         return res.status(400).json({ message: "Invalid session type" });
       }
 
-      // Check if the time slot is available
       const existingBookings = await storage.getTrainerBookings(
         bookingData.trainerId,
         new Date(bookingData.start),
@@ -143,17 +136,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Time slot is already booked" });
       }
 
-      // Create the booking
       const booking = await storage.createBooking(bookingData);
       res.status(201).json(booking);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ 
-          message: "Validation error", 
-          errors: error.errors 
-        });
+        return res.status(400).json({ message: "Validation error", errors: error.errors });
       }
-      console.error("Error creating booking:", error);
       res.status(500).json({ message: "Failed to create booking" });
     }
   });
@@ -162,169 +150,127 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { status, stripeSessionId } = req.body;
       const booking = await storage.updateBookingStatus(req.params.id, status, stripeSessionId);
-      
       if (!booking) {
         return res.status(404).json({ message: "Booking not found" });
       }
-      
       res.json(booking);
     } catch (error) {
-      console.error("Error updating booking status:", error);
       res.status(500).json({ message: "Failed to update booking" });
     }
   });
 
-  // Stripe payment endpoints
+  // ============================================
+  // STRIPE ROUTES
+  // ============================================
   app.post("/api/create-payment-intent", async (req, res) => {
     if (!stripe) {
       return res.status(500).json({ message: "Stripe is not configured" });
     }
-
     try {
       const { sessionType, bookingId } = req.body;
-      
-      const sessionConfig = SESSION_TYPES[sessionType as keyof typeof SESSION_TYPES];
+      const sessionConfig = SESSION_TYPES[sessionType];
       if (!sessionConfig) {
         return res.status(400).json({ message: "Invalid session type" });
       }
-
       const paymentIntent = await stripe.paymentIntents.create({
-        amount: sessionConfig.price * 100, // Convert to cents
+        amount: sessionConfig.price * 100,
         currency: "usd",
-        metadata: {
-          sessionType,
-          bookingId: bookingId || "",
-        },
+        metadata: { sessionType, bookingId: bookingId || "" },
       });
-
       res.json({ clientSecret: paymentIntent.client_secret });
     } catch (error: any) {
-      console.error("Error creating payment intent:", error);
-      res.status(500).json({ 
-        message: "Error creating payment intent: " + error.message 
-      });
+      res.status(500).json({ message: "Error creating payment intent: " + error.message });
     }
   });
 
-  // Stripe webhook endpoint
   app.post("/api/stripe/webhook", async (req, res) => {
     if (!stripe) {
       return res.status(500).json({ message: "Stripe is not configured" });
     }
-
     const sig = req.headers['stripe-signature'] as string;
     let event;
-
     try {
       event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET!);
     } catch (err: any) {
-      console.error('Webhook signature verification failed:', err.message);
       return res.status(400).send(`Webhook Error: ${err.message}`);
     }
 
-    // Handle the event
     switch (event.type) {
       case 'payment_intent.succeeded':
         const paymentIntent = event.data.object;
         const bookingId = paymentIntent.metadata.bookingId;
-        
         if (bookingId) {
           await storage.updateBookingStatus(bookingId, "paid", paymentIntent.id);
-          
-          // TODO: Send confirmation email with calendar invite
-          console.log(`Payment succeeded for booking ${bookingId}`);
         }
         break;
-        
-      default:
-        console.log(`Unhandled event type ${event.type}`);
     }
-
     res.json({ received: true });
   });
 
-  // Contact form endpoint
+  // ============================================
+  // CONTACT ROUTE
+  // ============================================
   app.post("/api/contact", async (req, res) => {
     try {
       const { firstName, lastName, email, phone, subject, message } = req.body;
-      
-      // TODO: Send email using Resend or similar service
       console.log("Contact form submission:", { firstName, lastName, email, phone, subject, message });
-      
       res.json({ message: "Thank you for your message. We'll get back to you soon!" });
     } catch (error) {
-      console.error("Error processing contact form:", error);
       res.status(500).json({ message: "Failed to send message" });
     }
   });
 
-  // Admin endpoints
-  app.post("/api/admin/login", async (req, res) => {
-    try {
-      const { email, password } = req.body;
-      const admin = await storage.getAdminUser(email);
-      
-      if (admin && admin.password === password) {
-        // TODO: In production, use proper JWT or session management
-        res.json({ success: true, message: "Login successful" });
-      } else {
-        res.status(401).json({ message: "Invalid credentials" });
-      }
-    } catch (error) {
-      console.error("Admin login error:", error);
-      res.status(500).json({ message: "Login failed" });
-    }
+  // ============================================
+  // CALENDLY WEBHOOK
+  // ============================================
+  const calendlyWebhookSchema = z.object({
+    event_id: z.string(),
+    email: z.string().email(),
+    event_type: z.string(),
+    start_time: z.string(),
+    payment_status: z.string().optional().default("pending"),
+    amount: z.number().optional().default(2000),
   });
 
-  app.get("/api/admin/bookings", async (req, res) => {
+  app.post("/webhook/calendly", async (req, res) => {
     try {
-      // In production, add proper authentication middleware
-      const bookings = await storage.getBookings();
-      res.json(bookings);
-    } catch (error) {
-      console.error("Error fetching admin bookings:", error);
-      res.status(500).json({ message: "Failed to fetch bookings" });
-    }
-  });
-
-  app.put("/api/admin/bookings/:id/cancel", async (req, res) => {
-    try {
-      // In production, add proper authentication middleware
-      const booking = await storage.cancelBooking(req.params.id);
+      let payload = req.body;
       
-      if (!booking) {
-        return res.status(404).json({ message: "Booking not found" });
+      if (payload.event === "invitee.created" && payload.payload) {
+        payload = {
+          event_id: payload.payload.event?.uuid || payload.payload.uri || "",
+          email: payload.payload.email || "",
+          event_type: payload.payload.event?.name || "PT60",
+          start_time: payload.payload.event?.start_time || payload.payload.scheduled_event?.start_time || new Date().toISOString(),
+          payment_status: payload.payload.payment?.successful ? "paid" : "pending",
+          amount: payload.payload.payment?.amount ? payload.payload.payment.amount * 100 : 2000,
+        };
       }
-      
-      res.json(booking);
-    } catch (error) {
-      console.error("Error canceling booking:", error);
-      res.status(500).json({ message: "Failed to cancel booking" });
-    }
-  });
 
-  app.put("/api/admin/trainers/:id/availability", async (req, res) => {
-    try {
-      // In production, add proper authentication middleware
-      const { availability } = req.body;
-      const trainer = await storage.updateTrainerAvailability(req.params.id, availability);
+      const validated = calendlyWebhookSchema.parse(payload);
       
-      if (!trainer) {
-        return res.status(404).json({ message: "Trainer not found" });
-      }
-      
-      res.json(trainer);
+      const booking = await storage.createCalendlyBooking({
+        eventId: validated.event_id,
+        email: validated.email,
+        eventType: validated.event_type,
+        startTime: new Date(validated.start_time),
+        paymentStatus: validated.payment_status,
+        amount: validated.amount,
+      });
+
+      res.status(201).json({ message: "Booking created", bookingId: booking.id });
     } catch (error) {
-      console.error("Error updating trainer availability:", error);
-      res.status(500).json({ message: "Failed to update availability" });
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid webhook payload", errors: error.errors });
+      }
+      console.error("Calendly webhook error:", error);
+      res.status(500).json({ message: "Failed to process webhook" });
     }
   });
 
   // ============================================
   // PORTAL AUTHENTICATION ROUTES
   // ============================================
-  
-  // User signup
   app.post("/api/portal/signup", async (req, res) => {
     try {
       const { email, password, firstName, lastName, phone } = req.body;
@@ -332,7 +278,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!email || !password || !firstName || !lastName) {
         return res.status(400).json({ message: "Email, password, first name, and last name are required" });
       }
-
       if (password.length < 8) {
         return res.status(400).json({ message: "Password must be at least 8 characters" });
       }
@@ -343,10 +288,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const user = await storage.createUser(email, password, firstName, lastName, phone);
-      
-      // Set session
-      (req.session as any).userId = user.id;
-      (req.session as any).userRole = user.role;
+      req.session.userId = user.id;
+      req.session.userRole = user.role;
       
       res.status(201).json({ user });
     } catch (error) {
@@ -355,11 +298,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // User login
   app.post("/api/portal/login", async (req, res) => {
     try {
       const { email, password } = req.body;
-      
       if (!email || !password) {
         return res.status(400).json({ message: "Email and password are required" });
       }
@@ -369,9 +310,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Invalid email or password" });
       }
 
-      // Set session
-      (req.session as any).userId = user.id;
-      (req.session as any).userRole = user.role;
+      req.session.userId = user.id;
+      req.session.userRole = user.role;
       
       res.json({ user });
     } catch (error) {
@@ -380,7 +320,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // User logout
   app.post("/api/portal/logout", (req, res) => {
     req.session.destroy((err) => {
       if (err) {
@@ -390,10 +329,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  // Get current user
   app.get("/api/portal/me", async (req, res) => {
     try {
-      const userId = (req.session as any).userId;
+      const userId = req.session?.userId;
       if (!userId) {
         return res.status(401).json({ message: "Not authenticated" });
       }
@@ -406,7 +344,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { passwordHash: _, ...safeUser } = user;
       res.json({ user: safeUser });
     } catch (error) {
-      console.error("Get user error:", error);
       res.status(500).json({ message: "Failed to get user" });
     }
   });
@@ -414,19 +351,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ============================================
   // PORTAL FORMS ROUTES
   // ============================================
-
-  // Get all forms
-  app.get("/api/portal/forms", async (req, res) => {
+  app.get("/api/portal/forms", requireAuth, async (req, res) => {
     try {
-      const userId = (req.session as any).userId;
-      if (!userId) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
-
+      const userId = req.session.userId!;
       const allForms = await storage.getForms();
       const userResponses = await storage.getUserFormResponses(userId);
       
-      // Combine forms with user's response status
       const formsWithStatus = allForms.map(form => {
         const response = userResponses.find(r => r.formId === form.id);
         return {
@@ -438,83 +368,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json(formsWithStatus);
     } catch (error) {
-      console.error("Get forms error:", error);
       res.status(500).json({ message: "Failed to get forms" });
     }
   });
 
-  // Get form by slug
-  app.get("/api/portal/forms/:slug", async (req, res) => {
+  app.get("/api/portal/forms/:slug", requireAuth, async (req, res) => {
     try {
-      const userId = (req.session as any).userId;
-      if (!userId) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
-
+      const userId = req.session.userId!;
       const form = await storage.getFormBySlug(req.params.slug);
       if (!form) {
         return res.status(404).json({ message: "Form not found" });
       }
-
       const response = await storage.getFormResponse(userId, form.id);
-      
-      res.json({
-        form,
-        response: response || null
-      });
+      res.json({ form, response: response || null });
     } catch (error) {
-      console.error("Get form error:", error);
       res.status(500).json({ message: "Failed to get form" });
     }
   });
 
-  // Save form response (autosave/draft)
-  app.post("/api/portal/forms/:slug/save", async (req, res) => {
+  app.post("/api/portal/forms/:slug/save", requireAuth, async (req, res) => {
     try {
-      const userId = (req.session as any).userId;
-      if (!userId) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
-
+      const userId = req.session.userId!;
       const form = await storage.getFormBySlug(req.params.slug);
       if (!form) {
         return res.status(404).json({ message: "Form not found" });
       }
-
       const { answers } = req.body;
       const response = await storage.saveFormResponse(userId, form.id, answers, "draft");
-      
       res.json(response);
     } catch (error: any) {
-      console.error("Save form error:", error);
       res.status(400).json({ message: error.message || "Failed to save form" });
     }
   });
 
-  // Submit form response
-  app.post("/api/portal/forms/:slug/submit", async (req, res) => {
+  app.post("/api/portal/forms/:slug/submit", requireAuth, async (req, res) => {
     try {
-      const userId = (req.session as any).userId;
-      if (!userId) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
-
+      const userId = req.session.userId!;
       const form = await storage.getFormBySlug(req.params.slug);
       if (!form) {
         return res.status(404).json({ message: "Form not found" });
       }
-
       const { answers } = req.body;
-      
-      // Save final answers first
       await storage.saveFormResponse(userId, form.id, answers, "draft");
-      
-      // Then submit
       const response = await storage.submitFormResponse(userId, form.id);
-      
       res.json(response);
     } catch (error: any) {
-      console.error("Submit form error:", error);
       res.status(400).json({ message: error.message || "Failed to submit form" });
     }
   });
@@ -522,43 +420,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ============================================
   // PORTAL BOOKING ROUTES
   // ============================================
-
-  // Get user's bookings
-  app.get("/api/portal/bookings", async (req, res) => {
+  app.get("/api/portal/bookings", requireAuth, async (req, res) => {
     try {
-      const userId = (req.session as any).userId;
-      if (!userId) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
-
+      const userId = req.session.userId!;
       const userBookings = await storage.getUserBookings(userId);
       res.json(userBookings);
     } catch (error) {
-      console.error("Get bookings error:", error);
       res.status(500).json({ message: "Failed to get bookings" });
     }
   });
 
-  // Create booking through portal
-  app.post("/api/portal/bookings", async (req, res) => {
+  app.post("/api/portal/bookings", requireAuth, async (req, res) => {
     try {
-      const userId = (req.session as any).userId;
-      if (!userId) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
-
+      const userId = req.session.userId!;
       const user = await storage.getUserById(userId);
       if (!user) {
         return res.status(401).json({ message: "User not found" });
       }
 
       const { trainerId, sessionType, date, time, notes } = req.body;
-      
       if (!trainerId || !sessionType || !date || !time) {
         return res.status(400).json({ message: "Trainer, session type, date, and time are required" });
       }
 
-      const sessionConfig = SESSION_TYPES[sessionType as keyof typeof SESSION_TYPES];
+      const sessionConfig = SESSION_TYPES[sessionType];
       if (!sessionConfig) {
         return res.status(400).json({ message: "Invalid session type" });
       }
@@ -566,13 +451,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const startDateTime = new Date(`${date}T${time}`);
       const endDateTime = addMinutes(startDateTime, sessionConfig.duration || 60);
 
-      // Check availability
-      const existingBookings = await storage.getTrainerBookings(
-        trainerId,
-        startDateTime,
-        endDateTime
-      );
-
+      const existingBookings = await storage.getTrainerBookings(trainerId, startDateTime, endDateTime);
       if (existingBookings.length > 0) {
         return res.status(400).json({ message: "Time slot is not available" });
       }
@@ -593,81 +472,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.status(201).json(booking);
     } catch (error) {
-      console.error("Create booking error:", error);
       res.status(500).json({ message: "Failed to create booking" });
     }
   });
 
-  // Cancel user booking
-  app.put("/api/portal/bookings/:id/cancel", async (req, res) => {
+  app.put("/api/portal/bookings/:id/cancel", requireAuth, async (req, res) => {
     try {
-      const userId = (req.session as any).userId;
-      if (!userId) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
-
+      const userId = req.session.userId!;
       const booking = await storage.cancelUserBooking(userId, req.params.id);
       if (!booking) {
         return res.status(404).json({ message: "Booking not found" });
       }
-
       res.json(booking);
     } catch (error: any) {
-      console.error("Cancel booking error:", error);
       res.status(400).json({ message: error.message || "Failed to cancel booking" });
     }
   });
 
   // ============================================
-  // PORTAL ADMIN ROUTES
+  // ADMIN ROUTES
   // ============================================
-
-  // Admin middleware
-  const portalAdminAuth = async (req: any, res: any, next: any) => {
-    const userId = (req.session as any).userId;
-    const userRole = (req.session as any).userRole;
-    
-    if (!userId || userRole !== "admin") {
-      return res.status(403).json({ message: "Admin access required" });
-    }
-    next();
-  };
-
-  // Get all form responses (admin)
-  app.get("/api/portal/admin/form-responses", portalAdminAuth, async (req, res) => {
+  app.get("/api/portal/admin/stats", requireRole("admin"), async (req, res) => {
     try {
-      const responses = await storage.getAllFormResponses();
-      res.json(responses);
+      const stats = await storage.getAdminStats();
+      res.json(stats);
     } catch (error) {
-      console.error("Get form responses error:", error);
-      res.status(500).json({ message: "Failed to get form responses" });
+      console.error("Get admin stats error:", error);
+      res.status(500).json({ message: "Failed to get stats" });
     }
   });
 
-  // Get all portal bookings (admin)
-  app.get("/api/portal/admin/bookings", portalAdminAuth, async (req, res) => {
+  app.get("/api/portal/admin/members", requireRole("admin"), async (req, res) => {
     try {
-      const allBookings = await storage.getBookings();
-      res.json(allBookings);
+      const search = req.query.search as string | undefined;
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 20;
+      const result = await storage.getAllUsers(search, page, limit);
+      res.json(result);
     } catch (error) {
-      console.error("Get admin bookings error:", error);
-      res.status(500).json({ message: "Failed to get bookings" });
-    }
-  });
-
-  // Get all members (admin)
-  app.get("/api/portal/admin/members", portalAdminAuth, async (req, res) => {
-    try {
-      const allUsers = await storage.getAllUsers();
-      res.json(allUsers);
-    } catch (error) {
-      console.error("Get members error:", error);
       res.status(500).json({ message: "Failed to get members" });
     }
   });
 
-  // Get member profile with forms and bookings (admin)
-  app.get("/api/portal/admin/members/:id", portalAdminAuth, async (req, res) => {
+  app.get("/api/portal/admin/members/:id", requireRole("admin"), async (req, res) => {
     try {
       const profile = await storage.getUserProfile(req.params.id);
       if (!profile) {
@@ -675,8 +522,217 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       res.json(profile);
     } catch (error) {
-      console.error("Get member profile error:", error);
       res.status(500).json({ message: "Failed to get member profile" });
+    }
+  });
+
+  app.put("/api/portal/admin/members/:id/notes", requireRole("admin"), async (req, res) => {
+    try {
+      const { notes } = req.body;
+      if (typeof notes !== "string") {
+        return res.status(400).json({ message: "Notes must be a string" });
+      }
+      const user = await storage.updateAdminNotes(req.params.id, notes);
+      if (!user) {
+        return res.status(404).json({ message: "Member not found" });
+      }
+      res.json(user);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update notes" });
+    }
+  });
+
+  app.put("/api/portal/admin/members/:id/role", requireRole("admin"), async (req, res) => {
+    try {
+      const { role } = req.body;
+      if (!["admin", "coach", "member"].includes(role)) {
+        return res.status(400).json({ message: "Invalid role" });
+      }
+      const user = await storage.updateUser(req.params.id, { role });
+      if (!user) {
+        return res.status(404).json({ message: "Member not found" });
+      }
+      res.json(user);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update role" });
+    }
+  });
+
+  app.put("/api/portal/admin/members/:id/belt", requireRole("admin", "coach"), async (req, res) => {
+    try {
+      const { beltRank } = req.body;
+      const user = await storage.updateUser(req.params.id, { beltRank });
+      if (!user) {
+        return res.status(404).json({ message: "Member not found" });
+      }
+      res.json(user);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update belt rank" });
+    }
+  });
+
+  app.put("/api/portal/admin/members/:id/attendance", requireRole("admin", "coach"), async (req, res) => {
+    try {
+      const { attendanceCount } = req.body;
+      const user = await storage.updateUser(req.params.id, { attendanceCount });
+      if (!user) {
+        return res.status(404).json({ message: "Member not found" });
+      }
+      res.json(user);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update attendance" });
+    }
+  });
+
+  app.get("/api/portal/admin/form-responses", requireRole("admin"), async (req, res) => {
+    try {
+      const responses = await storage.getAllFormResponses();
+      res.json(responses);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get form responses" });
+    }
+  });
+
+  app.get("/api/portal/admin/bookings", requireRole("admin"), async (req, res) => {
+    try {
+      const allBookings = await storage.getBookings();
+      res.json(allBookings);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get bookings" });
+    }
+  });
+
+  // ============================================
+  // SESSION NOTES ROUTES (Admin & Coach)
+  // ============================================
+  app.get("/api/portal/session-notes/:userId", requireRole("admin", "coach"), async (req, res) => {
+    try {
+      const notes = await storage.getSessionNotes(req.params.userId);
+      res.json(notes);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get session notes" });
+    }
+  });
+
+  app.post("/api/portal/session-notes/:userId", requireRole("admin", "coach"), async (req, res) => {
+    try {
+      const coachId = req.session.userId!;
+      const { notes, sessionDate } = req.body;
+      if (!notes || typeof notes !== "string") {
+        return res.status(400).json({ message: "Notes are required" });
+      }
+      const note = await storage.createSessionNote({
+        userId: req.params.userId,
+        coachId,
+        notes,
+        sessionDate: sessionDate ? new Date(sessionDate) : new Date(),
+      });
+      res.status(201).json(note);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to create session note" });
+    }
+  });
+
+  // ============================================
+  // MEMBERSHIP ROUTES (Admin)
+  // ============================================
+  app.get("/api/portal/memberships/:userId", requireRole("admin"), async (req, res) => {
+    try {
+      const membershipsList = await storage.getMemberships(req.params.userId);
+      res.json(membershipsList);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get memberships" });
+    }
+  });
+
+  app.post("/api/portal/memberships", requireRole("admin"), async (req, res) => {
+    try {
+      const { userId, type, priceCents, endDate } = req.body;
+      if (!userId || !type) {
+        return res.status(400).json({ message: "User ID and type are required" });
+      }
+      const membership = await storage.createMembership({
+        userId,
+        type,
+        status: "active",
+        priceCents: priceCents || 2000,
+        startDate: new Date(),
+        endDate: endDate ? new Date(endDate) : null,
+      });
+      res.status(201).json(membership);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to create membership" });
+    }
+  });
+
+  // ============================================
+  // COACH ROUTES
+  // ============================================
+  app.get("/api/portal/coach/members", requireRole("coach", "admin"), async (req, res) => {
+    try {
+      const coachId = req.session.userId!;
+      const userRole = req.session.userRole;
+      
+      if (userRole === "admin") {
+        const result = await storage.getAllUsers(undefined, 1, 100);
+        return res.json(result.users);
+      }
+      
+      const coachMembers = await storage.getCoachMembers(coachId);
+      res.json(coachMembers);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get coach members" });
+    }
+  });
+
+  // ============================================
+  // LEGACY ADMIN ROUTES
+  // ============================================
+  app.post("/api/admin/login", async (req, res) => {
+    try {
+      const { email, password } = req.body;
+      const admin = await storage.getAdminUser(email);
+      if (admin && admin.password === password) {
+        res.json({ success: true, message: "Login successful" });
+      } else {
+        res.status(401).json({ message: "Invalid credentials" });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Login failed" });
+    }
+  });
+
+  app.get("/api/admin/bookings", async (req, res) => {
+    try {
+      const bookingsList = await storage.getBookings();
+      res.json(bookingsList);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch bookings" });
+    }
+  });
+
+  app.put("/api/admin/bookings/:id/cancel", async (req, res) => {
+    try {
+      const booking = await storage.cancelBooking(req.params.id);
+      if (!booking) {
+        return res.status(404).json({ message: "Booking not found" });
+      }
+      res.json(booking);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to cancel booking" });
+    }
+  });
+
+  app.put("/api/admin/trainers/:id/availability", async (req, res) => {
+    try {
+      const { availability } = req.body;
+      const trainer = await storage.updateTrainerAvailability(req.params.id, availability);
+      if (!trainer) {
+        return res.status(404).json({ message: "Trainer not found" });
+      }
+      res.json(trainer);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update availability" });
     }
   });
 
