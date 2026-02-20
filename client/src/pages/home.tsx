@@ -13,6 +13,7 @@ import femaleStudent3 from "@assets/stock_images/female_bjj_students__65085ad5.j
 import trainerImage from "@assets/stock_images/female_brazilian_jiu_cfa563c5.jpg";
 import openMatImage from "@assets/stock_images/female_bjj_martial_a_dc8c6615.jpg";
 import compImage from "@assets/stock_images/female_mma_fighters__f5fccfa4.jpg";
+import heroVideo from "@assets/videos/hero-bg.mp4?url";
 
 function Section({ children, className = "", delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
   const ref = useRef(null);
@@ -58,11 +59,16 @@ export default function Home() {
     <div className="flex flex-col bg-[#0B0F14]">
       <section className="relative min-h-screen flex items-center overflow-hidden grain-texture" data-testid="hero-section">
         <div className="absolute inset-0 bg-gradient-to-br from-[#0B0F14] via-[#121826] to-[#0B0F14]" />
-        <div
-          className="absolute inset-0 bg-cover bg-center opacity-20"
-          style={{ backgroundImage: `url(${femaleFighterImage})` }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0B0F14] via-transparent to-[#0B0F14]/60" />
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover opacity-30"
+        >
+          <source src={heroVideo} type="video/mp4" />
+        </video>
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0B0F14] via-[#0B0F14]/40 to-[#0B0F14]/70" />
 
         <div className="absolute top-1/4 -left-32 w-96 h-96 bg-[#5EEBFF]/5 rounded-full blur-3xl" />
         <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-[#B06CFF]/5 rounded-full blur-3xl" />
