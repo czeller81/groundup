@@ -20,6 +20,12 @@ export default function PortalBooking() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      setLocation("/portal/login");
+    }
+  }, [authLoading, isAuthenticated, setLocation]);
+
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#0B0F14]">
@@ -29,7 +35,6 @@ export default function PortalBooking() {
   }
 
   if (!isAuthenticated) {
-    setLocation("/portal/login");
     return null;
   }
 

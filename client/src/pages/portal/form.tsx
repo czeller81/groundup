@@ -22,7 +22,7 @@ export default function PortalForm() {
   const [answers, setAnswers] = useState<Record<string, any>>({});
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading } = useQuery<{ form: any; response: any }>({
     queryKey: ["/api/portal/forms", slug],
     enabled: isAuthenticated && !!slug,
   });
@@ -74,6 +74,12 @@ export default function PortalForm() {
     return () => clearTimeout(timer);
   }, [answers, debouncedSave]);
 
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      setLocation("/portal/login");
+    }
+  }, [authLoading, isAuthenticated, setLocation]);
+
   if (authLoading || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -83,7 +89,6 @@ export default function PortalForm() {
   }
 
   if (!isAuthenticated) {
-    setLocation("/portal/login");
     return null;
   }
 

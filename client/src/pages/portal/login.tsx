@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -25,8 +25,13 @@ export default function PortalLogin() {
     phone: "",
   });
 
+  useEffect(() => {
+    if (isAuthenticated) {
+      setLocation("/portal/dashboard");
+    }
+  }, [isAuthenticated, setLocation]);
+
   if (isAuthenticated) {
-    setLocation("/portal/dashboard");
     return null;
   }
 
