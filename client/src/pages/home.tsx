@@ -88,7 +88,9 @@ export default function Home() {
               <span className="text-white">GROUND</span>
               <br />
               <span className="gradient-text-cyan">UP</span>{" "}
-              <span className="text-white">BJJ</span>
+              <span className="text-white">JJ &</span>
+              <br />
+              <span className="gradient-text-purple">FITNESS</span>
             </h1>
 
             <motion.p
