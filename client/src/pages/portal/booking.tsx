@@ -43,21 +43,15 @@ export default function PortalBooking() {
     : "";
 
   return (
-    <div className="min-h-screen bg-[#0B0F14]">
-      <header className="bg-[#121826] border-b border-white/5 py-4 px-6">
+    <div>
+      <div className="bg-[#121826]/50 border-b border-white/5 py-4 px-6">
         <div className="max-w-5xl mx-auto">
-          <Button variant="ghost" size="sm" className="mb-2 text-gray-400 hover:text-white hover:bg-white/5" asChild>
-            <Link href="/portal/dashboard">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Dashboard
-            </Link>
-          </Button>
           <h1 className="text-xl font-bold text-white flex items-center gap-2" style={{ fontFamily: 'var(--font-display)' }}>
             <CalendarIcon className="h-5 w-5 text-[#5EEBFF]" />
             BOOK A SESSION
           </h1>
         </div>
-      </header>
+      </div>
 
       <main className="max-w-5xl mx-auto px-4 py-8">
         <div

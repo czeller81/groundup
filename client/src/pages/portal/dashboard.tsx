@@ -8,12 +8,12 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { usePortalAuth } from "@/lib/portal-auth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { FileText, Calendar, CheckCircle, Clock, AlertCircle, LogOut, Settings, X, Loader2, Eye } from "lucide-react";
+import { FileText, Calendar, CheckCircle, Clock, AlertCircle, X, Loader2, Eye } from "lucide-react";
 import { format, isPast, isFuture, isToday, startOfDay, isSameDay } from "date-fns";
 
 export default function PortalDashboard() {
   const [, setLocation] = useLocation();
-  const { user, logout, isLoading: authLoading, isAuthenticated, isAdmin, isCoach, isStaff } = usePortalAuth();
+  const { user, isLoading: authLoading, isAuthenticated } = usePortalAuth();
   const { toast } = useToast();
   const [cancelDialog, setCancelDialog] = useState<{ open: boolean; booking: any | null }>({ open: false, booking: null });
   const [formViewDialog, setFormViewDialog] = useState<{ open: boolean; slug: string | null }>({ open: false, slug: null });
@@ -70,11 +70,6 @@ export default function PortalDashboard() {
     return null;
   }
 
-  const handleLogout = async () => {
-    await logout();
-    setLocation("/portal/login");
-  };
-
   const upcomingBookings = bookings.filter((b: any) => isFuture(new Date(b.start)) && b.status !== "canceled");
   const pastBookings = bookings.filter((b: any) => isPast(new Date(b.start)) || b.status === "canceled");
 
@@ -94,39 +89,15 @@ export default function PortalDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0B0F14]">
-      <header className="bg-[#121826] border-b border-white/5 py-4 px-6">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <div>
-            <h1 className="text-xl font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>
-              MEMBER <span className="gradient-text-purple">PORTAL</span>
-            </h1>
-            <p className="text-sm text-gray-400">Welcome, {user?.firstName}!</p>
-          </div>
-          <div className="flex items-center gap-4">
-            {isCoach && !isAdmin && (
-              <Button size="sm" className="bg-[#5EEBFF] text-black hover:bg-[#5EEBFF]/90" asChild data-testid="button-coach">
-                <Link href="/portal/coach">
-                  <Settings className="h-4 w-4 mr-2" />
-                  Coach Center
-                </Link>
-              </Button>
-            )}
-            {isAdmin && (
-              <Button size="sm" className="bg-[#B06CFF] text-white hover:bg-[#B06CFF]/90" asChild data-testid="button-admin">
-                <Link href="/portal/admin">
-                  <Settings className="h-4 w-4 mr-2" />
-                  Admin
-                </Link>
-              </Button>
-            )}
-            <Button variant="outline" size="sm" onClick={handleLogout} className="border-white/10 text-gray-300 hover:text-white hover:bg-white/5" data-testid="button-logout">
-              <LogOut className="h-4 w-4 mr-2" />
-              Logout
-            </Button>
-          </div>
+    <div>
+      <div className="bg-[#121826]/50 border-b border-white/5 py-4 px-6">
+        <div className="max-w-7xl mx-auto">
+          <h1 className="text-xl font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>
+            MEMBER <span className="gradient-text-purple">PORTAL</span>
+          </h1>
+          <p className="text-sm text-gray-400">Welcome, {user?.firstName}!</p>
         </div>
-      </header>
+      </div>
 
       <main className="max-w-7xl mx-auto px-4 py-8">
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">

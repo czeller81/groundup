@@ -19,6 +19,7 @@ import PortalAdminMembers from "@/pages/portal/admin";
 import PortalCoach from "@/pages/portal/coach";
 import Navbar from "@/components/layout/navbar";
 import Footer from "@/components/layout/footer";
+import PortalNavbar from "@/components/layout/portal-navbar";
 
 function MainLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -26,6 +27,15 @@ function MainLayout({ children }: { children: React.ReactNode }) {
       <Navbar />
       {children}
       <Footer />
+    </div>
+  );
+}
+
+function PortalLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="min-h-screen bg-[#0B0F14]">
+      <PortalNavbar />
+      {children}
     </div>
   );
 }
@@ -53,11 +63,21 @@ function Router() {
       </Route>
       
       <Route path="/portal/login" component={PortalLogin} />
-      <Route path="/portal/dashboard" component={PortalDashboard} />
-      <Route path="/portal/forms/:slug" component={PortalForm} />
-      <Route path="/portal/booking" component={PortalBooking} />
-      <Route path="/portal/admin" component={PortalAdminMembers} />
-      <Route path="/portal/coach" component={PortalCoach} />
+      <Route path="/portal/dashboard">
+        <PortalLayout><PortalDashboard /></PortalLayout>
+      </Route>
+      <Route path="/portal/forms/:slug">
+        <PortalLayout><PortalForm /></PortalLayout>
+      </Route>
+      <Route path="/portal/booking">
+        <PortalLayout><PortalBooking /></PortalLayout>
+      </Route>
+      <Route path="/portal/admin">
+        <PortalLayout><PortalAdminMembers /></PortalLayout>
+      </Route>
+      <Route path="/portal/coach">
+        <PortalLayout><PortalCoach /></PortalLayout>
+      </Route>
       
       <Route>
         <MainLayout><NotFound /></MainLayout>

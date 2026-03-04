@@ -104,23 +104,15 @@ export default function PortalCoach() {
   });
 
   return (
-    <div className="min-h-screen bg-[#0B0F14]">
-      <header className="bg-[#121826] border-b border-white/5 py-4 px-6">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <div>
-            <h1 className="text-xl font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>
-              COACH <span className="gradient-text-cyan">CENTER</span>
-            </h1>
-            <p className="text-sm text-gray-400">Manage your assigned members & session notes</p>
-          </div>
-          <Button variant="outline" size="sm" className="border-white/10 text-gray-300 hover:text-white hover:bg-white/5" asChild>
-            <Link href="/portal/dashboard">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Portal
-            </Link>
-          </Button>
+    <div>
+      <div className="bg-[#121826]/50 border-b border-white/5 py-4 px-6">
+        <div className="max-w-7xl mx-auto">
+          <h1 className="text-xl font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>
+            COACH <span className="gradient-text-cyan">CENTER</span>
+          </h1>
+          <p className="text-sm text-gray-400">Manage your assigned members & session notes</p>
         </div>
-      </header>
+      </div>
 
       <main className="max-w-7xl mx-auto px-4 py-6">
         <div className="grid lg:grid-cols-3 gap-6">
