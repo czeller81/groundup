@@ -72,7 +72,7 @@ export interface IStorage {
   getUserProfile(userId: string): Promise<{ user: SafeUser; formResponses: (FormResponse & { form: Form })[]; bookings: BookingWithTrainer[]; memberships: Membership[]; sessionNotes: (SessionNote & { coach: SafeUser })[] } | undefined>;
   updateAdminNotes(userId: string, notes: string): Promise<SafeUser | undefined>;
   
-  getAdminStats(): Promise<{ totalUsers: number; newUsers30Days: number; activeMemberships: number; upcomingSessions7Days: number; monthlyRevenue: number; membersNeedingForms: number }>;
+  getAdminStats(): Promise<{ totalUsers: number; newUsers30Days: number; activeMemberships: number; upcomingSessions7Days: number; monthlyRevenue: number; membersNeedingForms: number; totalRequiredForms: number }>;
   
   getMemberships(userId: string): Promise<Membership[]>;
   createMembership(membership: InsertMembership): Promise<Membership>;
@@ -520,6 +520,7 @@ export class DatabaseStorage implements IStorage {
       upcomingSessions7Days: upcomingSessionsResult.count,
       monthlyRevenue: Number(revenueResult.total || 0),
       membersNeedingForms: Math.max(0, membersNeedingForms),
+      totalRequiredForms: requiredFormIds.length,
     };
   }
 

@@ -224,8 +224,8 @@ export default function PortalAdmin() {
   };
 
   const formsCompleted = memberProfile?.formResponses?.filter((r: any) => r.status === "submitted").length || 0;
-  const totalForms = memberProfile?.formResponses?.length || 0;
-  const formsCompletion = totalForms > 0 ? Math.round((formsCompleted / totalForms) * 100) : 0;
+  const totalRequiredForms = stats?.totalRequiredForms || 0;
+  const formsCompletion = totalRequiredForms > 0 ? Math.round((formsCompleted / totalRequiredForms) * 100) : 0;
 
   return (
     <div>
@@ -524,7 +524,7 @@ export default function PortalAdmin() {
                       <CardHeader className="pb-3">
                         <CardTitle className="text-white text-base flex items-center gap-2">
                           <FileText className="h-5 w-5 text-[#B06CFF]" />
-                          Forms ({formsCompleted}/{totalForms || 0} completed)
+                          Forms ({formsCompleted}/{totalRequiredForms} completed)
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
