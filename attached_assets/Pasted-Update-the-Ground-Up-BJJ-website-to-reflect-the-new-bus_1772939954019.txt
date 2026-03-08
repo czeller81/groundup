@@ -1,0 +1,197 @@
+Update the Ground Up BJJ website to reflect the new business plan and positioning.
+
+GOAL
+Reposition Ground Up Jiu-Jitsu as a boutique Brazilian Jiu-Jitsu and fitness academy focused on:
+- women
+- kids
+- beginners
+- self-defense
+- strength & conditioning
+- personal training
+- small class sizes with a max capacity of 6 people
+
+BRAND DIRECTION
+Keep the design clean, modern, strong, and welcoming.
+The brand should feel:
+- empowering
+- safe
+- community-driven
+- premium but approachable
+
+IMPORTANT POSITIONING
+This is NOT a large competitive fight gym.
+This is a boutique academy built around confidence, safety, technique, personal attention, and community.
+
+MAIN MESSAGES TO REFLECT THROUGHOUT THE WEBSITE
+- Small group training, maximum 6 students per class
+- Specialized support for women, kids, and beginners
+- 8-week women’s self-defense program
+- Strength & conditioning and personal training
+- Free community self-defense class every 2 weeks
+- Mission focused on confidence, safety, health, and community
+
+UPDATE THE WEBSITE COPY WITH THE FOLLOWING STRUCTURE:
+
+1) HERO SECTION
+Headline:
+Ground Up Jiu-Jitsu & Fitness
+
+Subheadline:
+Boutique Jiu-Jitsu, self-defense, and strength training for women, kids, and beginners.
+
+Supporting text:
+Train in a safe, supportive, small-group environment designed to build confidence, fitness, and real-world self-defense skills.
+
+Primary CTA button:
+Start Your Training
+
+Secondary CTA button:
+Book a Free Intro
+
+Add a small badge or callout:
+Small Group Classes • Max 6 Students
+
+2) MISSION SECTION
+Title:
+Built to Empower From the Ground Up
+
+Body copy:
+Ground Up Jiu-Jitsu exists to empower women and children with the skills, confidence, and strength to protect themselves and live healthier lives. We believe training should feel safe, personal, and community-driven — not intimidating.
+
+3) PROGRAMS SECTION
+Title:
+Programs Designed for Real Life
+
+Create program cards for:
+
+A. Women’s Self-Defense
+Description:
+Our signature 8-week self-defense program helps women build practical skills, situational awareness, confidence, and strength in a supportive environment.
+
+Highlights:
+- 8-week program
+- 2 classes per week
+- 16 total classes
+- Beginner friendly
+
+B. Women’s BJJ Fundamentals
+Description:
+Learn Brazilian Jiu-Jitsu fundamentals in a small-group setting focused on technique, movement, confidence, and controlled training.
+
+Highlights:
+- Beginner friendly
+- Small class sizes
+- Technique-focused
+- Safe training environment
+
+C. Kids Jiu-Jitsu
+Description:
+A positive program designed to help kids develop confidence, discipline, coordination, and anti-bullying awareness.
+
+Highlights:
+- Ages 6–14
+- Confidence building
+- Discipline
+- Anti-bullying focus
+
+D. Strength & Conditioning
+Description:
+Small group fitness sessions focused on mobility, strength, injury prevention, and athletic conditioning.
+
+E. Personal Training
+Description:
+One-on-one coaching tailored to your fitness, self-defense, or performance goals.
+
+4) WHY US / DIFFERENTIATOR SECTION
+Title:
+Why Ground Up Is Different
+
+Create 4 feature blocks:
+- Max 6 Students Per Class
+- Personalized Coaching
+- Safe & Welcoming Environment
+- Built for Women, Kids & Beginners
+
+Supporting paragraph:
+Unlike large gyms, Ground Up focuses on quality over quantity. Our small-group model allows for better instruction, stronger community, and a more comfortable experience for people who want to learn in a supportive environment.
+
+5) COMMUNITY SECTION
+Title:
+Training That Gives Back
+
+Body copy:
+Every two weeks, Ground Up Jiu-Jitsu hosts a free community self-defense class to help women feel safer, introduce new people to training, and create a stronger local community.
+
+Add callout text:
+Free Community Self-Defense Class Every 2 Weeks
+
+6) RESULTS / BENEFITS SECTION
+Title:
+What You’ll Build Here
+
+Use bullet cards or icons:
+- Confidence
+- Real self-defense skills
+- Strength & fitness
+- Discipline
+- Stress relief
+- Community
+
+7) WHO IT’S FOR SECTION
+Title:
+Who We Serve
+
+Create 3 columns:
+- Women seeking self-defense, fitness, and confidence
+- Kids who need discipline, confidence, and positive structure
+- Adults wanting personal training or beginner-friendly martial arts
+
+8) CTA SECTION
+Title:
+Start From the Ground Up
+
+Body:
+Whether you’re looking to learn self-defense, improve your fitness, or help your child build confidence, Ground Up Jiu-Jitsu is here to help.
+
+Buttons:
+- Book a Free Intro
+- Contact Us
+
+9) FOOTER / CONTACT
+Make sure footer includes:
+- Ground Up Jiu-Jitsu & Fitness
+- Boutique training for women, kids, and beginners
+- Contact form or CTA
+- Social links if available
+
+DESIGN IMPROVEMENTS
+- Keep a strong martial arts feel but make it more modern and welcoming
+- Avoid aggressive “fighter gym” language
+- Use clear spacing and premium-looking cards
+- Make the women’s self-defense program stand out visually as the flagship offer
+- Add “Max 6 students” in multiple places
+- Use mobile-friendly responsive layout
+- Make CTA buttons visible throughout the page
+
+OPTIONAL NICE-TO-HAVE SECTIONS
+If space allows, add:
+- FAQ section
+- Testimonials placeholder
+- Schedule preview
+- Intro offer banner
+
+FAQ CONTENT
+Q: Do I need experience?
+A: No. Our programs are beginner friendly and designed to help you build confidence from day one.
+
+Q: Are classes large?
+A: No. We keep classes small with a maximum of 6 students for more personal coaching.
+
+Q: Is this good for women who only want self-defense?
+A: Yes. Our women’s self-defense program is designed specifically for practical real-world confidence and protection.
+
+Q: Do you offer kids classes?
+A: Yes. Our kids program focuses on confidence, discipline, anti-bullying, and physical development.
+
+FINAL INSTRUCTION
+Rewrite the site copy and update the layout so the website clearly reflects the business plan above. Keep the tone professional, empowering, welcoming, and community-focused.

@@ -1,6 +1,6 @@
 # Overview
 
-Ground Up Women's BJJ — a premium, modern website for a females-only personal training gym in Oxnard, CA. Features 1-on-1 jiu-jitsu and strength & conditioning training for female athletes. Includes a complete member portal with authentication, intake forms, session booking, and a comprehensive admin + coach management system.
+Ground Up Jiu-Jitsu & Fitness — a boutique BJJ and fitness academy in Oxnard, CA focused on women, kids, and beginners. Offers small group classes (max 6 students), women's self-defense, BJJ fundamentals, kids jiu-jitsu, strength & conditioning, and personal training. Brand positioning: empowering, safe, community-driven, premium but approachable. Includes a complete member portal with authentication, intake forms, session booking, and a comprehensive admin + coach management system.
 
 # User Preferences
 
