@@ -626,7 +626,7 @@ async function seedFormData() {
       description: "Authorization for use of photos and videos",
       isRequired: true,
       fields: [
-        { name: "mediaConsent", label: "I allow Ground Up Jiu-Jitsu to use photos and videos of me for marketing, social media, and promotional purposes", type: "checkbox", required: true }
+        { name: "mediaConsent", label: "Do you allow Ground Up Jiu-Jitsu to use photos and videos of you for marketing, social media, and promotional purposes?", type: "boolean", required: true }
       ]
     },
     {
