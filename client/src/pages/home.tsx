@@ -6,19 +6,19 @@ import {
   Shield, Dumbbell, Users, Award, ChevronDown, ChevronUp,
   Star, ArrowRight, Zap, Heart, CheckCircle, Lock
 } from "lucide-react";
-import selfDefenseFeaturedImg from "@assets/stock_images/women_self_defense_1.jpg";
-import bjjFundamentalsImg from "@assets/stock_images/women_bjj_1.jpg";
-import kidsClassImg from "@assets/stock_images/kids_martial_arts_1.jpg";
-import strengthImg from "@assets/stock_images/women_strength_conditioning_1.jpg";
-import personalTrainingImg from "@assets/stock_images/women_personal_training_1.jpg";
-import whyDifferentImg from "@assets/stock_images/women_self_defense_hero_1.jpg";
-import whoServeWomenImg from "@assets/stock_images/women_empowered_fitness_1.jpg";
-import whoServeKidsImg from "@assets/stock_images/kids_martial_arts_2.jpg";
-import whoServeBeginnersImg from "@assets/stock_images/women_personal_training_2.jpg";
-import coachImg from "@assets/stock_images/female_bjj_coach_1.jpg";
-import testimonialImg1 from "@assets/stock_images/woman_fitness_portrait_1.jpg";
-import testimonialImg2 from "@assets/stock_images/woman_fitness_portrait_2.jpg";
-import testimonialImg3 from "@assets/stock_images/woman_fitness_portrait_3.jpg";
+import selfDefenseFeaturedImg from "@assets/generated_images/bjj_selfdefense_featured.png";
+import bjjFundamentalsImg from "@assets/generated_images/bjj_fundamentals.png";
+import kidsClassImg from "@assets/generated_images/kids_martialarts.png";
+import strengthImg from "@assets/generated_images/women_strength.png";
+import personalTrainingImg from "@assets/generated_images/women_personaltraining.png";
+import whyDifferentImg from "@assets/generated_images/why_different.png";
+import whoServeWomenImg from "@assets/generated_images/who_serve_women.png";
+import whoServeKidsImg from "@assets/generated_images/who_serve_kids.png";
+import whoServeBeginnersImg from "@assets/generated_images/who_serve_beginners.png";
+import coachImg from "@assets/generated_images/coach_portrait.png";
+import testimonialImg1 from "@assets/generated_images/testimonial1.png";
+import testimonialImg2 from "@assets/generated_images/testimonial2.png";
+import testimonialImg3 from "@assets/generated_images/testimonial3.png";
 import heroVideo from "@assets/videos/hero-bg.mp4?url";
 
 function Section({ children, className = "", delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
