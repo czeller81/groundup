@@ -1,0 +1,205 @@
+Update the Ground Up Jiu-Jitsu website to add a new PRICING section and align all pricing across the site with the lower-cost business model below.
+
+IMPORTANT
+- Keep the current brand/style already in place
+- Make the pricing feel clear, affordable, beginner-friendly, and community-focused
+- Keep the design modern, clean, premium, and mobile responsive
+- Highlight small group training and max 6 students
+- Make the Women’s Self-Defense program stand out as a featured offer
+- Do NOT make the gym feel like an aggressive fighter gym
+- Tone should feel welcoming, empowering, and family-friendly
+
+ADD A NEW SECTION:
+SECTION TITLE:
+Simple, Affordable Pricing
+
+SECTION SUBTITLE:
+Boutique training with small class sizes, personalized coaching, and beginner-friendly programs.
+
+CREATE PRICING CARDS FOR THE FOLLOWING:
+
+1) FREE INTRO CLASS
+Title:
+Free Intro Class
+
+Price:
+Free
+
+Description:
+Try a class, meet the coach, and experience the training environment before committing.
+
+CTA Button:
+Book Free Intro
+
+Badge:
+Best Place to Start
+
+2) WOMEN’S BJJ FUNDAMENTALS
+Title:
+Women’s BJJ Fundamentals
+
+Price:
+$120 / month
+
+Description:
+Small group jiu-jitsu training focused on confidence, technique, movement, and beginner-friendly instruction.
+
+Included:
+- 2 classes per week
+- Beginner friendly
+- Technique focused
+- Max 6 students per class
+
+CTA Button:
+Start Training
+
+3) KIDS JIU-JITSU
+Title:
+Kids Jiu-Jitsu
+
+Price:
+$100 / month
+
+Description:
+A positive program that helps kids build confidence, discipline, coordination, and anti-bullying awareness.
+
+Included:
+- 2 classes per week
+- Confidence building
+- Discipline and coordination
+- Small class sizes
+
+CTA Button:
+Enroll Your Child
+
+4) STRENGTH & CONDITIONING
+Title:
+Strength & Conditioning
+
+Price:
+$15 per class
+Secondary price:
+$60 / month unlimited
+
+Description:
+Small group fitness sessions focused on mobility, strength, injury prevention, and athletic conditioning.
+
+Included:
+- Mobility work
+- Strength training
+- Injury prevention
+- Athletic conditioning
+
+CTA Button:
+Join a Class
+
+5) WOMEN’S SELF-DEFENSE PROGRAM
+Title:
+Women’s Self-Defense Program
+
+Price:
+$199 total
+
+Sub-label:
+8-Week Program
+
+Description:
+Our signature self-defense program helps women build practical skills, situational awareness, confidence, and strength in a supportive environment.
+
+Included:
+- 8-week program
+- 2 classes per week
+- 16 total classes
+- Beginner friendly
+- Practical self-defense skills
+
+CTA Button:
+Reserve Your Spot
+
+Badge:
+Featured Program
+
+IMPORTANT:
+Make this card visually stand out more than the others.
+
+6) PERSONAL TRAINING
+Title:
+Personal Training
+
+Price:
+$60 per session
+
+Description:
+One-on-one coaching tailored to your fitness, self-defense, or performance goals.
+
+Included:
+- Private coaching
+- Personalized instruction
+- Self-defense or fitness focused
+- Goal-based training
+
+CTA Button:
+Book a Session
+
+7) COMMUNITY CLASS
+Title:
+Free Community Self-Defense Class
+
+Price:
+Free Every 2 Weeks
+
+Description:
+We host a free community self-defense class every two weeks to help women feel safer, introduce people to training, and give back to the community.
+
+CTA Button:
+Learn More
+
+LAYOUT INSTRUCTIONS
+- Use responsive pricing cards
+- On desktop, show cards in a clean grid
+- On mobile, stack cards vertically with good spacing
+- Add subtle hover effects
+- Use clean icons or checkmarks for included features
+- Add “Max 6 Students” somewhere visible in the pricing section
+- Add clear CTA buttons on every card
+- Keep pricing easy to scan
+
+ADD A SMALL VALUE CALLOUT ABOVE OR BELOW PRICING:
+Title:
+Why Train Here?
+
+Bullets:
+- Small group classes
+- Personalized coaching
+- Beginner friendly
+- Safe, welcoming environment
+- Built for women, kids, and beginners
+
+ADD A SHORT NOTE BELOW THE PRICING SECTION:
+No experience needed. Our programs are designed to help you build confidence from day one in a safe and supportive environment.
+
+IF THERE IS ALREADY A CTA SECTION LOWER ON THE PAGE:
+Update it so the buttons make sense with pricing:
+- Book a Free Intro
+- Contact Us
+
+IF THERE IS ALREADY A PROGRAMS SECTION:
+Make sure the program names and pricing match exactly.
+
+OPTIONAL NICE TOUCHES
+- Add a “Most Popular” or “Featured” style to the Women’s Self-Defense card
+- Add a small note: “Small Group Classes • Max 6 Students”
+- Add FAQ item:
+Q: Do I need experience?
+A: No. All programs are beginner friendly.
+
+FINAL INSTRUCTION
+Implement the new pricing section directly into the site and make sure the page copy, program names, and CTA buttons are consistent with the following pricing:
+
+- Free Intro Class — Free
+- Women’s BJJ Fundamentals — $120/month
+- Kids Jiu-Jitsu — $100/month
+- Strength & Conditioning — $15/class or $60/month unlimited
+- Women’s Self-Defense Program — $199 total for 8 weeks
+- Personal Training — $60/session
+- Free Community Self-Defense Class — Free every 2 weeks

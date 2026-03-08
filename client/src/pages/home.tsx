@@ -238,9 +238,13 @@ export default function Home() {
                     </div>
                   ))}
                 </div>
+                <div className="flex items-baseline gap-2 mb-6">
+                  <span className="text-3xl font-bold text-[#FFB199]">$199</span>
+                  <span className="text-gray-400 text-sm">total · 8-week program</span>
+                </div>
                 <Button asChild className="bg-[#FFB199] text-[#0B0F14] font-bold uppercase tracking-wider hover:bg-[#FFB199]/90 w-fit">
                   <Link href="/portal/login">
-                    Enroll Now <ArrowRight className="ml-2 h-4 w-4" />
+                    Reserve Your Spot <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>
               </div>
@@ -258,6 +262,7 @@ export default function Home() {
             {[
               {
                 title: "Women's BJJ Fundamentals",
+                price: "$120/mo",
                 desc: "Learn Brazilian Jiu-Jitsu fundamentals in a small-group setting focused on technique, movement, confidence, and controlled training.",
                 highlights: ["Beginner friendly", "Small class sizes", "Technique-focused", "Safe environment"],
                 img: bjjFundamentalsImg,
@@ -265,6 +270,7 @@ export default function Home() {
               },
               {
                 title: "Kids Jiu-Jitsu",
+                price: "$100/mo",
                 desc: "A positive program designed to help kids develop confidence, discipline, coordination, and anti-bullying awareness.",
                 highlights: ["Ages 6–14", "Confidence building", "Discipline", "Anti-bullying focus"],
                 img: kidsClassImg,
@@ -272,6 +278,7 @@ export default function Home() {
               },
               {
                 title: "Strength & Conditioning",
+                price: "$15/class",
                 desc: "Small group fitness sessions focused on mobility, strength, injury prevention, and athletic conditioning.",
                 highlights: ["Small groups", "Functional strength", "Injury prevention", "Athletic conditioning"],
                 img: strengthImg,
@@ -279,6 +286,7 @@ export default function Home() {
               },
               {
                 title: "Personal Training",
+                price: "$60/session",
                 desc: "One-on-one coaching tailored to your fitness, self-defense, or performance goals at your own pace.",
                 highlights: ["1-on-1 sessions", "Custom goals", "Flexible schedule", "All levels welcome"],
                 img: personalTrainingImg,
@@ -303,7 +311,10 @@ export default function Home() {
                 </div>
                 <div className="p-6 flex flex-col flex-1">
                   <div className="w-8 h-1 rounded-full mb-3" style={{ backgroundColor: program.accent }} />
-                  <h3 className="text-lg font-bold text-white mb-2" style={{ fontFamily: 'var(--font-display)' }}>{program.title}</h3>
+                  <h3 className="text-lg font-bold text-white mb-1" style={{ fontFamily: 'var(--font-display)' }}>{program.title}</h3>
+                  {"price" in program && (
+                    <p className="text-base font-semibold mb-2" style={{ color: program.accent }}>{program.price}</p>
+                  )}
                   <p className="text-gray-400 text-sm leading-relaxed mb-4">{program.desc}</p>
                   <ul className="space-y-1.5 mt-auto">
                     {program.highlights.map((h) => (
@@ -610,52 +621,6 @@ export default function Home() {
                 </div>
               </motion.div>
             ))}
-          </div>
-        </div>
-      </Section>
-
-      {/* PRICING */}
-      <Section className="py-24 bg-[#121826] relative grain-texture" delay={0}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-4" style={{ fontFamily: 'var(--font-display)' }}>
-              SIMPLE <span className="gradient-text-cyan">PRICING</span>
-            </h2>
-            <p className="text-gray-400">No contracts. No hidden fees. Just great training.</p>
-          </div>
-
-          <div className="max-w-lg mx-auto">
-            <div className="rounded-2xl border border-[#5EEBFF]/20 bg-gradient-to-b from-[#5EEBFF]/5 to-transparent p-8 text-center neon-glow">
-              <h3 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: 'var(--font-display)' }}>PERSONAL TRAINING</h3>
-              <div className="flex items-baseline justify-center gap-1 mb-4">
-                <span className="text-5xl font-bold text-[#5EEBFF]" style={{ fontFamily: 'var(--font-display)' }}>$20</span>
-                <span className="text-gray-400">/session</span>
-              </div>
-              <p className="text-gray-400 mb-6">60-minute 1-on-1 session with Coach Raymi</p>
-              <ul className="text-left space-y-3 mb-8">
-                {[
-                  "Personalized technique instruction",
-                  "Strength & conditioning",
-                  "Flexible scheduling (8am – 5pm)",
-                  "All equipment provided",
-                  "Progress tracking",
-                ].map((item) => (
-                  <li key={item} className="flex items-center gap-3 text-gray-300 text-sm">
-                    <Zap className="h-4 w-4 text-[#5EEBFF] flex-shrink-0" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-              <Button
-                asChild
-                className="w-full bg-[#FFB199] text-[#0B0F14] font-bold uppercase tracking-wider hover:bg-[#FFB199]/90 h-14 text-base"
-              >
-                <Link href="/portal/login">
-                  Get Started
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Link>
-              </Button>
-            </div>
           </div>
         </div>
       </Section>
