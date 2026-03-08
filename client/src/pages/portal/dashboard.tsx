@@ -245,32 +245,38 @@ export default function PortalDashboard() {
               <div className="space-y-2">
                 {forms.map((form: any) => {
                   const IconComp = FORM_ICONS[form.slug] || FileText;
+                  const statusColor =
+                    form.responseStatus === "submitted" ? "bg-green-400" :
+                    form.responseStatus === "draft" ? "bg-yellow-400" : "bg-red-400";
                   return (
-                    <div key={form.id} className="flex items-center justify-between p-3 bg-white/[0.03] border border-white/5 rounded-lg hover:border-white/10 transition-colors">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-7 h-7 rounded-lg bg-[#5EEBFF]/10 flex items-center justify-center flex-shrink-0">
+                    <div key={form.id} className="p-3 bg-white/[0.03] border border-white/5 rounded-lg hover:border-white/10 transition-colors">
+                      {/* Top row: icon + title + status dot */}
+                      <div className="flex items-start gap-2.5">
+                        <div className="w-7 h-7 rounded-lg bg-[#5EEBFF]/10 flex items-center justify-center flex-shrink-0 mt-0.5">
                           <IconComp className="h-3.5 w-3.5 text-[#5EEBFF]" />
                         </div>
-                        <div className="min-w-0">
-                          <p className="font-medium text-sm text-white truncate">{form.title}</p>
-                          <p className="text-xs text-gray-500">{form.isRequired ? "Required" : "Optional"}</p>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm text-white leading-snug">{form.title}</p>
+                          <p className="text-xs text-gray-500 mt-0.5">{form.isRequired ? "Required" : "Optional"}</p>
                         </div>
+                        <div className={`w-2 h-2 rounded-full flex-shrink-0 mt-1.5 ${statusColor}`} />
                       </div>
-                      <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+                      {/* Bottom row: status badge + action button */}
+                      <div className="flex items-center justify-between mt-2.5 pt-2.5 border-t border-white/5">
                         {getStatusBadge(form.responseStatus)}
                         {form.responseStatus === "submitted" ? (
                           <Button
                             size="sm"
                             variant="ghost"
-                            className="text-[#5EEBFF] hover:text-[#5EEBFF]/80 hover:bg-[#5EEBFF]/10 h-7 px-2"
+                            className="text-[#5EEBFF] hover:text-[#5EEBFF]/80 hover:bg-[#5EEBFF]/10 h-7 px-3 text-xs"
                             onClick={() => setFormViewDialog({ open: true, slug: form.slug })}
                           >
-                            <Eye className="h-3 w-3 sm:mr-1" /><span className="hidden sm:inline">View</span>
+                            <Eye className="h-3 w-3 mr-1" />View
                           </Button>
                         ) : (
-                          <Button size="sm" variant="outline" className="h-7 px-2 sm:px-3 text-xs border-white/10 hover:bg-white/5" asChild>
+                          <Button size="sm" className="h-7 px-4 text-xs bg-[#5EEBFF]/10 text-[#5EEBFF] border border-[#5EEBFF]/20 hover:bg-[#5EEBFF]/20" asChild>
                             <Link href={`/portal/forms/${form.slug}`}>
-                              {form.responseStatus === "draft" ? "Continue" : "Start"}
+                              {form.responseStatus === "draft" ? "Continue" : "Start →"}
                             </Link>
                           </Button>
                         )}
