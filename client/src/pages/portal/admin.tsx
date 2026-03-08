@@ -223,6 +223,22 @@ export default function PortalAdmin() {
     );
   };
 
+  const getHealthFlags = (formResponses: any[]): { label: string; answer: string }[] => {
+    const parq = formResponses?.find((r: any) => r.form?.slug === "health-parq" && r.status === "submitted");
+    if (!parq?.form?.fields || !parq?.answers) return [];
+    const flags: { label: string; answer: string }[] = [];
+    for (const field of parq.form.fields) {
+      const key = field.name || field.id;
+      const val = parq.answers[key];
+      if (field.type === "boolean" && val === true) {
+        flags.push({ label: field.label, answer: "Yes" });
+      } else if ((field.type === "textarea" || field.type === "text") && typeof val === "string" && val.trim()) {
+        flags.push({ label: field.label, answer: val.trim() });
+      }
+    }
+    return flags;
+  };
+
   const formsCompleted = memberProfile?.formResponses?.filter((r: any) => r.status === "submitted").length || 0;
   const totalRequiredForms = stats?.totalRequiredForms || 0;
   const formsCompletion = totalRequiredForms > 0 ? Math.round((formsCompleted / totalRequiredForms) * 100) : 0;
@@ -510,6 +526,37 @@ export default function PortalAdmin() {
                   </CardContent>
                 </Card>
 
+                {/* Health Flags Alert */}
+                {(() => {
+                  const healthFlags = getHealthFlags(memberProfile.formResponses);
+                  if (healthFlags.length === 0) return null;
+                  return (
+                    <div className="rounded-xl border border-red-500/40 bg-red-500/10 p-4">
+                      <div className="flex items-start gap-3">
+                        <div className="p-2 rounded-lg bg-red-500/20 flex-shrink-0">
+                          <AlertTriangle className="h-5 w-5 text-red-400" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-red-300 mb-2">
+                            Health Conditions Flagged — Coach Awareness Required
+                          </p>
+                          <div className="space-y-1.5">
+                            {healthFlags.map((flag, i) => (
+                              <div key={i} className="flex gap-2 text-xs">
+                                <span className="text-red-400/70 flex-shrink-0">•</span>
+                                <span className="text-gray-300">
+                                  <span className="text-red-300/80">{flag.label}:</span>{" "}
+                                  <span className="text-white font-medium">{flag.answer}</span>
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+
                 {/* Tabbed Content */}
                 <Tabs defaultValue="forms" className="space-y-4">
                   <TabsList className="bg-[#121826] border border-white/5 w-full justify-start">
@@ -534,16 +581,28 @@ export default function PortalAdmin() {
                           <div className="space-y-2">
                             {memberProfile.formResponses.map((response: any) => {
                               const unchecked = response.status === "submitted" && hasUncheckedCheckboxes(response);
+                              const isParq = response.form?.slug === "health-parq";
+                              const parqFlags = isParq && response.status === "submitted"
+                                ? getHealthFlags(memberProfile.formResponses)
+                                : [];
+                              const hasParqFlags = parqFlags.length > 0;
+                              const borderClass = hasParqFlags
+                                ? "bg-red-500/5 border-red-500/30"
+                                : unchecked
+                                  ? "bg-orange-500/5 border-orange-500/30"
+                                  : "bg-[#0B0F14] border-white/5";
                               return (
-                                <div key={response.id} className={`p-3 rounded-lg border flex items-center justify-between ${
-                                  unchecked
-                                    ? "bg-orange-500/5 border-orange-500/30"
-                                    : "bg-[#0B0F14] border-white/5"
-                                }`}>
+                                <div key={response.id} className={`p-3 rounded-lg border flex items-center justify-between ${borderClass}`}>
                                   <div className="min-w-0 flex-1">
                                     <div className="flex items-center gap-2 flex-wrap">
                                       <p className="text-sm font-medium text-white">{response.form.title}</p>
-                                      {unchecked && (
+                                      {hasParqFlags && (
+                                        <span className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-500/20 text-red-400 border border-red-500/30">
+                                          <AlertTriangle className="h-2.5 w-2.5" />
+                                          Health conditions flagged
+                                        </span>
+                                      )}
+                                      {!hasParqFlags && unchecked && (
                                         <span className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-400 border border-orange-500/30">
                                           <AlertTriangle className="h-2.5 w-2.5" />
                                           Not fully agreed
@@ -555,7 +614,12 @@ export default function PortalAdmin() {
                                         ? `Submitted ${format(new Date(response.submittedAt), "MMM d, yyyy")}`
                                         : `Updated ${format(new Date(response.updatedAt), "MMM d, yyyy")}`}
                                     </p>
-                                    {unchecked && (
+                                    {hasParqFlags && (
+                                      <p className="text-xs text-red-400/80 mt-0.5">
+                                        Member reported health conditions — view form for details
+                                      </p>
+                                    )}
+                                    {!hasParqFlags && unchecked && (
                                       <p className="text-xs text-orange-400/80 mt-0.5">
                                         One or more agreement checkboxes were left unchecked — review required
                                       </p>
