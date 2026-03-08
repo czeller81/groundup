@@ -29,7 +29,9 @@ export default function PortalNavbar() {
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center gap-4">
             <Link href="/" className="flex items-center space-x-3 group" title="Back to main site">
-              <img src={logoImage} alt="Ground Up BJJ Logo" className="h-9 w-9 transition-transform group-hover:scale-110" style={{ filter: "brightness(0) invert(1)" }} />
+              <div className="h-9 w-9 rounded-full border border-white/20 bg-white/5 flex items-center justify-center overflow-hidden flex-shrink-0 transition-transform group-hover:scale-110">
+                <img src={logoImage} alt="Ground Up BJJ Logo" className="h-7 w-7 object-contain" style={{ filter: "brightness(0) invert(1)" }} />
+              </div>
               <div className="hidden sm:block">
                 <span className="text-lg font-bold text-white tracking-wider" style={{ fontFamily: 'var(--font-display)' }}>
                   GROUND UP

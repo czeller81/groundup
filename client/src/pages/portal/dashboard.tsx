@@ -88,7 +88,7 @@ export default function PortalDashboard() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-[#0B0F14]">
         <Loader2 className="animate-spin h-8 w-8 text-[#5EEBFF]" />
       </div>
     );
@@ -123,58 +123,140 @@ export default function PortalDashboard() {
 
   return (
     <div className="min-h-screen bg-[#0B0F14] flex flex-col">
-      {/* Header */}
-      <div className="bg-[#121826]/80 border-b border-white/5 py-4 px-4 sm:px-6">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>
-              MEMBER <span className="gradient-text-purple">PORTAL</span>
-            </h1>
-            <p className="text-sm text-gray-400 mt-0.5">
-              Welcome back, <span className="text-white font-medium">{user?.firstName}</span>
-            </p>
-          </div>
-          {!allFormsComplete && (
-            <div className="hidden sm:flex items-center gap-2 px-4 py-2 bg-amber-500/10 border border-amber-500/30 rounded-lg text-amber-400 text-sm">
-              <AlertCircle className="h-4 w-4 flex-shrink-0" />
-              {completedRequired}/{requiredForms.length} required forms complete
-            </div>
-          )}
-        </div>
-      </div>
+      <main className="flex-grow w-full max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6">
 
-      <main className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-8 flex-grow w-full">
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        {/* Welcome + Status Row */}
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <p className="text-xs text-gray-500 uppercase tracking-widest font-medium">Member Portal</p>
+            <h2 className="text-lg font-bold text-white mt-0.5" style={{ fontFamily: 'var(--font-display)' }}>
+              Welcome back, <span className="text-[#5EEBFF]">{user?.firstName}</span>
+            </h2>
+          </div>
+          <div className="flex items-center gap-2">
+            {allFormsComplete ? (
+              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-green-500/10 border border-green-500/20 rounded-full">
+                <CheckCircle className="h-3.5 w-3.5 text-green-400" />
+                <span className="text-green-400 text-xs font-medium">All forms done</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500/10 border border-amber-500/20 rounded-full">
+                <AlertCircle className="h-3.5 w-3.5 text-amber-400" />
+                <span className="text-amber-400 text-xs font-medium">{completedRequired}/{requiredForms.length} forms</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Incomplete Forms Alert Banner */}
+        {!allFormsComplete && (
+          <div className="mb-4 p-3 rounded-xl border border-amber-500/30 bg-amber-500/10 flex items-start gap-3">
+            <AlertCircle className="h-4 w-4 text-amber-400 flex-shrink-0 mt-0.5" />
+            <div className="min-w-0 flex-1">
+              <p className="text-amber-300 text-sm font-medium">Action required</p>
+              <p className="text-amber-400/80 text-xs mt-0.5">Complete your required forms to access all gym services.</p>
+            </div>
+            <Button size="sm" className="flex-shrink-0 bg-amber-500 text-white hover:bg-amber-600 h-7 px-3 text-xs" asChild>
+              <Link href={`/portal/forms/${requiredForms.find((f: any) => f.responseStatus !== "submitted")?.slug || ""}`}>
+                Start
+              </Link>
+            </Button>
+          </div>
+        )}
+
+        {/* Quick Action Tiles — mobile-first 2-col row */}
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          <Link href="/portal/booking">
+            <div className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl bg-[#B06CFF]/15 border border-[#B06CFF]/30 hover:bg-[#B06CFF]/20 transition-colors cursor-pointer h-full min-h-[80px]">
+              <Calendar className="h-6 w-6 text-[#B06CFF]" />
+              <span className="text-white text-sm font-semibold text-center leading-tight">Book Session</span>
+            </div>
+          </Link>
+          <Link href="/portal/forms/personal-training-intake">
+            <div className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl bg-[#5EEBFF]/10 border border-[#5EEBFF]/20 hover:bg-[#5EEBFF]/15 transition-colors cursor-pointer h-full min-h-[80px]">
+              <FileText className="h-6 w-6 text-[#5EEBFF]" />
+              <span className="text-white text-sm font-semibold text-center leading-tight">My Forms</span>
+            </div>
+          </Link>
+        </div>
+
+        {/* Main content grid: 1-col mobile, 2-col md, 3-col lg */}
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+
+          {/* UPCOMING SESSIONS — shown first on mobile */}
+          <Card className="bg-[#121826] border-white/10">
+            <CardHeader className="pb-3 pt-4 px-4">
+              <CardTitle className="flex items-center gap-2 text-white text-base">
+                <Calendar className="h-4 w-4 text-[#FFB199]" />
+                Upcoming Sessions
+              </CardTitle>
+              <CardDescription className="text-xs">
+                {upcomingBookings.length} upcoming session{upcomingBookings.length !== 1 ? "s" : ""}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="px-4 pb-4">
+              {upcomingBookings.length === 0 ? (
+                <div className="text-center py-3">
+                  <p className="text-gray-400 text-sm mb-3">No upcoming sessions</p>
+                  <Button asChild size="sm" className="bg-[#FFB199] text-[#0B0F14] font-bold hover:bg-[#FFB199]/90 w-full">
+                    <Link href="/portal/booking">Book a Session</Link>
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {upcomingBookings.slice(0, 3).map((booking: any) => (
+                    <div key={booking.id} className="p-3 bg-white/[0.03] border border-white/5 rounded-lg flex justify-between items-center">
+                      <div>
+                        <p className="font-medium text-sm text-white">{format(new Date(booking.start), "EEE, MMM d")}</p>
+                        <p className="text-xs text-gray-400">{format(new Date(booking.start), "h:mm a")} · {booking.trainer?.name}</p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-red-400 hover:text-red-300 hover:bg-red-400/10 h-7 w-7 p-0 flex-shrink-0"
+                        onClick={() => setCancelDialog({ open: true, booking })}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                  <Button variant="outline" size="sm" className="w-full mt-1 border-white/10 hover:bg-white/5 text-gray-300 text-xs" asChild>
+                    <Link href="/portal/booking">Book Another Session</Link>
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
           {/* REQUIRED FORMS */}
           <Card className="lg:col-span-2 bg-[#121826] border-white/10">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-white">
-                <FileText className="h-5 w-5 text-[#5EEBFF]" />
+            <CardHeader className="pb-3 pt-4 px-4">
+              <CardTitle className="flex items-center gap-2 text-white text-base">
+                <FileText className="h-4 w-4 text-[#5EEBFF]" />
                 Required Forms
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-xs">
                 {allFormsComplete
                   ? "All required forms are complete."
                   : `${completedRequired} of ${requiredForms.length} required forms submitted`}
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-4 pb-4">
               <div className="space-y-2">
                 {forms.map((form: any) => {
                   const IconComp = FORM_ICONS[form.slug] || FileText;
                   return (
                     <div key={form.id} className="flex items-center justify-between p-3 bg-white/[0.03] border border-white/5 rounded-lg hover:border-white/10 transition-colors">
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-8 h-8 rounded-lg bg-[#5EEBFF]/10 flex items-center justify-center flex-shrink-0">
-                          <IconComp className="h-4 w-4 text-[#5EEBFF]" />
+                        <div className="w-7 h-7 rounded-lg bg-[#5EEBFF]/10 flex items-center justify-center flex-shrink-0">
+                          <IconComp className="h-3.5 w-3.5 text-[#5EEBFF]" />
                         </div>
                         <div className="min-w-0">
                           <p className="font-medium text-sm text-white truncate">{form.title}</p>
                           <p className="text-xs text-gray-500">{form.isRequired ? "Required" : "Optional"}</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2 flex-shrink-0 ml-3">
+                      <div className="flex items-center gap-2 flex-shrink-0 ml-2">
                         {getStatusBadge(form.responseStatus)}
                         {form.responseStatus === "submitted" ? (
                           <Button
@@ -183,10 +265,10 @@ export default function PortalDashboard() {
                             className="text-[#5EEBFF] hover:text-[#5EEBFF]/80 hover:bg-[#5EEBFF]/10 h-7 px-2"
                             onClick={() => setFormViewDialog({ open: true, slug: form.slug })}
                           >
-                            <Eye className="h-3 w-3 mr-1" />View
+                            <Eye className="h-3 w-3 sm:mr-1" /><span className="hidden sm:inline">View</span>
                           </Button>
                         ) : (
-                          <Button size="sm" variant="outline" className="h-7 px-3 text-xs border-white/10 hover:bg-white/5" asChild>
+                          <Button size="sm" variant="outline" className="h-7 px-2 sm:px-3 text-xs border-white/10 hover:bg-white/5" asChild>
                             <Link href={`/portal/forms/${form.slug}`}>
                               {form.responseStatus === "draft" ? "Continue" : "Start"}
                             </Link>
@@ -202,20 +284,20 @@ export default function PortalDashboard() {
 
           {/* MEMBERSHIP STATUS */}
           <Card className="bg-[#121826] border-white/10">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-white">
-                <CreditCard className="h-5 w-5 text-[#B06CFF]" />
+            <CardHeader className="pb-3 pt-4 px-4">
+              <CardTitle className="flex items-center gap-2 text-white text-base">
+                <CreditCard className="h-4 w-4 text-[#B06CFF]" />
                 Membership
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-4 pb-4">
               {membership ? (
-                <div className="space-y-4">
-                  <div className="p-4 bg-[#B06CFF]/10 border border-[#B06CFF]/20 rounded-lg">
+                <div className="space-y-3">
+                  <div className="p-3 bg-[#B06CFF]/10 border border-[#B06CFF]/20 rounded-lg">
                     <p className="text-xs text-[#B06CFF] font-semibold uppercase tracking-wider mb-1">Active Plan</p>
-                    <p className="text-white font-semibold">{getMembershipInfo(membership.type).name}</p>
+                    <p className="text-white font-semibold text-sm">{getMembershipInfo(membership.type).name}</p>
                   </div>
-                  <div className="space-y-3 text-sm">
+                  <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span className="text-gray-400">Price</span>
                       <span className="text-white font-medium">{getMembershipInfo(membership.type).price}</span>
@@ -237,11 +319,11 @@ export default function PortalDashboard() {
                   </div>
                 </div>
               ) : (
-                <div className="text-center py-4">
-                  <div className="w-12 h-12 rounded-full bg-[#B06CFF]/10 flex items-center justify-center mx-auto mb-3">
-                    <CreditCard className="h-6 w-6 text-[#B06CFF]" />
+                <div className="text-center py-3">
+                  <div className="w-10 h-10 rounded-full bg-[#B06CFF]/10 flex items-center justify-center mx-auto mb-3">
+                    <CreditCard className="h-5 w-5 text-[#B06CFF]" />
                   </div>
-                  <p className="text-gray-400 text-sm mb-4">No active membership</p>
+                  <p className="text-gray-400 text-sm mb-3">No active membership</p>
                   <Button asChild size="sm" className="bg-[#B06CFF] text-white hover:bg-[#B06CFF]/90 w-full">
                     <Link href="/pricing">View Programs</Link>
                   </Button>
@@ -250,57 +332,36 @@ export default function PortalDashboard() {
             </CardContent>
           </Card>
 
-          {/* UPCOMING SESSIONS */}
-          <Card className="bg-[#121826] border-white/10">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-white">
-                <Calendar className="h-5 w-5 text-[#FFB199]" />
-                Upcoming Sessions
+          {/* COMMUNITY EVENTS */}
+          <Card className="bg-[#121826] border-[#FFB199]/20">
+            <CardHeader className="pb-3 pt-4 px-4">
+              <CardTitle className="flex items-center gap-2 text-white text-base">
+                <Star className="h-4 w-4 text-[#FFB199]" />
+                Community Event
               </CardTitle>
-              <CardDescription>
-                {upcomingBookings.length} upcoming session{upcomingBookings.length !== 1 ? "s" : ""}
-              </CardDescription>
+              <CardDescription className="text-xs">Free class — open to everyone</CardDescription>
             </CardHeader>
-            <CardContent>
-              {upcomingBookings.length === 0 ? (
-                <div className="text-center py-4">
-                  <p className="text-gray-400 text-sm mb-4">No upcoming sessions</p>
-                  <Button asChild size="sm" className="bg-[#FFB199] text-[#0B0F14] font-bold hover:bg-[#FFB199]/90 w-full">
-                    <Link href="/portal/booking">Book a Session</Link>
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {upcomingBookings.slice(0, 3).map((booking: any) => (
-                    <div key={booking.id} className="p-3 bg-white/[0.03] border border-white/5 rounded-lg flex justify-between items-center">
-                      <div>
-                        <p className="font-medium text-sm text-white">{format(new Date(booking.start), "EEE, MMM d")}</p>
-                        <p className="text-xs text-gray-400">{format(new Date(booking.start), "h:mm a")} · {booking.trainer?.name}</p>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-red-400 hover:text-red-300 hover:bg-red-400/10 h-7 w-7 p-0"
-                        onClick={() => setCancelDialog({ open: true, booking })}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
-                  <Button variant="outline" size="sm" className="w-full mt-2 border-white/10 hover:bg-white/5 text-gray-300 text-xs" asChild>
-                    <Link href="/portal/booking">Book Another Session</Link>
-                  </Button>
-                </div>
-              )}
+            <CardContent className="px-4 pb-4">
+              <div className="p-3 bg-[#FFB199]/10 border border-[#FFB199]/20 rounded-lg mb-3">
+                <p className="text-[#FFB199] font-semibold text-sm mb-1">Free Community Self-Defense</p>
+                <p className="text-white text-base font-bold">{format(nextCommunityClass, "EEEE, MMM d")}</p>
+                <p className="text-gray-400 text-xs mt-1">Repeats every 2 weeks</p>
+              </div>
+              <p className="text-gray-400 text-xs mb-3 leading-relaxed">
+                Open to everyone. No experience or registration required.
+              </p>
+              <Button asChild size="sm" className="w-full bg-[#FFB199] text-[#0B0F14] font-bold hover:bg-[#FFB199]/90">
+                <Link href="/contact">Learn More</Link>
+              </Button>
             </CardContent>
           </Card>
 
-          {/* QUICK ACTIONS */}
-          <Card className="bg-[#121826] border-white/10">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-white">Quick Actions</CardTitle>
+          {/* QUICK ACTIONS — desktop only (mobile has tile row above) */}
+          <Card className="hidden md:block bg-[#121826] border-white/10">
+            <CardHeader className="pb-3 pt-4 px-4">
+              <CardTitle className="text-white text-base">Quick Actions</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2">
+            <CardContent className="px-4 pb-4 space-y-2">
               <a
                 href="https://1club.ai"
                 target="_blank"
@@ -323,15 +384,6 @@ export default function PortalDashboard() {
                 </Link>
               </Button>
               <Button variant="outline" className="w-full border-white/10 hover:bg-white/5 text-gray-300 justify-between text-sm" asChild>
-                <Link href="/portal/booking">
-                  <div className="flex items-center gap-2">
-                    <Eye className="h-4 w-4" />
-                    View All Bookings
-                  </div>
-                  <ChevronRight className="h-4 w-4" />
-                </Link>
-              </Button>
-              <Button variant="outline" className="w-full border-white/10 hover:bg-white/5 text-gray-300 justify-between text-sm" asChild>
                 <Link href="/">
                   <div className="flex items-center gap-2">
                     <Home className="h-4 w-4" />
@@ -343,41 +395,18 @@ export default function PortalDashboard() {
             </CardContent>
           </Card>
 
-          {/* COMMUNITY EVENTS */}
-          <Card className="bg-[#121826] border-[#FFB199]/20">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-white">
-                <Star className="h-5 w-5 text-[#FFB199]" />
-                Community Event
-              </CardTitle>
-              <CardDescription>Free class — open to everyone</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="p-4 bg-[#FFB199]/10 border border-[#FFB199]/20 rounded-lg mb-4">
-                <p className="text-[#FFB199] font-semibold text-sm mb-1">Free Community Self-Defense</p>
-                <p className="text-white text-lg font-bold">{format(nextCommunityClass, "EEEE, MMM d")}</p>
-                <p className="text-gray-400 text-xs mt-1">Repeats every 2 weeks</p>
-              </div>
-              <p className="text-gray-400 text-xs mb-4 leading-relaxed break-words">
-                Open to everyone in the community. No experience or registration required — just show up.
-              </p>
-              <Button asChild size="sm" className="w-full bg-[#FFB199] text-[#0B0F14] font-bold hover:bg-[#FFB199]/90">
-                <Link href="/contact">Learn More</Link>
-              </Button>
-            </CardContent>
-          </Card>
         </div>
 
         {/* PAST SESSIONS */}
         {pastBookings.length > 0 && (
-          <Card className="mt-6 bg-[#121826] border-white/10">
-            <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
-                <Clock className="h-5 w-5 text-gray-400" />
+          <Card className="mt-4 bg-[#121826] border-white/10">
+            <CardHeader className="pt-4 px-4">
+              <CardTitle className="text-white flex items-center gap-2 text-base">
+                <Clock className="h-4 w-4 text-gray-400" />
                 Past Sessions
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-4 pb-4">
               <div className="space-y-2">
                 {pastBookings.slice(0, 5).map((booking: any) => (
                   <div key={booking.id} className="flex justify-between items-center p-3 bg-white/[0.02] border border-white/5 rounded-lg">
@@ -397,34 +426,22 @@ export default function PortalDashboard() {
       </main>
 
       {/* PORTAL FOOTER */}
-      <footer className="border-t border-white/5 mt-8 py-6 px-4">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+      <footer className="border-t border-white/5 mt-6 py-5 px-4">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="text-gray-600 text-xs">
-            &copy; {new Date().getFullYear()} Ground Up Jiu-Jitsu &amp; Fitness. All rights reserved.
+            &copy; {new Date().getFullYear()} Ground Up Jiu-Jitsu &amp; Fitness
           </p>
-          <div className="flex flex-wrap items-center gap-4 text-xs">
-            <Link href="/portal/forms/liability-waiver" className="text-gray-500 hover:text-gray-300 transition-colors">
-              Liability Waiver
-            </Link>
-            <Link href="/portal/forms/gym-rules" className="text-gray-500 hover:text-gray-300 transition-colors">
-              Gym Rules
-            </Link>
-            <Link href="/contact" className="text-gray-500 hover:text-gray-300 transition-colors">
-              Privacy Policy
-            </Link>
-            <Link href="/contact" className="text-gray-500 hover:text-gray-300 transition-colors">
-              Terms of Service
-            </Link>
-            <Link href="/contact" className="text-gray-500 hover:text-gray-300 transition-colors">
-              Safety Policy
-            </Link>
+          <div className="flex flex-wrap justify-center items-center gap-3 text-xs">
+            <Link href="/portal/forms/liability-waiver" className="text-gray-500 hover:text-gray-300 transition-colors">Liability Waiver</Link>
+            <Link href="/portal/forms/gym-rules" className="text-gray-500 hover:text-gray-300 transition-colors">Gym Rules</Link>
+            <Link href="/contact" className="text-gray-500 hover:text-gray-300 transition-colors">Contact</Link>
           </div>
         </div>
       </footer>
 
       {/* CANCEL DIALOG */}
       <Dialog open={cancelDialog.open} onOpenChange={(open) => setCancelDialog({ open, booking: open ? cancelDialog.booking : null })}>
-        <DialogContent className="bg-[#121826] border-white/10 text-white">
+        <DialogContent className="bg-[#121826] border-white/10 text-white mx-4 rounded-xl">
           <DialogHeader>
             <DialogTitle className="text-white">Cancel Booking</DialogTitle>
             <DialogDescription className="text-gray-400">
@@ -442,7 +459,7 @@ export default function PortalDashboard() {
               )}
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="gap-2">
+          <DialogFooter className="gap-2 flex-col sm:flex-row">
             <Button variant="outline" className="border-white/10 text-gray-300 hover:bg-white/5" onClick={() => setCancelDialog({ open: false, booking: null })}>
               Keep Booking
             </Button>
@@ -462,7 +479,7 @@ export default function PortalDashboard() {
 
       {/* FORM VIEW DIALOG */}
       <Dialog open={formViewDialog.open} onOpenChange={(open) => setFormViewDialog({ open, slug: open ? formViewDialog.slug : null })}>
-        <DialogContent className="bg-[#121826] border-white/10 text-white max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="bg-[#121826] border-white/10 text-white max-w-2xl max-h-[80vh] overflow-y-auto mx-4 rounded-xl">
           <DialogHeader>
             <DialogTitle className="text-white" style={{ fontFamily: 'var(--font-display)' }}>
               {formDetail?.form?.title || "Form Details"}
@@ -485,26 +502,36 @@ export default function PortalDashboard() {
                   const agreed = answer === true;
                   return (
                     <div key={fieldKey} className="flex items-start gap-3 py-2 border-b border-white/5">
-                      {agreed ? (
-                        <CheckCircle className="h-4 w-4 text-green-400 mt-0.5 flex-shrink-0" />
-                      ) : (
-                        <XCircle className="h-4 w-4 text-red-400 mt-0.5 flex-shrink-0" />
-                      )}
-                      <div>
-                        <p className="text-sm text-white leading-snug">{field.label || fieldKey}</p>
-                        <p className={`text-xs mt-0.5 font-medium ${agreed ? "text-green-400" : "text-red-400"}`}>
+                      <div className={`mt-0.5 flex-shrink-0 ${agreed ? "text-green-400" : "text-red-400"}`}>
+                        {agreed ? <CheckCircle className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs text-gray-400 mb-0.5">{field.label}</p>
+                        <p className={`text-sm font-medium ${agreed ? "text-green-300" : "text-red-300"}`}>
                           {agreed ? "Agreed" : "Not agreed"}
                         </p>
                       </div>
                     </div>
                   );
                 }
+                if (isBoolean) {
+                  const val = answer === true || answer === "true";
+                  return (
+                    <div key={fieldKey} className="flex items-start gap-3 py-2 border-b border-white/5">
+                      <div className={`mt-0.5 flex-shrink-0 ${val ? "text-amber-400" : "text-green-400"}`}>
+                        {val ? <AlertCircle className="h-4 w-4" /> : <CheckCircle className="h-4 w-4" />}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs text-gray-400 mb-0.5">{field.label}</p>
+                        <p className="text-sm font-medium text-white">{val ? "Yes" : "No"}</p>
+                      </div>
+                    </div>
+                  );
+                }
                 return (
-                  <div key={fieldKey} className="border-b border-white/5 pb-2">
-                    <p className="text-xs text-gray-400 uppercase tracking-wide">{field.label || fieldKey}</p>
-                    <p className="text-sm text-white mt-1">
-                      {isBoolean ? (answer ? "Yes" : "No") : String(answer)}
-                    </p>
+                  <div key={fieldKey} className="py-2 border-b border-white/5">
+                    <p className="text-xs text-gray-400 mb-0.5">{field.label}</p>
+                    <p className="text-sm text-white break-words">{String(answer)}</p>
                   </div>
                 );
               })
