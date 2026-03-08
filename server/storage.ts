@@ -84,6 +84,8 @@ export interface IStorage {
   
   createCalendlyBooking(data: { eventId: string; email: string; eventType: string; startTime: Date; paymentStatus: string; amount: number }): Promise<Booking>;
   
+  deleteFormResponse(userId: string, formId: string): Promise<void>;
+
   getAdminUser(email: string): Promise<AdminUser | undefined>;
   createAdminUser(adminUser: InsertAdminUser): Promise<AdminUser>;
 }
@@ -216,6 +218,12 @@ export class DatabaseStorage implements IStorage {
       .where(eq(formResponses.id, existing.id))
       .returning();
     return updated;
+  }
+
+  async deleteFormResponse(userId: string, formId: string): Promise<void> {
+    await db
+      .delete(formResponses)
+      .where(and(eq(formResponses.userId, userId), eq(formResponses.formId, formId)));
   }
 
   async getAllFormResponses(): Promise<(FormResponse & { user: SafeUser; form: Form })[]> {
@@ -569,6 +577,7 @@ async function seedFormData() {
       title: "Personal Training Intake Form",
       description: "Basic information about your training background and goals",
       isRequired: true,
+      retakeable: true,
       fields: [
         { name: "trainingExperience", label: "Previous Training Experience", type: "textarea", required: true },
         { name: "currentFitness", label: "Current Fitness Level", type: "select", options: ["Beginner", "Intermediate", "Advanced"], required: true },
@@ -581,6 +590,7 @@ async function seedFormData() {
       title: "Health & PAR-Q Assessment",
       description: "Physical Activity Readiness Questionnaire",
       isRequired: true,
+      retakeable: false,
       fields: [
         { name: "heartCondition", label: "Has a doctor ever said you have a heart condition?", type: "boolean", required: true },
         { name: "chestPain", label: "Do you feel pain in your chest during physical activity?", type: "boolean", required: true },
@@ -595,6 +605,7 @@ async function seedFormData() {
       title: "Goals & Preferences",
       description: "Help us understand your training goals",
       isRequired: true,
+      retakeable: true,
       fields: [
         { name: "primaryGoal", label: "Primary Training Goal", type: "select", options: ["Self-Defense", "Competition", "Fitness", "Fun & Social", "Weight Loss"], required: true },
         { name: "shortTermGoals", label: "Short-term Goals (3 months)", type: "textarea", required: true },
@@ -607,6 +618,7 @@ async function seedFormData() {
       title: "Martial Arts Liability Waiver",
       description: "Required waiver acknowledging the risks of martial arts training",
       isRequired: true,
+      retakeable: false,
       fields: [
         { name: "fullName", label: "Full Name", type: "text", required: true },
         { name: "dateOfBirth", label: "Date of Birth", type: "date", required: true },
@@ -625,6 +637,7 @@ async function seedFormData() {
       title: "Media Release Authorization",
       description: "Authorization for use of photos and videos",
       isRequired: true,
+      retakeable: true,
       fields: [
         { name: "mediaConsent", label: "Do you allow Ground Up Jiu-Jitsu to use photos and videos of you for marketing, social media, and promotional purposes?", type: "boolean", required: true }
       ]
@@ -634,6 +647,7 @@ async function seedFormData() {
       title: "Gym Rules Agreement",
       description: "Acknowledgment of gym policies and code of conduct",
       isRequired: true,
+      retakeable: false,
       fields: [
         { name: "followInstructions", label: "I will follow all instructor directions during class", type: "checkbox", required: true },
         { name: "respectfulTraining", label: "I will train respectfully and considerately with all other students", type: "checkbox", required: true },
@@ -646,6 +660,7 @@ async function seedFormData() {
       title: "Minor Participation Consent",
       description: "Required for participants under 18 years of age",
       isRequired: false,
+      retakeable: true,
       fields: [
         { name: "parentName", label: "Parent / Guardian Full Name", type: "text", required: true },
         { name: "childName", label: "Child's Full Name", type: "text", required: true },

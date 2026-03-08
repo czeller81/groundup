@@ -25,6 +25,7 @@ export const forms = pgTable("forms", {
   description: text("description"),
   fields: jsonb("fields").notNull(),
   isRequired: boolean("is_required").notNull().default(true),
+  retakeable: boolean("retakeable").notNull().default(false),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

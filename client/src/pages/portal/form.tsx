@@ -12,7 +12,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
 import { usePortalAuth } from "@/lib/portal-auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { ArrowLeft, Save, Send, Loader2, CheckCircle } from "lucide-react";
+import { ArrowLeft, Save, Send, Loader2, CheckCircle, Lock, RotateCcw } from "lucide-react";
 
 export default function PortalForm() {
   const { slug } = useParams<{ slug: string }>();
@@ -60,6 +60,22 @@ export default function PortalForm() {
     },
     onError: (error: any) => {
       toast({ title: "Error", description: error.message || "Failed to submit form", variant: "destructive" });
+    },
+  });
+
+  const retakeMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", `/api/portal/forms/${slug}/retake`, {});
+      return res.json();
+    },
+    onSuccess: () => {
+      setAnswers({});
+      queryClient.invalidateQueries({ queryKey: ["/api/portal/forms", slug] });
+      queryClient.invalidateQueries({ queryKey: ["/api/portal/forms"] });
+      toast({ title: "Form Reset", description: "You can now update your answers." });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message || "Failed to reset form", variant: "destructive" });
     },
   });
 
@@ -273,14 +289,39 @@ export default function PortalForm() {
 
       <main className="max-w-3xl mx-auto px-4 py-8">
         {isSubmitted && (
-          <Card className="mb-6 border-green-500 bg-green-50 dark:bg-green-900/20">
-            <CardContent className="p-4 flex items-center gap-3">
-              <CheckCircle className="h-5 w-5 text-green-600" />
-              <p className="text-green-800 dark:text-green-200">
-                This form has been submitted and can no longer be edited.
-              </p>
-            </CardContent>
-          </Card>
+          form?.retakeable ? (
+            <Card className="mb-6 bg-[#121826] border-[#5EEBFF]/30">
+              <CardContent className="p-4 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <CheckCircle className="h-5 w-5 text-green-400 flex-shrink-0" />
+                  <p className="text-gray-300 text-sm">
+                    This form has been submitted. You can update your answers at any time.
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-shrink-0 border-[#5EEBFF]/30 text-[#5EEBFF] hover:bg-[#5EEBFF]/10"
+                  onClick={() => retakeMutation.mutate()}
+                  disabled={retakeMutation.isPending}
+                >
+                  {retakeMutation.isPending
+                    ? <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    : <RotateCcw className="h-4 w-4 mr-2" />}
+                  Retake Form
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card className="mb-6 bg-[#121826] border-amber-500/30">
+              <CardContent className="p-4 flex items-center gap-3">
+                <Lock className="h-5 w-5 text-amber-400 flex-shrink-0" />
+                <p className="text-gray-300 text-sm">
+                  This form has been submitted and is locked for legal reasons.
+                </p>
+              </CardContent>
+            </Card>
+          )
         )}
 
         <form onSubmit={handleSubmit}>

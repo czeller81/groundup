@@ -401,6 +401,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/portal/forms/:slug/retake", requireAuth, async (req, res) => {
+    try {
+      const userId = req.session.userId!;
+      const form = await storage.getFormBySlug(req.params.slug);
+      if (!form) return res.status(404).json({ message: "Form not found" });
+      if (!form.retakeable) return res.status(403).json({ message: "This form cannot be retaken" });
+      await storage.deleteFormResponse(userId, form.id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to reset form" });
+    }
+  });
+
   app.post("/api/portal/forms/:slug/submit", requireAuth, async (req, res) => {
     try {
       const userId = req.session.userId!;
