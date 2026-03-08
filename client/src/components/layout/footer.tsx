@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import { MapPin, Phone, Mail, Instagram } from "lucide-react";
-import logoImage from "@assets/ground up logo_1758214430976.png";
+import logoImage from "@assets/Ground_up_Logo_1772941267349.png";
 
 export default function Footer() {
   return (
@@ -9,7 +9,7 @@ export default function Footer() {
         <div className="grid md:grid-cols-3 gap-10">
           <div>
             <div className="flex items-center space-x-3 mb-4">
-              <img src={logoImage} alt="Ground Up BJJ" className="h-10 w-10" />
+              <img src={logoImage} alt="Ground Up BJJ" className="h-10 w-10" style={{ filter: "brightness(0) invert(1)" }} />
               <span className="text-lg font-bold text-white tracking-wider" style={{ fontFamily: 'var(--font-display)' }}>
                 GROUND UP
               </span>

@@ -3,7 +3,7 @@ import { Link, useLocation } from "wouter";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
-import logoImage from "@assets/ground up logo_1758214430976.png";
+import logoImage from "@assets/Ground_up_Logo_1772941267349.png";
 
 export default function Navbar() {
   const [location] = useLocation();
@@ -36,7 +36,7 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16 md:h-20">
           <Link href="/" className="flex items-center space-x-3 group" data-testid="navbar-logo">
-            <img src={logoImage} alt="Ground Up BJJ Logo" className="h-10 w-10 transition-transform group-hover:scale-110" />
+            <img src={logoImage} alt="Ground Up BJJ Logo" className="h-10 w-10 transition-transform group-hover:scale-110" style={{ filter: "brightness(0) invert(1)" }} />
             <span className="text-lg font-bold text-white tracking-wider" style={{ fontFamily: 'var(--font-display)' }}>
               GROUND UP
             </span>

@@ -4,7 +4,7 @@ import { Menu, X, LogOut, Home, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePortalAuth } from "@/lib/portal-auth";
-import logoImage from "@assets/ground up logo_1758214430976.png";
+import logoImage from "@assets/Ground_up_Logo_1772941267349.png";
 
 export default function PortalNavbar() {
   const [location, setLocation] = useLocation();
@@ -29,7 +29,7 @@ export default function PortalNavbar() {
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center gap-4">
             <Link href="/" className="flex items-center space-x-3 group" title="Back to main site">
-              <img src={logoImage} alt="Ground Up BJJ Logo" className="h-9 w-9 transition-transform group-hover:scale-110" />
+              <img src={logoImage} alt="Ground Up BJJ Logo" className="h-9 w-9 transition-transform group-hover:scale-110" style={{ filter: "brightness(0) invert(1)" }} />
               <div className="hidden sm:block">
                 <span className="text-lg font-bold text-white tracking-wider" style={{ fontFamily: 'var(--font-display)' }}>
                   GROUND UP
