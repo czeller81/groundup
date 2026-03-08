@@ -3,8 +3,8 @@ import { Button } from "@/components/ui/button";
 import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
 import { ArrowRight, Zap, Target, Clock, Users, Dumbbell, Shield } from "lucide-react";
-import trainingImage from "@assets/stock_images/female_bjj_martial_a_a12da0db.jpg";
-import sparringImage from "@assets/stock_images/female_women_martial_65702319.jpg";
+import trainingImage from "@assets/stock_images/women_personal_training_1.jpg";
+import sparringImage from "@assets/stock_images/women_strength_conditioning_2.jpg";
 
 function Section({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   const ref = useRef(null);

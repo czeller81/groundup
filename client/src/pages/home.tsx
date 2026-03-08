@@ -6,15 +6,19 @@ import {
   Shield, Dumbbell, Users, Award, ChevronDown, ChevronUp,
   Star, ArrowRight, Zap, Heart, CheckCircle, Lock
 } from "lucide-react";
-import femaleFighterImage from "@assets/stock_images/woman_training_bjj_m_bb6c5084.jpg";
-import femaleStudent1 from "@assets/stock_images/female_bjj_students__456d0e30.jpg";
-import femaleStudent2 from "@assets/stock_images/female_bjj_students__0fe74900.jpg";
-import femaleStudent3 from "@assets/stock_images/female_bjj_students__65085ad5.jpg";
-import trainerImage from "@assets/stock_images/female_brazilian_jiu_cfa563c5.jpg";
-import martialImage from "@assets/stock_images/female_bjj_martial_a_dc8c6615.jpg";
-import martial2Image from "@assets/stock_images/female_bjj_martial_a_f7167aea.jpg";
-import martial3Image from "@assets/stock_images/female_bjj_martial_a_a12da0db.jpg";
-import sparringImage from "@assets/stock_images/female_women_martial_65702319.jpg";
+import selfDefenseFeaturedImg from "@assets/stock_images/women_self_defense_1.jpg";
+import bjjFundamentalsImg from "@assets/stock_images/women_bjj_1.jpg";
+import kidsClassImg from "@assets/stock_images/kids_martial_arts_1.jpg";
+import strengthImg from "@assets/stock_images/women_strength_conditioning_1.jpg";
+import personalTrainingImg from "@assets/stock_images/women_personal_training_1.jpg";
+import whyDifferentImg from "@assets/stock_images/women_self_defense_hero_1.jpg";
+import whoServeWomenImg from "@assets/stock_images/women_empowered_fitness_1.jpg";
+import whoServeKidsImg from "@assets/stock_images/kids_martial_arts_2.jpg";
+import whoServeBeginnersImg from "@assets/stock_images/women_personal_training_2.jpg";
+import coachImg from "@assets/stock_images/female_bjj_coach_1.jpg";
+import testimonialImg1 from "@assets/stock_images/woman_fitness_portrait_1.jpg";
+import testimonialImg2 from "@assets/stock_images/woman_fitness_portrait_2.jpg";
+import testimonialImg3 from "@assets/stock_images/woman_fitness_portrait_3.jpg";
 import heroVideo from "@assets/videos/hero-bg.mp4?url";
 
 function Section({ children, className = "", delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
@@ -242,7 +246,7 @@ export default function Home() {
               </div>
               <div className="aspect-[4/3] md:aspect-auto overflow-hidden">
                 <img
-                  src={martialImage}
+                  src={selfDefenseFeaturedImg}
                   alt="Women's Self-Defense Program"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
@@ -256,28 +260,28 @@ export default function Home() {
                 title: "Women's BJJ Fundamentals",
                 desc: "Learn Brazilian Jiu-Jitsu fundamentals in a small-group setting focused on technique, movement, confidence, and controlled training.",
                 highlights: ["Beginner friendly", "Small class sizes", "Technique-focused", "Safe environment"],
-                img: femaleFighterImage,
+                img: bjjFundamentalsImg,
                 accent: "#5EEBFF",
               },
               {
                 title: "Kids Jiu-Jitsu",
                 desc: "A positive program designed to help kids develop confidence, discipline, coordination, and anti-bullying awareness.",
                 highlights: ["Ages 6–14", "Confidence building", "Discipline", "Anti-bullying focus"],
-                img: femaleStudent1,
+                img: kidsClassImg,
                 accent: "#B06CFF",
               },
               {
                 title: "Strength & Conditioning",
                 desc: "Small group fitness sessions focused on mobility, strength, injury prevention, and athletic conditioning.",
                 highlights: ["Small groups", "Functional strength", "Injury prevention", "Athletic conditioning"],
-                img: martial2Image,
+                img: strengthImg,
                 accent: "#5EEBFF",
               },
               {
                 title: "Personal Training",
                 desc: "One-on-one coaching tailored to your fitness, self-defense, or performance goals at your own pace.",
                 highlights: ["1-on-1 sessions", "Custom goals", "Flexible schedule", "All levels welcome"],
-                img: sparringImage,
+                img: personalTrainingImg,
                 accent: "#FFB199",
               },
             ].map((program, i) => (
@@ -353,7 +357,7 @@ export default function Home() {
             <div className="relative">
               <div className="absolute -inset-4 bg-gradient-to-br from-[#5EEBFF]/10 to-[#B06CFF]/10 rounded-2xl blur-xl" />
               <img
-                src={femaleStudent3}
+                src={whyDifferentImg}
                 alt="Small group training"
                 className="relative rounded-2xl w-full aspect-[4/5] object-cover border border-white/10"
               />
@@ -451,21 +455,21 @@ export default function Home() {
           <div className="grid md:grid-cols-3 gap-8">
             {[
               {
-                img: martialImage,
+                img: whoServeWomenImg,
                 title: "Women",
                 desc: "Seeking self-defense skills, fitness, and the confidence to feel safer and stronger every day.",
                 highlights: ["Self-defense training", "Strength & conditioning", "Community support"],
                 accent: "#FFB199",
               },
               {
-                img: femaleStudent2,
+                img: whoServeKidsImg,
                 title: "Kids (Ages 6–14)",
                 desc: "Who need positive structure, confidence-building, and real tools to handle life's challenges.",
                 highlights: ["Discipline & focus", "Anti-bullying skills", "Physical coordination"],
                 accent: "#B06CFF",
               },
               {
-                img: martial3Image,
+                img: whoServeBeginnersImg,
                 title: "Beginners & Adults",
                 desc: "Wanting beginner-friendly personal training or martial arts with no prior experience required.",
                 highlights: ["No experience needed", "Personal training", "Flexible scheduling"],
@@ -544,7 +548,7 @@ export default function Home() {
             <div className="relative">
               <div className="absolute -inset-4 bg-gradient-to-br from-[#B06CFF]/20 to-[#5EEBFF]/20 rounded-2xl blur-xl" />
               <img
-                src={trainerImage}
+                src={coachImg}
                 alt="Raymi Gonzalez"
                 className="relative rounded-2xl w-full aspect-[3/4] object-cover border border-white/10"
               />
@@ -568,19 +572,19 @@ export default function Home() {
                 quote: "I signed up for the women's self-defense program with zero experience and left feeling completely confident. The small class size made all the difference — I actually got real coaching.",
                 name: "Maria G.",
                 role: "Self-Defense Program",
-                img: femaleStudent1,
+                img: testimonialImg1,
               },
               {
                 quote: "I was nervous to try BJJ but the environment here is so welcoming. Coach Raymi makes sure everyone feels safe and progresses at their own pace. My daughter loves the kids class too.",
                 name: "Jessica W.",
                 role: "BJJ Fundamentals",
-                img: femaleStudent2,
+                img: testimonialImg2,
               },
               {
                 quote: "The personal training sessions completely transformed my fitness and confidence. Knowing there's a max of 6 people in group classes means I always feel seen and supported.",
                 name: "Priya P.",
                 role: "Personal Training",
-                img: femaleStudent3,
+                img: testimonialImg3,
               },
             ].map((t, i) => (
               <motion.div
