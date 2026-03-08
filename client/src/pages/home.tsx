@@ -190,8 +190,9 @@ export default function Home() {
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[#B06CFF]/20 bg-[#B06CFF]/5 text-[#B06CFF] text-sm mb-6">
             Our Mission
           </div>
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-8" style={{ fontFamily: 'var(--font-display)' }}>
-            BUILT TO <span className="gradient-text-purple">EMPOWER</span> FROM THE GROUND UP
+          <h2 className="text-4xl md:text-5xl font-bold text-white mb-8 leading-tight" style={{ fontFamily: 'var(--font-display)' }}>
+            BUILT TO <span className="gradient-text-purple">EMPOWER</span>
+            <br />FROM THE GROUND UP
           </h2>
           <p className="text-gray-300 text-lg leading-relaxed max-w-3xl mx-auto">
             Ground Up Jiu-Jitsu exists to empower women and children with the skills, confidence, and strength to protect themselves and live healthier lives. We believe training should feel <span className="text-white font-medium">safe, personal, and community-driven</span> — not intimidating.
