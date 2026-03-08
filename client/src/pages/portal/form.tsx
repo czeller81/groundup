@@ -280,14 +280,14 @@ export default function PortalForm() {
 
   return (
     <div>
-      <div className="bg-[#121826]/50 border-b border-white/5 py-4 px-6">
+      <div className="bg-[#121826]/50 border-b border-white/5 py-4 px-4 sm:px-6">
         <div className="max-w-3xl mx-auto">
           <h1 className="text-xl font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>{form.title}</h1>
           {form.description && <p className="text-sm text-gray-400">{form.description}</p>}
         </div>
       </div>
 
-      <main className="max-w-3xl mx-auto px-4 py-8">
+      <main className="max-w-3xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
         {isSubmitted && (
           form?.retakeable ? (
             <Card className="mb-6 bg-[#121826] border-[#5EEBFF]/30">
@@ -326,7 +326,7 @@ export default function PortalForm() {
 
         <form onSubmit={handleSubmit}>
           <Card>
-            <CardContent className="p-6 space-y-6">
+            <CardContent className="p-4 sm:p-6 space-y-4 sm:space-y-6">
               {fields.map((field) => {
                 const fieldKey = field.name || field.id;
                 const isCheckbox = field.type === "checkbox";

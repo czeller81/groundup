@@ -44,7 +44,7 @@ export default function PortalBooking() {
 
   return (
     <div>
-      <div className="bg-[#121826]/50 border-b border-white/5 py-4 px-6">
+      <div className="bg-[#121826]/50 border-b border-white/5 py-4 px-4 sm:px-6">
         <div className="max-w-5xl mx-auto">
           <h1 className="text-xl font-bold text-white flex items-center gap-2" style={{ fontFamily: 'var(--font-display)' }}>
             <CalendarIcon className="h-5 w-5 text-[#5EEBFF]" />
@@ -53,7 +53,7 @@ export default function PortalBooking() {
         </div>
       </div>
 
-      <main className="max-w-5xl mx-auto px-4 py-8">
+      <main className="max-w-5xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
         <div
           className="calendly-inline-widget rounded-2xl overflow-hidden border border-white/10"
           data-url={`${CALENDLY_URL}?hide_gdpr_banner=1&background_color=121826&text_color=e2e8f0&primary_color=5eebff${prefill}`}

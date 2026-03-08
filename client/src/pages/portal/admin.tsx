@@ -245,7 +245,7 @@ export default function PortalAdmin() {
 
   return (
     <div>
-      <div className="bg-[#121826]/50 border-b border-white/5 py-4 px-6">
+      <div className="bg-[#121826]/50 border-b border-white/5 py-4 px-4 sm:px-6">
         <div className="max-w-7xl mx-auto">
           <h1 className="text-xl font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>
             ADMIN <span className="gradient-text-purple">DASHBOARD</span>
@@ -254,70 +254,70 @@ export default function PortalAdmin() {
         </div>
       </div>
 
-      <main className="max-w-7xl mx-auto px-4 py-6">
+      <main className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 mb-6">
           <Card className="bg-[#121826] border-white/5">
-            <CardContent className="pt-5 pb-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-[#B06CFF]/10">
-                  <Users className="h-5 w-5 text-[#B06CFF]" />
+            <CardContent className="p-3 sm:p-5 sm:pb-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-1.5 sm:p-2 rounded-lg bg-[#B06CFF]/10 flex-shrink-0">
+                  <Users className="h-4 w-4 sm:h-5 sm:w-5 text-[#B06CFF]" />
                 </div>
-                <div>
-                  <p className="text-2xl font-bold text-white">{statsLoading ? "..." : stats?.totalUsers || 0}</p>
-                  <p className="text-xs text-gray-400">Total Users</p>
+                <div className="min-w-0">
+                  <p className="text-xl sm:text-2xl font-bold text-white">{statsLoading ? "..." : stats?.totalUsers || 0}</p>
+                  <p className="text-xs text-gray-400 whitespace-nowrap">Total Users</p>
                 </div>
               </div>
             </CardContent>
           </Card>
           <Card className="bg-[#121826] border-white/5">
-            <CardContent className="pt-5 pb-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-[#5EEBFF]/10">
-                  <UserPlus className="h-5 w-5 text-[#5EEBFF]" />
+            <CardContent className="p-3 sm:p-5 sm:pb-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-1.5 sm:p-2 rounded-lg bg-[#5EEBFF]/10 flex-shrink-0">
+                  <UserPlus className="h-4 w-4 sm:h-5 sm:w-5 text-[#5EEBFF]" />
                 </div>
-                <div>
-                  <p className="text-2xl font-bold text-white">{statsLoading ? "..." : stats?.newUsers30Days || 0}</p>
-                  <p className="text-xs text-gray-400">New (30d)</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="bg-[#121826] border-white/5">
-            <CardContent className="pt-5 pb-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-green-500/10">
-                  <Activity className="h-5 w-5 text-green-400" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-white">{statsLoading ? "..." : stats?.activeMemberships || 0}</p>
-                  <p className="text-xs text-gray-400">Active Plans</p>
+                <div className="min-w-0">
+                  <p className="text-xl sm:text-2xl font-bold text-white">{statsLoading ? "..." : stats?.newUsers30Days || 0}</p>
+                  <p className="text-xs text-gray-400 whitespace-nowrap">New (30d)</p>
                 </div>
               </div>
             </CardContent>
           </Card>
           <Card className="bg-[#121826] border-white/5">
-            <CardContent className="pt-5 pb-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-[#FFB199]/10">
-                  <Calendar className="h-5 w-5 text-[#FFB199]" />
+            <CardContent className="p-3 sm:p-5 sm:pb-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-1.5 sm:p-2 rounded-lg bg-green-500/10 flex-shrink-0">
+                  <Activity className="h-4 w-4 sm:h-5 sm:w-5 text-green-400" />
                 </div>
-                <div>
-                  <p className="text-2xl font-bold text-white">{statsLoading ? "..." : stats?.upcomingSessions7Days || 0}</p>
-                  <p className="text-xs text-gray-400">Upcoming (7d)</p>
+                <div className="min-w-0">
+                  <p className="text-xl sm:text-2xl font-bold text-white">{statsLoading ? "..." : stats?.activeMemberships || 0}</p>
+                  <p className="text-xs text-gray-400 whitespace-nowrap">Active Plans</p>
                 </div>
               </div>
             </CardContent>
           </Card>
           <Card className="bg-[#121826] border-white/5">
-            <CardContent className="pt-5 pb-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-emerald-500/10">
-                  <DollarSign className="h-5 w-5 text-emerald-400" />
+            <CardContent className="p-3 sm:p-5 sm:pb-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-1.5 sm:p-2 rounded-lg bg-[#FFB199]/10 flex-shrink-0">
+                  <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-[#FFB199]" />
                 </div>
-                <div>
-                  <p className="text-2xl font-bold text-white">${statsLoading ? "..." : ((stats?.monthlyRevenue || 0) / 100).toFixed(0)}</p>
-                  <p className="text-xs text-gray-400">Revenue (Mo)</p>
+                <div className="min-w-0">
+                  <p className="text-xl sm:text-2xl font-bold text-white">{statsLoading ? "..." : stats?.upcomingSessions7Days || 0}</p>
+                  <p className="text-xs text-gray-400 whitespace-nowrap">Upcoming (7d)</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="bg-[#121826] border-white/5">
+            <CardContent className="p-3 sm:p-5 sm:pb-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-1.5 sm:p-2 rounded-lg bg-emerald-500/10 flex-shrink-0">
+                  <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-400" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xl sm:text-2xl font-bold text-white">${statsLoading ? "..." : ((stats?.monthlyRevenue || 0) / 100).toFixed(0)}</p>
+                  <p className="text-xs text-gray-400 whitespace-nowrap">Revenue (Mo)</p>
                 </div>
               </div>
             </CardContent>
@@ -346,7 +346,7 @@ export default function PortalAdmin() {
         )}
 
         {/* Member Management */}
-        <div className="grid lg:grid-cols-3 gap-6">
+        <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
           <div className="lg:col-span-1">
             <Card className="bg-[#121826] border-white/5">
               <CardHeader className="pb-3">
@@ -505,7 +505,7 @@ export default function PortalAdmin() {
                         <p className="text-lg font-bold text-[#5EEBFF]">{formsCompletion}%</p>
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 text-sm">
                       <div className="flex items-center gap-2">
                         <Mail className="h-4 w-4 text-[#5EEBFF]" />
                         <span className="text-gray-300 truncate">{memberProfile.user.email}</span>

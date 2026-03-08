@@ -105,7 +105,7 @@ export default function PortalCoach() {
 
   return (
     <div>
-      <div className="bg-[#121826]/50 border-b border-white/5 py-4 px-6">
+      <div className="bg-[#121826]/50 border-b border-white/5 py-4 px-4 sm:px-6">
         <div className="max-w-7xl mx-auto">
           <h1 className="text-xl font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>
             COACH <span className="gradient-text-cyan">CENTER</span>
@@ -114,8 +114,8 @@ export default function PortalCoach() {
         </div>
       </div>
 
-      <main className="max-w-7xl mx-auto px-4 py-6">
-        <div className="grid lg:grid-cols-3 gap-6">
+      <main className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
+        <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
           <div className="lg:col-span-1">
             <Card className="bg-[#121826] border-white/5">
               <CardHeader className="pb-3">
@@ -189,9 +189,9 @@ export default function PortalCoach() {
                     <h2 className="text-lg font-bold text-white mb-3" style={{ fontFamily: 'var(--font-display)' }}>
                       {selectedMember.firstName} {selectedMember.lastName}
                     </h2>
-                    <div className="grid grid-cols-2 gap-3 text-sm mb-4">
-                      <div className="flex items-center gap-2"><Mail className="h-4 w-4 text-[#5EEBFF]" /><span className="text-gray-300">{selectedMember.email}</span></div>
-                      <div className="flex items-center gap-2"><Phone className="h-4 w-4 text-[#5EEBFF]" /><span className="text-gray-300">{selectedMember.phone || "N/A"}</span></div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-sm mb-4">
+                      <div className="flex items-center gap-2 min-w-0"><Mail className="h-4 w-4 text-[#5EEBFF] flex-shrink-0" /><span className="text-gray-300 truncate">{selectedMember.email}</span></div>
+                      <div className="flex items-center gap-2"><Phone className="h-4 w-4 text-[#5EEBFF] flex-shrink-0" /><span className="text-gray-300">{selectedMember.phone || "N/A"}</span></div>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                       <div>

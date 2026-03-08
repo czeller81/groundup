@@ -124,7 +124,7 @@ export default function PortalDashboard() {
   return (
     <div className="min-h-screen bg-[#0B0F14] flex flex-col">
       {/* Header */}
-      <div className="bg-[#121826]/80 border-b border-white/5 py-5 px-6">
+      <div className="bg-[#121826]/80 border-b border-white/5 py-4 px-4 sm:px-6">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div>
             <h1 className="text-xl font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>
@@ -143,8 +143,8 @@ export default function PortalDashboard() {
         </div>
       </div>
 
-      <main className="max-w-7xl mx-auto px-4 py-8 flex-grow w-full">
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <main className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-8 flex-grow w-full">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
 
           {/* REQUIRED FORMS */}
           <Card className="lg:col-span-2 bg-[#121826] border-white/10">
