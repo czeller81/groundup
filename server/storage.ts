@@ -28,7 +28,7 @@ import {
   type InsertSessionNote
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, gte, lte, desc, sql, count, sum, or, ilike } from "drizzle-orm";
+import { eq, and, gte, lte, desc, sql, count, sum, or, ilike, inArray } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import bcrypt from "bcryptjs";
 
@@ -67,11 +67,12 @@ export interface IStorage {
   cancelBooking(id: string): Promise<Booking | undefined>;
   getTrainerBookings(trainerId: string, startDate: Date, endDate: Date): Promise<Booking[]>;
   
-  getAllUsers(search?: string, page?: number, limit?: number): Promise<{ users: SafeUser[]; total: number }>;
+  getAllUsers(search?: string, page?: number, limit?: number, incompleteFormsOnly?: boolean): Promise<{ users: (SafeUser & { missingFormsCount?: number })[]; total: number }>;
+  getMembersNeedingForms(): Promise<Array<SafeUser & { missingForms: string[] }>>;
   getUserProfile(userId: string): Promise<{ user: SafeUser; formResponses: (FormResponse & { form: Form })[]; bookings: BookingWithTrainer[]; memberships: Membership[]; sessionNotes: (SessionNote & { coach: SafeUser })[] } | undefined>;
   updateAdminNotes(userId: string, notes: string): Promise<SafeUser | undefined>;
   
-  getAdminStats(): Promise<{ totalUsers: number; newUsers30Days: number; activeMemberships: number; upcomingSessions7Days: number; monthlyRevenue: number }>;
+  getAdminStats(): Promise<{ totalUsers: number; newUsers30Days: number; activeMemberships: number; upcomingSessions7Days: number; monthlyRevenue: number; membersNeedingForms: number }>;
   
   getMemberships(userId: string): Promise<Membership[]>;
   createMembership(membership: InsertMembership): Promise<Membership>;
@@ -374,8 +375,67 @@ export class DatabaseStorage implements IStorage {
       );
   }
 
-  async getAllUsers(search?: string, page: number = 1, limit: number = 20): Promise<{ users: SafeUser[]; total: number }> {
+  private async getRequiredFormIds(): Promise<string[]> {
+    const requiredForms = await db.select({ id: forms.id }).from(forms).where(eq(forms.isRequired, true));
+    return requiredForms.map(f => f.id);
+  }
+
+  private async getCompletedUserIds(requiredFormIds: string[]): Promise<Set<string>> {
+    if (requiredFormIds.length === 0) return new Set();
+    const completed = await db
+      .select({ userId: formResponses.userId })
+      .from(formResponses)
+      .where(and(
+        inArray(formResponses.formId, requiredFormIds),
+        eq(formResponses.status, "submitted")
+      ))
+      .groupBy(formResponses.userId)
+      .having(sql`COUNT(*) >= ${requiredFormIds.length}`);
+    return new Set(completed.map(u => u.userId));
+  }
+
+  async getMembersNeedingForms(): Promise<Array<SafeUser & { missingForms: string[] }>> {
+    const requiredFormIds = await this.getRequiredFormIds();
+    if (requiredFormIds.length === 0) return [];
+    const requiredFormsData = await db.select().from(forms).where(eq(forms.isRequired, true));
+    const completedUserIds = await this.getCompletedUserIds(requiredFormIds);
+    const allUsers = await db.select().from(users);
+    const result: Array<SafeUser & { missingForms: string[] }> = [];
+    for (const user of allUsers) {
+      if (completedUserIds.has(user.id)) continue;
+      const userResponses = await db
+        .select({ formId: formResponses.formId })
+        .from(formResponses)
+        .where(and(eq(formResponses.userId, user.id), eq(formResponses.status, "submitted")));
+      const submittedFormIds = new Set(userResponses.map(r => r.formId));
+      const missingForms = requiredFormsData
+        .filter(f => !submittedFormIds.has(f.id))
+        .map(f => f.title);
+      if (missingForms.length > 0) {
+        const { passwordHash: _, ...safeUser } = user;
+        result.push({ ...safeUser, missingForms });
+      }
+    }
+    return result.sort((a, b) => b.missingForms.length - a.missingForms.length);
+  }
+
+  async getAllUsers(search?: string, page: number = 1, limit: number = 20, incompleteFormsOnly: boolean = false): Promise<{ users: (SafeUser & { missingFormsCount?: number })[]; total: number }> {
     const offset = (page - 1) * limit;
+
+    if (incompleteFormsOnly) {
+      const membersNeeding = await this.getMembersNeedingForms();
+      const filtered = search
+        ? membersNeeding.filter(u => {
+            const q = search.toLowerCase();
+            return u.firstName.toLowerCase().includes(q) || u.lastName.toLowerCase().includes(q) || u.email.toLowerCase().includes(q);
+          })
+        : membersNeeding;
+      const paginated = filtered.slice(offset, offset + limit);
+      return {
+        users: paginated.map(u => ({ ...u, missingFormsCount: u.missingForms.length })),
+        total: filtered.length,
+      };
+    }
     
     let whereClause;
     if (search) {
@@ -449,12 +509,17 @@ export class DatabaseStorage implements IStorage {
         eq(bookings.status, "paid")
       ));
     
+    const requiredFormIds = await this.getRequiredFormIds();
+    const completedUserIds = await this.getCompletedUserIds(requiredFormIds);
+    const membersNeedingForms = totalUsersResult.count - completedUserIds.size;
+
     return {
       totalUsers: totalUsersResult.count,
       newUsers30Days: newUsersResult.count,
       activeMemberships: activeMembershipsResult.count,
       upcomingSessions7Days: upcomingSessionsResult.count,
-      monthlyRevenue: Number(revenueResult.total || 0)
+      monthlyRevenue: Number(revenueResult.total || 0),
+      membersNeedingForms: Math.max(0, membersNeedingForms),
     };
   }
 

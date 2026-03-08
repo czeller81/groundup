@@ -16,7 +16,7 @@ import {
   Search, Users, ArrowLeft, FileText, Calendar, Mail, Phone, Clock, 
   CheckCircle, XCircle, AlertCircle, ChevronRight, Loader2, DollarSign, 
   TrendingUp, UserPlus, Activity, StickyNote, ChevronLeft, Shield,
-  Award, Hash
+  Award, Hash, AlertTriangle, Filter
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -26,6 +26,7 @@ export default function PortalAdmin() {
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [incompleteFormsOnly, setIncompleteFormsOnly] = useState(false);
   const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
   const [formDetailOpen, setFormDetailOpen] = useState<{ open: boolean; response: any | null }>({ open: false, response: null });
   const [adminNotes, setAdminNotes] = useState("");
@@ -38,12 +39,13 @@ export default function PortalAdmin() {
   });
 
   const { data: membersData, isLoading: membersLoading } = useQuery<{ users: any[]; total: number }>({
-    queryKey: ["/api/portal/admin/members", searchQuery, currentPage],
+    queryKey: ["/api/portal/admin/members", searchQuery, currentPage, incompleteFormsOnly],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (searchQuery) params.set("search", searchQuery);
       params.set("page", String(currentPage));
       params.set("limit", String(PAGE_SIZE));
+      if (incompleteFormsOnly) params.set("incompleteFormsOnly", "true");
       const res = await fetch(`/api/portal/admin/members?${params}`);
       if (!res.ok) throw new Error("Failed to fetch");
       return res.json();
@@ -299,6 +301,27 @@ export default function PortalAdmin() {
           </Card>
         </div>
 
+        {/* Forms Incomplete Alert */}
+        {!statsLoading && stats?.membersNeedingForms > 0 && (
+          <div
+            className="mb-6 flex items-center justify-between gap-4 p-4 rounded-xl border border-orange-500/30 bg-orange-500/10 cursor-pointer hover:bg-orange-500/15 transition-colors"
+            onClick={() => { setIncompleteFormsOnly(true); setCurrentPage(1); }}
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-orange-500/20">
+                <AlertTriangle className="h-5 w-5 text-orange-400" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-orange-300">
+                  {stats.membersNeedingForms} member{stats.membersNeedingForms !== 1 ? "s" : ""} {stats.membersNeedingForms !== 1 ? "have" : "has"} incomplete required forms
+                </p>
+                <p className="text-xs text-orange-400/70">Click to filter member list</p>
+              </div>
+            </div>
+            <span className="text-xs text-orange-400 underline underline-offset-2">View all</span>
+          </div>
+        )}
+
         {/* Member Management */}
         <div className="grid lg:grid-cols-3 gap-6">
           <div className="lg:col-span-1">
@@ -308,6 +331,36 @@ export default function PortalAdmin() {
                   <Users className="h-5 w-5 text-[#B06CFF]" />
                   Members ({totalMembers})
                 </CardTitle>
+                <div className="flex gap-1 mt-2">
+                  <button
+                    onClick={() => { setIncompleteFormsOnly(false); setCurrentPage(1); }}
+                    className={`flex-1 py-1.5 text-xs rounded-lg font-medium transition-colors ${
+                      !incompleteFormsOnly
+                        ? "bg-[#B06CFF]/20 text-[#B06CFF] border border-[#B06CFF]/30"
+                        : "text-gray-400 hover:text-white hover:bg-white/5 border border-transparent"
+                    }`}
+                  >
+                    All
+                  </button>
+                  <button
+                    onClick={() => { setIncompleteFormsOnly(true); setCurrentPage(1); }}
+                    className={`flex-1 py-1.5 text-xs rounded-lg font-medium transition-colors flex items-center justify-center gap-1 ${
+                      incompleteFormsOnly
+                        ? "bg-orange-500/20 text-orange-300 border border-orange-500/30"
+                        : "text-gray-400 hover:text-white hover:bg-white/5 border border-transparent"
+                    }`}
+                  >
+                    <AlertTriangle className="h-3 w-3" />
+                    Needs Forms
+                    {stats?.membersNeedingForms > 0 && (
+                      <span className={`ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                        incompleteFormsOnly ? "bg-orange-500/30 text-orange-200" : "bg-orange-500/20 text-orange-400"
+                      }`}>
+                        {stats.membersNeedingForms}
+                      </span>
+                    )}
+                  </button>
+                </div>
                 <div className="relative mt-2">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <Input
@@ -340,11 +393,17 @@ export default function PortalAdmin() {
                         data-testid={`member-item-${member.id}`}
                       >
                         <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <p className="text-sm font-medium text-white truncate">
                               {member.firstName} {member.lastName}
                             </p>
                             {getRoleBadge(member.role)}
+                            {incompleteFormsOnly && member.missingFormsCount > 0 && (
+                              <span className="flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-orange-500/20 text-orange-400 border border-orange-500/20">
+                                <AlertTriangle className="h-2.5 w-2.5" />
+                                {member.missingFormsCount} missing
+                              </span>
+                            )}
                           </div>
                           <p className="text-xs text-gray-400 truncate">{member.email}</p>
                         </div>
