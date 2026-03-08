@@ -91,6 +91,9 @@ export default function PortalLogin() {
       <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-[#5EEBFF]/10 rounded-full blur-3xl" />
       <Card className="w-full max-w-md relative z-10 bg-[#121826] border-white/10" data-testid="portal-login-card">
         <CardHeader className="text-center">
+          <a href="/" className="inline-flex items-center gap-1 text-xs text-gray-500 hover:text-gray-300 transition-colors mb-2">
+            ← Back to website
+          </a>
           <CardTitle className="text-2xl text-white" style={{ fontFamily: 'var(--font-display)' }}>
             MEMBER <span className="gradient-text-purple">PORTAL</span>
           </CardTitle>
