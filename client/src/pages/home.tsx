@@ -842,8 +842,9 @@ export default function Home() {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#5EEBFF]/5 rounded-full blur-3xl" />
 
         <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-4xl md:text-6xl font-bold text-white mb-6" style={{ fontFamily: 'var(--font-display)' }}>
-            START FROM THE <span className="gradient-text-warm">GROUND UP</span>
+          <h2 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight" style={{ fontFamily: 'var(--font-display)' }}>
+            START FROM THE
+            <br /><span className="gradient-text-warm">GROUND UP</span>
           </h2>
           <p className="text-gray-300 text-lg mb-10 max-w-xl mx-auto">
             Whether you're looking to learn self-defense, improve your fitness, or help your child build confidence, Ground Up Jiu-Jitsu is here to help.
