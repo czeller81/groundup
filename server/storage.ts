@@ -609,15 +609,15 @@ async function seedFormData() {
       isRequired: true,
       fields: [
         { name: "fullName", label: "Full Name", type: "text", required: true },
-        { name: "dateOfBirth", label: "Date of Birth", type: "text", required: true },
+        { name: "dateOfBirth", label: "Date of Birth", type: "date", required: true },
         { name: "emergencyContact", label: "Emergency Contact Name", type: "text", required: true },
-        { name: "emergencyPhone", label: "Emergency Contact Phone", type: "text", required: true },
+        { name: "emergencyPhone", label: "Emergency Contact Phone", type: "tel", required: true },
         { name: "riskAcknowledgment", label: "I understand martial arts training involves physical contact and risk of injury", type: "checkbox", required: true },
         { name: "voluntaryParticipation", label: "I voluntarily participate and assume all risks associated with training", type: "checkbox", required: true },
         { name: "liabilityRelease", label: "I release Ground Up Jiu-Jitsu and its instructors from liability for injuries sustained during training", type: "checkbox", required: true },
         { name: "safetyGuidelines", label: "I agree to follow all instructor safety guidelines at all times", type: "checkbox", required: true },
         { name: "digitalSignature", label: "Digital Signature (type your full name)", type: "text", required: true },
-        { name: "signatureDate", label: "Date", type: "text", required: true }
+        { name: "signatureDate", label: "Date", type: "date", required: true }
       ]
     },
     {
@@ -650,9 +650,10 @@ async function seedFormData() {
         { name: "parentName", label: "Parent / Guardian Full Name", type: "text", required: true },
         { name: "childName", label: "Child's Full Name", type: "text", required: true },
         { name: "childAge", label: "Child's Age", type: "text", required: true },
-        { name: "emergencyContact", label: "Emergency Contact Name & Phone", type: "text", required: true },
+        { name: "emergencyContact", label: "Emergency Contact Name", type: "text", required: true },
+        { name: "emergencyPhone", label: "Emergency Contact Phone", type: "tel", required: true },
         { name: "parentSignature", label: "Parent / Guardian Digital Signature (type full name)", type: "text", required: true },
-        { name: "signatureDate", label: "Date", type: "text", required: true }
+        { name: "signatureDate", label: "Date", type: "date", required: true }
       ]
     }
   ];

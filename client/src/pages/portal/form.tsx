@@ -127,36 +127,72 @@ export default function PortalForm() {
   };
 
   const renderField = (field: any) => {
-    const value = answers[field.id] ?? "";
+    const fieldKey = field.name || field.id;
+    const value = answers[fieldKey] ?? "";
 
     switch (field.type) {
       case "text":
+        return (
+          <Input
+            id={fieldKey}
+            name={fieldKey}
+            type="text"
+            autoComplete="off"
+            value={value}
+            onChange={(e) => handleChange(fieldKey, e.target.value)}
+            disabled={isSubmitted}
+            data-testid={`input-${fieldKey}`}
+          />
+        );
+
       case "date":
         return (
           <Input
-            type={field.type}
+            id={fieldKey}
+            name={fieldKey}
+            type="date"
+            autoComplete="off"
             value={value}
-            onChange={(e) => handleChange(field.id, e.target.value)}
+            onChange={(e) => handleChange(fieldKey, e.target.value)}
             disabled={isSubmitted}
-            data-testid={`input-${field.id}`}
+            data-testid={`input-${fieldKey}`}
+          />
+        );
+
+      case "tel":
+        return (
+          <Input
+            id={fieldKey}
+            name={fieldKey}
+            type="tel"
+            autoComplete="off"
+            inputMode="tel"
+            value={value}
+            onChange={(e) => handleChange(fieldKey, e.target.value)}
+            disabled={isSubmitted}
+            placeholder="(555) 000-0000"
+            data-testid={`input-${fieldKey}`}
           />
         );
 
       case "textarea":
         return (
           <Textarea
+            id={fieldKey}
+            name={fieldKey}
+            autoComplete="off"
             value={value}
-            onChange={(e) => handleChange(field.id, e.target.value)}
+            onChange={(e) => handleChange(fieldKey, e.target.value)}
             disabled={isSubmitted}
             rows={4}
-            data-testid={`input-${field.id}`}
+            data-testid={`input-${fieldKey}`}
           />
         );
 
       case "select":
         return (
-          <Select value={value} onValueChange={(v) => handleChange(field.id, v)} disabled={isSubmitted}>
-            <SelectTrigger data-testid={`select-${field.id}`}>
+          <Select value={value} onValueChange={(v) => handleChange(fieldKey, v)} disabled={isSubmitted}>
+            <SelectTrigger data-testid={`select-${fieldKey}`}>
               <SelectValue placeholder="Select an option" />
             </SelectTrigger>
             <SelectContent>
@@ -171,33 +207,49 @@ export default function PortalForm() {
 
       case "boolean":
         return (
-          <RadioGroup value={value?.toString()} onValueChange={(v) => handleChange(field.id, v === "true")} disabled={isSubmitted}>
+          <RadioGroup value={value?.toString()} onValueChange={(v) => handleChange(fieldKey, v === "true")} disabled={isSubmitted}>
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="true" id={`${field.id}-yes`} />
-                <Label htmlFor={`${field.id}-yes`}>Yes</Label>
+                <RadioGroupItem value="true" id={`${fieldKey}-yes`} />
+                <Label htmlFor={`${fieldKey}-yes`}>Yes</Label>
               </div>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="false" id={`${field.id}-no`} />
-                <Label htmlFor={`${field.id}-no`}>No</Label>
+                <RadioGroupItem value="false" id={`${fieldKey}-no`} />
+                <Label htmlFor={`${fieldKey}-no`}>No</Label>
               </div>
             </div>
           </RadioGroup>
         );
 
+      case "checkbox":
+        return (
+          <div className="flex items-start space-x-3 p-3 bg-white/[0.03] border border-white/5 rounded-lg">
+            <Checkbox
+              id={fieldKey}
+              checked={!!value}
+              onCheckedChange={(checked) => handleChange(fieldKey, !!checked)}
+              disabled={isSubmitted}
+              className="mt-0.5"
+            />
+            <Label htmlFor={fieldKey} className="text-sm leading-relaxed cursor-pointer font-normal">
+              {field.label}
+            </Label>
+          </div>
+        );
+
       case "multiselect":
-        const selectedOptions = answers[field.id] || [];
+        const selectedOptions = answers[fieldKey] || [];
         return (
           <div className="space-y-2">
             {field.options?.map((option: string) => (
               <div key={option} className="flex items-center space-x-2">
                 <Checkbox
-                  id={`${field.id}-${option}`}
+                  id={`${fieldKey}-${option}`}
                   checked={selectedOptions.includes(option)}
-                  onCheckedChange={(checked) => handleMultiSelectChange(field.id, option, !!checked)}
+                  onCheckedChange={(checked) => handleMultiSelectChange(fieldKey, option, !!checked)}
                   disabled={isSubmitted}
                 />
-                <Label htmlFor={`${field.id}-${option}`}>{option}</Label>
+                <Label htmlFor={`${fieldKey}-${option}`}>{option}</Label>
               </div>
             ))}
           </div>
@@ -234,15 +286,24 @@ export default function PortalForm() {
         <form onSubmit={handleSubmit}>
           <Card>
             <CardContent className="p-6 space-y-6">
-              {fields.map((field) => (
-                <div key={field.id} className="space-y-2">
-                  <Label htmlFor={field.id}>
-                    {field.label}
-                    {field.required && <span className="text-red-500 ml-1">*</span>}
-                  </Label>
-                  {renderField(field)}
-                </div>
-              ))}
+              {fields.map((field) => {
+                const fieldKey = field.name || field.id;
+                const isCheckbox = field.type === "checkbox";
+                return (
+                  <div key={fieldKey} className="space-y-2">
+                    {!isCheckbox && (
+                      <Label htmlFor={fieldKey}>
+                        {field.label}
+                        {field.required && <span className="text-red-500 ml-1">*</span>}
+                      </Label>
+                    )}
+                    {isCheckbox && field.required && (
+                      <span className="text-xs text-red-400">* Required</span>
+                    )}
+                    {renderField(field)}
+                  </div>
+                );
+              })}
 
               {!isSubmitted && (
                 <div className="flex items-center justify-between pt-4 border-t">
