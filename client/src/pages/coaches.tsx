@@ -59,19 +59,21 @@ export default function Coaches() {
               </h2>
               <p className="text-[#5EEBFF] font-semibold mb-6">Purple Belt 3rd Degree · 5 Years Experience</p>
 
-              <p className="text-gray-300 leading-relaxed mb-6">
-                Raymi leads the women's-only program at Gracie Barra Ventura, specializing in 1-on-1 BJJ training
-                and strength & conditioning fitness classes. Her approach combines technical precision with a deep
-                understanding of how women learn and progress in martial arts.
+              <p className="text-gray-300 leading-relaxed mb-4">
+                Raymi leads the programs at Ground Up Jiu-Jitsu, focusing on women's self-defense, beginner-friendly Brazilian Jiu-Jitsu, strength & conditioning, and personal coaching.
+              </p>
+              <p className="text-gray-300 leading-relaxed mb-4">
+                Her teaching philosophy centers on creating a safe, supportive, and empowering training environment, especially for women and beginners who may feel intimidated in traditional martial arts gyms.
+              </p>
+              <p className="text-gray-300 leading-relaxed mb-4">
+                Through small group classes (maximum 6 students) and personalized coaching, Raymi helps students build real self-defense skills, confidence, strength, and discipline at their own pace.
               </p>
               <p className="text-gray-300 leading-relaxed mb-8">
-                Whether you're a complete beginner looking to build confidence or an experienced practitioner
-                preparing for competition, Raymi tailors every session to meet you exactly where you are and
-                push you toward your goals.
+                Whether you're completely new to martial arts, looking to improve your fitness, or interested in learning practical self-defense, every session is designed to meet you where you are and help you grow from the ground up.
               </p>
 
               <div className="flex flex-wrap gap-2 mb-8">
-                {["1-on-1 BJJ Training", "Strength & Conditioning", "Women's Program", "Competition Prep", "Self-Defense"].map((tag) => (
+                {["Women's Self-Defense", "BJJ Fundamentals", "Strength & Conditioning", "Personal Coaching", "Small Group Classes"].map((tag) => (
                   <span key={tag} className="px-3 py-1.5 text-xs rounded-full border border-white/10 text-gray-300 bg-white/5">
                     {tag}
                   </span>
