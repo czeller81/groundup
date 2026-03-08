@@ -122,7 +122,7 @@ export default function PortalDashboard() {
   })();
 
   return (
-    <div className="min-h-screen bg-[#0B0F14] flex flex-col overflow-x-hidden">
+    <div className="min-h-screen bg-[#0B0F14] flex flex-col">
       {/* Header */}
       <div className="bg-[#121826]/80 border-b border-white/5 py-5 px-6">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
