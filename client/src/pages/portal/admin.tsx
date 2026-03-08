@@ -14,7 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { 
   Search, Users, ArrowLeft, FileText, Calendar, Mail, Phone, Clock, 
-  CheckCircle, AlertCircle, ChevronRight, Loader2, DollarSign, 
+  CheckCircle, XCircle, AlertCircle, ChevronRight, Loader2, DollarSign, 
   TrendingUp, UserPlus, Activity, StickyNote, ChevronLeft, Shield,
   Award, Hash
 } from "lucide-react";
@@ -156,13 +156,34 @@ export default function PortalAdmin() {
     return (
       <div className="space-y-3">
         {fields.map((field: any) => {
-          const answer = response.answers[field.name || field.id];
-          if (answer === undefined || answer === null || answer === "") return null;
+          const fieldKey = field.name || field.id;
+          const answer = response.answers[fieldKey];
+          const isCheckbox = field.type === "checkbox";
+          const isBoolean = field.type === "boolean";
+          if (!isCheckbox && !isBoolean && (answer === undefined || answer === null || answer === "")) return null;
+          if (isCheckbox) {
+            const agreed = answer === true;
+            return (
+              <div key={fieldKey} className="flex items-start gap-3 py-2 border-b border-white/5">
+                {agreed ? (
+                  <CheckCircle className="h-4 w-4 text-green-400 mt-0.5 flex-shrink-0" />
+                ) : (
+                  <XCircle className="h-4 w-4 text-red-400 mt-0.5 flex-shrink-0" />
+                )}
+                <div>
+                  <p className="text-sm text-white leading-snug">{field.label || fieldKey}</p>
+                  <p className={`text-xs mt-0.5 font-medium ${agreed ? "text-green-400" : "text-red-400"}`}>
+                    {agreed ? "Agreed" : "Not agreed"}
+                  </p>
+                </div>
+              </div>
+            );
+          }
           return (
-            <div key={field.name || field.id} className="border-b border-white/5 pb-2">
-              <p className="text-xs text-gray-400 uppercase tracking-wide">{field.label || field.name}</p>
+            <div key={fieldKey} className="border-b border-white/5 pb-2">
+              <p className="text-xs text-gray-400 uppercase tracking-wide">{field.label || fieldKey}</p>
               <p className="text-sm text-white mt-1">
-                {typeof answer === "boolean" ? (answer ? "Yes" : "No") : String(answer)}
+                {isBoolean ? (answer ? "Yes" : "No") : String(answer)}
               </p>
             </div>
           );
