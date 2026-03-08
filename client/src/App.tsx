@@ -33,7 +33,7 @@ function MainLayout({ children }: { children: React.ReactNode }) {
 
 function PortalLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-[#0B0F14]">
+    <div className="min-h-screen bg-[#0B0F14] overflow-x-hidden">
       <PortalNavbar />
       {children}
     </div>

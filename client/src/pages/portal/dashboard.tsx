@@ -122,7 +122,7 @@ export default function PortalDashboard() {
   })();
 
   return (
-    <div className="min-h-screen bg-[#0B0F14] flex flex-col">
+    <div className="min-h-screen bg-[#0B0F14] flex flex-col overflow-x-hidden">
       {/* Header */}
       <div className="bg-[#121826]/80 border-b border-white/5 py-5 px-6">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -358,7 +358,7 @@ export default function PortalDashboard() {
                 <p className="text-white text-lg font-bold">{format(nextCommunityClass, "EEEE, MMM d")}</p>
                 <p className="text-gray-400 text-xs mt-1">Repeats every 2 weeks</p>
               </div>
-              <p className="text-gray-400 text-xs mb-4 leading-relaxed">
+              <p className="text-gray-400 text-xs mb-4 leading-relaxed break-words">
                 Open to everyone in the community. No experience or registration required — just show up.
               </p>
               <Button asChild size="sm" className="w-full bg-[#FFB199] text-[#0B0F14] font-bold hover:bg-[#FFB199]/90">
