@@ -216,6 +216,13 @@ export default function PortalAdmin() {
     }
   };
 
+  const hasUncheckedCheckboxes = (response: any): boolean => {
+    if (!response?.form?.fields || !response?.answers) return false;
+    return response.form.fields.some((field: any) =>
+      field.type === "checkbox" && !response.answers[field.name || field.id]
+    );
+  };
+
   const formsCompleted = memberProfile?.formResponses?.filter((r: any) => r.status === "submitted").length || 0;
   const totalForms = memberProfile?.formResponses?.length || 0;
   const formsCompletion = totalForms > 0 ? Math.round((formsCompleted / totalForms) * 100) : 0;
@@ -525,27 +532,47 @@ export default function PortalAdmin() {
                           <p className="text-gray-400 text-sm text-center py-4">No form responses yet</p>
                         ) : (
                           <div className="space-y-2">
-                            {memberProfile.formResponses.map((response: any) => (
-                              <div key={response.id} className="p-3 rounded-lg bg-[#0B0F14] border border-white/5 flex items-center justify-between">
-                                <div>
-                                  <p className="text-sm font-medium text-white">{response.form.title}</p>
-                                  <p className="text-xs text-gray-400">
-                                    {response.submittedAt
-                                      ? `Submitted ${format(new Date(response.submittedAt), "MMM d, yyyy")}`
-                                      : `Updated ${format(new Date(response.updatedAt), "MMM d, yyyy")}`}
-                                  </p>
+                            {memberProfile.formResponses.map((response: any) => {
+                              const unchecked = response.status === "submitted" && hasUncheckedCheckboxes(response);
+                              return (
+                                <div key={response.id} className={`p-3 rounded-lg border flex items-center justify-between ${
+                                  unchecked
+                                    ? "bg-orange-500/5 border-orange-500/30"
+                                    : "bg-[#0B0F14] border-white/5"
+                                }`}>
+                                  <div className="min-w-0 flex-1">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      <p className="text-sm font-medium text-white">{response.form.title}</p>
+                                      {unchecked && (
+                                        <span className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-400 border border-orange-500/30">
+                                          <AlertTriangle className="h-2.5 w-2.5" />
+                                          Not fully agreed
+                                        </span>
+                                      )}
+                                    </div>
+                                    <p className="text-xs text-gray-400 mt-0.5">
+                                      {response.submittedAt
+                                        ? `Submitted ${format(new Date(response.submittedAt), "MMM d, yyyy")}`
+                                        : `Updated ${format(new Date(response.updatedAt), "MMM d, yyyy")}`}
+                                    </p>
+                                    {unchecked && (
+                                      <p className="text-xs text-orange-400/80 mt-0.5">
+                                        One or more agreement checkboxes were left unchecked — review required
+                                      </p>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center gap-2 flex-shrink-0 ml-3">
+                                    {getStatusBadge(response.status)}
+                                    {response.status === "submitted" && (
+                                      <Button variant="ghost" size="sm" className="text-[#5EEBFF] hover:text-[#5EEBFF]/80 hover:bg-[#5EEBFF]/10"
+                                        onClick={() => setFormDetailOpen({ open: true, response })}>
+                                        View
+                                      </Button>
+                                    )}
+                                  </div>
                                 </div>
-                                <div className="flex items-center gap-2">
-                                  {getStatusBadge(response.status)}
-                                  {response.status === "submitted" && (
-                                    <Button variant="ghost" size="sm" className="text-[#5EEBFF] hover:text-[#5EEBFF]/80 hover:bg-[#5EEBFF]/10"
-                                      onClick={() => setFormDetailOpen({ open: true, response })}>
-                                      View
-                                    </Button>
-                                  )}
-                                </div>
-                              </div>
-                            ))}
+                              );
+                            })}
                           </div>
                         )}
                       </CardContent>
