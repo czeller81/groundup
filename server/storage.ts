@@ -561,8 +561,10 @@ async function seedTrainerData() {
 
 async function seedFormData() {
   const existingForms = await storage.getForms();
-  if (existingForms.length === 0) {
-    await storage.createForm({
+  const existingSlugs = new Set(existingForms.map(f => f.slug));
+
+  const allForms = [
+    {
       slug: "personal-training-intake",
       title: "Personal Training Intake Form",
       description: "Basic information about your training background and goals",
@@ -573,8 +575,8 @@ async function seedFormData() {
         { name: "injuries", label: "Any Current Injuries or Limitations", type: "textarea", required: false },
         { name: "availability", label: "Preferred Training Days/Times", type: "textarea", required: true }
       ]
-    });
-    await storage.createForm({
+    },
+    {
       slug: "health-parq",
       title: "Health & PAR-Q Assessment",
       description: "Physical Activity Readiness Questionnaire",
@@ -587,8 +589,8 @@ async function seedFormData() {
         { name: "medicationDetails", label: "If yes, please list medications", type: "textarea", required: false },
         { name: "emergencyContact", label: "Emergency Contact Name & Phone", type: "text", required: true }
       ]
-    });
-    await storage.createForm({
+    },
+    {
       slug: "goals-preferences",
       title: "Goals & Preferences",
       description: "Help us understand your training goals",
@@ -599,7 +601,66 @@ async function seedFormData() {
         { name: "longTermGoals", label: "Long-term Goals (1 year)", type: "textarea", required: true },
         { name: "preferredStyle", label: "Preferred Training Style", type: "select", options: ["Gi", "No-Gi", "Both"], required: true }
       ]
-    });
+    },
+    {
+      slug: "liability-waiver",
+      title: "Martial Arts Liability Waiver",
+      description: "Required waiver acknowledging the risks of martial arts training",
+      isRequired: true,
+      fields: [
+        { name: "fullName", label: "Full Name", type: "text", required: true },
+        { name: "dateOfBirth", label: "Date of Birth", type: "text", required: true },
+        { name: "emergencyContact", label: "Emergency Contact Name", type: "text", required: true },
+        { name: "emergencyPhone", label: "Emergency Contact Phone", type: "text", required: true },
+        { name: "riskAcknowledgment", label: "I understand martial arts training involves physical contact and risk of injury", type: "checkbox", required: true },
+        { name: "voluntaryParticipation", label: "I voluntarily participate and assume all risks associated with training", type: "checkbox", required: true },
+        { name: "liabilityRelease", label: "I release Ground Up Jiu-Jitsu and its instructors from liability for injuries sustained during training", type: "checkbox", required: true },
+        { name: "safetyGuidelines", label: "I agree to follow all instructor safety guidelines at all times", type: "checkbox", required: true },
+        { name: "digitalSignature", label: "Digital Signature (type your full name)", type: "text", required: true },
+        { name: "signatureDate", label: "Date", type: "text", required: true }
+      ]
+    },
+    {
+      slug: "media-release",
+      title: "Media Release Authorization",
+      description: "Authorization for use of photos and videos",
+      isRequired: true,
+      fields: [
+        { name: "mediaConsent", label: "I allow Ground Up Jiu-Jitsu to use photos and videos of me for marketing, social media, and promotional purposes", type: "checkbox", required: true }
+      ]
+    },
+    {
+      slug: "gym-rules",
+      title: "Gym Rules Agreement",
+      description: "Acknowledgment of gym policies and code of conduct",
+      isRequired: true,
+      fields: [
+        { name: "followInstructions", label: "I will follow all instructor directions during class", type: "checkbox", required: true },
+        { name: "respectfulTraining", label: "I will train respectfully and considerately with all other students", type: "checkbox", required: true },
+        { name: "reportInjuries", label: "I will immediately report any injuries or discomfort to the instructor", type: "checkbox", required: true },
+        { name: "unsafeBehavior", label: "I understand that unsafe behavior may result in removal from class without refund", type: "checkbox", required: true }
+      ]
+    },
+    {
+      slug: "minor-consent",
+      title: "Minor Participation Consent",
+      description: "Required for participants under 18 years of age",
+      isRequired: false,
+      fields: [
+        { name: "parentName", label: "Parent / Guardian Full Name", type: "text", required: true },
+        { name: "childName", label: "Child's Full Name", type: "text", required: true },
+        { name: "childAge", label: "Child's Age", type: "text", required: true },
+        { name: "emergencyContact", label: "Emergency Contact Name & Phone", type: "text", required: true },
+        { name: "parentSignature", label: "Parent / Guardian Digital Signature (type full name)", type: "text", required: true },
+        { name: "signatureDate", label: "Date", type: "text", required: true }
+      ]
+    }
+  ];
+
+  for (const form of allForms) {
+    if (!existingSlugs.has(form.slug)) {
+      await storage.createForm(form);
+    }
   }
 }
 

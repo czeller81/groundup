@@ -636,6 +636,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ============================================
   // MEMBERSHIP ROUTES (Admin)
   // ============================================
+  app.get("/api/portal/my-membership", requireAuth, async (req, res) => {
+    try {
+      const userId = (req.session as any).userId;
+      const memberships = await storage.getMemberships(userId);
+      const active = memberships.find(m => m.status === "active") || null;
+      res.json(active);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get membership" });
+    }
+  });
+
   app.get("/api/portal/memberships/:userId", requireRole("admin"), async (req, res) => {
     try {
       const membershipsList = await storage.getMemberships(req.params.userId);
