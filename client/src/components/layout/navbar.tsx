@@ -36,10 +36,7 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16 md:h-20">
           <Link href="/" className="flex items-center space-x-3 group" data-testid="navbar-logo">
-            <img src={logoImage} alt="Ground Up BJJ Logo" className="h-10 w-10 transition-transform group-hover:scale-110" style={{ filter: "brightness(0) invert(1)" }} />
-            <span className="text-lg font-bold text-white tracking-wider" style={{ fontFamily: 'var(--font-display)' }}>
-              GROUND UP
-            </span>
+            <img src={logoImage} alt="Ground Up BJJ Logo" className="h-20 w-20 transition-transform group-hover:scale-110" style={{ filter: "brightness(0) invert(1)" }} />
           </Link>
 
           <div className="hidden md:flex items-center space-x-1">
