@@ -183,7 +183,57 @@ export default function PortalDashboard() {
         {/* Main content grid: 1-col mobile, 2-col md, 3-col lg */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
 
-          {/* UPCOMING SESSIONS — shown first on mobile */}
+          {/* MEMBERSHIP STATUS */}
+          <Card className="bg-[#121826] border-white/10">
+            <CardHeader className="pb-3 pt-4 px-4">
+              <CardTitle className="flex items-center gap-2 text-white text-base">
+                <CreditCard className="h-4 w-4 text-[#B06CFF]" />
+                Membership
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="px-4 pb-4">
+              {membership ? (
+                <div className="space-y-3">
+                  <div className="p-3 bg-[#B06CFF]/10 border border-[#B06CFF]/20 rounded-lg">
+                    <p className="text-xs text-[#B06CFF] font-semibold uppercase tracking-wider mb-1">Active Plan</p>
+                    <p className="text-white font-semibold text-sm">{getMembershipInfo(membership.type).name}</p>
+                  </div>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Price</span>
+                      <span className="text-white font-medium">{getMembershipInfo(membership.type).price}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Classes / week</span>
+                      <span className="text-white font-medium">{getMembershipInfo(membership.type).classes}</span>
+                    </div>
+                    {membership.endDate && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Renews</span>
+                        <span className="text-white font-medium">{format(new Date(membership.endDate), "MMM d, yyyy")}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Status</span>
+                      <Badge className="bg-green-600/20 text-green-400 border border-green-500/30 text-xs">Active</Badge>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-3">
+                  <div className="w-10 h-10 rounded-full bg-[#B06CFF]/10 flex items-center justify-center mx-auto mb-3">
+                    <CreditCard className="h-5 w-5 text-[#B06CFF]" />
+                  </div>
+                  <p className="text-gray-400 text-sm mb-3">No active membership</p>
+                  <Button asChild size="sm" className="bg-[#B06CFF] text-white hover:bg-[#B06CFF]/90 w-full">
+                    <Link href="/pricing">View Programs</Link>
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* UPCOMING SESSIONS */}
           <Card className="bg-[#121826] border-white/10">
             <CardHeader className="pb-3 pt-4 px-4">
               <CardTitle className="flex items-center gap-2 text-white text-base">
@@ -285,56 +335,6 @@ export default function PortalDashboard() {
                   );
                 })}
               </div>
-            </CardContent>
-          </Card>
-
-          {/* MEMBERSHIP STATUS */}
-          <Card className="bg-[#121826] border-white/10">
-            <CardHeader className="pb-3 pt-4 px-4">
-              <CardTitle className="flex items-center gap-2 text-white text-base">
-                <CreditCard className="h-4 w-4 text-[#B06CFF]" />
-                Membership
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="px-4 pb-4">
-              {membership ? (
-                <div className="space-y-3">
-                  <div className="p-3 bg-[#B06CFF]/10 border border-[#B06CFF]/20 rounded-lg">
-                    <p className="text-xs text-[#B06CFF] font-semibold uppercase tracking-wider mb-1">Active Plan</p>
-                    <p className="text-white font-semibold text-sm">{getMembershipInfo(membership.type).name}</p>
-                  </div>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Price</span>
-                      <span className="text-white font-medium">{getMembershipInfo(membership.type).price}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Classes / week</span>
-                      <span className="text-white font-medium">{getMembershipInfo(membership.type).classes}</span>
-                    </div>
-                    {membership.endDate && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">Renews</span>
-                        <span className="text-white font-medium">{format(new Date(membership.endDate), "MMM d, yyyy")}</span>
-                      </div>
-                    )}
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Status</span>
-                      <Badge className="bg-green-600/20 text-green-400 border border-green-500/30 text-xs">Active</Badge>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center py-3">
-                  <div className="w-10 h-10 rounded-full bg-[#B06CFF]/10 flex items-center justify-center mx-auto mb-3">
-                    <CreditCard className="h-5 w-5 text-[#B06CFF]" />
-                  </div>
-                  <p className="text-gray-400 text-sm mb-3">No active membership</p>
-                  <Button asChild size="sm" className="bg-[#B06CFF] text-white hover:bg-[#B06CFF]/90 w-full">
-                    <Link href="/pricing">View Programs</Link>
-                  </Button>
-                </div>
-              )}
             </CardContent>
           </Card>
 
