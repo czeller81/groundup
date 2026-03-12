@@ -2,7 +2,7 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { motion, useInView } from "framer-motion";
 import { useRef, useState } from "react";
-import { ArrowRight, ChevronDown, ChevronUp, CheckCircle, Users, Shield, Dumbbell, Star } from "lucide-react";
+import { ArrowRight, ChevronDown, ChevronUp, CheckCircle, Shield, Dumbbell, Star } from "lucide-react";
 
 function Section({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   const ref = useRef(null);
@@ -52,15 +52,11 @@ export default function Pricing() {
         <div className="absolute inset-0 bg-gradient-to-b from-[#121826] to-[#0B0F14]" />
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-[#5EEBFF]/5 rounded-full blur-3xl" />
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[#FFB199]/30 bg-[#FFB199]/10 text-[#FFB199] text-sm mb-6 font-medium">
-            <Users className="h-3.5 w-3.5" />
-            Small Group Classes &bull; Max 6 Students
-          </div>
           <h1 className="text-5xl md:text-6xl font-bold text-white mb-6" style={{ fontFamily: 'var(--font-display)' }}>
             SIMPLE, AFFORDABLE <span className="gradient-text-cyan">PRICING</span>
           </h1>
           <p className="text-gray-300 max-w-2xl mx-auto text-lg">
-            Boutique training with small class sizes, personalized coaching, and beginner-friendly programs.
+            Boutique training with personalized coaching and beginner-friendly programs.
           </p>
         </div>
       </section>
@@ -72,11 +68,11 @@ export default function Pricing() {
             <h3 className="text-xl font-bold text-white mb-6 text-center">Why Train Here?</h3>
             <div className="grid sm:grid-cols-2 md:grid-cols-5 gap-4">
               {[
-                "Small group classes",
                 "Personalized coaching",
                 "Beginner friendly",
                 "Safe, welcoming environment",
                 "Built for women, kids & beginners",
+                "Flexible scheduling",
               ].map((item, idx) => (
                 <div key={idx} className="flex items-start gap-3">
                   <CheckCircle className="h-5 w-5 text-[#5EEBFF] flex-shrink-0 mt-0.5" />
@@ -188,13 +184,13 @@ export default function Pricing() {
             >
               <h3 className="text-xl font-bold text-white mb-2">Women's BJJ Fundamentals</h3>
               <p className="text-3xl font-bold text-white mb-1">$120<span className="text-lg font-normal text-gray-400">/mo</span></p>
-              <p className="text-gray-500 text-xs mb-4">Small group · Max 6 students</p>
-              <p className="text-gray-400 text-sm mb-5 flex-grow">Small group jiu-jitsu training focused on confidence, technique, movement, and beginner-friendly instruction.</p>
+              <p className="text-gray-500 text-xs mb-4">Personalized coaching</p>
+              <p className="text-gray-400 text-sm mb-5 flex-grow">Jiu-jitsu training focused on confidence, technique, movement, and beginner-friendly instruction.</p>
               <div className="space-y-2 mb-6 text-sm text-gray-300">
                 <div className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-[#5EEBFF] flex-shrink-0" /> 2 classes per week</div>
                 <div className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-[#5EEBFF] flex-shrink-0" /> Beginner friendly</div>
                 <div className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-[#5EEBFF] flex-shrink-0" /> Technique focused</div>
-                <div className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-[#5EEBFF] flex-shrink-0" /> Max 6 students per class</div>
+                <div className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-[#5EEBFF] flex-shrink-0" /> Personalized attention</div>
               </div>
               <Button asChild className="w-full bg-white text-[#0B0F14] font-bold hover:bg-gray-200">
                 <Link href="/portal/login">Start Training</Link>
@@ -217,7 +213,7 @@ export default function Pricing() {
                 <div className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-[#5EEBFF] flex-shrink-0" /> 2 classes per week</div>
                 <div className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-[#5EEBFF] flex-shrink-0" /> Confidence building</div>
                 <div className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-[#5EEBFF] flex-shrink-0" /> Discipline & coordination</div>
-                <div className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-[#5EEBFF] flex-shrink-0" /> Small class sizes</div>
+                <div className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-[#5EEBFF] flex-shrink-0" /> Personalized attention</div>
               </div>
               <Button asChild className="w-full bg-white text-[#0B0F14] font-bold hover:bg-gray-200">
                 <Link href="/portal/login">Enroll Your Child</Link>
@@ -235,7 +231,7 @@ export default function Pricing() {
               <h3 className="text-xl font-bold text-white mb-2">Strength & Conditioning</h3>
               <p className="text-3xl font-bold text-white mb-1">$15<span className="text-lg font-normal text-gray-400">/class</span></p>
               <p className="text-gray-500 text-xs mb-4">Or $60/month unlimited</p>
-              <p className="text-gray-400 text-sm mb-5 flex-grow">Small group fitness sessions focused on mobility, strength, injury prevention, and athletic conditioning.</p>
+              <p className="text-gray-400 text-sm mb-5 flex-grow">Focused fitness sessions built around mobility, strength, injury prevention, and athletic conditioning.</p>
               <div className="space-y-2 mb-6 text-sm text-gray-300">
                 <div className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-[#5EEBFF] flex-shrink-0" /> Mobility work</div>
                 <div className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-[#5EEBFF] flex-shrink-0" /> Strength training</div>
@@ -327,8 +323,8 @@ export default function Pricing() {
               answer="No. All programs are beginner friendly. Our programs are designed to help you build confidence from day one in a safe and supportive environment."
             />
             <FAQ
-              question="How small are the classes?"
-              answer="We keep all group classes to a maximum of 6 students. This means more personal coaching, better technique correction, and a more comfortable learning environment."
+              question="Will I get personalized attention?"
+              answer="We keep our classes intentionally intimate so every student gets personal coaching, better technique correction, and a more comfortable learning environment."
             />
             <FAQ
               question="What's included in the Women's Self-Defense program?"
@@ -373,7 +369,7 @@ export default function Pricing() {
             </Button>
           </div>
           <p className="text-gray-500 text-sm mt-8">
-            Oxnard, CA &bull; Max 6 students per class &bull; No contracts
+            Oxnard, CA &bull; Personalized coaching &bull; No contracts
           </p>
         </div>
       </Section>

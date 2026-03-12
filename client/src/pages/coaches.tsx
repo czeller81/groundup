@@ -66,14 +66,14 @@ export default function Coaches() {
                 Her teaching philosophy centers on creating a safe, supportive, and empowering training environment, especially for women and beginners who may feel intimidated in traditional martial arts gyms.
               </p>
               <p className="text-gray-300 leading-relaxed mb-4">
-                Through small group classes (maximum 6 students) and personalized coaching, Raymi helps students build real self-defense skills, confidence, strength, and discipline at their own pace.
+                Through personalized coaching and dedicated attention, Raymi helps students build real self-defense skills, confidence, strength, and discipline at their own pace.
               </p>
               <p className="text-gray-300 leading-relaxed mb-8">
                 Whether you're completely new to martial arts, looking to improve your fitness, or interested in learning practical self-defense, every session is designed to meet you where you are and help you grow from the ground up.
               </p>
 
               <div className="flex flex-wrap gap-2 mb-8">
-                {["Women's Self-Defense", "BJJ Fundamentals", "Strength & Conditioning", "Personal Coaching", "Small Group Classes"].map((tag) => (
+                {["Women's Self-Defense", "BJJ Fundamentals", "Strength & Conditioning", "Personal Coaching"].map((tag) => (
                   <span key={tag} className="px-3 py-1.5 text-xs rounded-full border border-white/10 text-gray-300 bg-white/5">
                     {tag}
                   </span>

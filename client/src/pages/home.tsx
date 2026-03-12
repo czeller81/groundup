@@ -87,16 +87,6 @@ export default function Home() {
             transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
             className="max-w-3xl"
           >
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2, duration: 0.6 }}
-              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[#FFB199]/30 bg-[#FFB199]/10 text-[#FFB199] text-sm mb-6 font-medium"
-            >
-              <Users className="h-3.5 w-3.5" />
-              Small Group Classes &bull; Max 6 Students
-            </motion.div>
-
             <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold leading-[0.9] mb-6 tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>
               <span className="text-white">GROUND UP</span>
               <br />
@@ -119,7 +109,7 @@ export default function Home() {
               transition={{ delay: 0.5, duration: 0.6 }}
               className="text-base text-gray-400 max-w-xl mb-10 leading-relaxed"
             >
-              Train in a safe, supportive, small-group environment designed to build confidence, fitness, and real-world self-defense skills.
+              Train in a safe, supportive environment designed to build confidence, fitness, and real-world self-defense skills.
             </motion.p>
 
             <motion.div
@@ -159,7 +149,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {[
-              { icon: Users, label: "Max 6 Per Class", desc: "Personalized attention always" },
+              { icon: Users, label: "Personalized Attention", desc: "Coaching tailored to you" },
               { icon: Shield, label: "Safe & Welcoming", desc: "Judgment-free environment" },
               { icon: Heart, label: "Women & Kids Focus", desc: "Programs built for you" },
               { icon: Award, label: "Beginner Friendly", desc: "No experience needed" },
@@ -208,7 +198,7 @@ export default function Home() {
               PROGRAMS <span className="gradient-text-cyan">DESIGNED FOR REAL LIFE</span>
             </h2>
             <p className="text-gray-400 max-w-2xl mx-auto">
-              Every program is built around small groups, personal coaching, and real-world skills that matter.
+              Every program is built around personal coaching and real-world skills that matter.
             </p>
           </div>
 
@@ -264,8 +254,8 @@ export default function Home() {
               {
                 title: "Women's BJJ Fundamentals",
                 price: "$120/mo",
-                desc: "Learn Brazilian Jiu-Jitsu fundamentals in a small-group setting focused on technique, movement, confidence, and controlled training.",
-                highlights: ["Beginner friendly", "Small class sizes", "Technique-focused", "Safe environment"],
+                desc: "Learn Brazilian Jiu-Jitsu fundamentals in a focused setting built around technique, movement, confidence, and controlled training.",
+                highlights: ["Beginner friendly", "Personalized coaching", "Technique-focused", "Safe environment"],
                 img: bjjFundamentalsImg,
                 accent: "#5EEBFF",
               },
@@ -280,8 +270,8 @@ export default function Home() {
               {
                 title: "Strength & Conditioning",
                 price: "$15/class",
-                desc: "Small group fitness sessions focused on mobility, strength, injury prevention, and athletic conditioning.",
-                highlights: ["Small groups", "Functional strength", "Injury prevention", "Athletic conditioning"],
+                desc: "Focused fitness sessions built around mobility, strength, injury prevention, and athletic conditioning.",
+                highlights: ["Personalized coaching", "Functional strength", "Injury prevention", "Athletic conditioning"],
                 img: strengthImg,
                 accent: "#5EEBFF",
               },
@@ -341,11 +331,11 @@ export default function Home() {
                 WHY GROUND UP <span className="gradient-text-cyan">IS DIFFERENT</span>
               </h2>
               <p className="text-gray-300 leading-relaxed mb-10">
-                Unlike large gyms, Ground Up focuses on quality over quantity. Our small-group model allows for better instruction, stronger community, and a more comfortable experience for people who want to learn in a supportive environment.
+                Unlike large gyms, Ground Up focuses on quality over quantity. Our approach allows for better instruction, stronger community, and a more comfortable experience for people who want to learn in a supportive environment.
               </p>
               <div className="grid sm:grid-cols-2 gap-5">
                 {[
-                  { icon: Users, title: "Max 6 Students Per Class", desc: "Every student gets direct coaching attention — no one gets lost in the crowd.", accent: "#5EEBFF" },
+                  { icon: Users, title: "Personalized Attention", desc: "Every student gets direct coaching attention — no one gets lost in the crowd.", accent: "#5EEBFF" },
                   { icon: Award, title: "Personalized Coaching", desc: "Programs and sessions are tailored to your goals, fitness level, and pace.", accent: "#B06CFF" },
                   { icon: Heart, title: "Safe & Welcoming", desc: "A judgment-free space where you can learn, grow, and feel completely at ease.", accent: "#FFB199" },
                   { icon: Shield, title: "Built for Women, Kids & Beginners", desc: "Our programs are designed specifically around your needs, not repurposed from a competitive fight gym.", accent: "#5EEBFF" },
@@ -370,20 +360,9 @@ export default function Home() {
               <div className="absolute -inset-4 bg-gradient-to-br from-[#5EEBFF]/10 to-[#B06CFF]/10 rounded-2xl blur-xl" />
               <img
                 src={whyDifferentImg}
-                alt="Small group training"
+                alt="Training environment"
                 className="relative rounded-2xl w-full aspect-[4/5] object-cover border border-white/10"
               />
-              <div className="absolute bottom-6 left-6 right-6 p-4 bg-[#0B0F14]/90 backdrop-blur-sm rounded-xl border border-white/10">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-[#FFB199]/20 flex items-center justify-center flex-shrink-0">
-                    <Users className="h-5 w-5 text-[#FFB199]" />
-                  </div>
-                  <div>
-                    <p className="text-white font-bold text-sm" style={{ fontFamily: 'var(--font-display)' }}>MAX 6 STUDENTS PER CLASS</p>
-                    <p className="text-gray-400 text-xs">Every session feels personal</p>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -541,7 +520,7 @@ export default function Home() {
                 Raymi founded Ground Up Jiu-Jitsu with one goal: to build a safe, empowering home for women, kids, and beginners. With deep expertise in BJJ, self-defense, and strength & conditioning, she brings personal attention and real-world skill to every session.
               </p>
               <div className="flex flex-wrap gap-2 mb-8">
-                {["Women's Self-Defense", "Kids BJJ", "Strength & Conditioning", "Personal Training", "Small Group Classes"].map((tag) => (
+                {["Women's Self-Defense", "Kids BJJ", "Strength & Conditioning", "Personal Training"].map((tag) => (
                   <span key={tag} className="px-3 py-1.5 text-xs rounded-full border border-white/10 text-gray-300 bg-white/5">
                     {tag}
                   </span>
@@ -581,7 +560,7 @@ export default function Home() {
           <div className="grid md:grid-cols-3 gap-8">
             {[
               {
-                quote: "I signed up for the women's self-defense program with zero experience and left feeling completely confident. The small class size made all the difference — I actually got real coaching.",
+                quote: "I signed up for the women's self-defense program with zero experience and left feeling completely confident. The personalized attention made all the difference — I actually got real coaching.",
                 name: "Maria G.",
                 role: "Self-Defense Program",
                 img: testimonialImg1,
@@ -593,7 +572,7 @@ export default function Home() {
                 img: testimonialImg2,
               },
               {
-                quote: "The personal training sessions completely transformed my fitness and confidence. Knowing there's a max of 6 people in group classes means I always feel seen and supported.",
+                quote: "The personal training sessions completely transformed my fitness and confidence. The coaching here is so attentive — I always feel seen and supported.",
                 name: "Priya P.",
                 role: "Personal Training",
                 img: testimonialImg3,
@@ -634,7 +613,7 @@ export default function Home() {
               SIMPLE, AFFORDABLE <span className="gradient-text-cyan">PRICING</span>
             </h2>
             <p className="text-gray-300 text-lg max-w-2xl mx-auto">
-              Boutique training with small class sizes, personalized coaching, and beginner-friendly programs.
+              Boutique training with personalized coaching and beginner-friendly programs.
             </p>
           </div>
 
@@ -643,11 +622,11 @@ export default function Home() {
             <h3 className="text-2xl font-bold text-white mb-8 text-center">Why Train Here?</h3>
             <div className="grid md:grid-cols-5 gap-6">
               {[
-                "Small Group Classes",
                 "Personalized Coaching",
                 "Beginner Friendly",
                 "Safe, Welcoming Environment",
-                "Built for Women, Kids & Beginners"
+                "Built for Women, Kids & Beginners",
+                "Flexible Scheduling"
               ].map((item, idx) => (
                 <div key={idx} className="flex items-start gap-3">
                   <CheckCircle className="h-5 w-5 text-[#5EEBFF] flex-shrink-0 mt-0.5" />
@@ -676,13 +655,13 @@ export default function Home() {
             <div className="bg-[#121826] border border-white/10 rounded-xl p-6 flex flex-col hover:border-[#5EEBFF]/30 transition-colors">
               <h3 className="text-xl font-bold text-white mb-2">Women's BJJ Fundamentals</h3>
               <p className="text-3xl font-bold text-white mb-1">$120<span className="text-lg font-normal text-gray-400">/mo</span></p>
-              <p className="text-gray-500 text-xs mb-4">Small group classes</p>
-              <p className="text-gray-400 text-sm mb-6 flex-grow">Small group jiu-jitsu training focused on confidence, technique, movement, and beginner-friendly instruction.</p>
+              <p className="text-gray-500 text-xs mb-4">Personalized coaching</p>
+              <p className="text-gray-400 text-sm mb-6 flex-grow">Jiu-jitsu training focused on confidence, technique, movement, and beginner-friendly instruction.</p>
               <div className="space-y-2 mb-6 text-sm text-gray-300">
                 <div className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-[#5EEBFF]" /> 2 classes per week</div>
                 <div className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-[#5EEBFF]" /> Beginner friendly</div>
                 <div className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-[#5EEBFF]" /> Technique focused</div>
-                <div className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-[#5EEBFF]" /> Max 6 students</div>
+                <div className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-[#5EEBFF]" /> Personalized attention</div>
               </div>
               <Button asChild className="w-full bg-white text-[#0B0F14] font-bold hover:bg-gray-200">
                 <Link href="/portal/login">Start Training</Link>
@@ -699,7 +678,7 @@ export default function Home() {
                 <div className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-[#5EEBFF]" /> 2 classes per week</div>
                 <div className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-[#5EEBFF]" /> Confidence building</div>
                 <div className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-[#5EEBFF]" /> Discipline & coordination</div>
-                <div className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-[#5EEBFF]" /> Small class sizes</div>
+                <div className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-[#5EEBFF]" /> Personalized attention</div>
               </div>
               <Button asChild className="w-full bg-white text-[#0B0F14] font-bold hover:bg-gray-200">
                 <Link href="/portal/login">Enroll Your Child</Link>
@@ -711,7 +690,7 @@ export default function Home() {
               <h3 className="text-xl font-bold text-white mb-2">Strength & Conditioning</h3>
               <p className="text-3xl font-bold text-white mb-1">$15<span className="text-lg font-normal text-gray-400">/class</span></p>
               <p className="text-gray-500 text-xs mb-4">Or $60/month unlimited</p>
-              <p className="text-gray-400 text-sm mb-6 flex-grow">Small group fitness sessions focused on mobility, strength, injury prevention, and athletic conditioning.</p>
+              <p className="text-gray-400 text-sm mb-6 flex-grow">Focused fitness sessions built around mobility, strength, injury prevention, and athletic conditioning.</p>
               <div className="space-y-2 mb-6 text-sm text-gray-300">
                 <div className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-[#5EEBFF]" /> Mobility work</div>
                 <div className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-[#5EEBFF]" /> Strength training</div>
@@ -813,8 +792,8 @@ export default function Home() {
               answer="No. Our programs are beginner friendly and designed to help you build confidence from day one. You'll start at your own pace with personalized coaching every step of the way."
             />
             <FAQ
-              question="Are classes large?"
-              answer="No. We keep classes small with a maximum of 6 students per session. This means more personal coaching, better technique correction, and a more comfortable learning environment."
+              question="Will I get personalized attention?"
+              answer="Absolutely. We keep our classes intentionally intimate so every student gets personal coaching, better technique correction, and a more comfortable learning environment."
             />
             <FAQ
               question="Is this good for women who only want self-defense?"
@@ -873,7 +852,7 @@ export default function Home() {
             </Button>
           </div>
           <p className="text-gray-500 text-sm mt-8">
-            Oxnard, CA &bull; Max 6 students per class &bull; No contracts
+            Oxnard, CA &bull; Personalized coaching &bull; No contracts
           </p>
         </div>
       </Section>
