@@ -19,7 +19,7 @@ import coachImg from "@assets/generated_images/coach_portrait.png";
 import testimonialImg1 from "@assets/generated_images/testimonial1.png";
 import testimonialImg2 from "@assets/generated_images/testimonial2.png";
 import testimonialImg3 from "@assets/generated_images/testimonial3.png";
-import heroVideo from "@assets/videos/hero-bg.mp4?url";
+const heroVideo = "/videos/hero-bg.mp4";
 
 function Section({ children, className = "", delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
   const ref = useRef(null);
