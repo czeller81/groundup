@@ -18,7 +18,8 @@ export default function PortalNavbar() {
 
   const navItems = [
     { path: "/portal/dashboard", label: "Dashboard" },
-    { path: "/portal/booking", label: "Book Session" },
+    { path: "/portal/booking", label: "Book" },
+    { path: "/portal/schedule", label: "Schedule" },
     ...(isCoach || isAdmin ? [{ path: "/portal/coach", label: "Coach Center" }] : []),
     ...(isAdmin ? [{ path: "/portal/admin", label: "Admin" }] : []),
   ];

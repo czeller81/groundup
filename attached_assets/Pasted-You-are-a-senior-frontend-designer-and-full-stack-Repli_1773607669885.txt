@@ -1,0 +1,213 @@
+You are a senior frontend designer and full-stack Replit agent working on the Ground Up Jiu-Jitsu website and member portal.
+
+GOAL
+Create a beautiful, modern, high-converting SCHEDULE experience for both:
+1. The public website
+2. The member portal / dashboard
+
+The design should feel premium, minimal, modern, athletic, and slightly futuristic, following current UI trends:
+- clean spacing
+- glassmorphism used lightly
+- subtle gradients
+- smooth hover states
+- animated cards
+- elegant motion
+- mobile-first responsive layout
+- modern typography
+- premium boutique fitness / martial arts feel
+- aesthetic but still very readable
+- no clutter
+- no cheesy gym style
+
+BRAND DIRECTION
+Ground Up Jiu-Jitsu is a boutique academy focused on:
+- women’s jiu-jitsu
+- kids programs
+- strength and conditioning
+- self-defense
+- ecological / constraint-led training approach
+
+The visual style should communicate:
+- confidence
+- empowerment
+- professionalism
+- safety
+- modern coaching
+- community
+
+Use a premium palette based around:
+- black / charcoal
+- white
+- soft gray
+- subtle electric blue accents
+Optional:
+- very subtle warm accent for CTA highlights
+
+MAIN TASK
+Build a complete schedule section and apply it to both the public site and the portal.
+
+PUBLIC WEBSITE REQUIREMENTS
+Create a new premium “Class Schedule” section/page that includes:
+
+1. Hero / intro area
+- Title: “Class Schedule”
+- Subtitle explaining that classes are intentionally small, structured, and designed for women, kids, and performance-focused students.
+- Include a short supporting line like:
+  “Train with purpose through jiu-jitsu, self-defense, and strength & conditioning.”
+
+2. Modern schedule experience
+Create the schedule in a way that looks far better than a plain table.
+Preferred UX:
+- tabs or pills for each day of the week
+- beautiful animated schedule cards
+- or a weekly grid with elegant modern styling
+- on mobile, stack cards vertically
+- on desktop, support a clean weekly layout
+
+3. Class card design
+Each class card should show:
+- class name
+- time
+- audience
+- category tag
+- optional small icon
+- visual tag colors by class type
+
+Suggested class type tags:
+- Women’s Jiu-Jitsu
+- Kids
+- Youth
+- Conditioning
+- Strength & Conditioning
+- Competition
+- Open Mat
+- Self-Defense
+
+4. Extra schedule UX features
+Add:
+- “Today’s Classes” highlight
+- sticky filter chips
+- filter by:
+  - Women
+  - Kids
+  - Adults
+  - Strength & Conditioning
+  - Jiu-Jitsu
+  - Competition
+- “featured programs” callout cards near the schedule
+
+5. CTA area below schedule
+Include CTA buttons like:
+- Book a Free Intro
+- Join Women’s Program
+- View Kids Classes
+- Contact Us
+
+PORTAL REQUIREMENTS
+Apply the same design language to the portal dashboard and create a “My Schedule” or “Academy Schedule” module.
+
+In the portal:
+- show the weekly schedule in a cleaner, dashboard-friendly layout
+- include a “Today” view
+- include upcoming classes
+- allow highlighting featured classes
+- make the interface consistent with the website but slightly more app-like
+- use clean cards, elegant shadows, rounded corners, subtle blur/glass effects
+- mobile responsive
+
+If the portal already has components, extend them instead of breaking the current design system.
+
+IMPORTANT UI DETAILS
+- Use Framer Motion for subtle animations
+- Elegant transitions when changing days
+- Soft hover glow on active schedule cards
+- Keep text highly readable
+- Prioritize whitespace and hierarchy
+- Add small badges like “Women Only”, “Ages 4–7”, “Youth”, “Open”
+- Keep everything premium and boutique
+- Avoid overcrowding
+
+CONTENT TO USE
+Use exactly this schedule content:
+
+MONDAY
+- 12:00 PM – 1:00 PM — Conditioning for Jiu-Jitsu
+- 3:45 PM – 4:30 PM — Kids Intro to Jiu-Jitsu (Ages 4–7)
+- 4:30 PM – 5:30 PM — Intro to Jiu-Jitsu (Ages 8+)
+- 5:30 PM – 6:30 PM — Jiu-Jitsu / Women’s Only
+
+TUESDAY
+- 4:00 PM – 5:00 PM — Strength & Conditioning for Kids and Teens for Martial Arts
+- 5:00 PM – 6:00 PM — Strength & Conditioning for Adults
+
+WEDNESDAY
+- 4:00 PM – 5:00 PM — Strength & Conditioning for Adults
+- 5:00 PM – 6:00 PM — Strength & Conditioning for Competition Jiu-Jitsu
+- 6:00 PM – 7:00 PM — Jiu-Jitsu / Women’s Only
+
+THURSDAY
+- 12:00 PM – 1:00 PM — Conditioning for Jiu-Jitsu
+- 3:45 PM – 4:30 PM — Kids Intro to Jiu-Jitsu (Ages 4–7)
+- 4:30 PM – 5:30 PM — Youth Intro to Jiu-Jitsu
+- 5:30 PM – 6:30 PM — Jiu-Jitsu / Self-Defense Women’s Only
+
+FRIDAY
+- 12:00 PM – 1:00 PM — Strength & Conditioning
+- 4:00 PM – 5:00 PM — Ecological Approach Competition Kids Class
+- 5:00 PM – 6:00 PM — Jiu-Jitsu Women’s Only
+
+SATURDAY
+- 10:00 AM – 11:00 AM — Jiu-Jitsu / Self-Defense Intro Women’s
+- 11:00 AM – 12:00 PM — Ecological Approach Competition Kids Class
+- 12:00 PM – 1:00 PM — Strength & Conditioning Open
+
+SUNDAY
+- 9:00 AM – 10:00 AM — Strength & Conditioning
+- 10:00 AM — Open Mat
+
+DATA STRUCTURE
+Create a clean reusable data structure for the schedule such as:
+- day
+- startTime
+- endTime
+- title
+- category
+- audience
+- tags
+- featured
+- description (optional)
+
+Make the schedule easy to update later from a single source file.
+
+DEVELOPMENT REQUIREMENTS
+- Reuse existing site styles where appropriate
+- Do not break current pages
+- Make the schedule component reusable
+- Make it fully responsive
+- Use semantic HTML and accessible interactions
+- Add hover, active, and selected states
+- Add empty/loading-safe states if needed
+- Keep code clean and production-ready
+
+BONUS IMPROVEMENTS
+If appropriate, add:
+- a “program spotlight” card for Women’s Only Jiu-Jitsu
+- a “Kids Intro” highlight card
+- a small note explaining the ecological / constraint-led approach
+- a “small class sizes” premium note
+
+MICROCOPY SUGGESTIONS
+Use short polished copy like:
+- “Small group coaching. Real progress.”
+- “Built for women, kids, and purposeful training.”
+- “Train smarter with structure, support, and intention.”
+
+OUTPUT
+Please:
+1. Build the full schedule UI for the public website
+2. Apply the design system to the portal schedule module
+3. Create any reusable components needed
+4. Add all schedule data
+5. Make sure the final result feels premium, modern, and aesthetic
+6. Show me exactly what files were created or changed
+7. Summarize the completed work clearly at the end
