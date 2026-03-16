@@ -99,16 +99,23 @@ Preferred communication style: Simple, everyday language.
 - Home (single-page with Hero, Trust strip, Programs, Coach, Testimonials, Pricing, FAQ, CTA)
 - Personal Training (info + CTA to portal)
 - Coaches (Raymi Gonzalez spotlight)
-- Pricing (per-session $20 + monthly unlimited $280)
+- Programs (Start Here funnel — no pricing shown)
 - Contact (form + info)
 - Portal: Login, Dashboard, Forms, Booking, Admin, Coach
+
+## PWA (Progressive Web App)
+- Installable on iPhone/Android via "Add to Home Screen"
+- manifest.json at client/public/manifest.json
+- Icons at client/public/icons/ (192x192, 512x512, 180x180 apple-touch-icon)
+- Apple meta tags in client/index.html (apple-mobile-web-app-capable, theme-color, status-bar-style)
+- App name: "Ground Up BJJ", display: standalone, theme: #0B0F14
 
 ## Business Info
 - Phone: (786) 757-1175
 - Email: raymin33@gmail.com
 - Location: Oxnard, CA
 - Trainer: Raymi Gonzalez, Purple Belt 3rd Degree
-- Sessions: $20/hour, 8am–5pm
+- Sessions: 8am–5pm
 
 # External Dependencies
 - Neon Database (PostgreSQL)
