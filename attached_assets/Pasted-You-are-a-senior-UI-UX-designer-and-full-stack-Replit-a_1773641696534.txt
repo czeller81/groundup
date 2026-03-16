@@ -1,0 +1,201 @@
+You are a senior UI/UX designer and full-stack Replit agent.
+
+IMPORTANT:
+Do NOT add more sections on top of the existing pricing page.
+Do NOT keep the old pricing layout and stack new content below it.
+Instead, fully refactor and simplify the current /pricing page into a cleaner, more conversion-focused page.
+
+GOAL
+Turn the Pricing page into a simple, premium CTA page whose primary purpose is to get the visitor to:
+BOOK A FREE INTRO
+
+The page should feel:
+- cleaner
+- shorter
+- more premium
+- easier to understand
+- less cluttered
+- more intentional
+- more modern
+- more elegant
+
+MAIN PROBLEM TO FIX
+Right now the page feels like:
+- too much content
+- too many cards
+- too much pricing emphasis
+- old and new sections stacked together
+- too much scrolling
+- too much visual noise
+
+I want you to REMOVE the unnecessary pricing-heavy layout and replace it with a much simpler structure.
+
+NEW STRATEGY
+This should no longer feel like a traditional pricing page.
+It should feel like a “Start Here” page.
+
+Instead of making people compare a bunch of prices, the page should:
+1. explain who we help
+2. show the main programs simply
+3. guide them to book a free intro
+4. reduce hesitation
+5. keep pricing minimal and secondary
+
+REDESIGN THE PAGE FROM SCRATCH USING THE SAME ROUTE
+Refactor the existing /pricing page into this simplified structure:
+
+SECTION 1 — SIMPLE HERO
+Headline:
+Start Your Training at Ground Up
+
+Subheadline:
+Small-group coaching for women, kids, beginners, and anyone looking to build confidence through jiu-jitsu, self-defense, and strength & conditioning.
+
+CTA buttons:
+- Book Free Intro
+- View Schedule
+
+Add 3 short trust bullets under the hero:
+- Beginner friendly
+- Small classes
+- Safe, supportive coaching
+
+SECTION 2 — WHO IT’S FOR
+A simple clean section with 3 or 4 cards only:
+- Women
+- Kids
+- Beginners
+- Strength & Conditioning
+
+Each card should have:
+- title
+- one short sentence
+- small icon
+- simple CTA: Book Free Intro
+
+Keep these cards elegant and minimal.
+
+SECTION 3 — OUR PROGRAMS
+Replace the big pricing comparison layout with only 3 featured program cards:
+
+1. Women’s Jiu-Jitsu / Self-Defense
+2. Kids Jiu-Jitsu
+3. Strength & Conditioning
+
+Each card should contain:
+- program title
+- short benefit-driven description
+- very light pricing reference only if useful, such as:
+  “Programs start at...”
+  or “8-week self-defense program available”
+- CTA button: Book Free Intro
+
+IMPORTANT:
+Do not create too many badges, chips, or clutter.
+Do not use oversized pricing blocks.
+Do not make this look like a SaaS pricing table.
+
+SECTION 4 — FEATURED STARTING POINT
+One single highlighted section:
+Best Place to Start
+
+Feature:
+Women’s Self-Defense — 8 Week Program
+
+Keep it much simpler than the current version.
+Use:
+- title
+- short emotional paragraph
+- 3 simple bullets
+- one price mention only: $199 total
+- CTA: Book Free Intro
+
+Do NOT add multiple pricing boxes like:
+- total investment
+- per class breakdown
+- what you’ll build
+Keep this section visually elegant and simplified.
+
+SECTION 5 — HOW THE FREE INTRO WORKS
+Use a very simple 3-step row:
+1. Book
+2. Meet Your Coach
+3. Start Training
+
+Add one line underneath:
+No pressure. We’ll help you find the best class for your goals.
+
+SECTION 6 — FINAL CTA
+A clean closing banner:
+Ready to begin?
+
+Subtext:
+Book your free intro and we’ll help you find the right fit.
+
+Buttons:
+- Book Free Intro
+- Contact Us
+
+DESIGN DIRECTION
+Use a premium, minimal aesthetic:
+- dark background
+- clean typography
+- soft blue accent
+- subtle premium glow
+- clean spacing
+- large readable text
+- minimal gradients
+- no overcrowding
+- no excessive cards
+- no extra sections unless truly necessary
+
+MAKE IT SIMPLER
+Please reduce:
+- number of sections
+- number of cards
+- number of buttons competing for attention
+- pricing emphasis
+- wall of text
+- repeated CTA blocks
+- visual clutter
+
+MAKE IT BETTER
+Please improve:
+- hierarchy
+- whitespace
+- readability
+- conversion focus
+- elegance
+- mobile layout
+- consistency with the rest of the Ground Up site
+
+TECHNICAL INSTRUCTIONS
+- Refactor the existing pricing page instead of stacking onto it
+- Delete or replace the old pricing-heavy sections
+- Remove unnecessary repeated program/pricing cards
+- Keep only the cleaner funnel structure above
+- Reuse existing components only if they fit the new simplified design
+- Make it fully responsive
+- Keep code clean and production-ready
+
+VERY IMPORTANT
+I do NOT want:
+- a long page
+- a traditional pricing table
+- too many comparisons
+- too much pricing detail
+- a page that feels busy
+
+I DO want:
+- elegant
+- minimal
+- premium
+- clear
+- conversion-focused
+- simple
+
+OUTPUT
+At the end:
+1. Tell me exactly which old sections were removed
+2. Tell me which components were replaced or refactored
+3. Summarize how the new page is simpler and better
