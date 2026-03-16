@@ -1,0 +1,329 @@
+You are a senior conversion-focused UI/UX designer and full-stack Replit agent working on the Ground Up Jiu-Jitsu website.
+
+GOAL
+Transform the current Pricing page into a high-converting CTA funnel that leads visitors to book a FREE INTRO for any program we offer.
+
+This should not feel like a boring pricing table.
+It should feel like a premium boutique martial arts + fitness funnel designed to:
+- reduce hesitation
+- build trust
+- explain the value quickly
+- segment users by interest
+- push them toward one primary action:
+  BOOK YOUR FREE INTRO
+
+BUSINESS CONTEXT
+Ground Up Jiu-Jitsu is a boutique academy focused on:
+- women’s jiu-jitsu
+- women’s self-defense
+- kids jiu-jitsu
+- youth intro classes
+- strength & conditioning
+- ecological / constraint-led training
+- small class sizes
+- safe welcoming environment
+- beginners
+- community
+
+The academy is especially designed for:
+- women
+- kids
+- beginners
+- parents
+- people who want more personalized coaching
+- people who may feel intimidated by traditional gyms
+
+PRIMARY CONVERSION GOAL
+Every offer on the pricing page should guide the visitor toward:
+- Book a Free Intro
+- Book a Free Trial
+- Reserve Your Free First Class
+Choose the most premium and clear wording, but keep it consistent across the whole page.
+
+IMPORTANT STRATEGY
+Do NOT make the page overly focused on numbers.
+Instead:
+1. lead with value
+2. reduce friction
+3. help people choose the right program
+4. make every section CTA-driven
+5. keep the free intro as the main action
+
+DESIGN DIRECTION
+Create a modern, aesthetic, premium conversion page using current high-end UI trends:
+- minimal but luxurious
+- clean spacing
+- subtle gradients
+- soft glow accents
+- elegant motion
+- tasteful glassmorphism where appropriate
+- rounded cards
+- smooth hover states
+- premium athletic/feminine/boutique aesthetic
+- mobile-first responsive design
+- slightly futuristic but still warm and welcoming
+- visually consistent with the current Ground Up site
+
+BRAND STYLE
+Use Ground Up brand language and styling:
+- dark premium background
+- white text
+- muted gray support text
+- electric blue accents
+- optional soft purple / warm peach accent for featured CTA moments
+- strong typography hierarchy
+- no clutter
+- no generic corporate look
+- no cheesy gym design
+
+PAGE OBJECTIVE
+The page should answer:
+- What do you offer?
+- Who is it for?
+- Why is it worth it?
+- What should I do next?
+And the answer should always be:
+BOOK A FREE INTRO
+
+BUILD THE PAGE WITH THIS STRUCTURE
+
+SECTION 1 — HERO CTA
+Create a premium hero section for the pricing page.
+
+Headline ideas:
+- Find the Right Program for You
+- Start with a Free Intro
+- Small Group Coaching. Real Progress.
+- Train with Confidence at Ground Up
+
+Subheadline should explain:
+- personalized coaching
+- women, kids, beginners welcome
+- small class sizes
+- book a free intro to find the right fit
+
+Add:
+- 1 primary CTA button: Book Your Free Intro
+- 1 secondary CTA button: View Programs
+- optional trust note under button:
+  “No pressure. Come meet us, see the space, and find the best fit.”
+
+SECTION 2 — TRUST / WHY TRAIN HERE
+Keep or redesign the current “Why Train Here?” section so it looks more premium and useful.
+Use elegant icon cards or badges.
+
+Include:
+- Personalized coaching
+- Beginner friendly
+- Safe, welcoming environment
+- Built for women, kids & beginners
+- Flexible scheduling
+- Small class sizes
+- Real self-defense + fitness
+
+SECTION 3 — CHOOSE YOUR PATH
+This is very important.
+Create a beautiful “Choose Your Program” funnel section with 4–6 visually distinct cards.
+Each card should guide the user to the free intro path.
+
+Programs to include:
+- Women’s Self-Defense
+- Women’s Jiu-Jitsu
+- Kids Jiu-Jitsu
+- Youth Intro to Jiu-Jitsu
+- Strength & Conditioning
+- Competition / Ecological Approach (optional if appropriate)
+
+Each card should have:
+- program name
+- short benefit-driven description
+- ideal for text
+- pricing snippet if desired, but not overly dominant
+- clear CTA button:
+  Book Free Intro
+
+Optional secondary text:
+- Best for beginners
+- Ages 4–7
+- Ages 8+
+- Women only
+- Build confidence
+- Learn practical self-defense
+- Improve athletic performance
+
+SECTION 4 — FEATURED OFFER / BEST ENTRY POINT
+Make one premium highlighted section for the best starter offer.
+
+Most likely feature:
+Women’s Self-Defense Program
+or
+Start Here: Free Intro + Program Match
+
+This section should function like a mini conversion funnel.
+Include:
+- headline
+- short emotional copy
+- value explanation
+- what happens after booking
+- CTA button
+- support text like:
+  “We’ll help you choose the right class after your intro.”
+
+Important:
+This section should not just show price.
+It should explain the transformation and lower fear.
+
+SECTION 5 — HOW THE FREE INTRO WORKS
+Add a 3-step or 4-step conversion section that reduces anxiety.
+
+Example:
+1. Book your free intro
+2. Meet your coach
+3. Try the class that fits you
+4. Join when you’re ready
+
+Add reassurance copy like:
+- No experience needed
+- No pressure sales
+- Beginner-friendly environment
+- We’ll guide you every step of the way
+
+This section is essential for conversions.
+
+SECTION 6 — PRICING, BUT SMARTER
+Redesign pricing so it supports the funnel instead of dominating the page.
+
+Instead of a plain pricing table, create premium pricing cards with strong CTA support.
+
+Offers to include:
+- Women’s Self-Defense Program — 8-week program — $199
+- Women’s Jiu-Jitsu — memberships start at [placeholder or current amount]
+- Kids Jiu-Jitsu — memberships start at [placeholder or current amount]
+- Strength & Conditioning — starting at [placeholder or current amount]
+- Open / intro options if appropriate
+
+Important pricing strategy:
+- pricing should be visible, but secondary to the CTA
+- every pricing card should end with Book Free Intro
+- include “starting at” language where useful
+- highlight value, not just cost
+- include per-class breakdown for the 8-week self-defense program if desired
+- visually emphasize the best first step instead of making people compare too much
+
+SECTION 7 — FAQ TO REMOVE OBJECTIONS
+Add a beautiful FAQ section with accordion interaction.
+
+Questions to include:
+- Do I need experience?
+- Is this good for beginners?
+- What should I wear to my first class?
+- Are classes safe?
+- How do I know which program is right for me?
+- Do you offer classes for women only?
+- What age can kids start?
+- What happens at the free intro?
+
+Each answer should gently push toward booking the intro.
+
+SECTION 8 — FINAL CTA BAND
+End with a strong final conversion banner.
+
+Example headline:
+Ready to get started?
+Book your free intro and we’ll help you find the right class.
+
+Buttons:
+- Book Free Intro
+- Contact Us
+
+Optional line:
+“Women, kids, and beginners welcome.”
+
+CTA SYSTEM REQUIREMENTS
+Unify all CTAs across the pricing page.
+Every major section should include a clear CTA.
+Use one main CTA label consistently such as:
+- Book Your Free Intro
+or
+- Reserve Your Free Intro
+
+Whichever is chosen, apply it everywhere consistently.
+
+The CTA should link to:
+- the booking page
+- calendly
+- lead capture modal
+- contact flow
+Use the existing booking flow if already present.
+If no booking flow exists, create a placeholder CTA component ready to connect.
+
+ADVANCED CONVERSION IMPROVEMENTS
+Please also implement the following if appropriate:
+
+1. Sticky mobile CTA
+On mobile, add a sticky bottom CTA bar:
+- Book Free Intro
+
+2. Program match helper
+Add a small section or UI that says:
+“Not sure where to start?”
+Then give quick options:
+- I’m new
+- I want self-defense
+- I’m looking for kids classes
+- I want strength & conditioning
+Each one leads to the appropriate CTA card or booking flow.
+
+3. Micro trust messaging
+Add supporting microcopy like:
+- No experience needed
+- Beginner friendly
+- Small classes
+- Safe and supportive coaching
+- No pressure
+
+4. Visual hierarchy improvements
+Make sure the eye is drawn in this order:
+headline → benefits → best-fit offer → CTA → reassurance
+
+COPY STYLE
+Write clean, premium, emotionally intelligent copy.
+Avoid overhyped marketing language.
+Use calm confidence.
+Tone should feel:
+- empowering
+- welcoming
+- premium
+- modern
+- trustworthy
+
+TECHNICAL REQUIREMENTS
+- Reuse the current site design system where possible
+- Improve, do not break, the current pricing page
+- Keep it fully responsive
+- Use accessible semantics
+- Use elegant animations (Framer Motion if already used in the project)
+- Optimize spacing and layout for mobile and desktop
+- Keep components reusable
+- Keep the page easy to edit later
+
+IMPORTANT
+The page should not feel like “here are our prices.”
+It should feel like:
+“Here’s the right path for you — start with a free intro.”
+
+CURRENT PAGE
+There is already a pricing page with:
+- top nav
+- “Why Train Here?” section
+- featured women’s self-defense program
+Use what exists if useful, but upgrade the page into a much stronger conversion funnel.
+
+OUTPUT
+Please:
+1. Redesign the pricing page into a CTA funnel
+2. Keep it visually premium and modern
+3. Make the free intro the primary conversion action throughout
+4. Reuse or improve the current sections instead of cluttering the page
+5. Show exactly what files were created or updated
+6. Summarize the funnel improvements clearly at the end
