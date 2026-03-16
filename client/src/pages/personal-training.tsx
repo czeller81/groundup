@@ -123,10 +123,6 @@ export default function PersonalTraining() {
                   </li>
                 ))}
               </ul>
-              <div className="flex items-baseline gap-2 mb-6">
-                <span className="text-4xl font-bold text-[#5EEBFF]" style={{ fontFamily: 'var(--font-display)' }}>$20</span>
-                <span className="text-gray-400">per session</span>
-              </div>
               <Button
                 asChild
                 className="bg-[#FFB199] text-[#0B0F14] font-bold uppercase tracking-wider hover:bg-[#FFB199]/90"

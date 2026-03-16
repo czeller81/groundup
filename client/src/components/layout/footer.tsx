@@ -28,7 +28,8 @@ export default function Footer() {
               {[
                 { href: "/personal-training", label: "Personal Training" },
                 { href: "/coaches", label: "Coaches" },
-                { href: "/pricing", label: "Pricing" },
+                { href: "/pricing", label: "Programs" },
+                { href: "/schedule", label: "Schedule" },
                 { href: "/contact", label: "Contact" },
                 { href: "/portal/login", label: "Member Portal" },
               ].map((link) => (

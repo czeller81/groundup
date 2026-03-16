@@ -137,7 +137,7 @@ export default function Pricing() {
               {
                 title: "Kids Jiu-Jitsu",
                 desc: "Fun, structured jiu-jitsu for ages 4 and up. Kids build discipline, coordination, and self-confidence through guided movement and play.",
-                note: "Classes for ages 4–7 and 8+ · Programs starting at $100/mo",
+                note: "Classes for ages 4–7 and 8+",
                 accent: "#FFB199",
               },
               {
@@ -189,7 +189,6 @@ export default function Pricing() {
                   <Button asChild size="lg" className="bg-[#B06CFF] text-white font-bold uppercase tracking-wider hover:bg-[#B06CFF]/90">
                     <Link href="/portal/login">Book Your Free Intro <ArrowRight className="ml-2 h-4 w-4" /></Link>
                   </Button>
-                  <span className="text-gray-400 text-sm">Full program — <strong className="text-white">$199 total</strong></span>
                 </div>
               </div>
             </div>

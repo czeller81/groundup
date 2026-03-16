@@ -229,10 +229,6 @@ export default function Home() {
                     </div>
                   ))}
                 </div>
-                <div className="flex items-baseline gap-2 mb-6">
-                  <span className="text-3xl font-bold text-[#FFB199]">$199</span>
-                  <span className="text-gray-400 text-sm">total · 8-week program</span>
-                </div>
                 <Button asChild className="bg-[#FFB199] text-[#0B0F14] font-bold uppercase tracking-wider hover:bg-[#FFB199]/90 w-fit">
                   <Link href="/portal/login">
                     Reserve Your Spot <ArrowRight className="ml-2 h-4 w-4" />
@@ -253,7 +249,6 @@ export default function Home() {
             {[
               {
                 title: "Women's BJJ Fundamentals",
-                price: "$120/mo",
                 desc: "Learn Brazilian Jiu-Jitsu fundamentals in a focused setting built around technique, movement, confidence, and controlled training.",
                 highlights: ["Beginner friendly", "Personalized coaching", "Technique-focused", "Safe environment"],
                 img: bjjFundamentalsImg,
@@ -261,7 +256,6 @@ export default function Home() {
               },
               {
                 title: "Kids Jiu-Jitsu",
-                price: "$100/mo",
                 desc: "A positive program designed to help kids develop confidence, discipline, coordination, and anti-bullying awareness.",
                 highlights: ["Ages 6–14", "Confidence building", "Discipline", "Anti-bullying focus"],
                 img: kidsClassImg,
@@ -269,7 +263,6 @@ export default function Home() {
               },
               {
                 title: "Strength & Conditioning",
-                price: "$15/class",
                 desc: "Focused fitness sessions built around mobility, strength, injury prevention, and athletic conditioning.",
                 highlights: ["Personalized coaching", "Functional strength", "Injury prevention", "Athletic conditioning"],
                 img: strengthImg,
@@ -277,7 +270,6 @@ export default function Home() {
               },
               {
                 title: "Personal Training",
-                price: "$60/session",
                 desc: "One-on-one coaching tailored to your fitness, self-defense, or performance goals at your own pace.",
                 highlights: ["1-on-1 sessions", "Custom goals", "Flexible schedule", "All levels welcome"],
                 img: personalTrainingImg,
@@ -303,9 +295,6 @@ export default function Home() {
                 <div className="p-6 flex flex-col flex-1">
                   <div className="w-8 h-1 rounded-full mb-3" style={{ backgroundColor: program.accent }} />
                   <h3 className="text-lg font-bold text-white mb-1" style={{ fontFamily: 'var(--font-display)' }}>{program.title}</h3>
-                  {"price" in program && (
-                    <p className="text-base font-semibold mb-2" style={{ color: program.accent }}>{program.price}</p>
-                  )}
                   <p className="text-gray-400 text-sm leading-relaxed mb-4">{program.desc}</p>
                   <ul className="space-y-1.5 mt-auto">
                     {program.highlights.map((h) => (
@@ -605,180 +594,6 @@ export default function Home() {
         </div>
       </Section>
 
-      {/* PRICING */}
-      <Section className="py-24 bg-[#0B0F14] relative" delay={0}>
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-4" style={{ fontFamily: 'var(--font-display)' }}>
-              SIMPLE, AFFORDABLE <span className="gradient-text-cyan">PRICING</span>
-            </h2>
-            <p className="text-gray-300 text-lg max-w-2xl mx-auto">
-              Boutique training with personalized coaching and beginner-friendly programs.
-            </p>
-          </div>
-
-          {/* WHY TRAIN HERE */}
-          <div className="bg-[#121826] border border-white/10 rounded-xl p-8 md:p-12 mb-16">
-            <h3 className="text-2xl font-bold text-white mb-8 text-center">Why Train Here?</h3>
-            <div className="grid md:grid-cols-5 gap-6">
-              {[
-                "Personalized Coaching",
-                "Beginner Friendly",
-                "Safe, Welcoming Environment",
-                "Built for Women, Kids & Beginners",
-                "Flexible Scheduling"
-              ].map((item, idx) => (
-                <div key={idx} className="flex items-start gap-3">
-                  <CheckCircle className="h-5 w-5 text-[#5EEBFF] flex-shrink-0 mt-0.5" />
-                  <p className="text-gray-300 text-sm">{item}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* PRICING CARDS */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-            {/* FREE INTRO */}
-            <div className="bg-[#121826] border border-white/10 rounded-xl p-6 flex flex-col hover:border-[#5EEBFF]/30 transition-colors">
-              <div className="inline-flex items-center gap-2 w-fit px-3 py-1 rounded-full bg-[#5EEBFF]/10 border border-[#5EEBFF]/30 text-[#5EEBFF] text-xs font-semibold mb-4">
-                Best Place to Start
-              </div>
-              <h3 className="text-xl font-bold text-white mb-2">Free Intro Class</h3>
-              <p className="text-4xl font-bold text-[#5EEBFF] mb-4">Free</p>
-              <p className="text-gray-400 text-sm mb-6 flex-grow">Try a class, meet the coach, and experience the training environment before committing.</p>
-              <Button asChild className="w-full bg-[#FFB199] text-[#0B0F14] font-bold hover:bg-[#FFB199]/90">
-                <Link href="/portal/login">Book Free Intro</Link>
-              </Button>
-            </div>
-
-            {/* WOMEN'S BJJ */}
-            <div className="bg-[#121826] border border-white/10 rounded-xl p-6 flex flex-col hover:border-[#5EEBFF]/30 transition-colors">
-              <h3 className="text-xl font-bold text-white mb-2">Women's BJJ Fundamentals</h3>
-              <p className="text-3xl font-bold text-white mb-1">$120<span className="text-lg font-normal text-gray-400">/mo</span></p>
-              <p className="text-gray-500 text-xs mb-4">Personalized coaching</p>
-              <p className="text-gray-400 text-sm mb-6 flex-grow">Jiu-jitsu training focused on confidence, technique, movement, and beginner-friendly instruction.</p>
-              <div className="space-y-2 mb-6 text-sm text-gray-300">
-                <div className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-[#5EEBFF]" /> 2 classes per week</div>
-                <div className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-[#5EEBFF]" /> Beginner friendly</div>
-                <div className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-[#5EEBFF]" /> Technique focused</div>
-                <div className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-[#5EEBFF]" /> Personalized attention</div>
-              </div>
-              <Button asChild className="w-full bg-white text-[#0B0F14] font-bold hover:bg-gray-200">
-                <Link href="/portal/login">Start Training</Link>
-              </Button>
-            </div>
-
-            {/* KIDS JIU-JITSU */}
-            <div className="bg-[#121826] border border-white/10 rounded-xl p-6 flex flex-col hover:border-[#5EEBFF]/30 transition-colors">
-              <h3 className="text-xl font-bold text-white mb-2">Kids Jiu-Jitsu</h3>
-              <p className="text-3xl font-bold text-white mb-1">$100<span className="text-lg font-normal text-gray-400">/mo</span></p>
-              <p className="text-gray-500 text-xs mb-4">Ages 6–14</p>
-              <p className="text-gray-400 text-sm mb-6 flex-grow">A positive program that helps kids build confidence, discipline, coordination, and anti-bullying awareness.</p>
-              <div className="space-y-2 mb-6 text-sm text-gray-300">
-                <div className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-[#5EEBFF]" /> 2 classes per week</div>
-                <div className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-[#5EEBFF]" /> Confidence building</div>
-                <div className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-[#5EEBFF]" /> Discipline & coordination</div>
-                <div className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-[#5EEBFF]" /> Personalized attention</div>
-              </div>
-              <Button asChild className="w-full bg-white text-[#0B0F14] font-bold hover:bg-gray-200">
-                <Link href="/portal/login">Enroll Your Child</Link>
-              </Button>
-            </div>
-
-            {/* STRENGTH & CONDITIONING */}
-            <div className="bg-[#121826] border border-white/10 rounded-xl p-6 flex flex-col hover:border-[#5EEBFF]/30 transition-colors">
-              <h3 className="text-xl font-bold text-white mb-2">Strength & Conditioning</h3>
-              <p className="text-3xl font-bold text-white mb-1">$15<span className="text-lg font-normal text-gray-400">/class</span></p>
-              <p className="text-gray-500 text-xs mb-4">Or $60/month unlimited</p>
-              <p className="text-gray-400 text-sm mb-6 flex-grow">Focused fitness sessions built around mobility, strength, injury prevention, and athletic conditioning.</p>
-              <div className="space-y-2 mb-6 text-sm text-gray-300">
-                <div className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-[#5EEBFF]" /> Mobility work</div>
-                <div className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-[#5EEBFF]" /> Strength training</div>
-                <div className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-[#5EEBFF]" /> Injury prevention</div>
-                <div className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-[#5EEBFF]" /> Athletic conditioning</div>
-              </div>
-              <Button asChild className="w-full bg-white text-[#0B0F14] font-bold hover:bg-gray-200">
-                <Link href="/portal/login">Join a Class</Link>
-              </Button>
-            </div>
-          </div>
-
-          {/* FEATURED - WOMEN'S SELF-DEFENSE */}
-          <div className="lg:col-span-2 bg-gradient-to-br from-[#B06CFF]/10 via-[#121826] to-[#5EEBFF]/10 border border-[#B06CFF]/30 rounded-xl p-8 md:p-12 mb-12 relative overflow-hidden lg:col-span-4">
-            <div className="absolute top-0 right-0 w-96 h-96 bg-[#B06CFF]/20 rounded-full blur-3xl -z-10" />
-            <div className="grid md:grid-cols-2 gap-8 items-center">
-              <div>
-                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#B06CFF]/20 border border-[#B06CFF]/40 text-[#B06CFF] text-sm font-semibold mb-4">
-                  ⭐ Featured Program
-                </div>
-                <h3 className="text-3xl md:text-4xl font-bold text-white mb-2" style={{ fontFamily: 'var(--font-display)' }}>
-                  Women's Self-Defense Program
-                </h3>
-                <p className="text-[#B06CFF] font-semibold mb-4">8-Week Program</p>
-                <p className="text-5xl font-bold text-white mb-2">$199</p>
-                <p className="text-gray-400 text-sm mb-8">Our signature self-defense program helps women build practical skills, situational awareness, confidence, and strength in a supportive environment.</p>
-                <div className="space-y-3 mb-8">
-                  {[
-                    "8-week program",
-                    "2 classes per week (16 total classes)",
-                    "Beginner friendly",
-                    "Practical self-defense skills",
-                    "Supportive women-only environment"
-                  ].map((item, idx) => (
-                    <div key={idx} className="flex items-center gap-3">
-                      <CheckCircle className="h-5 w-5 text-[#B06CFF] flex-shrink-0" />
-                      <span className="text-gray-300">{item}</span>
-                    </div>
-                  ))}
-                </div>
-                <Button asChild size="lg" className="bg-[#B06CFF] text-white font-bold hover:bg-[#B06CFF]/90 uppercase tracking-wider">
-                  <Link href="/portal/login">Reserve Your Spot</Link>
-                </Button>
-              </div>
-              <img src={selfDefenseFeaturedImg} alt="Women's Self-Defense" className="rounded-lg hidden md:block" />
-            </div>
-          </div>
-
-          {/* PERSONAL TRAINING & COMMUNITY */}
-          <div className="grid md:grid-cols-2 gap-6 mb-12">
-            {/* PERSONAL TRAINING */}
-            <div className="bg-[#121826] border border-white/10 rounded-xl p-6 flex flex-col hover:border-[#5EEBFF]/30 transition-colors">
-              <h3 className="text-xl font-bold text-white mb-2">Personal Training</h3>
-              <p className="text-3xl font-bold text-white mb-1">$60<span className="text-lg font-normal text-gray-400">/session</span></p>
-              <p className="text-gray-500 text-xs mb-4">One-on-one coaching</p>
-              <p className="text-gray-400 text-sm mb-6 flex-grow">One-on-one coaching tailored to your fitness, self-defense, or performance goals.</p>
-              <div className="space-y-2 mb-6 text-sm text-gray-300">
-                <div className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-[#5EEBFF]" /> Private coaching</div>
-                <div className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-[#5EEBFF]" /> Personalized instruction</div>
-                <div className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-[#5EEBFF]" /> Self-defense or fitness</div>
-                <div className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-[#5EEBFF]" /> Goal-based training</div>
-              </div>
-              <Button asChild className="w-full bg-white text-[#0B0F14] font-bold hover:bg-gray-200">
-                <Link href="/portal/login">Book a Session</Link>
-              </Button>
-            </div>
-
-            {/* FREE COMMUNITY CLASS */}
-            <div className="bg-[#121826] border border-white/10 rounded-xl p-6 flex flex-col hover:border-[#5EEBFF]/30 transition-colors">
-              <h3 className="text-xl font-bold text-white mb-2">Free Community Self-Defense</h3>
-              <p className="text-3xl font-bold text-[#5EEBFF] mb-1">Free</p>
-              <p className="text-gray-500 text-xs mb-4">Every 2 weeks</p>
-              <p className="text-gray-400 text-sm mb-6 flex-grow">We host a free community self-defense class every two weeks to help women feel safer, introduce people to training, and give back to the community.</p>
-              <div className="flex-grow" />
-              <Button asChild className="w-full bg-[#FFB199] text-[#0B0F14] font-bold hover:bg-[#FFB199]/90">
-                <Link href="/contact">Learn More</Link>
-              </Button>
-            </div>
-          </div>
-
-          {/* NO EXPERIENCE NOTE */}
-          <div className="text-center">
-            <p className="text-gray-400 text-base italic">
-              No experience needed. Our programs are designed to help you build confidence from day one in a safe and supportive environment.
-            </p>
-          </div>
-        </div>
-      </Section>
 
       {/* FAQ */}
       <Section className="py-24 bg-[#0B0F14] relative" delay={0}>
