@@ -139,28 +139,6 @@ export default function Coaches() {
           </div>
         </div>
       </Section>
-
-      <Section className="py-24 bg-[#0B0F14] relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-[#5EEBFF]/5 via-transparent to-[#B06CFF]/5" />
-        <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-4xl font-bold text-white mb-6" style={{ fontFamily: 'var(--font-display)' }}>
-            TRAIN WITH <span className="gradient-text-warm">RAYMI</span>
-          </h2>
-          <p className="text-gray-300 text-lg mb-10">
-            Start your journey today with personalized 1-on-1 training designed just for you.
-          </p>
-          <Button
-            asChild
-            size="lg"
-            className="bg-[#FFB199] text-[#0B0F14] font-bold uppercase tracking-wider hover:bg-[#FFB199]/90 text-base px-10 h-14"
-          >
-            <Link href="/portal/login">
-              Book Your Free Trial
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Link>
-          </Button>
-        </div>
-      </Section>
     </div>
   );
 }
