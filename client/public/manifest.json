@@ -1,5 +1,5 @@
 {
-  "name": "Ground Up BJJ & Fitness",
+  "name": "Ground Up BJJ",
   "short_name": "Ground Up",
   "description": "Women's Brazilian Jiu-Jitsu & Fitness Academy in Oxnard, CA",
   "start_url": "/",
@@ -7,7 +7,7 @@
   "id": "/",
   "display": "standalone",
   "background_color": "#0B0F14",
-  "theme_color": "#0B0F14",
+  "theme_color": "#5EEBFF",
   "orientation": "portrait-primary",
   "icons": [
     {
