@@ -1,0 +1,25 @@
+WHAT TO PATCH NOW vs WHAT TO REBUILD
+While you can update your messaging and add facility photos to your current site today (patch), relying on a static site or generic contact forms to schedule trial classes often results in lost leads. A dedicated, multi-step booking funnel (rebuild) is required to capture interest, schedule the class, and automate reminders to reduce no-shows.
+
+Next Expansion Path: Funnel Execution Pack
+Why this route: A martial arts academy thrives on lead generation and intro-offer bookings. The Funnel Execution Pack is designed to build high-converting, multi-step flows that turn local traffic into scheduled appointments.
+
+What this would build:
+- A dedicated landing page optimized for local search terms and beginner reassurance.
+- A multi-step booking widget integrated with your class schedule.
+- A 'What to Expect' onboarding sequence to reduce beginner anxiety.
+- Automated confirmation and reminder pages to decrease trial no-show rates.
+- A clear presentation of your 'Ground Up' foundational methodology.
+
+POSITIONING FOUNDATION (lock this in before any builder starts):
+Business category: Local Martial Arts Academy (inferred)
+Key differentiators: Foundational training methodology (inferred from 'Ground Up')
+Positioning expression: A Brazilian Jiu-Jitsu training provider offering foundational, structured martial arts instruction for practitioners of all levels.
+Primary CTA: Book Your Free Trial
+Ideal funnel: Hero (Clear local/digital split) -> Trust (Facility/Instructor) -> Offer (Trial/Curriculum) -> CTA (Booking Widget/Checkout)
+POSITIONING LOCK: All design, copy, routes, and CTAs must reinforce this identity.
+
+WHAT TO DO NEXT:
+Step 1 = Go to the Lime dashboard, navigate to Build Packs, and select the Funnel Execution Pack.
+Step 2 = Input your specific location, instructor lineage, and class schedule into the builder.
+Step 3 = Use the generated funnel as your primary destination for local ads and Google Business Profile traffic.
