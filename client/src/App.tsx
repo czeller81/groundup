@@ -19,6 +19,7 @@ import PortalBooking from "@/pages/portal/booking";
 import PortalAdminMembers from "@/pages/portal/admin";
 import PortalCoach from "@/pages/portal/coach";
 import Schedule from "@/pages/schedule";
+import Book from "@/pages/book";
 import PortalSchedule from "@/pages/portal/schedule";
 import Navbar from "@/components/layout/navbar";
 import Footer from "@/components/layout/footer";
@@ -63,6 +64,9 @@ function Router() {
       </Route>
       <Route path="/schedule">
         <MainLayout><Schedule /></MainLayout>
+      </Route>
+      <Route path="/book">
+        <MainLayout><Book /></MainLayout>
       </Route>
       <Route path="/admin">
         <MainLayout><Admin /></MainLayout>

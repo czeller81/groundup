@@ -139,7 +139,7 @@ export default function Home() {
                 className="bg-[#FFB199] text-[#0B0F14] font-bold uppercase tracking-wider hover:bg-[#FFB199]/90 text-base px-8 h-14"
                 data-testid="hero-cta-book"
               >
-                <Link href="/contact">
+                <Link href="/book">
                   Book Your Free Trial
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
@@ -269,7 +269,7 @@ export default function Home() {
             </div>
             <div className="block">
               <Button asChild size="lg" className="bg-[#FFB199] text-[#0B0F14] font-bold uppercase tracking-wider hover:bg-[#FFB199]/90 h-13 px-10">
-                <Link href="/contact">
+                <Link href="/book">
                   Book Your Free Trial
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>

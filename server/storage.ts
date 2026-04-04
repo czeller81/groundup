@@ -89,6 +89,9 @@ export interface IStorage {
 
   getAdminUser(email: string): Promise<AdminUser | undefined>;
   createAdminUser(adminUser: InsertAdminUser): Promise<AdminUser>;
+
+  createTrialLead(lead: import("@shared/schema").InsertTrialLead): Promise<import("@shared/schema").TrialLead>;
+  getTrialLeads(): Promise<import("@shared/schema").TrialLead[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -607,6 +610,17 @@ export class DatabaseStorage implements IStorage {
   async createAdminUser(adminUser: InsertAdminUser): Promise<AdminUser> {
     const [newAdmin] = await db.insert(adminUsers).values(adminUser).returning();
     return newAdmin;
+  }
+
+  async createTrialLead(lead: import("@shared/schema").InsertTrialLead): Promise<import("@shared/schema").TrialLead> {
+    const { trialLeads } = await import("@shared/schema");
+    const [newLead] = await db.insert(trialLeads).values({ ...lead, status: "new" }).returning();
+    return newLead;
+  }
+
+  async getTrialLeads(): Promise<import("@shared/schema").TrialLead[]> {
+    const { trialLeads } = await import("@shared/schema");
+    return db.select().from(trialLeads).orderBy(desc(trialLeads.createdAt));
   }
 }
 

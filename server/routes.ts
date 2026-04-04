@@ -39,6 +39,11 @@ const PAGE_META: Record<string, { title: string; description: string; canonical:
     description: "Ready to start your BJJ journey? Contact Ground Up Jiu-Jitsu & Fitness in Oxnard, CA to book your free trial class or ask us anything. No experience needed.",
     canonical: "https://groundupbjj.com/contact",
   },
+  "/book": {
+    title: "Book Your Free Trial Class — Ground Up Jiu-Jitsu & Fitness, Oxnard CA",
+    description: "Reserve your first free BJJ class at Ground Up Jiu-Jitsu in Oxnard, CA. Women's BJJ, Kids Jiu-Jitsu, Self-Defense, and more. No experience needed. Takes 2 minutes.",
+    canonical: "https://groundupbjj.com/book",
+  },
 };
 
 const PAGE_CONTENT: Record<string, string> = {
@@ -68,6 +73,10 @@ const PAGE_CONTENT: Record<string, string> = {
 <p>Book your free trial class or get in touch with us. No experience needed to start your BJJ journey.</p>
 <p>Phone: (786) 757-1175 | Email: raymin33@gmail.com | Location: Oxnard, CA</p>
 <a href="/contact">Book Your Free Trial</a>`,
+  "/book": `<h1>Book Your Free Trial Class — Ground Up Jiu-Jitsu, Oxnard CA</h1>
+<p>Reserve your first free BJJ class. Choose your program, pick a time, and we'll see you on the mat.</p>
+<ul><li>Women's BJJ Fundamentals</li><li>Women's Self-Defense (8-week program)</li><li>Kids Jiu-Jitsu (Ages 4–14)</li><li>Strength &amp; Conditioning</li><li>Personal Training</li></ul>
+<p>No experience needed. No gear required. First class is completely free.</p>`,
 };
 
 async function serveWithMeta(req: Request, res: Response, next: NextFunction) {
@@ -177,6 +186,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   <url><loc>https://groundupbjj.com/coaches</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://groundupbjj.com/personal-training</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://groundupbjj.com/contact</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://groundupbjj.com/book</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>1.0</priority></url>
 </urlset>`);
   });
 
@@ -347,6 +357,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ message: "Thank you for your message. We'll get back to you soon!" });
     } catch (error) {
       res.status(500).json({ message: "Failed to send message" });
+    }
+  });
+
+  // ============================================
+  // TRIAL LEAD CAPTURE (public booking funnel)
+  // ============================================
+  app.post("/api/trial-leads", async (req, res) => {
+    try {
+      const { insertTrialLeadSchema } = await import("@shared/schema");
+      const parsed = insertTrialLeadSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ message: "Invalid data", errors: parsed.error.errors });
+      }
+      const lead = await storage.createTrialLead(parsed.data);
+      console.log("New trial lead:", lead.firstName, lead.lastName, lead.email, lead.program);
+      res.json({ message: "Booking confirmed!", lead });
+    } catch (error) {
+      console.error("Trial lead error:", error);
+      res.status(500).json({ message: "Failed to save booking" });
+    }
+  });
+
+  app.get("/api/portal/admin/trial-leads", requireRole("admin", "coach"), async (req, res) => {
+    try {
+      const leads = await storage.getTrialLeads();
+      res.json(leads);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch leads" });
     }
   });
 

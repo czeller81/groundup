@@ -230,3 +230,30 @@ export type FormResponseWithForm = FormResponse & {
 };
 
 export type SafeUser = Omit<User, 'passwordHash'>;
+
+export const trialLeads = pgTable("trial_leads", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name").notNull(),
+  email: text("email").notNull(),
+  phone: text("phone").notNull(),
+  program: text("program").notNull(),
+  classId: text("class_id"),
+  classTitle: text("class_title"),
+  classDay: text("class_day"),
+  classTime: text("class_time"),
+  experience: text("experience").notNull().default("none"),
+  childName: text("child_name"),
+  childAge: text("child_age"),
+  status: text("status").notNull().default("new"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertTrialLeadSchema = createInsertSchema(trialLeads).omit({
+  id: true,
+  status: true,
+  createdAt: true,
+});
+
+export type InsertTrialLead = z.infer<typeof insertTrialLeadSchema>;
+export type TrialLead = typeof trialLeads.$inferSelect;
