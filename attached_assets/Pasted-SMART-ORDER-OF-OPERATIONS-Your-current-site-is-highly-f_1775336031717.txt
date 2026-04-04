@@ -1,0 +1,30 @@
+SMART ORDER OF OPERATIONS
+Your current site is highly fixable and has excellent foundational messaging. The priority is to patch the current page first by adding facility photos, a 'What to Expect' section, and student testimonials. These edits alone will meaningfully improve your conversion rate by reducing beginner anxiety. A dedicated booking funnel becomes relevant once you want to automate your lead generation and scheduling processes further.
+
+Future Expansion Path: Local Lead Generation Funnel
+Why this route: A local martial arts academy relies on converting web traffic into foot traffic. A dedicated booking funnel replaces manual scheduling with an automated system that captures leads, schedules trials, and sends reminders to reduce no-shows.
+
+What this would build:
+- A dedicated landing page optimized specifically for local Oxnard traffic, featuring integrated facility photos and video backgrounds of classes.
+- A multi-step lead capture flow that collects the user's name, phone number, and experience level before showing the schedule.
+- An integrated calendar booking system allowing users to select their specific trial class time.
+- An automated SMS and email reminder sequence that sends 'what to expect' and 'what to wear' instructions 24 hours before the class to maximize attendance.
+- A digital waiver integration so new students can sign their liability forms before arriving at the gym.
+
+POSITIONING FOUNDATION (lock this in before any builder starts):
+Business category: Local Brazilian Jiu-Jitsu Academy
+Key differentiators: Gracie Barra Lineage instruction, Beginner-friendly structured curriculum, Specialized women's and kids (6-14) programs, Located in Oxnard, CA
+Positioning expression: A beginner-friendly Brazilian Jiu-Jitsu academy in Oxnard, CA, providing structured, foundational training for women, kids, and adults under Gracie Barra lineage.
+Primary CTA: Book Your Free Trial
+Ideal funnel: Click 'Book Free Trial' -> Select Date/Time on embedded calendar -> Fill out basic info & sign digital waiver -> Receive automated SMS with 'What to expect / what to wear' instructions.
+POSITIONING LOCK: All design, copy, routes, and CTAs must reinforce this identity.
+
+WHAT TO DO NEXT:
+Step 1: Complete the immediate patches on your current site first—specifically adding photos, the 'What to Expect' steps, and testimonials.
+Step 2: Monitor how these changes impact the number of trial requests you receive over the next 30 days.
+Step 3: Once you are ready to automate your scheduling and reduce trial no-shows, explore building a dedicated lead generation funnel with automated SMS reminders.
+
+---
+OPTIONAL: BUILD THIS IN VIBE OS
+---
+If you want to implement this inside VIBE OS, the Funnel Execution Pack is the closest fit. It can generate the structured landing page, lead capture flow, and automated sequences required to turn local web traffic into booked trial classes on your mats.
