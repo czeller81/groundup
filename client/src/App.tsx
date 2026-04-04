@@ -20,6 +20,8 @@ import PortalAdminMembers from "@/pages/portal/admin";
 import PortalCoach from "@/pages/portal/coach";
 import Schedule from "@/pages/schedule";
 import Book from "@/pages/book";
+import WomensSelfDefense from "@/pages/womens-self-defense";
+import Kids from "@/pages/kids";
 import PortalSchedule from "@/pages/portal/schedule";
 import Navbar from "@/components/layout/navbar";
 import Footer from "@/components/layout/footer";
@@ -67,6 +69,12 @@ function Router() {
       </Route>
       <Route path="/book">
         <MainLayout><Book /></MainLayout>
+      </Route>
+      <Route path="/womens-self-defense">
+        <MainLayout><WomensSelfDefense /></MainLayout>
+      </Route>
+      <Route path="/kids">
+        <MainLayout><Kids /></MainLayout>
       </Route>
       <Route path="/admin">
         <MainLayout><Admin /></MainLayout>

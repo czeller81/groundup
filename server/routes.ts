@@ -44,6 +44,16 @@ const PAGE_META: Record<string, { title: string; description: string; canonical:
     description: "Reserve your first free BJJ class at Ground Up Jiu-Jitsu in Oxnard, CA. Women's BJJ, Kids Jiu-Jitsu, Self-Defense, and more. No experience needed. Takes 2 minutes.",
     canonical: "https://groundupbjj.com/book",
   },
+  "/womens-self-defense": {
+    title: "Women's Self-Defense Program — 8 Weeks in Oxnard, CA | Ground Up Jiu-Jitsu",
+    description: "An 8-week Women's Self-Defense program in Oxnard, CA. Practical BJJ-based techniques, situational awareness, and confidence in a women-only class. First class free.",
+    canonical: "https://groundupbjj.com/womens-self-defense",
+  },
+  "/kids": {
+    title: "Kids Jiu-Jitsu in Oxnard, CA — Ages 4–14 | Ground Up Jiu-Jitsu",
+    description: "Kids BJJ classes in Oxnard, CA for ages 4–14. Build confidence, discipline, coordination, and anti-bullying awareness in a small, structured program. First class free.",
+    canonical: "https://groundupbjj.com/kids",
+  },
 };
 
 const PAGE_CONTENT: Record<string, string> = {
@@ -77,6 +87,16 @@ const PAGE_CONTENT: Record<string, string> = {
 <p>Reserve your first free BJJ class. Choose your program, pick a time, and we'll see you on the mat.</p>
 <ul><li>Women's BJJ Fundamentals</li><li>Women's Self-Defense (8-week program)</li><li>Kids Jiu-Jitsu (Ages 4–14)</li><li>Strength &amp; Conditioning</li><li>Personal Training</li></ul>
 <p>No experience needed. No gear required. First class is completely free.</p>`,
+  "/womens-self-defense": `<h1>Women's Self-Defense Program — 8 Weeks in Oxnard, CA</h1>
+<p>A structured 8-week Women's Self-Defense program at Ground Up Jiu-Jitsu in Oxnard, CA. Practical BJJ-based techniques for real situations.</p>
+<ul><li>Awareness &amp; prevention</li><li>Breaking grips &amp; escaping</li><li>Ground defense</li><li>Confident body language</li><li>Scenario practice</li></ul>
+<p>Women-only class. Max 6 students. No experience needed. First class free.</p>
+<a href="/book">Book Your Free Trial</a>`,
+  "/kids": `<h1>Kids Jiu-Jitsu in Oxnard, CA — Ages 4–14 | Ground Up Jiu-Jitsu</h1>
+<p>Kids BJJ classes for ages 4–14 at Ground Up Jiu-Jitsu in Oxnard, CA. Build confidence, discipline, coordination, and anti-bullying awareness.</p>
+<ul><li>Ages 4–7: Kids Intro to Jiu-Jitsu</li><li>Ages 8–14: Youth Jiu-Jitsu</li><li>Max 6 kids per class</li><li>Belt progression system</li><li>Anti-bullying focus</li></ul>
+<p>First class is free. No gear required. Come see the mat.</p>
+<a href="/book">Book a Free Trial Class</a>`,
 };
 
 async function serveWithMeta(req: Request, res: Response, next: NextFunction) {

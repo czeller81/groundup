@@ -4,8 +4,8 @@ import { Button } from "@/components/ui/button";
 import SEO from "@/components/seo";
 import { motion, useInView } from "framer-motion";
 import {
-  Shield, Dumbbell, Users, Award, ChevronDown, ChevronUp,
-  Star, ArrowRight, Zap, Heart, CheckCircle, Lock, CalendarDays, Clock
+  Shield, Users, Award, ChevronDown, ChevronUp,
+  Star, ArrowRight, Zap, Heart, CheckCircle, CalendarDays, Clock
 } from "lucide-react";
 import { CATEGORY_CONFIG, getClassesForDay, getCurrentDay } from "@/lib/schedule-data";
 import selfDefenseFeaturedImg from "@assets/generated_images/bjj_selfdefense_featured.png";
@@ -14,9 +14,6 @@ import kidsClassImg from "@assets/generated_images/kids_martialarts.png";
 import strengthImg from "@assets/generated_images/women_strength.png";
 import personalTrainingImg from "@assets/generated_images/women_personaltraining.png";
 import whyDifferentImg from "@assets/generated_images/why_different.png";
-import whoServeWomenImg from "@assets/generated_images/who_serve_women.png";
-import whoServeKidsImg from "@assets/generated_images/who_serve_kids.png";
-import whoServeBeginnersImg from "@assets/generated_images/who_serve_beginners.png";
 import coachImg from "@assets/generated_images/coach_portrait.png";
 const facilityFrame1 = "/images/facility/frame_01.jpg";
 const facilityFrame4 = "/images/facility/frame_04.jpg";
@@ -336,11 +333,18 @@ export default function Home() {
                     </div>
                   ))}
                 </div>
-                <Button asChild className="bg-[#FFB199] text-[#0B0F14] font-bold uppercase tracking-wider hover:bg-[#FFB199]/90 w-fit">
-                  <Link href="/portal/login">
-                    Reserve Your Spot <ArrowRight className="ml-2 h-4 w-4" />
-                  </Link>
-                </Button>
+                <div className="flex flex-wrap gap-3">
+                  <Button asChild className="bg-[#FFB199] text-[#0B0F14] font-bold uppercase tracking-wider hover:bg-[#FFB199]/90 w-fit">
+                    <Link href="/book">
+                      Book Free Trial <ArrowRight className="ml-2 h-4 w-4" />
+                    </Link>
+                  </Button>
+                  <Button asChild variant="outline" className="border-[#FFB199]/30 text-[#FFB199] hover:bg-[#FFB199]/10 uppercase tracking-wider w-fit bg-transparent">
+                    <Link href="/womens-self-defense">
+                      Learn More
+                    </Link>
+                  </Button>
+                </div>
               </div>
               <div className="aspect-[4/3] md:aspect-auto overflow-hidden">
                 <img
@@ -364,9 +368,10 @@ export default function Home() {
               {
                 title: "Kids Jiu-Jitsu",
                 desc: "A positive program designed to help kids develop confidence, discipline, coordination, and anti-bullying awareness.",
-                highlights: ["Ages 6–14", "Confidence building", "Discipline", "Anti-bullying focus"],
+                highlights: ["Ages 4–14", "Confidence building", "Discipline", "Anti-bullying focus"],
                 img: kidsClassImg,
                 accent: "#B06CFF",
+                link: "/kids",
               },
               {
                 title: "Strength & Conditioning",
@@ -403,7 +408,7 @@ export default function Home() {
                   <div className="w-8 h-1 rounded-full mb-3" style={{ backgroundColor: program.accent }} />
                   <h3 className="text-lg font-bold text-white mb-1" style={{ fontFamily: 'var(--font-display)' }}>{program.title}</h3>
                   <p className="text-gray-400 text-sm leading-relaxed mb-4">{program.desc}</p>
-                  <ul className="space-y-1.5 mt-auto">
+                  <ul className="space-y-1.5">
                     {program.highlights.map((h) => (
                       <li key={h} className="flex items-center gap-2 text-xs text-gray-400">
                         <div className="w-1 h-1 rounded-full flex-shrink-0" style={{ backgroundColor: program.accent }} />
@@ -411,6 +416,13 @@ export default function Home() {
                       </li>
                     ))}
                   </ul>
+                  {program.link && (
+                    <div className="mt-5 pt-4 border-t border-white/5">
+                      <Link href={program.link} className="text-xs font-semibold uppercase tracking-wider hover:opacity-80 transition-opacity flex items-center gap-1" style={{ color: program.accent }}>
+                        Learn More <ArrowRight className="h-3.5 w-3.5" />
+                      </Link>
+                    </div>
+                  )}
                 </div>
               </motion.div>
             ))}
@@ -528,143 +540,15 @@ export default function Home() {
                 alt="Training environment"
                 className="relative rounded-2xl w-full aspect-[4/5] object-cover border border-white/10"
               />
+              <div className="absolute -bottom-5 left-4 right-4 p-4 rounded-xl border border-[#FFB199]/20 bg-[#FFB199]/10 backdrop-blur-sm flex items-center gap-3">
+                <Zap className="h-5 w-5 text-[#FFB199] flex-shrink-0" />
+                <span className="text-[#FFB199] text-sm font-semibold leading-snug">Free community self-defense class every 2 weeks — open to all women in Oxnard.</span>
+              </div>
             </div>
           </div>
         </div>
       </Section>
 
-      {/* COMMUNITY */}
-      <Section className="py-24 bg-[#0B0F14] relative overflow-hidden" delay={0}>
-        <div className="absolute inset-0 bg-gradient-to-r from-[#B06CFF]/5 via-transparent to-[#5EEBFF]/5" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-[#B06CFF]/5 rounded-full blur-3xl" />
-        <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[#5EEBFF]/20 bg-[#5EEBFF]/5 text-[#5EEBFF] text-sm mb-6">
-            Community First
-          </div>
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6" style={{ fontFamily: 'var(--font-display)' }}>
-            TRAINING THAT <span className="gradient-text-cyan">GIVES BACK</span>
-          </h2>
-          <p className="text-gray-300 text-lg leading-relaxed mb-10 max-w-2xl mx-auto">
-            Every two weeks, Ground Up Jiu-Jitsu hosts a free community self-defense class to help women feel safer, introduce new people to training, and create a stronger local community.
-          </p>
-          <div className="inline-flex items-center gap-3 px-6 py-4 rounded-2xl border border-[#FFB199]/30 bg-[#FFB199]/10">
-            <Zap className="h-5 w-5 text-[#FFB199] flex-shrink-0" />
-            <span className="text-[#FFB199] font-semibold">Free Community Self-Defense Class Every 2 Weeks</span>
-          </div>
-          <div className="mt-8">
-            <Button asChild size="lg" className="bg-[#B06CFF] text-white font-bold uppercase tracking-wider hover:bg-[#B06CFF]/90 text-base px-10 h-14">
-              <Link href="/contact">
-                Join the Community
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
-            </Button>
-          </div>
-        </div>
-      </Section>
-
-      {/* WHAT YOU'LL BUILD */}
-      <Section className="py-24 bg-[#121826] relative grain-texture" delay={0}>
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-4" style={{ fontFamily: 'var(--font-display)' }}>
-              WHAT YOU'LL <span className="gradient-text-purple">BUILD HERE</span>
-            </h2>
-            <p className="text-gray-400 max-w-2xl mx-auto">
-              More than physical skills — we help you develop the whole person.
-            </p>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {[
-              { icon: Shield, label: "Confidence", color: "#FFB199" },
-              { icon: Lock, label: "Real Self-Defense Skills", color: "#5EEBFF" },
-              { icon: Dumbbell, label: "Strength & Fitness", color: "#B06CFF" },
-              { icon: Award, label: "Discipline", color: "#FFB199" },
-              { icon: Zap, label: "Stress Relief", color: "#5EEBFF" },
-              { icon: Users, label: "Community", color: "#B06CFF" },
-            ].map((item, i) => (
-              <motion.div
-                key={item.label}
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.08, duration: 0.4 }}
-                className="flex flex-col items-center text-center p-6 rounded-xl border border-white/5 bg-[#0B0F14] hover:border-white/10 transition-all group"
-              >
-                <div className="w-14 h-14 rounded-full flex items-center justify-center mb-4 transition-colors" style={{ backgroundColor: `${item.color}15` }}>
-                  <item.icon className="h-7 w-7" style={{ color: item.color }} />
-                </div>
-                <h4 className="text-white font-semibold text-sm" style={{ fontFamily: 'var(--font-display)' }}>{item.label}</h4>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </Section>
-
-      {/* WHO WE SERVE */}
-      <Section className="py-24 bg-[#0B0F14] relative" delay={0}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-4" style={{ fontFamily: 'var(--font-display)' }}>
-              WHO WE <span className="gradient-text-warm">SERVE</span>
-            </h2>
-          </div>
-          <div className="grid md:grid-cols-3 gap-8">
-            {[
-              {
-                img: whoServeWomenImg,
-                title: "Women",
-                desc: "Seeking self-defense skills, fitness, and the confidence to feel safer and stronger every day.",
-                highlights: ["Self-defense training", "Strength & conditioning", "Community support"],
-                accent: "#FFB199",
-              },
-              {
-                img: whoServeKidsImg,
-                title: "Kids (Ages 6–14)",
-                desc: "Who need positive structure, confidence-building, and real tools to handle life's challenges.",
-                highlights: ["Discipline & focus", "Anti-bullying skills", "Physical coordination"],
-                accent: "#B06CFF",
-              },
-              {
-                img: whoServeBeginnersImg,
-                title: "Beginners & Adults",
-                desc: "Wanting beginner-friendly personal training or martial arts with no prior experience required.",
-                highlights: ["No experience needed", "Personal training", "Flexible scheduling"],
-                accent: "#5EEBFF",
-              },
-            ].map((card, i) => (
-              <motion.div
-                key={card.title}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1, duration: 0.5 }}
-                className="rounded-2xl overflow-hidden border border-white/5 bg-[#121826] hover:border-white/10 transition-all group"
-              >
-                <div className="aspect-[4/3] overflow-hidden">
-                  <img
-                    src={card.img}
-                    alt={card.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                </div>
-                <div className="p-7">
-                  <div className="w-8 h-1 rounded-full mb-4" style={{ backgroundColor: card.accent }} />
-                  <h3 className="text-2xl font-bold text-white mb-3" style={{ fontFamily: 'var(--font-display)' }}>{card.title}</h3>
-                  <p className="text-gray-400 text-sm leading-relaxed mb-5">{card.desc}</p>
-                  <ul className="space-y-2">
-                    {card.highlights.map((h) => (
-                      <li key={h} className="flex items-center gap-2 text-sm text-gray-300">
-                        <CheckCircle className="h-4 w-4 flex-shrink-0" style={{ color: card.accent }} />
-                        {h}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </Section>
 
       {/* COACH */}
       <Section className="py-24 bg-[#121826] relative grain-texture" delay={0}>
