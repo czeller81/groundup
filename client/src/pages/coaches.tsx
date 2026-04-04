@@ -39,7 +39,7 @@ export default function Coaches() {
             YOUR <span className="gradient-text-purple">COACH</span>
           </h1>
           <p className="text-gray-400 max-w-2xl mx-auto text-lg">
-            Expert instruction from an experienced female BJJ practitioner dedicated to women's training.
+            Ground Up was built around one coach and one mission: create a safe, personal, empowering training space for women, kids, and beginners.
           </p>
         </div>
       </section>
@@ -135,7 +135,7 @@ export default function Coaches() {
               {
                 icon: BookOpen,
                 title: "Continuous Growth",
-                desc: "Regular training updates and competition attendance ensure the latest techniques and teaching methods.",
+                desc: "Raymi continues to train and develop her own skills — which means her students always benefit from current, high-quality instruction.",
                 accent: "#FFB199",
               },
             ].map((item, i) => (

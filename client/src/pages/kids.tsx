@@ -362,10 +362,10 @@ export default function Kids() {
         <div className="absolute inset-0 bg-gradient-to-br from-[#FFB199]/5 via-transparent to-[#B06CFF]/5" />
         <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-4" style={{ fontFamily: "var(--font-display)" }}>
-            FIRST CLASS IS <span className="text-[#FFB199]">FREE</span>
+            YOUR CHILD'S <span className="text-[#FFB199]">FIRST CLASS IS FREE</span>
           </h2>
           <p className="text-gray-400 mb-10 max-w-md mx-auto">
-            No commitment. No gear needed. Just bring your kid and an open mind — Coach Raymi handles the rest.
+            No gear, no commitment, no pressure. Bring your child in, let them meet Coach Raymi, and see how they respond. Most kids leave wanting to come back.
           </p>
           <Button
             asChild

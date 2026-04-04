@@ -90,7 +90,7 @@ export default function Contact() {
             GET IN <span className="gradient-text-warm">TOUCH</span>
           </h1>
           <p className="text-gray-400 max-w-2xl mx-auto text-lg">
-            Ready to start your BJJ journey? We're here to answer your questions.
+            Have a question? Curious about a program? Not sure where to start? We're here — reach out any time.
           </p>
         </div>
       </section>
@@ -286,16 +286,16 @@ export default function Contact() {
               </div>
 
               <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-[#5EEBFF]/5 to-[#B06CFF]/5 p-8 text-center">
-                <h3 className="text-xl font-bold text-white mb-3" style={{ fontFamily: 'var(--font-display)' }}>READY TO START?</h3>
+                <h3 className="text-xl font-bold text-white mb-3" style={{ fontFamily: 'var(--font-display)' }}>READY TO BEGIN?</h3>
                 <p className="text-gray-400 text-sm mb-6">
-                  Skip the form and book your free trial session directly through the member portal.
+                  Your first class is completely free — no gear, no commitment, no pressure. Book directly and we'll handle the rest.
                 </p>
                 <Button
                   asChild
                   className="w-full bg-[#5EEBFF] text-[#0B0F14] font-bold uppercase tracking-wider hover:bg-[#5EEBFF]/90"
                 >
-                  <Link href="/portal/login">
-                    Book Free Trial
+                  <Link href="/book">
+                    Start Your Free Trial
                   </Link>
                 </Button>
               </div>

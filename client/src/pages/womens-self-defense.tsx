@@ -119,7 +119,7 @@ export default function WomensSelfDefense() {
                 style={{ backgroundColor: "#FF6B8A", color: "#0B0F14" }}
               >
                 <Link href="/book">
-                  Book Your Free Trial <ArrowRight className="ml-2 h-5 w-5" />
+                  Start Your Free Trial <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
               <Button
@@ -128,7 +128,7 @@ export default function WomensSelfDefense() {
                 size="lg"
                 className="h-14 px-8 text-base border-white/20 text-white hover:bg-white/10 bg-transparent uppercase tracking-wider"
               >
-                <Link href="/schedule">View Schedule</Link>
+                <Link href="/schedule">See Class Times</Link>
               </Button>
             </div>
           </motion.div>
@@ -241,7 +241,7 @@ export default function WomensSelfDefense() {
                 style={{ backgroundColor: "#FF6B8A", color: "#0B0F14" }}
               >
                 <Link href="/book">
-                  Reserve Your Spot <ArrowRight className="ml-2 h-4 w-4" />
+                  Start Your Free Trial <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
             </div>
@@ -346,10 +346,10 @@ export default function WomensSelfDefense() {
         <div className="absolute inset-0 bg-gradient-to-br from-[#FF6B8A]/5 via-transparent to-[#B06CFF]/5" />
         <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-4" style={{ fontFamily: "var(--font-display)" }}>
-            YOUR FIRST CLASS <span style={{ color: "#FF6B8A" }}>IS FREE</span>
+            YOUR FIRST CLASS <span style={{ color: "#FF6B8A" }}>IS ALWAYS FREE</span>
           </h2>
           <p className="text-gray-400 mb-10 max-w-md mx-auto">
-            No commitment. No gear. Just show up ready to learn. Coach Raymi will take care of the rest.
+            No gear. No commitment. No pressure. Just come in, meet Coach Raymi, try the class, and see how you feel. We'll take care of the rest.
           </p>
           <Button
             asChild
@@ -358,7 +358,7 @@ export default function WomensSelfDefense() {
             style={{ backgroundColor: "#FF6B8A", color: "#0B0F14" }}
           >
             <Link href="/book">
-              Book Your Free Trial <ArrowRight className="ml-2 h-5 w-5" />
+              Start Your Free Trial <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
           </Button>
           <p className="text-gray-600 text-xs mt-4">No credit card required · Oxnard, CA · (786) 757-1175</p>

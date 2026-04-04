@@ -69,8 +69,8 @@ export default function Home() {
   return (
     <div className="flex flex-col bg-[#0B0F14]">
       <SEO
-        title="Master Brazilian Jiu-Jitsu in Oxnard, CA"
-        description="Ground Up Jiu-Jitsu & Fitness offers beginner-friendly BJJ classes for women, kids, and adults in Oxnard, CA. No experience needed. Book your free trial class today."
+        title="Ground Up BJJ — Boutique BJJ & Self-Defense Studio in Oxnard, CA"
+        description="Ground Up Jiu-Jitsu is a boutique training studio in Oxnard, CA for women, kids, and beginners. Personal coaching, small classes, and a genuinely welcoming environment. First class free."
         canonical="/"
       />
 
@@ -103,17 +103,17 @@ export default function Home() {
               transition={{ delay: 0.2, duration: 0.5 }}
               className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/15 bg-white/5 text-gray-300 text-xs font-semibold uppercase tracking-widest mb-6"
             >
-              Ground Up Jiu-Jitsu &amp; Fitness · Oxnard, CA
+              Boutique BJJ &amp; Self-Defense Studio · Oxnard, CA
             </motion.div>
 
             <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold leading-[0.9] mb-6 tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>
-              <span className="text-white">MASTER</span>
+              <span className="text-white">CONFIDENCE</span>
               <br />
-              <span className="gradient-text-cyan">BRAZILIAN</span>
+              <span className="gradient-text-cyan">BUILT</span>
               <br />
-              <span className="gradient-text-purple">JIU-JITSU</span>
+              <span className="gradient-text-purple">HERE.</span>
               <br />
-              <span className="text-white text-4xl md:text-5xl lg:text-6xl">from the Ground Up in Oxnard</span>
+              <span className="text-white text-3xl md:text-4xl lg:text-5xl font-semibold">for women, kids &amp; beginners</span>
             </h1>
 
             <motion.p
@@ -122,7 +122,7 @@ export default function Home() {
               transition={{ delay: 0.4, duration: 0.6 }}
               className="text-lg md:text-xl text-gray-300 max-w-xl mb-10 leading-relaxed"
             >
-              A structured, foundational approach to BJJ for beginners and advanced practitioners.
+              A supportive, small-group studio where you build real self-defense skills, strength, and confidence — with personal coaching, at your own pace. No intimidation. Ever.
             </motion.p>
 
             <motion.div
@@ -138,7 +138,7 @@ export default function Home() {
                 data-testid="hero-cta-book"
               >
                 <Link href="/book">
-                  Book Your Free Trial
+                  Start Your Free Trial
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
@@ -149,7 +149,7 @@ export default function Home() {
                 className="border-white/20 text-white hover:bg-white/10 hover:border-white/30 uppercase tracking-wider text-base px-8 h-14 bg-transparent"
                 data-testid="hero-cta-schedule"
               >
-                <Link href="/schedule">View Class Schedule</Link>
+                <Link href="/pricing">Explore Programs</Link>
               </Button>
             </motion.div>
           </motion.div>
@@ -268,7 +268,7 @@ export default function Home() {
             <div className="block">
               <Button asChild size="lg" className="bg-[#FFB199] text-[#0B0F14] font-bold uppercase tracking-wider hover:bg-[#FFB199]/90 h-13 px-10">
                 <Link href="/book">
-                  Book Your Free Trial
+                  Book Your First Class — Free
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
@@ -285,11 +285,11 @@ export default function Home() {
             Our Mission
           </div>
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-8 leading-tight" style={{ fontFamily: 'var(--font-display)' }}>
-            BUILT TO <span className="gradient-text-purple">EMPOWER</span>
-            <br />FROM THE GROUND UP
+            THIS IS NOT A <span className="gradient-text-purple">FIGHT GYM.</span>
+            <br />THIS IS SOMETHING BETTER.
           </h2>
           <p className="text-gray-300 text-lg leading-relaxed max-w-3xl mx-auto">
-            Ground Up Jiu-Jitsu exists to empower women and children with the skills, confidence, and strength to protect themselves and live healthier lives. We believe training should feel <span className="text-white font-medium">safe, personal, and community-driven</span> — not intimidating.
+            Ground Up Jiu-Jitsu is a boutique training studio designed around women, kids, and beginners. Small classes. Personal coaching. A warm, structured environment where you grow at your own pace. We believe training should feel <span className="text-white font-medium">safe, personal, and genuinely empowering</span> — not intimidating, not rushed, not performative.
           </p>
         </div>
       </Section>
@@ -298,11 +298,14 @@ export default function Home() {
       <Section className="py-24 bg-[#0B0F14] relative belt-stripe" delay={0}>
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[#5EEBFF]/20 bg-[#5EEBFF]/5 text-[#5EEBFF] text-xs font-semibold uppercase tracking-widest mb-4">
+              Find Your Path
+            </div>
             <h2 className="text-4xl md:text-5xl font-bold text-white mb-4" style={{ fontFamily: 'var(--font-display)' }}>
-              PROGRAMS <span className="gradient-text-cyan">DESIGNED FOR REAL LIFE</span>
+              TRAINING BUILT <span className="gradient-text-cyan">AROUND YOU</span>
             </h2>
             <p className="text-gray-400 max-w-2xl mx-auto">
-              Every program is built around personal coaching and real-world skills that matter.
+              Whether you're a woman looking for self-defense, a parent enrolling a child, or a beginner taking your first step — there's a program here designed specifically for you.
             </p>
           </div>
 
@@ -336,12 +339,12 @@ export default function Home() {
                 <div className="flex flex-wrap gap-3">
                   <Button asChild className="bg-[#FFB199] text-[#0B0F14] font-bold uppercase tracking-wider hover:bg-[#FFB199]/90 w-fit">
                     <Link href="/book">
-                      Book Free Trial <ArrowRight className="ml-2 h-4 w-4" />
+                      Start Your Free Trial <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
                   </Button>
                   <Button asChild variant="outline" className="border-[#FFB199]/30 text-[#FFB199] hover:bg-[#FFB199]/10 uppercase tracking-wider w-fit bg-transparent">
                     <Link href="/womens-self-defense">
-                      Learn More
+                      Explore the Program
                     </Link>
                   </Button>
                 </div>
@@ -364,6 +367,7 @@ export default function Home() {
                 highlights: ["Beginner friendly", "Personalized coaching", "Technique-focused", "Safe environment"],
                 img: bjjFundamentalsImg,
                 accent: "#5EEBFF",
+                link: "/womens-self-defense",
               },
               {
                 title: "Kids Jiu-Jitsu",
@@ -508,7 +512,7 @@ export default function Home() {
                 WHY GROUND UP <span className="gradient-text-cyan">IS DIFFERENT</span>
               </h2>
               <p className="text-gray-300 leading-relaxed mb-10">
-                Unlike large gyms, Ground Up focuses on quality over quantity. Our approach allows for better instruction, stronger community, and a more comfortable experience for people who want to learn in a supportive environment.
+                We intentionally stay small — because personal attention, real coaching, and a safe environment require it. Ground Up is not a volume gym. It's a boutique studio where every student is known by name, every session is coached (not just supervised), and no one gets lost in the crowd.
               </p>
               <div className="grid sm:grid-cols-2 gap-5">
                 {[
@@ -744,7 +748,7 @@ export default function Home() {
             />
             <FAQ
               question="Do you offer kids classes?"
-              answer="Yes. Our kids program (ages 6–14) focuses on confidence, discipline, anti-bullying awareness, and physical development in a positive, supportive environment."
+              answer="Yes. Our kids program (ages 4–14) focuses on confidence, discipline, anti-bullying awareness, and physical development in a positive, supportive environment."
             />
             <FAQ
               question="What is the free community self-defense class?"
@@ -765,11 +769,11 @@ export default function Home() {
 
         <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight" style={{ fontFamily: 'var(--font-display)' }}>
-            START FROM THE
-            <br /><span className="gradient-text-warm">GROUND UP</span>
+            YOUR FIRST CLASS
+            <br /><span className="gradient-text-warm">IS ALWAYS FREE</span>
           </h2>
           <p className="text-gray-300 text-lg mb-10 max-w-xl mx-auto">
-            Whether you're looking to learn self-defense, improve your fitness, or help your child build confidence, Ground Up Jiu-Jitsu is here to help.
+            No gear. No commitment. No pressure. Just come in, meet Coach Raymi, and experience what a truly supportive training environment feels like. We'll help you find the right fit.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button
@@ -777,8 +781,8 @@ export default function Home() {
               size="lg"
               className="bg-[#FFB199] text-[#0B0F14] font-bold uppercase tracking-wider hover:bg-[#FFB199]/90 text-base px-10 h-14"
             >
-              <Link href="/portal/login">
-                Book a Free Intro
+              <Link href="/book">
+                Start Your Free Trial
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
@@ -789,13 +793,13 @@ export default function Home() {
               className="border-white/20 text-white hover:bg-white/10 hover:border-white/30 uppercase tracking-wider text-base px-8 h-14 bg-transparent"
             >
               <Link href="/contact">
-                Contact Us
+                Ask Us Anything
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
           </div>
           <p className="text-gray-500 text-sm mt-8">
-            Oxnard, CA &bull; Personalized coaching &bull; No contracts
+            Oxnard, CA &bull; Personalized coaching &bull; Small classes &bull; No contracts
           </p>
         </div>
       </Section>
