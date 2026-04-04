@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { motion, useInView } from "framer-motion";
 import {
   Shield, Dumbbell, Users, Award, ChevronDown, ChevronUp,
-  Star, ArrowRight, Zap, Heart, CheckCircle, Lock
+  Star, ArrowRight, Zap, Heart, CheckCircle, Lock, CalendarDays, Clock
 } from "lucide-react";
+import { CATEGORY_CONFIG, getClassesForDay, getCurrentDay } from "@/lib/schedule-data";
 import selfDefenseFeaturedImg from "@assets/generated_images/bjj_selfdefense_featured.png";
 import bjjFundamentalsImg from "@assets/generated_images/bjj_fundamentals.png";
 import kidsClassImg from "@assets/generated_images/kids_martialarts.png";
@@ -61,6 +62,11 @@ function FAQ({ question, answer }: { question: string; answer: string }) {
 }
 
 export default function Home() {
+  const todayDay = getCurrentDay();
+  const todayRawClasses = getClassesForDay(todayDay);
+  const displayDay = todayRawClasses.length > 0 ? todayDay : "Monday";
+  const displayClasses = todayRawClasses.length > 0 ? todayRawClasses : getClassesForDay("Monday");
+
   return (
     <div className="flex flex-col bg-[#0B0F14]">
 
@@ -87,29 +93,30 @@ export default function Home() {
             transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
             className="max-w-3xl"
           >
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2, duration: 0.5 }}
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/15 bg-white/5 text-gray-300 text-xs font-semibold uppercase tracking-widest mb-6"
+            >
+              Ground Up Jiu-Jitsu &amp; Fitness · Oxnard, CA
+            </motion.div>
+
             <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold leading-[0.9] mb-6 tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>
-              <span className="text-white">GROUND UP</span>
+              <span className="text-white">BUILD YOUR</span>
               <br />
-              <span className="gradient-text-cyan">JIU-JITSU</span>
+              <span className="gradient-text-cyan">BJJ</span>
               <br />
-              <span className="gradient-text-purple">&amp; FITNESS</span>
+              <span className="gradient-text-purple">FOUNDATION</span>
             </h1>
 
             <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.4, duration: 0.6 }}
-              className="text-lg md:text-xl text-gray-300 max-w-xl mb-4 leading-relaxed"
+              className="text-lg md:text-xl text-gray-300 max-w-xl mb-10 leading-relaxed"
             >
-              Boutique jiu-jitsu, self-defense, and strength training for women, kids, and beginners.
-            </motion.p>
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.5, duration: 0.6 }}
-              className="text-base text-gray-400 max-w-xl mb-10 leading-relaxed"
-            >
-              Train in a safe, supportive environment designed to build confidence, fitness, and real-world self-defense skills.
+              Fundamentals-first Brazilian Jiu-Jitsu for beginners, women &amp; kids — in a safe, supportive gym in Oxnard. No experience needed. Build real skills from day one.
             </motion.p>
 
             <motion.div
@@ -124,8 +131,8 @@ export default function Home() {
                 className="bg-[#FFB199] text-[#0B0F14] font-bold uppercase tracking-wider hover:bg-[#FFB199]/90 text-base px-8 h-14"
                 data-testid="hero-cta-book"
               >
-                <Link href="/portal/login">
-                  Start Your Training
+                <Link href="/contact">
+                  Book a Free Trial Class
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
@@ -136,7 +143,7 @@ export default function Home() {
                 className="border-white/20 text-white hover:bg-white/10 hover:border-white/30 uppercase tracking-wider text-base px-8 h-14 bg-transparent"
                 data-testid="hero-cta-schedule"
               >
-                <Link href="/contact">Book a Free Intro</Link>
+                <Link href="/schedule">View Class Schedule</Link>
               </Button>
             </motion.div>
           </motion.div>
@@ -307,6 +314,64 @@ export default function Home() {
                 </div>
               </motion.div>
             ))}
+          </div>
+        </div>
+      </Section>
+
+      {/* SCHEDULE PREVIEW */}
+      <Section className="py-20 bg-[#121826] relative" delay={0}>
+        <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-10">
+            <div>
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[#5EEBFF]/20 bg-[#5EEBFF]/5 text-[#5EEBFF] text-xs font-semibold uppercase tracking-widest mb-4">
+                <CalendarDays className="h-3.5 w-3.5" />
+                {displayDay === todayDay ? "Today's Classes" : "Upcoming Classes"}
+              </div>
+              <h2 className="text-3xl md:text-4xl font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>
+                FIND A CLASS <span className="gradient-text-cyan">THAT FITS YOU</span>
+              </h2>
+              <p className="text-gray-400 text-sm mt-2 max-w-md">Max 6 students per class — structured for beginners. Every session is coached, not just supervised.</p>
+            </div>
+            <Button asChild className="bg-transparent border border-[#5EEBFF]/40 text-[#5EEBFF] hover:bg-[#5EEBFF]/10 uppercase tracking-wider font-semibold flex-shrink-0">
+              <Link href="/schedule">
+                Full Schedule <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
+          </div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {displayClasses.slice(0, 6).map((entry, i) => {
+              const cfg = CATEGORY_CONFIG[entry.category];
+              return (
+                <motion.div
+                  key={entry.id}
+                  initial={{ opacity: 0, y: 12 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.06, duration: 0.35 }}
+                  className={`rounded-xl border ${cfg.border} bg-[#0B0F14]/80 p-4 flex items-center gap-3 hover:brightness-110 transition-all`}
+                >
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 text-lg ${cfg.bg}`}>
+                    {cfg.icon}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-white font-semibold text-sm leading-snug">{entry.title}</p>
+                    <div className="flex items-center gap-1 mt-0.5">
+                      <Clock className={`h-3 w-3 flex-shrink-0 ${cfg.color}`} />
+                      <p className={`text-xs font-medium ${cfg.color}`}>{entry.startTime}{entry.endTime ? ` – ${entry.endTime}` : ""}</p>
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+
+          <div className="mt-6 text-center">
+            <Link href="/schedule">
+              <span className="text-[#5EEBFF] text-sm font-medium hover:underline cursor-pointer">
+                See all classes for the full week →
+              </span>
+            </Link>
           </div>
         </div>
       </Section>
@@ -501,9 +566,15 @@ export default function Home() {
               </h2>
               <div className="mb-6">
                 <h3 className="text-2xl font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>RAYMI GONZALEZ</h3>
-                <span className="inline-block mt-2 px-3 py-1 text-sm rounded-full bg-[#B06CFF]/20 text-[#B06CFF] border border-[#B06CFF]/30">
-                  Purple Belt 3rd Degree
-                </span>
+                <div className="flex flex-wrap items-center gap-2 mt-2">
+                  <span className="inline-block px-3 py-1 text-sm rounded-full bg-[#B06CFF]/20 text-[#B06CFF] border border-[#B06CFF]/30">
+                    Purple Belt 3rd Degree
+                  </span>
+                  <span className="inline-block px-3 py-1 text-sm rounded-full bg-[#5EEBFF]/10 text-[#5EEBFF] border border-[#5EEBFF]/20">
+                    Gracie Lineage
+                  </span>
+                </div>
+                <p className="text-gray-500 text-xs mt-2">Certified BJJ Instructor · 5+ Years Teaching Experience · Oxnard, CA</p>
               </div>
               <p className="text-gray-300 leading-relaxed mb-6">
                 Raymi founded Ground Up Jiu-Jitsu with one goal: to build a safe, empowering home for women, kids, and beginners. With deep expertise in BJJ, self-defense, and strength & conditioning, she brings personal attention and real-world skill to every session.
