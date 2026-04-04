@@ -1,0 +1,449 @@
+You are the Replit Agent working inside the Lime Digital VIBE OS codebase.
+
+Your task is to refactor the AI Conversion Audit recommendation system so it becomes vendor-neutral by default and no longer leaks Lime Digital / VIBE OS internal product language into third-party website audits.
+
+This is a trust-critical product fix. Do not make a shallow copy edit. Audit the recommendation pipeline, prompt templates, fallback logic, output rendering, and UI separation, then implement the complete fix end-to-end.
+
+==================================================
+PRIMARY GOAL
+==================================================
+
+When the Conversion Audit analyzes an external or third-party website, the audit must:
+
+1. Diagnose the site objectively
+2. Recommend the right execution path in neutral language
+3. Avoid self-promotional leakage in the main recommendation
+4. Never imply Lime Digital / VIBE OS is the only or required next step
+5. Only mention Lime / VIBE OS / Build Packs / Replit / internal dashboard routes in a clearly separated OPTIONAL section, and only when appropriate
+
+The core rule is:
+
+THE MAIN AUDIT MUST BE VENDOR-NEUTRAL.
+ANY INTERNAL LIME ROUTING MUST BE CLEARLY SEPARATED AS OPTIONAL.
+
+==================================================
+NON-NEGOTIABLE RULES
+==================================================
+
+1. Do NOT mention “Lime dashboard,” “Build Packs,” “Replit,” “VIBE OS,” or internal product routes in the main audit diagnosis or main recommendation block for third-party sites.
+2. Do NOT let internal product upsell language contaminate neutral recommendations.
+3. The audit must never sound like it always finds a reason to sell Lime.
+4. If the user is auditing an external domain, the primary recommendation must remain product-agnostic.
+5. If an optional Lime implementation path is shown, it must be:
+   - clearly labeled as optional
+   - visually separated
+   - subordinate to the neutral recommendation
+6. Preserve monetization opportunities without sacrificing trust.
+7. Do not break the existing scoring logic, UI flow, or audit generation system.
+
+==================================================
+STEP 1 — AUDIT FIRST
+==================================================
+
+Before changing anything, audit the current system and identify exactly where leakage is coming from.
+
+Inspect:
+
+A. PROMPT LAYERS
+- system prompts
+- audit prompts
+- post-processing prompts
+- “what to patch now vs rebuild” prompts
+- recommendation/routing prompts
+- builder suggestion prompts
+- any fallback recommendation prompt fragments
+
+B. OUTPUT TEMPLATES
+- recommendation blocks
+- “next expansion path” sections
+- “what this would build” sections
+- “what to do next” sections
+- positioning foundation blocks
+- any prebuilt CTA/recovery sections
+
+C. LOGIC / ROUTING
+- domain classification logic
+- first-party vs third-party audit detection
+- internal product recommendation triggers
+- whether all audits are routed through the same monetization template
+- any hidden fallback that always appends Lime language
+
+D. UI RENDERING
+- how recommendations are displayed
+- whether neutral and optional implementation blocks are currently merged
+- whether labels make internal routing look mandatory
+
+E. CONTENT MEMORY / CONTEXT BLEED
+- whether session context or earlier user/product context is contaminating unrelated audits
+- whether prior mentions of Lime/VIBE OS influence later third-party audit outputs
+- whether there is any reusable recommendation memory or state causing carryover
+
+Produce an internal implementation summary, then implement the full fix.
+
+==================================================
+STEP 2 — DEFINE CLEAR MODES
+==================================================
+
+Introduce explicit recommendation modes.
+
+Required modes:
+1. Vendor-neutral audit mode
+2. Optional Lime implementation mode
+3. First-party / Lime-site audit mode
+
+--------------------------------------------------
+MODE 1 — VENDOR-NEUTRAL AUDIT MODE
+--------------------------------------------------
+
+Use this when auditing:
+- third-party sites
+- client sites
+- unrelated business websites
+- any domain not owned/operated by Lime Digital or the user’s VIBE OS property if that distinction exists
+
+This mode must:
+- diagnose objectively
+- recommend neutral solutions
+- describe the needed funnel/system/site changes in generic terms
+- avoid internal product references in the main recommendation
+
+Allowed language:
+- booking funnel
+- landing page
+- onboarding sequence
+- CRM
+- scheduler
+- checkout flow
+- trust layer
+- lead routing
+- email/SMS reminders
+- local SEO page
+- service funnel
+- waitlist flow
+- intake sequence
+- production-ready web app
+- authenticated portal
+- customer dashboard
+
+Disallowed in main recommendation:
+- Lime dashboard
+- VIBE OS
+- Build Pack
+- Replit prompt
+- internal plan names
+- “go to Lime”
+- “select X pack in dashboard”
+- anything sounding like forced self-routing
+
+--------------------------------------------------
+MODE 2 — OPTIONAL LIME IMPLEMENTATION MODE
+--------------------------------------------------
+
+This mode may appear only as a separate, optional section when the user is inside your product and it is contextually useful.
+
+This section must be clearly labeled with phrasing like:
+- Optional: Build this in VIBE OS
+- If you want to implement this inside Lime Digital
+- Optional implementation path in VIBE OS
+
+This section can mention:
+- relevant pack names
+- internal workflow names
+- dashboard steps
+- product-specific implementation pathways
+
+But it must remain:
+- clearly optional
+- not merged into the main audit diagnosis
+- not framed as the only correct next step
+
+--------------------------------------------------
+MODE 3 — FIRST-PARTY / LIME-SITE AUDIT MODE
+--------------------------------------------------
+
+If the site being audited is a Lime Digital / VIBE OS property, it is acceptable for recommendations to refer directly to internal product structures, because it is your own product ecosystem.
+
+Even then:
+- keep the diagnosis honest
+- do not let upsell language replace real analysis
+- keep recommendations credible and operational
+
+==================================================
+STEP 3 — DOMAIN / CONTEXT CLASSIFICATION
+==================================================
+
+Implement a robust classifier that determines which mode to use.
+
+Classify the audit target using:
+- audited domain
+- current workspace/project context
+- whether the site belongs to Lime Digital / VIBE OS
+- whether the user is auditing their own product inside the platform
+- whether the domain is third-party / client / unrelated
+
+At minimum, implement logic like:
+
+IF audited domain is a known Lime-owned or VIBE-owned property
+→ use first-party mode
+
+ELSE
+→ use vendor-neutral mode by default
+
+Optional Lime implementation block may be shown only if:
+- user is inside the VIBE OS platform
+- the UI supports a separate labeled section
+- the wording is explicitly optional
+
+Never rely on vague inference alone if domain ownership can be checked cleanly.
+
+==================================================
+STEP 4 — RECOMMENDATION ARCHITECTURE
+==================================================
+
+Refactor the audit output into separate blocks.
+
+Recommended output structure:
+
+1. What to Patch Now
+2. What May Need Rebuilding Later
+3. Recommended Execution Path
+4. What This Should Include
+5. Positioning Foundation (if appropriate)
+6. Optional: Build This in VIBE OS (only when contextually allowed)
+
+The important rule:
+Blocks 1–5 must remain vendor-neutral for third-party audits.
+Only block 6 may reference Lime/VIBE OS/internal product routing.
+
+==================================================
+STEP 5 — CONTENT RULES FOR THIRD-PARTY AUDITS
+==================================================
+
+For external audits, enforce the following:
+
+Allowed:
+- “A dedicated booking funnel”
+- “A multi-step lead capture flow”
+- “A production-ready member portal”
+- “Automated confirmation/reminder workflows”
+- “A stronger trial-to-booking journey”
+- “A more structured CTA path”
+- “Improved local trust proof”
+- “A conversion-focused landing page”
+
+Not allowed in main recommendation:
+- “Go to the Lime dashboard”
+- “Select the Funnel Execution Pack”
+- “Use the Replit Build Pack”
+- “This should be built in VIBE OS”
+- “Upgrade inside Lime to continue”
+- any internal product command
+
+Neutral “what to do next” examples:
+- Gather class schedule, offer details, and trust assets
+- Build a dedicated landing page focused on free trials
+- Add booking flow and reminders
+- Clarify beginner onboarding and trial expectations
+- Connect lead capture to email/SMS follow-up
+- Validate with local traffic and conversion tracking
+
+==================================================
+STEP 6 — OPTIONAL LIME SECTION DESIGN
+==================================================
+
+If the user is inside VIBE OS and you want to offer a monetizable next step, create a distinct optional section.
+
+Example section label:
+Optional: Build This in VIBE OS
+
+Example structure:
+- Recommended internal pack/tool
+- Why it matches this audit
+- What information to prepare before using it
+- Internal next step CTA
+
+Rules:
+- visually separate from the main audit
+- clearly optional
+- never phrased as mandatory
+- never embedded into the neutral “what to do next” steps
+
+Example acceptable wording:
+“If you want to build this inside VIBE OS, the Funnel Execution Pack is the closest internal fit.”
+
+Example unacceptable wording:
+“Step 1: Go to the Lime dashboard…”
+
+==================================================
+STEP 7 — FIX SPECIFIC LEAKAGE TYPES
+==================================================
+
+Search for and eliminate these leakage patterns:
+
+1. Hardcoded internal CTA appended to every audit
+2. Shared recommendation template used for both internal and external audits
+3. Pack names injected automatically into external recommendations
+4. “What to do next” always routing to Lime tools
+5. Positioning foundation blocks containing internal brand framing unrelated to audited site
+6. Fallback templates that mention internal products when model output is incomplete
+7. Context carryover from prior Lime-related conversations contaminating current audit output
+
+==================================================
+STEP 8 — PROMPT REWRITE
+==================================================
+
+Update the audit recommendation prompts with explicit instructions such as:
+
+- When auditing a third-party or external website, keep recommendations vendor-neutral.
+- Do not mention Lime Digital, VIBE OS, Build Packs, Replit, internal dashboard paths, or product plan names in the main diagnosis or main recommendation.
+- If suggesting an internal implementation path, place it in a separately labeled optional section only.
+- The primary goal is objective conversion guidance, not self-promotion.
+- Recommend categories of solutions, not proprietary product names, unless explicitly in the optional implementation block.
+
+Also add guardrails:
+- If audited domain != Lime-owned domain, suppress internal route language in the primary response.
+- If internal pack names appear in the main recommendation, rewrite before rendering.
+
+==================================================
+STEP 9 — POST-PROCESSING SAFETY LAYER
+==================================================
+
+Add a sanitization / validation layer before audit output is shown.
+
+For third-party audits:
+- scan the main recommendation blocks for prohibited internal phrases
+- detect terms like:
+  - Lime dashboard
+  - Build Pack
+  - Replit
+  - VIBE OS
+  - select X pack
+  - upgrade to Builder/Founder
+- if found in the wrong section:
+  - either rewrite into neutral phrasing
+  - or move the content into the optional Lime section if appropriate
+
+This validator should act as a final safety net even if the model slips.
+
+==================================================
+STEP 10 — UI / PRESENTATION REFACTOR
+==================================================
+
+Refactor the frontend display so the audit feels trustworthy.
+
+Requirements:
+- main recommendation block looks neutral and advisory
+- optional internal implementation block is visually distinct
+- optional block is lower priority than the diagnosis
+- avoid making optional Lime implementation feel like the only path
+
+Possible UI labels:
+- Recommended Execution Path
+- What This Should Include
+- Optional: Build This in VIBE OS
+
+Avoid labels like:
+- Next Expansion Path
+if that label tends to imply an internal product upsell
+unless it is rewritten neutrally
+
+==================================================
+STEP 11 — POSITIONING FOUNDATION CLEANUP
+==================================================
+
+Audit whether “Positioning Foundation” is leaking internal product assumptions.
+
+For third-party sites:
+- positioning foundation should be about the audited business only
+- not about Lime
+- not about internal pack/category assumptions unless generic
+- not tied to your own app’s structure
+
+It is okay to infer:
+- category
+- target audience
+- CTA direction
+- funnel structure
+
+It is not okay to route that directly into Lime implementation commands in the same block.
+
+==================================================
+STEP 12 — KEEP MONETIZATION WITHOUT LOSING TRUST
+==================================================
+
+Do not remove your monetization path.
+Just separate it cleanly.
+
+Desired behavior:
+- neutral audit builds trust
+- optional implementation block creates monetization opportunity
+- user feels advised, not sold to
+- Lime becomes the convenient option, not the forced answer
+
+This is the product principle:
+TRUST FIRST, OPTIONAL INTERNAL IMPLEMENTATION SECOND.
+
+==================================================
+STEP 13 — TEST CASES TO IMPLEMENT
+==================================================
+
+Add or update tests covering at minimum:
+
+1. Third-party domain audit does not mention Lime/VIBE OS/Build Packs in main recommendation
+2. Third-party audit can still produce an optional internal implementation block if enabled
+3. Internal implementation block is clearly labeled optional
+4. Lime-owned domain audit may include internal recommendations where appropriate
+5. Post-processing validator catches prohibited internal phrases in neutral blocks
+6. “What to do next” for third-party sites is neutral
+7. Pack names do not appear in external audits unless in optional section
+8. Legacy fallback templates no longer leak internal routing language
+9. UI rendering keeps optional implementation visually separated from core diagnosis
+10. GroundUpBJJ-style audit no longer outputs “Go to the Lime dashboard…”
+
+==================================================
+STEP 14 — BACKWARD COMPATIBILITY
+==================================================
+
+Do not break:
+- current audit scoring
+- current domain analysis logic
+- current UI structure more than necessary
+- current plan gating
+- existing first-party audit usefulness
+
+If existing database records or cached audit results contain older leaked phrasing, add a note or admin utility to identify or invalidate them if practical.
+
+==================================================
+STEP 15 — COPY EXAMPLES TO TARGET
+==================================================
+
+BAD EXAMPLE (must eliminate in main recommendation):
+“Step 1 = Go to the Lime dashboard, navigate to Build Packs, and select the Funnel Execution Pack.”
+
+GOOD EXAMPLE (neutral main recommendation):
+“Step 1 = Build a dedicated free-trial booking funnel with local trust proof, class schedule clarity, and automated reminders.”
+
+GOOD OPTIONAL BLOCK:
+“Optional: Build This in VIBE OS
+If you want to implement this inside VIBE OS, the Funnel Execution Pack is the closest internal fit for this type of offer.”
+
+==================================================
+STEP 16 — DELIVERABLES
+==================================================
+
+When complete, provide:
+1. Summary of the new neutral-vs-optional recommendation architecture
+2. Where leakage was found
+3. Prompt/template changes made
+4. Post-processing safeguards added
+5. UI changes for optional implementation separation
+6. Tests added
+7. Any remaining edge cases or content that should be manually reviewed
+
+==================================================
+FINAL NON-NEGOTIABLE RULE
+==================================================
+
+FOR THIRD-PARTY WEBSITE AUDITS, THE MAIN RECOMMENDATION MUST REMAIN VENDOR-NEUTRAL.
+
+LIME DIGITAL / VIBE OS IMPLEMENTATION ROUTING MAY ONLY APPEAR IN A CLEARLY SEPARATED OPTIONAL SECTION.
