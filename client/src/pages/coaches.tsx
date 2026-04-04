@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
 import { ArrowRight, Award, Shield, BookOpen } from "lucide-react";
+import SEO from "@/components/seo";
 import trainerImage from "@assets/generated_images/coaches_portrait.png";
 import trainingImage from "@assets/generated_images/pt_content.png";
 
@@ -25,6 +26,11 @@ function Section({ children, className = "" }: { children: React.ReactNode; clas
 export default function Coaches() {
   return (
     <div className="flex flex-col bg-[#0B0F14]">
+      <SEO
+        title="Our BJJ Instructor — Raymi Gonzalez, Gracie Barra Lineage"
+        description="Meet Coach Raymi Gonzalez, Purple Belt (3rd Degree) under the Gracie Barra lineage. Head instructor at Ground Up Jiu-Jitsu & Fitness in Oxnard, CA with 5+ years of coaching experience."
+        canonical="/coaches"
+      />
       <section className="relative pt-32 pb-20 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-[#121826] to-[#0B0F14]" />
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-[#B06CFF]/5 rounded-full blur-3xl" />

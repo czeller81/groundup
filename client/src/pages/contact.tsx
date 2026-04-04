@@ -1,4 +1,5 @@
 import { Link } from "wouter";
+import SEO from "@/components/seo";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -76,6 +77,11 @@ export default function Contact() {
 
   return (
     <div className="flex flex-col bg-[#0B0F14]">
+      <SEO
+        title="Contact Us — Book Your Free Trial Class in Oxnard, CA"
+        description="Ready to start your BJJ journey? Contact Ground Up Jiu-Jitsu & Fitness in Oxnard, CA to book your free trial class or ask us anything. No experience needed."
+        canonical="/contact"
+      />
       <section className="relative pt-32 pb-20 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-[#121826] to-[#0B0F14]" />
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-[#FFB199]/5 rounded-full blur-3xl" />

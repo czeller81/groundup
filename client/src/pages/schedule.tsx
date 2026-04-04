@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import SEO from "@/components/seo";
 import { Clock, Filter, ChevronRight, CalendarDays, Zap, Star, Users, ArrowRight } from "lucide-react";
 import {
   SCHEDULE, DAYS, CATEGORY_CONFIG, getClassesForDay, getCurrentDay,
@@ -119,6 +120,11 @@ export default function Schedule() {
 
   return (
     <div className="min-h-screen bg-[#0B0F14]">
+      <SEO
+        title="Class Schedule — BJJ, Kids & Women's Classes in Oxnard, CA"
+        description="View the full weekly class schedule at Ground Up Jiu-Jitsu in Oxnard, CA. Women's BJJ, Kids Jiu-Jitsu, Strength & Conditioning, and more. Max 6 students per class."
+        canonical="/schedule"
+      />
       {/* Hero */}
       <section className="relative pt-20 pb-14 px-4 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-[#B06CFF]/5 via-transparent to-transparent" />

@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
 import { ArrowRight, Zap, Target, Clock, Users, Dumbbell, Shield } from "lucide-react";
+import SEO from "@/components/seo";
 import trainingImage from "@assets/generated_images/pt_hero_bg.png";
 import sparringImage from "@assets/generated_images/pt_content.png";
 
@@ -25,6 +26,11 @@ function Section({ children, className = "" }: { children: React.ReactNode; clas
 export default function PersonalTraining() {
   return (
     <div className="flex flex-col bg-[#0B0F14]">
+      <SEO
+        title="Personal Training in Oxnard, CA — 1-on-1 BJJ & Fitness Coaching"
+        description="Book a private personal training session at Ground Up Jiu-Jitsu in Oxnard, CA. Custom 1-on-1 coaching for all fitness levels. Your first session is free."
+        canonical="/personal-training"
+      />
       <section className="relative pt-32 pb-20 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-[#121826] to-[#0B0F14]" />
         <div

@@ -1,6 +1,7 @@
 import { Link } from "wouter";
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import SEO from "@/components/seo";
 import { motion, useInView } from "framer-motion";
 import {
   Shield, Dumbbell, Users, Award, ChevronDown, ChevronUp,
@@ -69,6 +70,11 @@ export default function Home() {
 
   return (
     <div className="flex flex-col bg-[#0B0F14]">
+      <SEO
+        title="Master Brazilian Jiu-Jitsu in Oxnard, CA"
+        description="Ground Up Jiu-Jitsu & Fitness offers beginner-friendly BJJ classes for women, kids, and adults in Oxnard, CA. No experience needed. Book your free trial class today."
+        canonical="/"
+      />
 
       {/* HERO */}
       <section className="relative min-h-screen flex items-center overflow-hidden grain-texture" data-testid="hero-section">

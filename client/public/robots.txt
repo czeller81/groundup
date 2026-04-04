@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+
+Disallow: /portal/
+Disallow: /admin
+
+Sitemap: https://groundupbjj.com/sitemap.xml

@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { motion, useInView, AnimatePresence } from "framer-motion";
 import { useRef, useState } from "react";
 import { ArrowRight, ChevronDown, ChevronUp, CheckCircle } from "lucide-react";
+import SEO from "@/components/seo";
 
 function Reveal({ children, className = "", delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
   const ref = useRef(null);
@@ -51,6 +52,11 @@ function FAQ({ question, answer }: { question: string; answer: string }) {
 export default function Pricing() {
   return (
     <div className="flex flex-col bg-[#0B0F14] min-h-screen">
+      <SEO
+        title="BJJ Programs & Pricing — Women's, Kids & Adult Classes in Oxnard"
+        description="Explore BJJ programs and pricing at Ground Up Jiu-Jitsu in Oxnard, CA. Women's self-defense, kids BJJ, strength & conditioning, and personal training. Beginner friendly."
+        canonical="/pricing"
+      />
 
       {/* ── HERO ── */}
       <section className="relative pt-32 pb-20 px-4 overflow-hidden">
