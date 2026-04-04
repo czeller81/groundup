@@ -5,6 +5,114 @@ import { insertBookingSchema } from "@shared/schema";
 import { z } from "zod";
 import Stripe from "stripe";
 import { addHours, addMinutes, format, parseISO } from "date-fns";
+import fs from "fs";
+import path from "path";
+
+const PAGE_META: Record<string, { title: string; description: string; canonical: string }> = {
+  "/": {
+    title: "Master Brazilian Jiu-Jitsu in Oxnard, CA | Ground Up Jiu-Jitsu & Fitness",
+    description: "Ground Up Jiu-Jitsu & Fitness offers beginner-friendly BJJ classes for women, kids, and adults in Oxnard, CA. No experience needed. Book your free trial class today.",
+    canonical: "https://groundupbjj.com/",
+  },
+  "/schedule": {
+    title: "Class Schedule — BJJ, Kids & Women's Classes in Oxnard, CA | Ground Up Jiu-Jitsu",
+    description: "View the full weekly class schedule at Ground Up Jiu-Jitsu in Oxnard, CA. Women's BJJ, Kids Jiu-Jitsu, Strength & Conditioning, and more. Max 6 students per class.",
+    canonical: "https://groundupbjj.com/schedule",
+  },
+  "/pricing": {
+    title: "BJJ Programs & Pricing — Women's, Kids & Adult Classes | Ground Up Jiu-Jitsu Oxnard",
+    description: "Explore BJJ programs and pricing at Ground Up Jiu-Jitsu in Oxnard, CA. Women's self-defense, kids BJJ, strength & conditioning, and personal training. Beginner friendly.",
+    canonical: "https://groundupbjj.com/pricing",
+  },
+  "/coaches": {
+    title: "Our BJJ Coach — Raymi Gonzalez, Gracie Barra Lineage | Ground Up Jiu-Jitsu Oxnard",
+    description: "Meet Coach Raymi Gonzalez, Purple Belt (3rd Degree) under the Gracie Barra lineage. Head instructor at Ground Up Jiu-Jitsu & Fitness in Oxnard, CA with 5+ years of coaching experience.",
+    canonical: "https://groundupbjj.com/coaches",
+  },
+  "/personal-training": {
+    title: "Personal Training in Oxnard, CA — 1-on-1 BJJ & Fitness Coaching | Ground Up BJJ",
+    description: "Book a private personal training session at Ground Up Jiu-Jitsu in Oxnard, CA. Custom 1-on-1 coaching for all fitness levels. Your first session is free.",
+    canonical: "https://groundupbjj.com/personal-training",
+  },
+  "/contact": {
+    title: "Contact Us — Book Your Free Trial Class in Oxnard, CA | Ground Up Jiu-Jitsu",
+    description: "Ready to start your BJJ journey? Contact Ground Up Jiu-Jitsu & Fitness in Oxnard, CA to book your free trial class or ask us anything. No experience needed.",
+    canonical: "https://groundupbjj.com/contact",
+  },
+};
+
+const PAGE_CONTENT: Record<string, string> = {
+  "/": `<h1>Master Brazilian Jiu-Jitsu from the Ground Up in Oxnard, CA</h1>
+<p>A structured, foundational approach to BJJ for beginners and advanced practitioners.</p>
+<p>Ground Up Jiu-Jitsu &amp; Fitness offers Brazilian Jiu-Jitsu classes for women, kids, and beginners in Oxnard, CA. No experience needed.</p>
+<ul><li>Women's BJJ Fundamentals</li><li>Kids Jiu-Jitsu (Ages 6–14)</li><li>Women's Self-Defense Program</li><li>Strength &amp; Conditioning</li><li>Personal Training</li></ul>
+<p>Head Coach: Raymi Gonzalez — Purple Belt, 3rd Degree, Gracie Barra Lineage. 5+ years coaching experience in Oxnard, CA.</p>
+<a href="/contact">Book Your Free Trial</a> <a href="/schedule">View Class Schedule</a>`,
+  "/schedule": `<h1>Class Schedule — Ground Up Jiu-Jitsu &amp; Fitness, Oxnard CA</h1>
+<p>Weekly BJJ classes for women, kids, and beginners in Oxnard, CA. Max 6 students per class.</p>
+<ul><li>Women's BJJ — Monday, Wednesday, Friday</li><li>Kids Jiu-Jitsu — Tuesday, Thursday, Saturday</li><li>Women's Self-Defense — Wednesday evenings</li><li>Strength &amp; Conditioning — Monday, Wednesday, Friday</li></ul>
+<a href="/contact">Book Your Free Trial</a>`,
+  "/pricing": `<h1>BJJ Programs &amp; Pricing — Ground Up Jiu-Jitsu, Oxnard CA</h1>
+<p>Beginner-friendly Brazilian Jiu-Jitsu programs for women, kids, and adults. No experience required.</p>
+<ul><li>Women's Self-Defense — 8-week program, 2 classes per week</li><li>Women's BJJ Fundamentals — ongoing membership</li><li>Kids Jiu-Jitsu (Ages 6–14)</li><li>Strength &amp; Conditioning</li><li>Personal Training — first session free</li></ul>
+<a href="/contact">Book Your Free Trial</a>`,
+  "/coaches": `<h1>BJJ Instructor — Raymi Gonzalez | Ground Up Jiu-Jitsu, Oxnard CA</h1>
+<p>Meet Raymi Gonzalez, Purple Belt (3rd Degree) under the Gracie Barra lineage. 5+ years of coaching experience in Oxnard, CA.</p>
+<p>Specialties: Women's Self-Defense, Kids BJJ, Strength &amp; Conditioning, Personal Training.</p>
+<a href="/contact">Book Your Free Trial</a>`,
+  "/personal-training": `<h1>Personal Training in Oxnard, CA — 1-on-1 BJJ &amp; Fitness Coaching</h1>
+<p>Private personal training sessions at Ground Up Jiu-Jitsu in Oxnard, CA. Custom coaching tailored to your goals. Your first session is free.</p>
+<ul><li>1-on-1 personalized sessions</li><li>Monday through Saturday, 8am–5pm</li><li>All fitness levels welcome</li><li>First session free</li></ul>
+<a href="/contact">Book Your Free Session</a>`,
+  "/contact": `<h1>Contact Ground Up Jiu-Jitsu &amp; Fitness — Oxnard, CA</h1>
+<p>Book your free trial class or get in touch with us. No experience needed to start your BJJ journey.</p>
+<p>Phone: (786) 757-1175 | Email: raymin33@gmail.com | Location: Oxnard, CA</p>
+<a href="/contact">Book Your Free Trial</a>`,
+};
+
+async function serveWithMeta(req: Request, res: Response, next: NextFunction) {
+  if (process.env.NODE_ENV !== "production") return next();
+  const routePath = req.path;
+  const meta = PAGE_META[routePath];
+  if (!meta) return next();
+
+  try {
+    const indexPath = path.resolve(import.meta.dirname, "public", "index.html");
+    let html = await fs.promises.readFile(indexPath, "utf-8");
+
+    const title = meta.title.replace(/&/g, "&amp;");
+    const desc = meta.description.replace(/"/g, "&quot;");
+
+    html = html
+      .replace(/<title>[^<]*<\/title>/, `<title>${title}</title>`)
+      .replace(
+        /<meta name="description"[^>]*>/,
+        `<meta name="description" content="${desc}" />`
+      )
+      .replace(
+        /<meta property="og:title"[^>]*>/,
+        `<meta property="og:title" content="${title}" />`
+      )
+      .replace(
+        /<meta property="og:description"[^>]*>/,
+        `<meta property="og:description" content="${desc}" />`
+      )
+      .replace(
+        /<link rel="canonical"[^>]*>/,
+        `<link rel="canonical" href="${meta.canonical}" />`
+      );
+
+    const content = PAGE_CONTENT[routePath] || "";
+    if (content) {
+      const noscript = `<noscript style="display:block;padding:20px;font-family:sans-serif;max-width:800px;margin:0 auto">${content}</noscript>`;
+      html = html.replace("</body>", `${noscript}\n</body>`);
+    }
+
+    res.status(200).set({ "Content-Type": "text/html" }).end(html);
+  } catch {
+    next();
+  }
+}
 
 declare module "express-session" {
   interface SessionData {
@@ -760,6 +868,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to update availability" });
     }
   });
+
+  for (const pagePath of Object.keys(PAGE_META)) {
+    app.get(pagePath, serveWithMeta);
+  }
 
   const httpServer = createServer(app);
   return httpServer;
