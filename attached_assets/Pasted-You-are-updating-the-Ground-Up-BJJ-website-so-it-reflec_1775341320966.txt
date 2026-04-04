@@ -1,0 +1,243 @@
+You are updating the Ground Up BJJ website so it reflects the true original vision of the business.
+
+IMPORTANT:
+This task is about improving the actual Ground Up BJJ website.
+Do NOT modify the AI audit system.
+Do NOT build audit logic.
+Do NOT create generic martial arts funnel copy.
+This is a website positioning, copy, UX, and conversion refinement task for Ground Up BJJ only.
+
+BUSINESS VISION TO PROTECT
+
+Ground Up BJJ is not meant to feel like a generic high-volume fight gym.
+
+It is meant to feel like:
+- a boutique, small-capacity training experience
+- women-forward and beginner-friendly
+- personal, supportive, and high-touch
+- rooted in confidence, self-defense, discipline, and transformation
+- family-conscious, with kids programs as part of the offer
+- inclusive for women, kids, and beginners
+- elevated by strength and conditioning, not just BJJ classes
+- emotionally safe, modern, and premium
+- welcoming for people who may feel intimidated by a traditional gym environment
+
+This brand should feel:
+- premium
+- calm
+- empowering
+- personal
+- trustworthy
+- structured
+- supportive
+- transformation-focused
+
+It should NOT feel like:
+- a loud fight gym
+- a hard-core male-dominated MMA brand
+- a generic “book a free trial now” martial arts template
+- a churn-and-burn local lead-gen funnel
+
+PROJECT GOAL
+
+Refine the website so the messaging, layout, CTAs, trust signals, and page flow clearly communicate the real Ground Up vision while still improving conversion.
+
+The site should make the right person think:
+“This feels safe, personal, and real. I could actually start here.”
+
+PRIMARY STRATEGY
+
+The website should position Ground Up as a boutique training studio where women, kids, beginners, and families can build:
+- confidence
+- self-defense ability
+- discipline
+- fitness
+- strength
+- real skill
+
+The website should sell the experience of guided transformation, not just a trial class.
+
+KEY POSITIONING
+
+Business category:
+Boutique women-forward BJJ, self-defense, and conditioning studio
+
+Core positioning statement:
+A boutique training space in Oxnard that helps women, kids, and beginners build confidence, self-defense skills, fitness, and discipline through personal coaching in a supportive environment.
+
+Core brand truth:
+This is not a high-volume fight gym.
+This is a premium, guided, confidence-building training experience.
+
+TARGET AUDIENCES
+
+Prioritize these audiences in the messaging and structure:
+1. Women who want self-defense, confidence, and a safe place to start
+2. Parents looking for a structured, positive environment for their kids
+3. Beginners who are curious but intimidated by traditional martial arts gyms
+4. Adults who want fitness, discipline, and skill in a more personal environment
+
+WEBSITE PROBLEMS TO FIX
+
+The site likely needs improvement in these areas:
+- the boutique nature is not obvious enough
+- the women-forward emotional promise is not strong enough
+- the site may feel too close to generic BJJ gym language
+- the trust layer needs to feel more real and visual
+- the beginner experience and trial process may not be clearly explained
+- the path for women, kids, and adults may not be segmented clearly enough
+- the copy may undersell the premium, personal, supportive nature of the business
+
+YOUR TASKS
+
+1. REWRITE THE CORE WEBSITE COPY
+Rewrite the homepage and key sections so the site feels boutique, women-forward, beginner-safe, and premium.
+
+Improve:
+- hero section
+- supporting headline
+- CTA copy
+- program overview copy
+- about section copy
+- trust-building sections
+- beginner reassurance copy
+- trial explanation copy
+- contact / conversion copy
+
+2. IMPROVE THE SITE STRUCTURE
+Refine the homepage flow so it follows this emotional sequence:
+
+A. Immediate clarity
+What this place is and who it is for
+
+B. Emotional safety
+Why this is a good place for women, kids, and beginners
+
+C. Trust
+Real coaching, real environment, real support, real results
+
+D. Program paths
+Women / Kids / Adults or equivalent segmentation
+
+E. What to expect
+Clear explanation of the first visit or trial
+
+F. CTA
+Warm, confident next step
+
+3. CREATE BETTER CTA STRATEGY
+Do not rely only on generic CTA language like:
+- Book Free Trial
+- Join Now
+
+Instead create a more intentional CTA system such as:
+- Start Your Free Trial
+- Explore Women’s Self-Defense
+- Find the Right Program
+- See What to Expect
+- Get Started
+
+Primary CTA should still support conversion, but the tone should feel warm and guided, not pushy.
+
+4. ADD OR IMPROVE TRUST-BUILDING CONTENT
+Add or strengthen sections for:
+- beginner reassurance
+- women-friendly environment
+- kids development benefits
+- coach credibility
+- class atmosphere
+- supportive culture
+- what to wear / what to expect
+- facility or training environment proof
+- optional testimonials if already supported by real content
+
+5. SEGMENT THE EXPERIENCE
+Make sure the site clearly speaks to:
+- women
+- kids / parents
+- adults / beginners
+
+Each audience should feel personally seen.
+
+6. PRESERVE PREMIUM BRAND TONE
+All copy should feel:
+- grounded
+- calm
+- premium
+- local
+- personal
+- human
+- emotionally intelligent
+
+Avoid:
+- cliché fitness hype
+- aggressive macho language
+- fake urgency
+- over-marketed sales language
+- generic “best martial arts gym” tone
+
+7. RECOMMEND VISUAL / UX IMPROVEMENTS
+If the codebase supports it, improve the layout and section structure to better support:
+- premium branding
+- clean spacing
+- clearer hierarchy
+- stronger emotional trust
+- better mobile readability
+- clearer audience pathways
+- clearer CTA placement
+
+8. CREATE A “WHAT TO EXPECT” FLOW
+The site should clearly explain:
+- how the trial works
+- what someone should wear
+- whether beginners are welcome
+- how the environment feels
+- what happens after the first visit
+
+This is especially important for women and first-time visitors.
+
+9. OPTIONAL OFFER FRAMING
+If appropriate within the current business model, make space for stronger offer framing around:
+- women’s self-defense
+- beginner-friendly foundations
+- kids confidence and discipline
+- strength and conditioning support
+
+Do not invent fake programs unless the site already implies them.
+You may improve naming and presentation of existing offers, but do not fabricate unsupported business claims.
+
+DELIVERABLES
+
+Make the actual code/content changes in the project and provide:
+
+1. Updated homepage copy
+2. Improved CTA system
+3. Revised section structure
+4. Better positioning language
+5. Added beginner / women / family reassurance sections
+6. Recommended improvements for About / Programs / Contact sections if those pages exist
+7. Any necessary component/layout updates
+8. A concise summary of what changed and why
+
+IMPLEMENTATION RULES
+
+- Make the site better without erasing its authenticity
+- Keep the business local and real
+- Do not turn the site into a generic funnel template
+- Do not overwrite the brand with “fight gym” energy
+- Do not make unsupported claims
+- Do not build the AI audit tool
+- Focus only on improving Ground Up BJJ’s website
+
+SUCCESS CRITERIA
+
+After the update, Ground Up BJJ should feel like:
+- a boutique training studio
+- a safe place to begin
+- especially compelling for women, kids, and beginners
+- personal and premium
+- confidence-building and transformation-focused
+
+The site should convert better because it feels more aligned, more trustworthy, and more emotionally clear — not because it became more generic.
+
+Please make the actual changes now in the existing codebase, then summarize exactly what you changed.
