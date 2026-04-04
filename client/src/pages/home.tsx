@@ -188,6 +188,97 @@ export default function Home() {
         </div>
       </Section>
 
+      {/* HOW IT WORKS */}
+      <Section className="py-24 bg-[#121826] relative" delay={0}>
+        <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-14">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[#FFB199]/20 bg-[#FFB199]/5 text-[#FFB199] text-sm mb-4">
+              No Experience Needed
+            </div>
+            <h2 className="text-4xl md:text-5xl font-bold text-white mb-4" style={{ fontFamily: 'var(--font-display)' }}>
+              WHAT TO <span className="gradient-text-warm">EXPECT</span>
+            </h2>
+            <p className="text-gray-400 max-w-xl mx-auto">
+              We know walking into a martial arts gym for the first time can feel intimidating. Here's exactly what your first visit looks like — simple, welcoming, and at your pace.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-4 gap-6 relative">
+            <div className="hidden md:block absolute top-10 left-[12.5%] right-[12.5%] h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+            {[
+              {
+                step: "01",
+                icon: Clock,
+                title: "Arrive 15 Min Early",
+                desc: "Show up a little before class. We'll give you a quick tour, answer your questions, and make sure you feel at home before anything starts.",
+                accent: "#5EEBFF",
+              },
+              {
+                step: "02",
+                icon: Heart,
+                title: "Meet Coach Raymi",
+                desc: "Your instructor will introduce herself, learn about your goals, and let you know what to expect. No jargon, no pressure — just a real conversation.",
+                accent: "#FFB199",
+              },
+              {
+                step: "03",
+                icon: Shield,
+                title: "Learn the Fundamentals",
+                desc: "Every class starts with foundational movements. No sparring in your first session — just safe, structured technique at your own pace.",
+                accent: "#B06CFF",
+              },
+              {
+                step: "04",
+                icon: Award,
+                title: "Leave Feeling Capable",
+                desc: "Most new students leave surprised by how much they learned — and how comfortable they felt. You'll leave with a skill, not just a workout.",
+                accent: "#5EEBFF",
+              },
+            ].map((item, i) => (
+              <motion.div
+                key={item.step}
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.12, duration: 0.5 }}
+                className="relative flex flex-col items-center text-center p-7 rounded-2xl border border-white/5 bg-[#0B0F14] hover:border-white/10 transition-all"
+              >
+                <div
+                  className="w-12 h-12 rounded-full flex items-center justify-center mb-4 text-xs font-bold tracking-widest"
+                  style={{ backgroundColor: `${item.accent}20`, color: item.accent }}
+                >
+                  {item.step}
+                </div>
+                <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-3" style={{ backgroundColor: `${item.accent}15` }}>
+                  <item.icon className="h-5 w-5" style={{ color: item.accent }} />
+                </div>
+                <h3 className="text-white font-bold text-base mb-2" style={{ fontFamily: 'var(--font-display)' }}>{item.title}</h3>
+                <p className="text-gray-500 text-xs leading-relaxed">{item.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+
+          <div className="mt-10 text-center">
+            <div className="inline-flex flex-wrap justify-center gap-4 text-sm text-gray-400 mb-6">
+              {["Wear comfortable athletic clothing", "No gear required for your first class", "Bring water and an open mind"].map((tip) => (
+                <span key={tip} className="flex items-center gap-1.5">
+                  <CheckCircle className="h-4 w-4 text-[#FFB199] flex-shrink-0" />
+                  {tip}
+                </span>
+              ))}
+            </div>
+            <div className="block">
+              <Button asChild size="lg" className="bg-[#FFB199] text-[#0B0F14] font-bold uppercase tracking-wider hover:bg-[#FFB199]/90 h-13 px-10">
+                <Link href="/contact">
+                  Book Your Free Trial
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </Section>
+
       {/* MISSION */}
       <Section className="py-24 bg-[#121826] relative grain-texture" delay={0}>
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-[#B06CFF]/5 rounded-full blur-3xl" />
@@ -339,6 +430,17 @@ export default function Home() {
                 FIND A CLASS <span className="gradient-text-cyan">THAT FITS YOU</span>
               </h2>
               <p className="text-gray-400 text-sm mt-2 max-w-md">Max 6 students per class — structured for beginners. Every session is coached, not just supervised.</p>
+              <div className="flex flex-wrap gap-2 mt-4">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[#FFB199]/10 text-[#FFB199] border border-[#FFB199]/20">
+                  <CheckCircle className="h-3.5 w-3.5" /> No experience required
+                </span>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[#5EEBFF]/10 text-[#5EEBFF] border border-[#5EEBFF]/20">
+                  <CheckCircle className="h-3.5 w-3.5" /> Beginner friendly
+                </span>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[#B06CFF]/10 text-[#B06CFF] border border-[#B06CFF]/20">
+                  <CheckCircle className="h-3.5 w-3.5" /> First class free
+                </span>
+              </div>
             </div>
             <Button asChild className="bg-transparent border border-[#5EEBFF]/40 text-[#5EEBFF] hover:bg-[#5EEBFF]/10 uppercase tracking-wider font-semibold flex-shrink-0">
               <Link href="/schedule">

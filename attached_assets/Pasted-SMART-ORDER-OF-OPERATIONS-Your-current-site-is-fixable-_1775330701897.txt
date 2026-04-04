@@ -1,0 +1,29 @@
+SMART ORDER OF OPERATIONS
+Your current site is fixable. The priority is to update the hero CTA, add facility photos, and include a 'What to Expect' section first — those changes alone will meaningfully improve your conversion rate. A dedicated booking funnel is worth exploring once those patches are live and you are ready to automate your lead capture and scheduling process.
+
+Future Expansion Path: Dedicated Booking Funnel
+Why this route: A local martial arts academy relies heavily on converting web traffic into scheduled, in-person appointments. A dedicated funnel streamlines this process, reducing drop-off between interest and stepping on the mat.
+
+What this would build:
+- A multi-step lead capture flow that asks the user which program they are interested in (Kids, Women, Adult Beginners) before asking for contact info.
+- An integrated calendar booking system allowing users to select their exact trial class date and time.
+- An automated SMS and email reminder workflow to reduce no-shows (e.g., sending a text 24 hours before with 'What to wear' instructions).
+- A post-booking confirmation page that includes a welcome video from Coach Raymi and a map to the facility.
+
+POSITIONING FOUNDATION (lock this in before any builder starts):
+Business category: Local Brazilian Jiu-Jitsu academy
+Key differentiators: Gracie Barra lineage instruction, Explicit focus on beginners, women, and kids, Structured, foundational curriculum (not just open rolling)
+Positioning expression: A beginner-friendly, structured Brazilian Jiu-Jitsu academy in Oxnard, CA, empowering women, kids, and adults to master fundamentals safely under Gracie Barra lineage.
+Primary CTA: Book Your Free Trial Class
+Ideal funnel: Landing Page -> Select Class Type (Kids/Women/Adults) -> Choose Date/Time -> Enter Details -> Automated SMS Confirmation with 'What to wear' instructions.
+POSITIONING LOCK: All design, copy, routes, and CTAs must reinforce this identity.
+
+WHAT TO DO NEXT:
+Step 1 = Complete the patch instructions provided in the fix plan first (adding photos, FAQs, and micro-copy).
+Step 2 = Reassess your conversion rates over 30 days.
+Step 3 = Explore building a dedicated booking funnel if you want to automate scheduling and reduce trial no-shows.
+
+---
+OPTIONAL: BUILD THIS IN VIBE OS
+---
+If you want to implement this inside VIBE OS, the Funnel Execution Pack is the closest fit. It will generate the multi-step lead capture flow, integrate the scheduling logic, and set up the automated follow-up sequences tailored specifically for your local service business.
