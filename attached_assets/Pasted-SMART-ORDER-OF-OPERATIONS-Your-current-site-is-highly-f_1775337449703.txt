@@ -1,0 +1,28 @@
+SMART ORDER OF OPERATIONS
+Your current site is highly fixable. The priority is to update the core content first—specifically adding facility photos, student testimonials, a beginner FAQ, and a step-by-step 'What to Expect' section. These front-end patches alone will meaningfully improve your conversion rate by reducing anxiety for first-time visitors. A dedicated funnel build becomes relevant later once you want to automate your scheduling and follow-up sequences.
+
+FUTURE EXPANSION PATH: Dedicated Lead Generation Funnel
+Why this route: A local gym relies on foot traffic, and the biggest drop-off happens between booking a trial online and actually walking through the front door. A dedicated funnel approach focuses on capturing the lead and automating the follow-up.
+
+What this would build:
+- A multi-step lead capture flow that collects the visitor's name, phone number, and fitness goals before showing the schedule.
+- An integrated calendar booking system specifically for introductory classes.
+- An automated SMS and email reminder workflow that sends directions, what to wear, and a welcoming video from the Head Coach to reduce no-show rates.
+- Dedicated, distraction-free landing pages for specific demographics (e.g., a standalone page just for the Kids Program or Women's Self-Defense).
+
+POSITIONING FOUNDATION (lock this in before any builder starts):
+Business category: Local Brazilian Jiu-Jitsu Academy
+Key differentiators: Gracie Barra Lineage coaching, Beginner-friendly structured approach, Dedicated Women's and Kids (6-14) programs
+Positioning expression: A beginner-friendly Brazilian Jiu-Jitsu academy in Oxnard, CA, providing structured, Gracie Barra-lineage instruction for women, kids, and adults.
+Primary CTA: Book Your Free Trial
+Ideal funnel: Click CTA -> Enter contact info -> Select class time -> Receive automated SMS reminder sequence -> Attend in-person trial.
+
+WHAT TO DO NEXT:
+Step 1: Complete the content patches on your current site first (add photos, FAQs, and testimonials).
+Step 2: Monitor your trial booking rates and no-show rates for 30 days.
+Step 3: If you are getting traffic but struggling with no-shows or calendar management, explore upgrading to a dedicated booking funnel with automated SMS follow-ups.
+
+---
+OPTIONAL: BUILD THIS IN VIBE OS
+---
+If you want to implement this automated booking and follow-up system inside VIBE OS, the Funnel Execution Pack is the closest fit. It is designed to replace static gym pages with active lead-capture sequences and automated SMS reminders.
