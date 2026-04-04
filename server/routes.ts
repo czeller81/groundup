@@ -157,7 +157,29 @@ const requireRole = (...roles: string[]) => {
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  
+
+  // ============================================
+  // SEO: robots.txt and sitemap.xml
+  // ============================================
+  app.get("/robots.txt", (_req, res) => {
+    res.set("Content-Type", "text/plain").send(
+      `User-agent: *\nAllow: /\nDisallow: /portal/\nDisallow: /admin\n\nSitemap: https://groundupbjj.com/sitemap.xml\n`
+    );
+  });
+
+  app.get("/sitemap.xml", (_req, res) => {
+    const today = new Date().toISOString().split("T")[0];
+    res.set("Content-Type", "application/xml").send(`<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://groundupbjj.com/</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://groundupbjj.com/schedule</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://groundupbjj.com/pricing</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://groundupbjj.com/coaches</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://groundupbjj.com/personal-training</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://groundupbjj.com/contact</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+</urlset>`);
+  });
+
   // ============================================
   // TRAINER ROUTES
   // ============================================
