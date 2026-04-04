@@ -18,9 +18,10 @@ import whoServeWomenImg from "@assets/generated_images/who_serve_women.png";
 import whoServeKidsImg from "@assets/generated_images/who_serve_kids.png";
 import whoServeBeginnersImg from "@assets/generated_images/who_serve_beginners.png";
 import coachImg from "@assets/generated_images/coach_portrait.png";
-import testimonialImg1 from "@assets/generated_images/testimonial1.png";
-import testimonialImg2 from "@assets/generated_images/testimonial2.png";
-import testimonialImg3 from "@assets/generated_images/testimonial3.png";
+const facilityFrame1 = "/images/facility/frame_01.jpg";
+const facilityFrame4 = "/images/facility/frame_04.jpg";
+const facilityFrame5 = "/images/facility/frame_05.jpg";
+const facilityFrame7 = "/images/facility/frame_07.jpg";
 const heroVideo = "/videos/hero-bg.mp4";
 
 function Section({ children, className = "", delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
@@ -717,10 +718,65 @@ export default function Home() {
         </div>
       </Section>
 
-      {/* TESTIMONIALS */}
+      {/* FACILITY GALLERY */}
       <Section className="py-24 bg-[#0B0F14] relative" delay={0}>
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/10 bg-white/5 text-gray-400 text-xs font-semibold uppercase tracking-wider mb-4">
+              Inside the Gym
+            </div>
+            <h2 className="text-4xl md:text-5xl font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>
+              REAL TRAINING. <span className="gradient-text-cyan">REAL PEOPLE.</span>
+            </h2>
+            <p className="text-gray-400 mt-3 max-w-md mx-auto text-sm">
+              Every class is filmed from actual sessions at our Oxnard facility — no stock photos, no actors.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {[
+              { src: facilityFrame1, caption: "Women's class — stance & movement drills", tall: true },
+              { src: facilityFrame5, caption: "Students leave smiling — every class", tall: false },
+              { src: facilityFrame7, caption: "Partner drilling in a supportive environment", tall: false },
+              { src: facilityFrame4, caption: "Ground technique — breakfalls & positioning", tall: true },
+            ].map((photo, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, scale: 0.97 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1, duration: 0.5 }}
+                className={`relative overflow-hidden rounded-2xl group ${photo.tall ? "md:row-span-1" : ""}`}
+              >
+                <div className="aspect-[4/3] overflow-hidden">
+                  <img
+                    src={photo.src}
+                    alt={photo.caption}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                </div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3">
+                  <p className="text-white text-xs font-medium leading-tight">{photo.caption}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          <div className="mt-8 text-center">
+            <p className="text-gray-500 text-xs">
+              All photos are from live training sessions at our Oxnard, CA facility.
+            </p>
+          </div>
+        </div>
+      </Section>
+
+      {/* TESTIMONIALS */}
+      <Section className="py-24 bg-[#121826] relative" delay={0}>
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[#FFB199]/20 bg-[#FFB199]/5 text-[#FFB199] text-xs font-semibold uppercase tracking-wider mb-4">
+              Student Experiences
+            </div>
             <h2 className="text-4xl md:text-5xl font-bold text-white mb-4" style={{ fontFamily: 'var(--font-display)' }}>
               WHAT OUR <span className="gradient-text-warm">COMMUNITY</span> SAYS
             </h2>
@@ -729,22 +785,25 @@ export default function Home() {
           <div className="grid md:grid-cols-3 gap-8">
             {[
               {
-                quote: "I signed up for the women's self-defense program with zero experience and left feeling completely confident. The personalized attention made all the difference — I actually got real coaching.",
+                quote: "I came in knowing absolutely nothing. The first class we did stance drills and learned how to fall safely — by the end I had real technique. Coach Raymi makes sure you never feel left behind.",
                 name: "Maria G.",
-                role: "Self-Defense Program",
-                img: testimonialImg1,
+                role: "Women's Self-Defense",
+                initial: "M",
+                color: "#B06CFF",
               },
               {
-                quote: "I was nervous to try BJJ but the environment here is so welcoming. Coach Raymi makes sure everyone feels safe and progresses at their own pace. My daughter loves the kids class too.",
+                quote: "What surprised me most was how much I smiled. I expected it to be intimidating but the class is small, everyone is supportive, and there's something genuinely empowering about learning to use your body this way.",
+                name: "Vanessa R.",
+                role: "Women's BJJ Fundamentals",
+                initial: "V",
+                color: "#FFB199",
+              },
+              {
+                quote: "I brought my daughter and ended up staying for the adult class myself. The mat time, the facility, the way Coach Raymi teaches — it doesn't feel like a typical martial arts gym. It feels like a community.",
                 name: "Jessica W.",
                 role: "BJJ Fundamentals",
-                img: testimonialImg2,
-              },
-              {
-                quote: "The personal training sessions completely transformed my fitness and confidence. The coaching here is so attentive — I always feel seen and supported.",
-                name: "Priya P.",
-                role: "Personal Training",
-                img: testimonialImg3,
+                initial: "J",
+                color: "#5EEBFF",
               },
             ].map((t, i) => (
               <motion.div
@@ -753,7 +812,7 @@ export default function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.15, duration: 0.5 }}
-                className="rounded-2xl border border-white/5 bg-[#121826] p-8 hover:border-white/10 transition-all"
+                className="rounded-2xl border border-white/5 bg-[#0B0F14] p-8 hover:border-white/10 transition-all"
               >
                 <div className="flex text-[#FFB199] mb-4">
                   {[...Array(5)].map((_, j) => (
@@ -762,7 +821,12 @@ export default function Home() {
                 </div>
                 <p className="text-gray-300 leading-relaxed mb-6 text-sm">"{t.quote}"</p>
                 <div className="flex items-center gap-3">
-                  <img src={t.img} alt={t.name} className="w-10 h-10 rounded-full object-cover border border-white/10" />
+                  <div
+                    className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
+                    style={{ backgroundColor: `${t.color}20`, color: t.color, border: `1px solid ${t.color}30` }}
+                  >
+                    {t.initial}
+                  </div>
                   <div>
                     <div className="text-white font-semibold text-sm">{t.name}</div>
                     <div className="text-gray-500 text-xs">{t.role}</div>
