@@ -1,0 +1,26 @@
+SMART ORDER OF OPERATIONS
+
+Your current site is fixable. The priority is to update the hero with your specific city, add visual proof of your facility, and implement a direct trial-booking CTA first — those changes alone will meaningfully improve your local conversion rate. The Funnel Execution Pack is worth exploring once those patches are live and you're ready to build a dedicated, high-converting flow for paid local ads.
+
+YOUR RECOMMENDED EXECUTION PATH:
+Future Expansion Path: Funnel Execution Pack
+Why this route: Local martial arts academies thrive on simple, high-converting lead generation funnels (e.g., a '1-Week Free Trial' funnel) that drive traffic from local Facebook or Google ads directly into a calendar booking system.
+What this would build:
+- A dedicated local landing page optimized specifically for trial class bookings.
+- Integrated calendar scheduling to remove back-and-forth email friction.
+- Automated SMS/email confirmation sequences to reduce trial no-show rates.
+- Clear, beginner-friendly 'What to Expect' onboarding sections.
+- Integrated Google Reviews and student testimonial blocks.
+
+POSITIONING FOUNDATION (lock this in before any builder starts):
+Business category: Local Brazilian Jiu-Jitsu Academy (inferred)
+Key differentiators: Foundational/beginner-focused curriculum (inferred from 'ground up')
+Positioning expression: A local Brazilian Jiu-Jitsu academy offering foundational martial arts training for individuals looking to build fitness and self-defense skills.
+Primary CTA: Book a Free Trial Class
+Ideal funnel: Visitor lands on site -> Sees local geography and beginner-friendly hero -> Clicks 'Book a Trial' -> Selects class time on integrated calendar -> Receives automated SMS/email preparation instructions -> Attends class.
+POSITIONING LOCK: All design, copy, routes, and CTAs must reinforce this identity.
+
+WHAT TO DO NEXT:
+Step 1 = Complete the patches outlined in the fix plan first (updating your hero, location, and CTA on your current site).
+Step 2 = Reassess your conversion rate and trial booking volume.
+Step 3 = If you plan to run local paid ads and need a higher-converting dedicated flow, go to the Lime dashboard, select Build Packs, and choose the Funnel Execution Pack to create a standalone trial-booking funnel.
