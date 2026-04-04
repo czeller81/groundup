@@ -1,0 +1,197 @@
+You are updating the AI Conversion Audit logic and recommendation output for Ground Up BJJ so the audit stays faithful to the true business vision and does NOT flatten the brand into a generic high-volume martial arts funnel.
+
+IMPORTANT CONTEXT
+Ground Up BJJ is not supposed to be framed as a standard “local BJJ academy” whose primary identity is just free-trial booking and membership conversion.
+
+The real vision is:
+
+- a boutique, small-capacity training studio
+- high-touch coaching and personal attention
+- women-forward positioning
+- beginner-friendly and emotionally safe
+- family-conscious, with kids programs as part of the offer
+- rooted in confidence, self-defense, discipline, and transformation
+- includes strength and conditioning as part of the value
+- should feel premium, personal, intentional, and supportive
+- should NOT feel like a loud, mass-market, fight-gym funnel
+
+The audit system must preserve the soul of the brand while still giving strong conversion advice.
+
+YOUR TASK
+Refactor the audit recommendation logic, prompt logic, fallback copy, and output framing so that for businesses like Ground Up BJJ, the tool produces recommendations that are conversion-aware but brand-faithful.
+
+GOALS
+1. Prevent the AI audit from defaulting to generic “gym funnel” language when the site’s actual positioning is boutique, women-forward, or transformation-focused.
+2. Make sure the audit distinguishes between:
+   - high-volume lead-gen martial arts gyms
+   - boutique, premium, experience-led training studios
+3. Ensure the recommendations protect the business identity before suggesting automations, funnels, builders, or nurture systems.
+4. Make the audit output feel strategic, premium, and specific — not templated.
+
+WHAT TO CHANGE
+
+1) UPDATE THE AUDIT SYSTEM PROMPT / CLASSIFICATION LOGIC
+Add logic so the audit first determines the business positioning archetype before recommending an execution path.
+
+Introduce a classification layer such as:
+
+- boutique_premium_service
+- local_lead_gen_business
+- women_forward_fitness_brand
+- family_program_training_center
+- standard_martial_arts_gym
+
+For Ground Up BJJ-like businesses, the audit should detect signals such as:
+- women-focused copy
+- empowerment language
+- beginner-friendly language
+- family / kids programs
+- strength and conditioning
+- premium or intimate tone
+- personal coaching emphasis
+- small class experience
+- transformation / confidence / safety language
+
+If these signals exist, the audit should prefer a “boutique program funnel” or “guided brand experience” recommendation rather than a generic booking funnel.
+
+2) ADD HARD GUARDRAILS TO THE RECOMMENDATION ENGINE
+The audit must not:
+- reduce the brand to “local martial arts academy”
+- over-prioritize automation before positioning is clear
+- recommend builder paths that imply the business should become a volume-based sales funnel if the site indicates a boutique identity
+- erase emotional differentiators like safety, trust, women-first energy, or transformation
+
+Instead, the audit should:
+- protect original business identity
+- identify emotional conversion levers
+- recommend trust-building first
+- recommend clearer program segmentation
+- recommend guided onboarding
+- only suggest automation after positioning and trust layers are in place
+
+3) UPDATE THE OUTPUT TEMPLATE
+When the business resembles Ground Up BJJ, the audit output should sound more like this:
+
+SMART ORDER OF OPERATIONS
+
+Your current site is highly fixable, but the priority is not to turn this into a generic martial arts funnel. The first priority is to strengthen the trust layer, clarify the boutique experience, and make the emotional promise of the brand unmistakable. This business should feel personal, safe, empowering, and high-touch from the first scroll.
+
+The biggest opportunity is to reinforce what makes this different:
+a boutique, women-forward, family-conscious training space that blends Brazilian Jiu-Jitsu, self-defense, and strength/conditioning into a guided experience for real people — especially beginners.
+
+RECOMMENDED EXECUTION PATH:
+Future Expansion Path: a boutique-program funnel approach
+
+Why this route:
+This business is not meant to compete as a high-volume fight gym. Its advantage is intimacy, trust, and transformation. The best funnel architecture is one that highlights the guided experience, showcases the environment, and helps the right people feel safe enough to take the first step.
+
+What this would build:
+- A premium landing experience that communicates the business as a boutique training studio, not a mass-market academy.
+- A dedicated women’s self-defense and beginner pathway, so visitors immediately understand this is a safe place to start.
+- A clearer trial and onboarding flow that explains exactly what to expect before the first visit.
+- A stronger visual trust layer with real facility photos, coach presence, training atmosphere, and proof of the experience.
+- An optional segmented inquiry path for women, kids, and adults so each audience feels personally spoken to.
+- A future nurture system using email and SMS reminders only after the brand foundation and offer positioning are fully aligned.
+
+POSITIONING FOUNDATION (lock this in before any builder starts):
+Business category: Boutique women-forward BJJ, self-defense, and conditioning studio
+Key differentiators: Small class sizes, personal attention, beginner-friendly environment, women-focused empowerment, kids development, confidence-building coaching, strength and conditioning support
+Positioning expression: A boutique training space in Oxnard that helps women, kids, and beginners build confidence, self-defense skills, fitness, and discipline through personal coaching in a supportive environment.
+Primary CTA: Start Your Free Trial
+Secondary CTA: Explore Women’s Self-Defense
+
+Ideal customer journey:
+Visitor lands on site -> immediately understands this is a safe, beginner-friendly, boutique environment -> sees real photos, clear program pathways, and what to expect -> chooses the right path (Women / Kids / Adults) -> submits inquiry or books a trial -> receives a warm welcome sequence explaining what to wear, where to go, and how the first session works -> attends first class -> receives a guided next-step membership offer
+
+POSITIONING LOCK:
+All design, copy, photos, CTA language, and future automation must reinforce this identity:
+This is not a loud, high-volume fight gym.
+It is a premium, guided, confidence-building training experience.
+
+WHAT TO DO NEXT:
+Step 1: Strengthen the current site first by clarifying the brand promise: boutique, beginner-friendly, women-forward, personal, supportive.
+Step 2: Add real trust-building content: facility photos, coach presence, class atmosphere, beginner reassurance, and a simple “What to Expect” section.
+Step 3: Create clearer program pathways for Women, Kids, and Adults so each visitor feels immediately understood.
+Step 4: Refine the free trial offer so it feels welcoming and guided, not transactional.
+Step 5: After the positioning is fully aligned, consider a more structured funnel with booking automation, reminders, and segmented follow-up flows.
+
+4) IMPLEMENT ARCHITECTURAL CHANGES
+Refactor the audit pipeline so recommendation generation follows this order:
+
+A. Extract site signals
+- brand tone
+- audience emphasis
+- offer structure
+- emotional promise
+- trust signals
+- visual proof
+- CTA style
+- operational maturity
+
+B. Determine business archetype
+Use explicit classification, not loose inference.
+
+C. Generate strategy recommendation based on archetype
+The recommendation path must match the identity of the business.
+
+D. Generate builder / execution recommendation only after the positioning is locked
+Do not jump too early to automation, funnels, or implementation frameworks.
+
+5) ADD BRAND-PROTECTION RULES
+Create a section in the recommendation logic that explicitly protects:
+- boutique identity
+- emotional tone
+- niche audience focus
+- premium feel
+- small-capacity/high-touch service businesses
+
+For example:
+If the brand is boutique/high-touch/premium, then the system must not recommend a generic volume-maximization funnel as the default primary path.
+
+6) IMPROVE FAILURE HANDLING
+One flaw observed before was that when a site had rendering or DNS issues, the audit over-relied on partial signals and produced recommendations based on incomplete or misleading context.
+
+Fix this by:
+- lowering confidence when site extraction is incomplete
+- explicitly stating when the system may be relying on weak signals
+- avoiding over-specific positioning claims unless supported by evidence
+- preferring cautious, brand-preserving strategy language when page evidence is partial
+
+7) OUTPUT REQUIREMENTS
+Implement the change fully across:
+- the AI audit prompt
+- classification logic
+- recommendation generator
+- fallback templates
+- builder recommendation logic
+- any frontend label or rendering layer that shows the recommended path
+
+DELIVERABLES
+Produce:
+1. the updated system prompt text
+2. the classification rules / heuristics
+3. the recommendation generation rules
+4. the fallback behavior for incomplete site evidence
+5. updated output template examples
+6. the actual code changes needed in the current codebase
+7. any schema/type updates required
+8. tests covering:
+   - boutique women-forward training studio
+   - generic martial arts gym
+   - kids-focused academy
+   - broken/incomplete site extraction case
+
+IMPLEMENTATION INSTRUCTIONS
+- Preserve vendor-neutral language in the main output.
+- Keep any VIBE OS references only in a clearly labeled optional section at the end.
+- Do not let the main recommendation feel like a disguised VIBE sales pitch.
+- Keep the tone premium, strategic, and operator-level.
+- Make the result production-ready.
+- Do not return only commentary. Make the actual code changes.
+- Update all affected backend and frontend pieces so the new recommendation path is reflected everywhere consistently.
+- Add tests.
+- Show a concise summary of what was changed and why.
+
+SUCCESS CRITERIA
+The Ground Up BJJ audit should no longer come back sounding like a generic martial arts lead funnel.
+It should preserve the original boutique vision while still offering strong conversion strategy and a realistic execution path.
