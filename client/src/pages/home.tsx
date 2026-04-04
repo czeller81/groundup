@@ -568,13 +568,12 @@ export default function Home() {
                 <h3 className="text-2xl font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>RAYMI GONZALEZ</h3>
                 <div className="flex flex-wrap items-center gap-2 mt-2">
                   <span className="inline-block px-3 py-1 text-sm rounded-full bg-[#B06CFF]/20 text-[#B06CFF] border border-[#B06CFF]/30">
-                    Purple Belt 3rd Degree
-                  </span>
-                  <span className="inline-block px-3 py-1 text-sm rounded-full bg-[#5EEBFF]/10 text-[#5EEBFF] border border-[#5EEBFF]/20">
-                    Gracie Lineage
+                    Purple Belt · 3rd Degree
                   </span>
                 </div>
-                <p className="text-gray-500 text-xs mt-2">Certified BJJ Instructor · 5+ Years Teaching Experience · Oxnard, CA</p>
+                <p className="text-gray-400 text-sm mt-3 leading-relaxed">
+                  Promoted under the Gracie Barra lineage · Trained in Ventura County, CA · 5+ Years Coaching
+                </p>
               </div>
               <p className="text-gray-300 leading-relaxed mb-6">
                 Raymi founded Ground Up Jiu-Jitsu with one goal: to build a safe, empowering home for women, kids, and beginners. With deep expertise in BJJ, self-defense, and strength & conditioning, she brings personal attention and real-world skill to every session.

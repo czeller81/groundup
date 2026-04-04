@@ -60,13 +60,16 @@ export default function Coaches() {
               <div className="flex flex-wrap items-center gap-2 mb-3">
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 text-sm rounded-full bg-[#B06CFF]/20 text-[#B06CFF] border border-[#B06CFF]/30">
                   <Award className="h-3.5 w-3.5" />
-                  Purple Belt 3rd Degree
-                </span>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 text-sm rounded-full bg-[#5EEBFF]/10 text-[#5EEBFF] border border-[#5EEBFF]/20">
-                  Gracie Lineage
+                  Purple Belt · 3rd Degree
                 </span>
               </div>
-              <p className="text-gray-500 text-sm mb-6">Certified BJJ Instructor · 5+ Years Teaching Experience · Oxnard, CA</p>
+              <div className="mb-6 border-l-2 border-[#5EEBFF]/30 pl-4">
+                <p className="text-[#5EEBFF] text-xs font-semibold uppercase tracking-widest mb-1">Instructor Lineage</p>
+                <p className="text-gray-300 text-sm leading-relaxed">
+                  Promoted under the <span className="text-white font-medium">Gracie Barra lineage</span> — one of the world's most recognized BJJ systems. Raymi trained in Ventura County, CA under certified black belt instructors before founding Ground Up BJJ and bringing that same fundamentals-first method to Oxnard.
+                </p>
+                <p className="text-gray-500 text-xs mt-2">Certified BJJ Instructor · 5+ Years Teaching Experience</p>
+              </div>
 
               <p className="text-gray-300 leading-relaxed mb-4">
                 Raymi leads the programs at Ground Up Jiu-Jitsu, focusing on women's self-defense, beginner-friendly Brazilian Jiu-Jitsu, strength & conditioning, and personal coaching.
