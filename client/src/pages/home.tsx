@@ -103,11 +103,13 @@ export default function Home() {
             </motion.div>
 
             <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold leading-[0.9] mb-6 tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>
-              <span className="text-white">BUILD YOUR</span>
+              <span className="text-white">MASTER</span>
               <br />
-              <span className="gradient-text-cyan">BJJ</span>
+              <span className="gradient-text-cyan">BRAZILIAN</span>
               <br />
-              <span className="gradient-text-purple">FOUNDATION</span>
+              <span className="gradient-text-purple">JIU-JITSU</span>
+              <br />
+              <span className="text-white text-4xl md:text-5xl lg:text-6xl">from the Ground Up in Oxnard</span>
             </h1>
 
             <motion.p
@@ -116,7 +118,7 @@ export default function Home() {
               transition={{ delay: 0.4, duration: 0.6 }}
               className="text-lg md:text-xl text-gray-300 max-w-xl mb-10 leading-relaxed"
             >
-              Fundamentals-first Brazilian Jiu-Jitsu for beginners, women &amp; kids — in a safe, supportive gym in Oxnard. No experience needed. Build real skills from day one.
+              A structured, foundational approach to BJJ for beginners and advanced practitioners.
             </motion.p>
 
             <motion.div
@@ -132,7 +134,7 @@ export default function Home() {
                 data-testid="hero-cta-book"
               >
                 <Link href="/contact">
-                  Book a Free Trial Class
+                  Book Your Free Trial
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
