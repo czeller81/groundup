@@ -1,0 +1,25 @@
+Section 1 — SMART ORDER OF OPERATIONS
+Your current site is fixable. The priority is to update the hero messaging to be more beginner-friendly, add clear trust signals like instructor lineage, and make your class schedule easy to find—those changes alone will meaningfully improve your conversion rate. The Funnel Execution Pack is worth exploring once those patches are live and you're ready to build a more optimized lead-generation flow for trial classes.
+
+Section 2 — FUTURE EXPANSION PATH:
+Future Expansion Path: Funnel Execution Pack
+Why this route: For a local academy or instructional platform, capturing leads for trial classes is the primary growth mechanism. A dedicated funnel builder streamlines this scheduling and intake process.
+What this would build:
+- A dedicated landing page optimized specifically for local search traffic.
+- A frictionless, multi-step trial booking form.
+- Automated intake questionnaires to gauge a beginner's experience level.
+- Integrated scheduling to book directly into specific beginner classes.
+- A follow-up email sequence to reduce trial no-show rates.
+
+Section 3 — POSITIONING FOUNDATION (lock this in before any builder starts):
+Business category: Local martial arts academy or BJJ instructional platform (inferred)
+Key differentiators: Fundamentals-focused Brazilian Jiu-Jitsu instruction (inferred)
+Positioning expression: A fundamentals-focused Brazilian Jiu-Jitsu academy helping beginners build a strong grappling foundation.
+Primary CTA: Book a Free Trial Class
+Ideal funnel: Land on site -> View beginner-friendly hero -> Check class schedule -> Click 'Book a Free Trial' -> Fill out short intake form -> Receive automated welcome email with 'what to bring' instructions.
+POSITIONING LOCK: All design, copy, routes, and CTAs must reinforce this identity.
+
+Section 4 — WHAT TO DO NEXT:
+Step 1: Complete the hero, schedule, and trust patches on your current site first.
+Step 2: Reassess your trial booking volume after the messaging is clearer.
+Step 3: If you need a higher-converting booking flow, go to the Lime dashboard, select Build Packs, and explore the Funnel Execution Pack to create a dedicated lead-gen pathway.
