@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import SEO from "@/components/seo";
 import { motion, useInView } from "framer-motion";
@@ -39,16 +39,22 @@ function Section({ children, className = "", delay = 0 }: { children: React.Reac
 
 function FAQ({ question, answer }: { question: string; answer: string }) {
   const [open, setOpen] = useState(false);
+  const panelId = useId();
   return (
     <div className="border border-white/10 rounded-xl overflow-hidden">
       <button
+        type="button"
         onClick={() => setOpen(!open)}
+        aria-expanded={open}
+        aria-controls={panelId}
         className="w-full flex items-center justify-between px-6 py-5 text-left hover:bg-white/5 transition-colors"
       >
         <span className="font-semibold text-white">{question}</span>
-        {open ? <ChevronUp className="h-5 w-5 text-[#5EEBFF] flex-shrink-0" /> : <ChevronDown className="h-5 w-5 text-gray-400 flex-shrink-0" />}
+        {open ? <ChevronUp className="h-5 w-5 text-[#5EEBFF] flex-shrink-0" aria-hidden="true" /> : <ChevronDown className="h-5 w-5 text-gray-400 flex-shrink-0" aria-hidden="true" />}
       </button>
       <motion.div
+        id={panelId}
+        role="region"
         initial={false}
         animate={{ height: open ? "auto" : 0, opacity: open ? 1 : 0 }}
         transition={{ duration: 0.3 }}

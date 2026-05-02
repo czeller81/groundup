@@ -61,7 +61,7 @@ export default function Kids() {
       <SEO
         title="Kids Jiu-Jitsu in Oxnard, CA — Ages 4–14 | Ground Up Jiu-Jitsu"
         description="Kids Jiu-Jitsu classes in Oxnard, CA for ages 4–14. Build confidence, discipline, and anti-bullying awareness in a structured, welcoming program. First class free."
-        canonical="https://groundupbjj.com/kids"
+        canonical="/kids"
       />
 
       {/* HERO */}

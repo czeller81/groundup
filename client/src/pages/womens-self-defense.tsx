@@ -63,7 +63,7 @@ export default function WomensSelfDefense() {
       <SEO
         title="Women's Self-Defense Program — 8 Weeks in Oxnard, CA | Ground Up BJJ"
         description="An 8-week Women's Self-Defense program in Oxnard, CA. Learn practical techniques, build confidence, and train in a supportive women-only environment. First class free."
-        canonical="https://groundupbjj.com/womens-self-defense"
+        canonical="/womens-self-defense"
       />
 
       {/* HERO */}

@@ -488,7 +488,7 @@ export class DatabaseStorage implements IStorage {
     return this.updateUser(userId, { adminNotes: notes });
   }
 
-  async getAdminStats(): Promise<{ totalUsers: number; newUsers30Days: number; activeMemberships: number; upcomingSessions7Days: number; monthlyRevenue: number }> {
+  async getAdminStats(): Promise<{ totalUsers: number; newUsers30Days: number; activeMemberships: number; upcomingSessions7Days: number; monthlyRevenue: number; membersNeedingForms: number; totalRequiredForms: number }> {
     const now = new Date();
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
     const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);

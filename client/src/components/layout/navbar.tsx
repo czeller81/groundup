@@ -70,7 +70,7 @@ export default function Navbar() {
                 className="ml-4 bg-[#FFB199] text-[#0B0F14] font-semibold hover:bg-[#FFB199]/90 uppercase tracking-wider text-xs"
                 data-testid="nav-link-book"
               >
-                Book Free Trial
+                Start Free Trial
               </Button>
             </Link>
           </div>
@@ -118,7 +118,7 @@ export default function Navbar() {
                   className="block px-4 py-3 text-sm font-semibold tracking-wide uppercase text-[#0B0F14] bg-[#FFB199] rounded-lg text-center mt-2"
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  Book Free Trial
+                  Start Free Trial
                 </Link>
               </div>
             </motion.div>

@@ -55,13 +55,13 @@ export default function Admin() {
   });
 
   // Fetch bookings
-  const { data: bookings = [], isLoading: bookingsLoading } = useQuery({
+  const { data: bookings = [], isLoading: bookingsLoading } = useQuery<any[]>({
     queryKey: ["/api/admin/bookings"],
     enabled: isLoggedIn,
   });
 
   // Fetch trainers
-  const { data: trainers = [] } = useQuery({
+  const { data: trainers = [] } = useQuery<any[]>({
     queryKey: ["/api/trainers"],
     enabled: isLoggedIn,
   });
@@ -131,7 +131,7 @@ export default function Admin() {
     ]);
 
     const csvContent = [csvHeaders, ...csvData]
-      .map(row => row.map(cell => `"${cell}"`).join(","))
+      .map(row => row.map((cell: any) => `"${cell}"`).join(","))
       .join("\n");
 
     const blob = new Blob([csvContent], { type: "text/csv" });

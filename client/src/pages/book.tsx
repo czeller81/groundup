@@ -230,7 +230,7 @@ export default function Book() {
       <SEO
         title="Book Your Free Trial Class | Ground Up Jiu-Jitsu & Fitness Oxnard"
         description="Reserve your first free BJJ class at Ground Up Jiu-Jitsu in Oxnard, CA. No experience needed. Takes 2 minutes."
-        canonical="https://groundupbjj.com/book"
+        canonical="/book"
       />
 
       <div className="min-h-screen bg-[#0B0F14] pt-20 pb-20">
