@@ -15,6 +15,12 @@ import strengthImg from "@assets/generated_images/women_strength.png";
 import personalTrainingImg from "@assets/generated_images/women_personaltraining.png";
 import whyDifferentImg from "@assets/womens-team-1.jpg";
 import coachImg from "@assets/raymi-coach.jpg";
+import facilityFloorImg from "@assets/facility-floor.jpg";
+import facilityStrengthImg from "@assets/facility-strength.jpg";
+import facilityMatImg from "@assets/facility-mat.jpg";
+import facilityLoungeImg from "@assets/facility-lounge.jpg";
+import facilityCafeImg from "@assets/facility-cafe.jpg";
+import facilityTeaImg from "@assets/facility-tea.jpg";
 const facilityFrame1 = "/images/facility/frame_01.jpg";
 const facilityFrame4 = "/images/facility/frame_04.jpg";
 const facilityFrame5 = "/images/facility/frame_05.jpg";
@@ -646,6 +652,8 @@ export default function Home() {
                   <img
                     src={photo.src}
                     alt={photo.caption}
+                    loading="lazy"
+                    decoding="async"
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                   />
                 </div>
@@ -660,6 +668,57 @@ export default function Home() {
             <p className="text-gray-500 text-xs">
               All photos are from live training sessions at our Oxnard, CA facility.
             </p>
+          </div>
+        </div>
+      </Section>
+
+      {/* THE SPACE / AMENITIES */}
+      <Section className="py-24 bg-[#0B0F14] relative" delay={0}>
+        <div className="absolute top-0 left-0 w-[450px] h-[450px] bg-[#B06CFF]/5 rounded-full blur-3xl" />
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[#B06CFF]/20 bg-[#B06CFF]/5 text-[#B06CFF] text-xs font-semibold uppercase tracking-wider mb-4">
+              Step Inside
+            </div>
+            <h2 className="text-4xl md:text-5xl font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>
+              A SPACE BUILT <span className="gradient-text-purple">FOR YOU</span>
+            </h2>
+            <p className="text-gray-400 mt-3 max-w-lg mx-auto text-sm">
+              Clean, calm, and fully equipped — from spacious mats to a recovery sauna and a cozy lounge with complimentary tea &amp; coffee.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            {[
+              { src: facilityFloorImg, caption: "Open, airy training floor" },
+              { src: facilityStrengthImg, caption: "Strength & conditioning equipment" },
+              { src: facilityMatImg, caption: "Spacious matted rolling area" },
+              { src: facilityLoungeImg, caption: "Relax in our member lounge" },
+              { src: facilityCafeImg, caption: "Community tables & games" },
+              { src: facilityTeaImg, caption: "Complimentary tea & coffee bar" },
+            ].map((photo, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, scale: 0.97 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.08, duration: 0.5 }}
+                className="relative overflow-hidden rounded-2xl group"
+              >
+                <div className="aspect-[4/5] md:aspect-[4/3] overflow-hidden">
+                  <img
+                    src={photo.src}
+                    alt={photo.caption}
+                    loading="lazy"
+                    decoding="async"
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                </div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent flex items-end p-4">
+                  <p className="text-white text-sm font-semibold leading-tight">{photo.caption}</p>
+                </div>
+              </motion.div>
+            ))}
           </div>
         </div>
       </Section>
