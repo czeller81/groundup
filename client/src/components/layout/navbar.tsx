@@ -64,10 +64,17 @@ export default function Navbar() {
                 )}
               </Link>
             ))}
+            <Link
+              href="/ln/login"
+              className="ml-2 px-4 py-2 text-sm font-medium tracking-wide uppercase text-gray-300 hover:text-white transition-colors"
+              data-testid="nav-link-login"
+            >
+              Member Login
+            </Link>
             <Link href="/book">
               <Button
                 size="sm"
-                className="ml-4 bg-[#FFB199] text-[#0B0F14] font-semibold hover:bg-[#FFB199]/90 uppercase tracking-wider text-xs"
+                className="ml-2 bg-[#FFB199] text-[#0B0F14] font-semibold hover:bg-[#FFB199]/90 uppercase tracking-wider text-xs"
                 data-testid="nav-link-book"
               >
                 Start Free Trial
@@ -113,6 +120,14 @@ export default function Navbar() {
                     {item.label}
                   </Link>
                 ))}
+                <Link
+                  href="/ln/login"
+                  className="block px-4 py-3 text-sm font-medium tracking-wide uppercase text-gray-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                  data-testid="mobile-nav-link-login"
+                >
+                  Member Login
+                </Link>
                 <Link
                   href="/book"
                   className="block px-4 py-3 text-sm font-semibold tracking-wide uppercase text-[#0B0F14] bg-[#FFB199] rounded-lg text-center mt-2"
