@@ -7,7 +7,7 @@ import SEO from "@/components/seo";
 import { Clock, Filter, ChevronRight, CalendarDays, Zap, Star, Users, ArrowRight } from "lucide-react";
 import {
   SCHEDULE, DAYS, CATEGORY_CONFIG, getClassesForDay, getCurrentDay,
-  type DayOfWeek, type ClassCategory, type Audience, type ClassEntry
+  type DayOfWeek, type ClassEntry
 } from "@/lib/schedule-data";
 
 const DAY_SHORT: Record<DayOfWeek, string> = {
@@ -15,26 +15,22 @@ const DAY_SHORT: Record<DayOfWeek, string> = {
   Friday: "Fri", Saturday: "Sat", Sunday: "Sun",
 };
 
-type FilterKey = "all" | "women" | "kids" | "youth" | "adults" | "bjj" | "strength";
+type FilterKey = "all" | "bjj" | "strength" | "kids" | "open-mat";
 
 const FILTERS: { key: FilterKey; label: string }[] = [
   { key: "all",      label: "All Classes" },
-  { key: "women",    label: "Women" },
-  { key: "kids",     label: "Kids" },
-  { key: "youth",    label: "Youth" },
-  { key: "adults",   label: "Adults" },
   { key: "bjj",      label: "Jiu-Jitsu" },
   { key: "strength", label: "Strength & Cond." },
+  { key: "kids",     label: "Kids" },
+  { key: "open-mat", label: "Open Mat" },
 ];
 
 function matchesFilter(entry: ClassEntry, filter: FilterKey): boolean {
   if (filter === "all") return true;
-  if (filter === "women")    return entry.audience.includes("women");
-  if (filter === "kids")     return entry.audience.includes("kids");
-  if (filter === "youth")    return entry.audience.includes("youth");
-  if (filter === "adults")   return entry.audience.includes("adults") || entry.audience.includes("all");
-  if (filter === "bjj")      return ["womens-bjj", "kids", "youth", "self-defense", "open-mat", "competition"].includes(entry.category);
-  if (filter === "strength") return ["strength", "conditioning"].includes(entry.category);
+  if (filter === "bjj")      return entry.category === "jiu-jitsu";
+  if (filter === "strength") return entry.category === "strength";
+  if (filter === "kids")     return entry.category === "kids";
+  if (filter === "open-mat") return entry.category === "open-mat";
   return true;
 }
 
@@ -97,6 +93,11 @@ function ClassCard({ entry, index }: { entry: ClassEntry; index: number }) {
               <span className={`inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full ${cfg.bg} ${cfg.color}`}>
                 <span>{cfg.icon}</span>{cfg.label}
               </span>
+              {entry.advanced && (
+                <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-400 border border-rose-500/30">
+                  Advanced
+                </span>
+              )}
               {entry.tags.slice(0, 2).map((tag) => (
                 <span key={tag} className="inline-flex text-[10px] font-medium px-2 py-0.5 rounded-full bg-white/5 text-gray-400 border border-white/5">
                   {tag}

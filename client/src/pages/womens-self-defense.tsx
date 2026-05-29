@@ -54,7 +54,7 @@ function FAQ({ question, answer }: { question: string; answer: string }) {
 }
 
 const womenClasses = SCHEDULE.filter(c =>
-  ["womens-bjj", "self-defense"].includes(c.category)
+  c.category === "jiu-jitsu" && !c.advanced
 );
 
 export default function WomensSelfDefense() {

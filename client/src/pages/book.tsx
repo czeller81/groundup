@@ -43,7 +43,7 @@ const PROGRAMS: Program[] = [
     bg: "bg-[#B06CFF]/10",
     border: "border-[#B06CFF]/30",
     audiences: ["women"],
-    categories: ["womens-bjj"],
+    categories: ["jiu-jitsu"],
   },
   {
     id: "self-defense",
@@ -54,7 +54,7 @@ const PROGRAMS: Program[] = [
     bg: "bg-[#FF6B8A]/10",
     border: "border-[#FF6B8A]/30",
     audiences: ["women"],
-    categories: ["self-defense"],
+    categories: ["jiu-jitsu"],
   },
   {
     id: "kids",
@@ -65,7 +65,7 @@ const PROGRAMS: Program[] = [
     bg: "bg-[#FFB199]/10",
     border: "border-[#FFB199]/30",
     audiences: ["kids", "youth"],
-    categories: ["kids", "youth"],
+    categories: ["kids"],
     forKids: true,
   },
   {
@@ -77,7 +77,7 @@ const PROGRAMS: Program[] = [
     bg: "bg-[#5EEBFF]/10",
     border: "border-[#5EEBFF]/30",
     audiences: ["adults", "all"],
-    categories: ["conditioning", "strength"],
+    categories: ["strength"],
   },
   {
     id: "personal-training",
@@ -121,7 +121,7 @@ type DetailsForm = z.infer<typeof detailsSchema>;
 
 function getClassesForProgram(program: Program): ClassEntry[] {
   if (!program.categories.length) return [];
-  return SCHEDULE.filter((c) => program.categories.includes(c.category));
+  return SCHEDULE.filter((c) => program.categories.includes(c.category) && !c.advanced);
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────

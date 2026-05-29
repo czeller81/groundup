@@ -52,7 +52,7 @@ function FAQ({ question, answer }: { question: string; answer: string }) {
 }
 
 const kidsClasses = SCHEDULE.filter(c =>
-  ["kids", "youth", "competition"].includes(c.category) && c.audience.some(a => ["kids", "youth"].includes(a))
+  c.category === "kids"
 );
 
 export default function Kids() {
