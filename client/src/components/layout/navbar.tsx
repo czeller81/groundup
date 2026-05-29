@@ -65,7 +65,7 @@ export default function Navbar() {
               </Link>
             ))}
             <Link
-              href="/ln/login"
+              href="/portal/login"
               className="ml-2 px-4 py-2 text-sm font-medium tracking-wide uppercase text-gray-300 hover:text-white transition-colors"
               data-testid="nav-link-login"
             >
@@ -121,7 +121,7 @@ export default function Navbar() {
                   </Link>
                 ))}
                 <Link
-                  href="/ln/login"
+                  href="/portal/login"
                   className="block px-4 py-3 text-sm font-medium tracking-wide uppercase text-gray-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
                   onClick={() => setMobileMenuOpen(false)}
                   data-testid="mobile-nav-link-login"
