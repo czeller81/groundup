@@ -13,7 +13,7 @@ import bjjFundamentalsImg from "@assets/womens-sparring-2.jpg";
 import kidsClassImg from "@assets/generated_images/kids_martialarts.png";
 import strengthImg from "@assets/generated_images/women_strength.png";
 import personalTrainingImg from "@assets/generated_images/women_personaltraining.png";
-import whyDifferentImg from "@assets/womens-group.jpg";
+import whyDifferentImg from "@assets/womens-team-1.jpg";
 import coachImg from "@assets/raymi-coach.jpg";
 const facilityFrame1 = "/images/facility/frame_01.jpg";
 const facilityFrame4 = "/images/facility/frame_04.jpg";
