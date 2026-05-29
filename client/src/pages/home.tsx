@@ -8,13 +8,13 @@ import {
   Star, ArrowRight, Zap, Heart, CheckCircle, CalendarDays, Clock
 } from "lucide-react";
 import { CATEGORY_CONFIG, getClassesForDay, getCurrentDay } from "@/lib/schedule-data";
-import selfDefenseFeaturedImg from "@assets/generated_images/bjj_selfdefense_featured.png";
-import bjjFundamentalsImg from "@assets/generated_images/bjj_fundamentals.png";
+import selfDefenseFeaturedImg from "@assets/womens-sparring-1.jpg";
+import bjjFundamentalsImg from "@assets/womens-sparring-2.jpg";
 import kidsClassImg from "@assets/generated_images/kids_martialarts.png";
 import strengthImg from "@assets/generated_images/women_strength.png";
 import personalTrainingImg from "@assets/generated_images/women_personaltraining.png";
-import whyDifferentImg from "@assets/generated_images/why_different.png";
-import coachImg from "@assets/generated_images/coach_portrait.png";
+import whyDifferentImg from "@assets/womens-group.jpg";
+import coachImg from "@assets/raymi-coach.jpg";
 const facilityFrame1 = "/images/facility/frame_01.jpg";
 const facilityFrame4 = "/images/facility/frame_04.jpg";
 const facilityFrame5 = "/images/facility/frame_05.jpg";

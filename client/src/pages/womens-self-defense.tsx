@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { SCHEDULE, CATEGORY_CONFIG } from "@/lib/schedule-data";
-import selfDefenseFeaturedImg from "@assets/generated_images/bjj_selfdefense_featured.png";
+import selfDefenseFeaturedImg from "@assets/womens-sparring-3.jpg";
 
 const facilityFrame7 = "/images/facility/frame_07.jpg";
 const facilityFrame1 = "/images/facility/frame_01.jpg";

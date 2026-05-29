@@ -4,7 +4,7 @@ import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
 import { ArrowRight, Award, Shield, BookOpen } from "lucide-react";
 import SEO from "@/components/seo";
-import trainerImage from "@assets/generated_images/coaches_portrait.png";
+import trainerImage from "@assets/raymi-coach.jpg";
 import trainingImage from "@assets/generated_images/pt_content.png";
 
 function Section({ children, className = "" }: { children: React.ReactNode; className?: string }) {
