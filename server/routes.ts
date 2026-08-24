@@ -465,10 +465,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/portal/admin/trial-leads", requireRole("admin", "coach"), async (req, res) => {
     try {
-      const leads = await storage.getTrialLeads();
-      res.json(leads);
+      const program = req.query.program as string | undefined;
+      if (program && !["training", "adaptive-capacity"].includes(program)) {
+        return res.status(400).json({ message: "Invalid lead program" });
+      }
+      const leads = await storage.getTrialLeads(program === "training" ? undefined : program);
+      const filtered = program === "training"
+        ? leads.filter((lead) => lead.program !== "adaptive-capacity")
+        : leads;
+      res.json(filtered);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch leads" });
+    }
+  });
+
+  app.patch("/api/portal/admin/trial-leads/:id/status", requireRole("admin", "coach"), async (req, res) => {
+    const { leadStatuses } = await import("@shared/schema");
+    if (!leadStatuses.includes(req.body.status)) {
+      return res.status(400).json({ message: "Invalid lead status" });
+    }
+    try {
+      const lead = await storage.updateTrialLeadStatus(req.params.id, req.body.status);
+      if (!lead) return res.status(404).json({ message: "Lead not found" });
+      res.json(lead);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update lead" });
+    }
+  });
+
+  app.get("/api/portal/admin/contact-submissions", requireRole("admin"), async (_req, res) => {
+    try {
+      res.json(await storage.getContactSubmissions());
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch messages" });
+    }
+  });
+
+  app.patch("/api/portal/admin/contact-submissions/:id/status", requireRole("admin"), async (req, res) => {
+    const { contactStatuses } = await import("@shared/schema");
+    if (!contactStatuses.includes(req.body.status)) {
+      return res.status(400).json({ message: "Invalid message status" });
+    }
+    try {
+      const submission = await storage.updateContactSubmissionStatus(req.params.id, req.body.status);
+      if (!submission) return res.status(404).json({ message: "Message not found" });
+      res.json(submission);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update message" });
     }
   });
 

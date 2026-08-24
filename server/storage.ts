@@ -91,8 +91,11 @@ export interface IStorage {
   createAdminUser(adminUser: InsertAdminUser): Promise<AdminUser>;
 
   createTrialLead(lead: import("@shared/schema").InsertTrialLead): Promise<import("@shared/schema").TrialLead>;
-  getTrialLeads(): Promise<import("@shared/schema").TrialLead[]>;
-  createContactSubmission(data: import("@shared/schema").InsertContactSubmission): Promise<any>;
+  getTrialLeads(program?: string): Promise<import("@shared/schema").TrialLead[]>;
+  updateTrialLeadStatus(id: string, status: import("@shared/schema").LeadStatus): Promise<import("@shared/schema").TrialLead | undefined>;
+  createContactSubmission(data: import("@shared/schema").InsertContactSubmission): Promise<import("@shared/schema").ContactSubmission>;
+  getContactSubmissions(): Promise<import("@shared/schema").ContactSubmission[]>;
+  updateContactSubmissionStatus(id: string, status: import("@shared/schema").ContactStatus): Promise<import("@shared/schema").ContactSubmission | undefined>;
   createAnalyticsEvent(data: import("@shared/schema").InsertAnalyticsEvent): Promise<import("@shared/schema").AnalyticsEvent>;
 }
 
@@ -620,14 +623,33 @@ export class DatabaseStorage implements IStorage {
     return newLead;
   }
 
-  async getTrialLeads(): Promise<import("@shared/schema").TrialLead[]> {
+  async getTrialLeads(program?: string): Promise<import("@shared/schema").TrialLead[]> {
     const { trialLeads } = await import("@shared/schema");
-    return db.select().from(trialLeads).orderBy(desc(trialLeads.createdAt));
+    return db.select().from(trialLeads)
+      .where(program ? eq(trialLeads.program, program) : undefined)
+      .orderBy(desc(trialLeads.createdAt));
   }
 
-  async createContactSubmission(data: import("@shared/schema").InsertContactSubmission): Promise<any> {
+  async updateTrialLeadStatus(id: string, status: import("@shared/schema").LeadStatus): Promise<import("@shared/schema").TrialLead | undefined> {
+    const { trialLeads } = await import("@shared/schema");
+    const [lead] = await db.update(trialLeads).set({ status }).where(eq(trialLeads.id, id)).returning();
+    return lead;
+  }
+
+  async createContactSubmission(data: import("@shared/schema").InsertContactSubmission): Promise<import("@shared/schema").ContactSubmission> {
     const { contactSubmissions } = await import("@shared/schema");
     const [submission] = await db.insert(contactSubmissions).values(data).returning();
+    return submission;
+  }
+
+  async getContactSubmissions(): Promise<import("@shared/schema").ContactSubmission[]> {
+    const { contactSubmissions } = await import("@shared/schema");
+    return db.select().from(contactSubmissions).orderBy(desc(contactSubmissions.createdAt));
+  }
+
+  async updateContactSubmissionStatus(id: string, status: import("@shared/schema").ContactStatus): Promise<import("@shared/schema").ContactSubmission | undefined> {
+    const { contactSubmissions } = await import("@shared/schema");
+    const [submission] = await db.update(contactSubmissions).set({ status }).where(eq(contactSubmissions.id, id)).returning();
     return submission;
   }
 

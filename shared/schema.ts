@@ -288,6 +288,8 @@ export const insertTrialLeadSchema = createInsertSchema(trialLeads).omit({
 
 export type InsertTrialLead = z.infer<typeof insertTrialLeadSchema>;
 export type TrialLead = typeof trialLeads.$inferSelect;
+export const leadStatuses = ["new", "contacted", "qualified", "archived"] as const;
+export type LeadStatus = typeof leadStatuses[number];
 
 export const analyticsEvents = pgTable("analytics_events", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -337,3 +339,6 @@ export const insertContactSubmissionSchema = createInsertSchema(contactSubmissio
 });
 
 export type InsertContactSubmission = z.infer<typeof insertContactSubmissionSchema>;
+export type ContactSubmission = typeof contactSubmissions.$inferSelect;
+export const contactStatuses = ["new", "acknowledged", "resolved", "archived"] as const;
+export type ContactStatus = typeof contactStatuses[number];

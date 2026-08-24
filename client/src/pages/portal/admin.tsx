@@ -31,11 +31,38 @@ export default function PortalAdmin() {
   const [formDetailOpen, setFormDetailOpen] = useState<{ open: boolean; response: any | null }>({ open: false, response: null });
   const [adminNotes, setAdminNotes] = useState("");
   const [newSessionNote, setNewSessionNote] = useState("");
+  const [inboxTab, setInboxTab] = useState<"training" | "adaptive" | "messages">("training");
   const PAGE_SIZE = 15;
 
   const { data: stats, isLoading: statsLoading } = useQuery<any>({
     queryKey: ["/api/portal/admin/stats"],
     enabled: isAuthenticated && isAdmin,
+  });
+
+  const { data: trainingLeads = [], isLoading: trainingLeadsLoading } = useQuery<any[]>({
+    queryKey: ["/api/portal/admin/trial-leads", "training"],
+    queryFn: async () => (await fetch("/api/portal/admin/trial-leads?program=training")).json(),
+    enabled: isAuthenticated && isAdmin,
+  });
+  const { data: adaptiveLeads = [], isLoading: adaptiveLeadsLoading } = useQuery<any[]>({
+    queryKey: ["/api/portal/admin/trial-leads", "adaptive-capacity"],
+    queryFn: async () => (await fetch("/api/portal/admin/trial-leads?program=adaptive-capacity")).json(),
+    enabled: isAuthenticated && isAdmin,
+  });
+  const { data: contactMessages = [], isLoading: contactMessagesLoading } = useQuery<any[]>({
+    queryKey: ["/api/portal/admin/contact-submissions"],
+    enabled: isAuthenticated && isAdmin,
+  });
+
+  const statusMutation = useMutation({
+    mutationFn: async ({ kind, id, status }: { kind: "lead" | "message"; id: string; status: string }) =>
+      apiRequest("PATCH", kind === "lead"
+        ? `/api/portal/admin/trial-leads/${id}/status`
+        : `/api/portal/admin/contact-submissions/${id}/status`, { status }),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: [variables.kind === "lead" ? "/api/portal/admin/trial-leads" : "/api/portal/admin/contact-submissions"] });
+      toast({ title: "Status updated" });
+    },
   });
 
   const { data: membersData, isLoading: membersLoading } = useQuery<{ users: any[]; total: number }>({
@@ -216,6 +243,53 @@ export default function PortalAdmin() {
     }
   };
 
+  const getInboxStatusBadge = (status: string) => (
+    <Badge className={
+      status === "new" ? "bg-orange-500/20 text-orange-300 border-orange-500/30" :
+      status === "archived" ? "bg-gray-500/20 text-gray-400 border-gray-500/30" :
+      "bg-green-500/20 text-green-400 border-green-500/30"
+    }>{status.replace("-", " ")}</Badge>
+  );
+
+  const renderInboxRow = (item: any, kind: "lead" | "message") => {
+    const isMessage = kind === "message";
+    const name = isMessage ? `${item.firstName} ${item.lastName}` : `${item.firstName} ${item.lastName}`;
+    const statuses = isMessage ? ["new", "acknowledged", "resolved", "archived"] : ["new", "contacted", "qualified", "archived"];
+    return (
+      <div key={item.id} className="rounded-lg bg-[#0B0F14] border border-white/5 p-4 space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <p className="font-medium text-white">{name}</p>
+              {getInboxStatusBadge(item.status)}
+            </div>
+            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-400 mt-1">
+              <a className="hover:text-[#5EEBFF]" href={`mailto:${item.email}`}>{item.email}</a>
+              {item.phone && item.phone !== "not-provided" && <span>{item.phone}</span>}
+              <span>{format(new Date(item.createdAt), "MMM d, yyyy 'at' h:mm a")}</span>
+            </div>
+          </div>
+          <Select value={item.status} onValueChange={(status) => statusMutation.mutate({ kind, id: item.id, status })}>
+            <SelectTrigger className="w-full sm:w-36 h-8 bg-[#121826] border-white/10 text-white text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>{statuses.map((status) => <SelectItem key={status} value={status}>{status.replace("-", " ")}</SelectItem>)}</SelectContent>
+          </Select>
+        </div>
+        {isMessage ? (
+          <div><p className="text-sm font-medium text-[#FFB199]">{item.subject}</p><p className="text-sm text-gray-300 whitespace-pre-wrap mt-1">{item.message}</p></div>
+        ) : (
+          <div className="flex flex-wrap gap-x-5 gap-y-1 text-sm text-gray-300">
+            <span>Program: <strong className="text-white">{item.program}</strong></span>
+            {item.classTitle && <span>Class: {item.classTitle}</span>}
+            {item.experience && <span>Experience: {item.experience}</span>}
+            {item.source && <span>Source: {item.source}</span>}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   const hasUncheckedCheckboxes = (response: any): boolean => {
     if (!response?.form?.fields || !response?.answers) return false;
     return response.form.fields.some((field: any) =>
@@ -344,6 +418,29 @@ export default function PortalAdmin() {
             <span className="text-xs text-orange-400 underline underline-offset-2">View all</span>
           </div>
         )}
+
+        <Card className="bg-[#121826] border-white/5 mb-6">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-white flex items-center gap-2 text-base">
+              <Mail className="h-5 w-5 text-[#5EEBFF]" /> Lead & Message Inbox
+            </CardTitle>
+            <p className="text-xs text-gray-400">Review every public submission, acknowledge it, and track what happens next.</p>
+            <div className="flex gap-1 pt-2 overflow-x-auto">
+              {([["training", `Training leads (${trainingLeads.length})`], ["adaptive", `Adaptive Capacity (${adaptiveLeads.length})`], ["messages", `Contact messages (${contactMessages.length})`]] as const).map(([value, label]) => (
+                <button key={value} onClick={() => setInboxTab(value as typeof inboxTab)} className={`px-3 py-1.5 text-xs rounded-lg whitespace-nowrap ${inboxTab === value ? "bg-[#5EEBFF]/15 text-[#5EEBFF] border border-[#5EEBFF]/30" : "text-gray-400 hover:text-white"}`}>{label}</button>
+              ))}
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {((inboxTab === "training" && trainingLeadsLoading) || (inboxTab === "adaptive" && adaptiveLeadsLoading) || (inboxTab === "messages" && contactMessagesLoading)) ? (
+              <div className="flex justify-center py-6"><Loader2 className="h-6 w-6 animate-spin text-[#5EEBFF]" /></div>
+            ) : inboxTab === "messages" ? (
+              contactMessages.length ? contactMessages.map((item) => renderInboxRow(item, "message")) : <p className="text-gray-400 text-sm text-center py-6">No contact messages yet.</p>
+            ) : (inboxTab === "training" ? trainingLeads : adaptiveLeads).length ? (
+              (inboxTab === "training" ? trainingLeads : adaptiveLeads).map((item) => renderInboxRow(item, "lead"))
+            ) : <p className="text-gray-400 text-sm text-center py-6">No leads in this inbox yet.</p>}
+          </CardContent>
+        </Card>
 
         {/* Member Management */}
         <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
