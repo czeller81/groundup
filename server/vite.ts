@@ -62,7 +62,7 @@ export async function setupVite(app: Express, server: Server) {
       const requestPath = new URL(req.originalUrl, "http://localhost").pathname;
       const knownPublicPaths = new Set([
         "/", "/schedule", "/pricing", "/coaches", "/personal-training",
-        "/contact", "/book", "/womens-self-defense", "/kids", "/adaptive-capacity",
+         "/contact", "/privacy", "/book", "/womens-self-defense", "/kids", "/adaptive-capacity",
       ]);
       const isPortalPath = requestPath === "/portal" || requestPath.startsWith("/portal/");
       res.status(knownPublicPaths.has(requestPath) || isPortalPath ? 200 : 404)
@@ -94,7 +94,7 @@ export function serveStatic(app: Express) {
     const requestPath = new URL(req.originalUrl, "http://localhost").pathname;
     const knownPublicPaths = new Set([
       "/", "/schedule", "/pricing", "/coaches", "/personal-training",
-      "/contact", "/book", "/womens-self-defense", "/kids", "/adaptive-capacity",
+       "/contact", "/privacy", "/book", "/womens-self-defense", "/kids", "/adaptive-capacity",
     ]);
     const isPortalPath = requestPath === "/portal" || requestPath.startsWith("/portal/");
     res.status(knownPublicPaths.has(requestPath) || isPortalPath ? 200 : 404)
