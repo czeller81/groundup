@@ -1,0 +1,1252 @@
+You are working on the existing Replit app:
+
+**App:** `GroundUP`
+**Public domain:** `https://groundupbjj.com`
+**Replit deployment:** `https://ground-up-bjj.replit.app`
+
+This is the live Ground Up platform.
+
+Your job is to align the entire website, public messaging, booking flows, portal experience, program architecture, SEO, and conversion funnel around the actual Ground Up vision.
+
+This prompt supersedes any older brand assumptions that treated Ground Up as only a BJJ gym.
+
+Do not reduce Ground Up to “AI classes.”
+
+Do not reduce it to “just martial arts.”
+
+Do not present it as a vague wellness brand.
+
+The central idea is:
+
+# GROUND UP
+
+**Build the capacity to adapt to whatever comes next.**
+
+Ground Up is a human resilience and capability platform built from the ground up through physical practice, practical self-defense, judgment, community, and modern adaptive skills.
+
+The physical training is not separate from the mission.
+
+It is part of the mission.
+
+---
+
+# 1. CORE BRAND POSITIONING
+
+Ground Up should be positioned as a small, intentional, local environment where people build:
+
+* confidence
+* physical readiness
+* practical self-defense
+* independent judgment
+* adaptability
+* resilience
+* community
+* modern work capability
+
+Ground Up exists to help people become more capable in a changing world.
+
+The brand should feel:
+
+* human
+* grounded
+* practical
+* local
+* intelligent
+* approachable
+* non-intimidating
+* future-facing
+* not hype-driven
+
+---
+
+# 2. PRIMARY MESSAGE
+
+Use this as the core message throughout the brand:
+
+# Build the capacity to adapt to whatever comes next.
+
+Supporting message:
+
+**Ground Up helps people build confidence, physical readiness, practical judgment, and modern skills through small-group training, community, and real-world practice.**
+
+Secondary emotional line:
+
+**Confidence built here. Capability carried everywhere.**
+
+---
+
+# 3. WHAT GROUND UP IS
+
+Ground Up is the umbrella.
+
+It contains multiple forms of development.
+
+## TRAINING
+
+Physical capability and confidence through:
+
+* Women’s Brazilian Jiu-Jitsu
+* Women’s Self-Defense
+* Kids Jiu-Jitsu / Confidence
+* Strength & Conditioning
+* Personal Training
+
+## ADAPTIVE CAPACITY
+
+A flagship 12-week cohort designed to build the human capability to:
+
+* recognize change
+* reason independently
+* work with AI without surrendering judgment
+* redesign real workflows
+* learn continuously
+* communicate value
+* build economic mobility
+* execute under uncertainty
+
+These should feel like two sides of the same philosophy.
+
+Physical training develops capability under pressure.
+
+Adaptive Capacity develops capability under uncertainty.
+
+---
+
+# 4. DO NOT MARKET THIS AS “BJJ + AI”
+
+This is critical.
+
+Do not write messaging such as:
+
+* “BJJ and AI classes”
+* “AI gym”
+* “learn ChatGPT at your martial arts academy”
+* “technology school inside a gym”
+
+That cheapens the idea and makes it feel gimmicky.
+
+Instead, communicate the unifying idea:
+
+**Ground Up develops capable people.**
+
+BJJ, self-defense, physical readiness, AI literacy, judgment, workflow redesign, and community are different practice environments for the same outcome:
+
+**Adaptive Capacity.**
+
+---
+
+# 5. ADAPTIVE CAPACITY FRAMEWORK
+
+Use the provided Adaptive Capacity framework as the conceptual foundation.
+
+The program is not about one AI tool.
+
+Its mission is:
+
+**To build a repeatable human capability to recognize change, reason independently, collaborate with AI without surrendering judgment, and execute under uncertainty.**
+
+The principle:
+
+**Technology is the environment. Adaptive Capacity is the outcome.**
+
+The model includes five domains:
+
+* Cognitive Flexibility
+* AI & Technology
+* Economic Mobility
+* Physical Readiness
+* Community & Agency
+
+Present this clearly and visually where appropriate.
+
+Do not overcomplicate the homepage with the full framework.
+
+Use a dedicated Adaptive Capacity page for the deeper explanation.
+
+---
+
+# 6. 12-WEEK ADAPTIVE CAPACITY COHORT
+
+Create a dedicated flagship offer:
+
+# Ground Up Adaptive Capacity
+
+## 12-Week Cohort
+
+Primary line:
+
+**Build the capacity to adapt to whatever comes next.**
+
+Supporting copy:
+
+**A guided 12-week experience that combines independent judgment, practical AI, real-world workflow redesign, physical readiness, and peer learning.**
+
+This is not a lecture series.
+
+It is a coached practice experience.
+
+The cohort should be structured around the source framework.
+
+---
+
+# 7. COHORT STRUCTURE
+
+The 12-week journey has three phases.
+
+## PHASE 1 — MINDSET & COLLABORATION
+
+### Weeks 1–5
+
+Focus:
+
+* reframing problems
+* understanding AI limits
+* recognizing assumptions
+* distinguishing fluent output from correct output
+* learning how to validate
+* building epistemic discipline
+
+Core idea:
+
+**The Validation Tether**
+
+Participants must learn enough independently to:
+
+* question
+* verify
+* modify
+* reject
+* override
+
+AI output when needed.
+
+Do not teach blind tool dependence.
+
+---
+
+## PHASE 2 — BUILD & REDESIGN
+
+### Weeks 6–9
+
+Focus:
+
+* applying adaptive capacity directly to real jobs and workflows
+* designing practical AI-supported systems
+* testing assumptions
+* preserving human judgment
+* turning abstract insight into functional execution
+
+Participants should create:
+
+**An AI-augmented professional workflow built around a real problem.**
+
+Use the VIBE sequence when appropriate:
+
+* Vision
+* Intelligence
+* Business Logic
+* Execution
+
+Do not present this as generic prompt engineering.
+
+---
+
+## PHASE 3 — STEWARD & DEMONSTRATE
+
+### Weeks 10–12
+
+Focus:
+
+* communicating value
+* transferring capability to the real world
+* labor-market relevance
+* peer teaching
+* reflection
+* capstone demonstration
+
+Participants should complete a capstone that may include:
+
+* software
+* service design
+* workflow redesign
+* operational improvement
+* professional artifact
+
+The capstone should demonstrate:
+
+* independent understanding
+* deliberate AI orchestration
+* validation
+* transferability
+* value creation
+
+---
+
+# 8. ADAPTIVE PRACTICE LOOP
+
+Introduce the idea that learning happens through repeated practice.
+
+Use this general loop:
+
+1. Attempt
+2. Augment
+3. Interrogate
+4. Justify
+5. Transfer
+
+Participants should not simply consume content.
+
+They should:
+
+* try
+* use AI
+* question the result
+* explain their reasoning
+* transfer what they learned to a different problem
+
+This should influence both the website explanation and future cohort portal design.
+
+---
+
+# 9. INTERNALIZED + DISTRIBUTED MASTERY
+
+Explain that modern capability requires two forms of mastery:
+
+## Internalized Mastery
+
+What the person truly knows.
+
+Includes:
+
+* domain knowledge
+* mental models
+* independent reasoning
+* judgment
+
+## Distributed Mastery
+
+The ability to orchestrate human-AI systems.
+
+Includes:
+
+* workflow design
+* prompting
+* curation
+* tool selection
+* assigning the right tool to the right task
+
+The bridge between them is:
+
+# Validation Tether
+
+Do not imply that tool fluency equals expertise.
+
+---
+
+# 10. PHYSICAL READINESS AS PART OF THE MODEL
+
+Ground Up’s physical environment is not a marketing side project.
+
+It supports adaptive development.
+
+Physical practice helps people learn:
+
+* consistency
+* effort regulation
+* composure
+* feedback
+* recovery from mistakes
+* confidence under pressure
+
+This is one of the reasons Ground Up is a credible home for Adaptive Capacity.
+
+Use the physical environment as part of the story, but do not require BJJ participation as a gate for Adaptive Capacity unless explicitly configured later.
+
+Physical practice may be:
+
+* integrated
+* optional
+* complementary
+
+depending on the cohort design.
+
+---
+
+# 11. COMMUNITY & AGENCY
+
+Ground Up should emphasize that learning is social.
+
+Include ideas such as:
+
+* peer teaching
+* teach-backs
+* shared accountability
+* local capability
+* community problem-solving
+* human judgment
+* stewardship
+
+The goal is not only individual productivity.
+
+It is to build capability that remains in the community.
+
+---
+
+# 12. ECONOMIC MOBILITY
+
+The Adaptive Capacity program should have a practical work/economic angle.
+
+Do not promise jobs.
+
+Do not promise salary increases.
+
+Do communicate that participants will practice:
+
+* identifying transferable skills
+* improving real workflows
+* demonstrating value
+* communicating capability
+* building portfolio evidence
+* applying new skills to current work
+* preparing for changing job roles
+
+Use credible language.
+
+---
+
+# 13. HOMEPAGE MESSAGE
+
+Keep the homepage clear.
+
+Do not dump the entire Adaptive Capacity framework into the hero.
+
+Recommended hero:
+
+# Confidence Built Here
+
+Supporting line:
+
+**Small-group Jiu-Jitsu, self-defense, strength, and practical resilience in Oxnard.**
+
+Second line:
+
+**Built for women, kids, beginners, and people who want to become more capable in a changing world.**
+
+Primary CTA:
+
+**Start Your Free Trial**
+
+Secondary CTA:
+
+**Explore Ground Up**
+
+Farther down the homepage, introduce the larger mission:
+
+# More Than Training
+
+Suggested copy:
+
+**Ground Up is built around one idea: capability can be trained. On the mat, that means composure, strength, feedback, and recovery. In work and life, it means judgment, adaptability, and knowing how to use modern tools without becoming dependent on them.**
+
+Then introduce:
+
+**Ground Up Adaptive Capacity — 12-Week Cohort**
+
+CTA:
+
+**Explore the Cohort**
+
+---
+
+# 14. NAVIGATION
+
+Organize navigation clearly.
+
+Recommended public structure:
+
+* Home
+* Training
+* Adaptive Capacity
+* Schedule
+* Pricing
+* Coaches
+* About
+* Contact
+* Member Portal
+
+Under Training:
+
+* Women’s BJJ
+* Women’s Self-Defense
+* Kids Jiu-Jitsu
+* Strength & Conditioning
+* Personal Training
+
+Do not bury Adaptive Capacity inside a generic “Classes” dropdown.
+
+It should be a major product.
+
+---
+
+# 15. ADAPTIVE CAPACITY LANDING PAGE
+
+Create a dedicated page with strong conversion design.
+
+Recommended structure:
+
+## Hero
+
+**Build the capacity to adapt to whatever comes next.**
+
+**12 weeks. Real problems. Practical AI. Independent judgment. Human capability.**
+
+CTA:
+
+**Join the Interest List**
+
+Secondary CTA:
+
+**See How the Cohort Works**
+
+---
+
+## Why this exists
+
+Explain:
+
+* work is changing
+* AI is increasingly part of the environment
+* learning one tool is not enough
+* the human advantage is judgment, adaptation, verification, and transfer
+
+Use:
+
+**We are not training people for one specific AI tool.**
+
+---
+
+## The Five Domains
+
+Present visually:
+
+* Cognitive Flexibility
+* AI & Technology
+* Economic Mobility
+* Physical Readiness
+* Community & Agency
+
+---
+
+## The 12-Week Journey
+
+Show three phases:
+
+Weeks 1–5
+**Mindset & Collaboration**
+
+Weeks 6–9
+**Build & Redesign**
+
+Weeks 10–12
+**Steward & Demonstrate**
+
+---
+
+## What Participants Build
+
+Explain that every participant leaves with evidence of capability, not just attendance.
+
+Examples:
+
+* improved workflow
+* professional artifact
+* AI-assisted process
+* service redesign
+* portfolio piece
+* capstone demonstration
+
+Do not promise certifications unless a real certification exists.
+
+---
+
+## Who It Is For
+
+Potential audiences:
+
+* working adults
+* small-business owners
+* professionals
+* career changers
+* parents returning to work
+* people concerned about AI disruption
+* people who want practical AI capability without becoming programmers
+
+Avoid overly broad “for everyone” messaging.
+
+---
+
+## What It Is Not
+
+Include:
+
+* not coding school
+* not prompt-engineering bootcamp
+* not one-tool certification
+* not motivational seminar
+* not passive video course
+* not guaranteed job placement
+
+---
+
+# 16. COHORT CONVERSION FLOW
+
+Build a clean funnel.
+
+Recommended flow:
+
+**Adaptive Capacity page**
+→ **Join Interest List**
+→ simple qualification form
+→ stored lead
+→ admin review
+→ follow-up
+→ cohort enrollment
+
+Do not force cohort prospects into the BJJ free-trial funnel.
+
+Do not mix the two lead types.
+
+Create distinct lead types:
+
+* Training Lead
+* Adaptive Capacity Lead
+
+Both should flow into the admin system cleanly.
+
+---
+
+# 17. ADAPTIVE CAPACITY LEAD FORM
+
+Collect only necessary information.
+
+Suggested fields:
+
+* Name
+* Email
+* Phone
+* Occupation / role
+* What is changing in your work/life?
+* What do you want to become more capable of?
+* Current comfort with AI
+* Preferred cohort timing
+* Optional employer/company
+
+Store marketing attribution.
+
+Do not collect unnecessary sensitive information.
+
+---
+
+# 18. PORTAL SUPPORT FOR COHORTS
+
+Prepare the member portal so it can support Adaptive Capacity cohorts.
+
+Do not break current BJJ/member functionality.
+
+Add cohort architecture that can eventually support:
+
+* cohort enrollment
+* week number
+* session schedule
+* assignments
+* exercises
+* reflections
+* capstone milestones
+* attendance
+* resources
+* peer teach-backs
+* facilitator notes
+* completion status
+
+Keep it modular.
+
+Training members and cohort participants may overlap, but do not assume they are the same user type.
+
+---
+
+# 19. ROLE MODEL
+
+Support role distinctions such as:
+
+* Training Member
+* Adaptive Capacity Participant
+* Coach
+* Cohort Facilitator
+* Admin
+
+Use secure server-side authorization.
+
+A participant should not see admin/facilitator data.
+
+---
+
+# 20. PROGRAM RELATIONSHIP
+
+Do not force one program to depend on the other.
+
+A person may:
+
+* train BJJ only
+* join Adaptive Capacity only
+* do both
+
+Ground Up membership architecture should support that flexibility.
+
+---
+
+# 21. LANGUAGE ACROSS THE SITE
+
+Replace disconnected or contradictory copy with consistent language.
+
+Ground Up should repeatedly reinforce:
+
+* capability
+* confidence
+* small-group practice
+* resilience
+* adaptability
+* practical skills
+* human judgment
+* community
+
+Avoid overusing:
+
+* transformation
+* elite
+* warrior
+* domination
+* future-proof
+* guaranteed
+* revolutionary
+
+Keep tone intelligent and grounded.
+
+---
+
+# 22. WOMEN-FIRST POSITIONING
+
+Ground Up remains strongly women-forward.
+
+Do not erase that.
+
+The local opportunity includes:
+
+* women’s BJJ
+* women’s self-defense
+* confidence
+* small groups
+* no macho/fight-gym atmosphere
+
+But do not make every Ground Up program women-only unless that is factually the program rule.
+
+Adaptive Capacity may serve a broader adult audience.
+
+---
+
+# 23. KIDS
+
+Kids programming should remain clearly separate from Adaptive Capacity unless a future youth version is intentionally created.
+
+Do not market adult AI/workforce curriculum to children.
+
+Keep kids focused on:
+
+* confidence
+* discipline
+* movement
+* emotional regulation
+* anti-bullying awareness
+* social development
+* age-appropriate martial arts
+
+---
+
+# 24. BRAND STORY
+
+Ground Up should tell a credible story:
+
+**Ground Up started with physical training, but the mission is larger: build people who can stay composed, learn, adapt, and act when conditions change.**
+
+This is the bridge between BJJ and Adaptive Capacity.
+
+Use this idea on the About page.
+
+---
+
+# 25. ABOUT PAGE
+
+Update the About page to explain:
+
+* why Ground Up exists
+* why small-group practice matters
+* why capability matters
+* why physical and cognitive adaptability belong together
+* why AI is treated as an environment, not the end goal
+* why human judgment must remain central
+
+Keep the language human.
+
+Do not turn it into an academic manifesto.
+
+---
+
+# 26. BOOKING ARCHITECTURE
+
+Training and Adaptive Capacity must have distinct conversion paths.
+
+## Training
+
+CTA:
+
+**Start Your Free Trial**
+
+## Adaptive Capacity
+
+CTA:
+
+**Join the Interest List**
+or
+**Apply for the Next Cohort**
+
+Do not route both to the same generic form.
+
+---
+
+# 27. ADMIN DASHBOARD
+
+Admin should be able to clearly distinguish:
+
+* training leads
+* Adaptive Capacity leads
+* members
+* participants
+* cohort status
+* trial requests
+* bookings
+* contact submissions
+
+Add clear filters.
+
+---
+
+# 28. EMAILS
+
+Use different follow-up messaging.
+
+Training lead confirmation:
+
+**We received your request. A Ground Up coach will confirm your first session.**
+
+Adaptive Capacity lead confirmation:
+
+**You’re on the Ground Up Adaptive Capacity interest list. We’ll contact you with cohort timing, format, and next steps.**
+
+Do not imply enrollment until accepted/confirmed.
+
+---
+
+# 29. SEO
+
+Create search-ready metadata for Adaptive Capacity without keyword spam.
+
+Potential terms:
+
+* AI training Oxnard
+* AI workshops Oxnard
+* workforce AI training Ventura County
+* practical AI training Oxnard
+* career skills Oxnard
+* workforce development Oxnard
+* AI for professionals Oxnard
+
+Do not position the page as only AI training.
+
+Primary SEO theme should remain:
+
+**Adaptive Capacity / workforce readiness / practical AI / human capability**
+
+---
+
+# 30. LOCAL POSITIONING
+
+Ground Up is local to Oxnard.
+
+The brand should feel embedded in the community.
+
+Use language such as:
+
+* Oxnard
+* Ventura County
+* local professionals
+* local families
+* local businesses
+* local workforce
+
+Do not pretend it is a national institution yet.
+
+---
+
+# 31. ADAPTIVE CAPACITY AS PILOT
+
+If cohort dates are not yet scheduled, position it as:
+
+**Founding Cohort**
+or
+**Oxnard Pilot**
+
+Do not invent dates.
+
+Allow admin to configure:
+
+* cohort name
+* start date
+* end date
+* capacity
+* application status
+* enrollment state
+* facilitator
+* price
+
+---
+
+# 32. CAPACITY
+
+Cohorts should be intentionally limited.
+
+Do not claim unlimited enrollment.
+
+The value proposition is guided practice and feedback.
+
+Build the system so cohorts can have a maximum capacity.
+
+---
+
+# 33. PRICING
+
+Do not invent Adaptive Capacity pricing unless already configured.
+
+If price is undecided, use:
+
+**Founding cohort pricing coming soon**
+
+or hide price until finalized.
+
+Make it centrally configurable.
+
+---
+
+# 34. ANALYTICS
+
+Track Training and Adaptive Capacity separately.
+
+For Adaptive Capacity, track:
+
+* page view
+* CTA click
+* interest form start
+* form completion
+* application completion
+* accepted
+* enrolled
+* cohort started
+* cohort completed
+
+For advertising/analytics, distinguish program interest.
+
+---
+
+# 35. META EVENTS
+
+If Meta Pixel/CAPI is configured later, support events such as:
+
+Training:
+
+* ViewContent
+* LeadStart
+* Lead
+
+Adaptive Capacity:
+
+* ViewContent
+* LeadStart
+* Lead
+* CompleteRegistration when actual cohort enrollment is confirmed
+
+Do not fire Purchase unless payment is actually verified.
+
+---
+
+# 36. HOMEPAGE VISUAL HIERARCHY
+
+Do not let Adaptive Capacity visually overwhelm the physical programs.
+
+Recommended sequence:
+
+1. Hero
+2. Training programs
+3. Why Ground Up is different
+4. Women/kids/beginner trust section
+5. Adaptive Capacity introduction
+6. Community
+7. Testimonials/proof
+8. CTA
+
+Ground Up should feel coherent, not like two companies sharing one site.
+
+---
+
+# 37. DESIGN LANGUAGE
+
+Keep the current dark, modern Ground Up visual identity.
+
+Adaptive Capacity can introduce:
+
+* structured diagrams
+* systems thinking
+* technical grid motifs
+* subtle future-facing visual cues
+
+But it must still look like Ground Up.
+
+Do not create a completely separate corporate website inside the same product.
+
+---
+
+# 38. DO NOT OVERPROMISE
+
+Never claim:
+
+* guaranteed job placement
+* guaranteed salary improvement
+* future-proof career
+* immunity from AI disruption
+* guaranteed personal safety
+* guaranteed weight loss
+* guaranteed confidence
+* guaranteed business results
+
+Use language around:
+
+* practice
+* capability
+* development
+* evidence
+* readiness
+* judgment
+* transfer
+
+---
+
+# 39. PROOF OVER HYPE
+
+The Adaptive Capacity program should ultimately prove value through:
+
+* completed work
+* before/after assessment
+* capstone
+* participant reflection
+* transferable workflow
+* independent understanding
+* peer demonstration
+
+Design the page and portal around evidence, not hype.
+
+---
+
+# 40. FINAL BRAND ARCHITECTURE
+
+The site should ultimately communicate this structure:
+
+# GROUND UP
+
+## Build the capacity to adapt to whatever comes next.
+
+### TRAINING
+
+Physical capability under pressure.
+
+* Women’s BJJ
+* Self-Defense
+* Kids Confidence
+* Strength
+* Personal Training
+
+### ADAPTIVE CAPACITY
+
+Human capability under uncertainty.
+
+* 12-week cohort
+* Cognitive flexibility
+* Practical AI
+* Judgment
+* Workflow redesign
+* Economic mobility
+* Physical readiness
+* Community
+
+These are not random services.
+
+They are one philosophy practiced in different environments.
+
+---
+
+# 41. IMPLEMENTATION RULE
+
+Do not change messaging only on the homepage.
+
+Update the message coherently across:
+
+* homepage
+* about
+* navigation
+* program pages
+* Adaptive Capacity page
+* booking
+* portal
+* admin
+* emails
+* confirmations
+* metadata
+* footer
+* SEO
+* social previews
+
+Eliminate stale contradictory copy.
+
+---
+
+# 42. PRESERVE THE PREVIOUS PRODUCTION-HARDENING REQUIREMENTS
+
+All previously identified technical priorities remain mandatory:
+
+* secure legacy APIs
+* protect booking/customer data
+* fix contact form delivery
+* harden sessions
+* fix Stripe/webhooks
+* secure Calendly if retained
+* enforce booking capacity
+* use America/Los_Angeles
+* remove stale admin paths
+* correct role authorization
+* add analytics readiness
+* add Meta Pixel/CAPI readiness
+* correct sitemap
+* fix OG image
+* correct real 404 behavior
+* improve accessibility
+* improve performance
+* add privacy/legal surfaces
+* protect child data
+* remove contradictory config
+* test the portal end-to-end
+
+Do not sacrifice production safety for speed.
+
+---
+
+# 43. FINAL QA
+
+After implementation, review the entire experience as four distinct people:
+
+## Persona 1
+
+Woman looking for beginner BJJ/self-defense.
+
+Can she understand Ground Up and request a trial easily?
+
+## Persona 2
+
+Parent looking for confidence-building martial arts for a child.
+
+Can they understand the program, trust the environment, and take the next step?
+
+## Persona 3
+
+Working adult concerned about AI and career change.
+
+Can they understand Adaptive Capacity without thinking this is a coding course?
+
+## Persona 4
+
+Existing Ground Up member.
+
+Can they log in, book, view schedule, and manage their experience without confusion?
+
+All four journeys must make sense.
+
+---
+
+# 44. FINAL REPORT
+
+Return:
+
+## 1. Brand Architecture Implemented
+
+## 2. Homepage Messaging
+
+## 3. Training Programs
+
+## 4. Adaptive Capacity Page
+
+## 5. 12-Week Cohort Funnel
+
+## 6. Portal Cohort Support
+
+## 7. Booking / Lead Architecture
+
+## 8. Admin Experience
+
+## 9. SEO / Analytics
+
+## 10. Security / Production Hardening
+
+## 11. Messaging Conflicts Removed
+
+## 12. Automated Tests
+
+## 13. Live Smoke Test
+
+## 14. Remaining Decisions Needed
+
+Clearly identify anything that still requires owner decisions such as:
+
+* cohort price
+* cohort start date
+* exact capacity
+* facilitator
+* physical-practice requirement
+* certification
+* schedule
+
+Do not invent those values.
+
+## 15. Final Verdict
+
+Choose:
+
+* `GROUND UP PLATFORM ALIGNED AND PRODUCTION READY`
+* `ALIGNED — CONFIGURATION DECISIONS REQUIRED`
+* `FUNCTIONALLY ALIGNED — TECHNICAL BLOCKERS REMAIN`
+* `NOT READY`
+
+The final product should make one idea unmistakable:
+
+# Ground Up is where people practice becoming more capable.
+
+On the mat.
+At work.
+Under pressure.
+Under uncertainty.
+
+**Build the capacity to adapt to whatever comes next.**
