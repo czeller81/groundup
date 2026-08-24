@@ -463,6 +463,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/portal/admin/campaign-report", requireRole("admin", "coach"), async (req, res) => {
+    const funnel = req.query.funnel === "adaptive_capacity" ? "adaptive_capacity" : req.query.funnel === "training" ? "training" : null;
+    if (!funnel) return res.status(400).json({ message: "funnel must be training or adaptive_capacity" });
+    const clean = (key: string) => typeof req.query[key] === "string" ? (req.query[key] as string).trim().slice(0, 200) || undefined : undefined;
+    try {
+      res.json(await storage.getCampaignReport({
+        funnel,
+        source: clean("source"),
+        medium: clean("medium"),
+        campaign: clean("campaign"),
+        landingPath: clean("landingPath"),
+      }));
+    } catch (error) {
+      console.error("Campaign report error:", error);
+      res.status(500).json({ message: "Failed to build campaign report" });
+    }
+  });
+
   app.get("/api/portal/admin/trial-leads", requireRole("admin", "coach"), async (req, res) => {
     try {
       const program = req.query.program as string | undefined;

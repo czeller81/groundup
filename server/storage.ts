@@ -97,6 +97,18 @@ export interface IStorage {
   getContactSubmissions(): Promise<import("@shared/schema").ContactSubmission[]>;
   updateContactSubmissionStatus(id: string, status: import("@shared/schema").ContactStatus): Promise<import("@shared/schema").ContactSubmission | undefined>;
   createAnalyticsEvent(data: import("@shared/schema").InsertAnalyticsEvent): Promise<import("@shared/schema").AnalyticsEvent>;
+  getCampaignReport(filters: {
+    funnel: "training" | "adaptive_capacity";
+    source?: string;
+    medium?: string;
+    campaign?: string;
+    landingPath?: string;
+  }): Promise<{
+    funnel: string;
+    filters: Record<string, string>;
+    totals: { pageViews: number; funnelSteps: number; formStarts: number; submissions: number; successfulLeads: number; totalLeads: number; consentedSessions: number };
+    breakdown: Array<{ source: string; medium: string; campaign: string; landingPath: string; pageViews: number; funnelSteps: number; formStarts: number; submissions: number; successfulLeads: number; totalLeads: number; consentedSessions: number }>;
+  }>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -657,6 +669,69 @@ export class DatabaseStorage implements IStorage {
     const { analyticsEvents } = await import("@shared/schema");
     const [event] = await db.insert(analyticsEvents).values(data).returning();
     return event;
+  }
+
+  async getCampaignReport(filters: {
+    funnel: "training" | "adaptive_capacity";
+    source?: string;
+    medium?: string;
+    campaign?: string;
+    landingPath?: string;
+  }) {
+    const { analyticsEvents, trialLeads } = await import("@shared/schema");
+    const events = await db.select().from(analyticsEvents).where(eq(analyticsEvents.funnel, filters.funnel));
+    const leads = await db.select().from(trialLeads).where(
+      filters.funnel === "adaptive_capacity"
+        ? eq(trialLeads.program, "adaptive-capacity")
+        : sql`${trialLeads.program} <> 'adaptive-capacity'`,
+    );
+    const value = (obj: unknown, key: string) => {
+      const v = obj && typeof obj === "object" ? (obj as Record<string, unknown>)[key] : undefined;
+      return typeof v === "string" && v.trim() ? v.trim() : "(none)";
+    };
+    const matches = (obj: unknown) => {
+      const source = value(obj, "utm_source");
+      const medium = value(obj, "utm_medium");
+      const campaign = value(obj, "utm_campaign");
+      const landingPath = value(obj, "landing_path");
+      return (!filters.source || filters.source === source) &&
+        (!filters.medium || filters.medium === medium) &&
+        (!filters.campaign || filters.campaign === campaign) &&
+        (!filters.landingPath || filters.landingPath === landingPath);
+    };
+    type Row = { source: string; medium: string; campaign: string; landingPath: string; pageViews: number; funnelSteps: number; formStarts: number; submissions: number; successfulLeads: number; totalLeads: number; consentedSessions: Set<string> };
+    const rows = new Map<string, Row>();
+    const getRow = (obj: unknown) => {
+      const row = { source: value(obj, "utm_source"), medium: value(obj, "utm_medium"), campaign: value(obj, "utm_campaign"), landingPath: value(obj, "landing_path") };
+      const key = JSON.stringify(row);
+      if (!rows.has(key)) rows.set(key, { ...row, pageViews: 0, funnelSteps: 0, formStarts: 0, submissions: 0, successfulLeads: 0, totalLeads: 0, consentedSessions: new Set() });
+      return rows.get(key)!;
+    };
+    for (const event of events) {
+      if (!matches(event.properties)) continue;
+      const row = getRow(event.properties);
+      if (event.event === "page_view") row.pageViews++;
+      if (event.event === "funnel_step") row.funnelSteps++;
+      if (event.event === "lead_form_started") row.formStarts++;
+      if (event.event === "lead_form_submitted") row.submissions++;
+      if (event.event === "lead_form_succeeded") row.successfulLeads++;
+      row.consentedSessions.add(event.sessionId);
+    }
+    for (const lead of leads) {
+      if (!matches(lead.attribution)) continue;
+      getRow(lead.attribution).totalLeads++;
+    }
+    const breakdown = Array.from(rows.values()).map(({ consentedSessions, ...row }) => ({ ...row, consentedSessions: consentedSessions.size }));
+    const totals = breakdown.reduce((total, row) => ({
+      pageViews: total.pageViews + row.pageViews,
+      funnelSteps: total.funnelSteps + row.funnelSteps,
+      formStarts: total.formStarts + row.formStarts,
+      submissions: total.submissions + row.submissions,
+      successfulLeads: total.successfulLeads + row.successfulLeads,
+      totalLeads: total.totalLeads + row.totalLeads,
+      consentedSessions: total.consentedSessions + row.consentedSessions,
+    }), { pageViews: 0, funnelSteps: 0, formStarts: 0, submissions: 0, successfulLeads: 0, totalLeads: 0, consentedSessions: 0 });
+    return { funnel: filters.funnel, filters: Object.fromEntries(Object.entries(filters).filter(([, v]) => v)), totals, breakdown };
   }
 }
 

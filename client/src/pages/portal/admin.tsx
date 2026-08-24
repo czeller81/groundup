@@ -16,13 +16,13 @@ import {
   Search, Users, ArrowLeft, FileText, Calendar, Mail, Phone, Clock, 
   CheckCircle, XCircle, AlertCircle, ChevronRight, Loader2, DollarSign, 
   TrendingUp, UserPlus, Activity, StickyNote, ChevronLeft, Shield,
-  Award, Hash, AlertTriangle, Filter
+  Award, Hash, AlertTriangle, Filter, BarChart3
 } from "lucide-react";
 import { format } from "date-fns";
 
 export default function PortalAdmin() {
   const [, setLocation] = useLocation();
-  const { user, isLoading: authLoading, isAuthenticated, isAdmin } = usePortalAuth();
+  const { user, isLoading: authLoading, isAuthenticated, isAdmin, isStaff } = usePortalAuth();
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -32,6 +32,8 @@ export default function PortalAdmin() {
   const [adminNotes, setAdminNotes] = useState("");
   const [newSessionNote, setNewSessionNote] = useState("");
   const [inboxTab, setInboxTab] = useState<"training" | "adaptive" | "messages">("training");
+  const [reportFunnel, setReportFunnel] = useState<"training" | "adaptive_capacity">("training");
+  const [reportFilters, setReportFilters] = useState({ source: "", medium: "", campaign: "", landingPath: "" });
   const PAGE_SIZE = 15;
 
   const { data: stats, isLoading: statsLoading } = useQuery<any>({
@@ -52,6 +54,17 @@ export default function PortalAdmin() {
   const { data: contactMessages = [], isLoading: contactMessagesLoading } = useQuery<any[]>({
     queryKey: ["/api/portal/admin/contact-submissions"],
     enabled: isAuthenticated && isAdmin,
+  });
+  const { data: campaignReport, isLoading: campaignReportLoading } = useQuery<any>({
+    queryKey: ["/api/portal/admin/campaign-report", reportFunnel, reportFilters],
+    queryFn: async () => {
+      const params = new URLSearchParams({ funnel: reportFunnel });
+      Object.entries(reportFilters).forEach(([key, value]) => value && params.set(key, value));
+      const response = await fetch(`/api/portal/admin/campaign-report?${params}`);
+      if (!response.ok) throw new Error("Failed to load campaign report");
+      return response.json();
+    },
+    enabled: isAuthenticated && isStaff,
   });
 
   const statusMutation = useMutation({
@@ -158,7 +171,7 @@ export default function PortalAdmin() {
   }, [memberProfile?.user?.adminNotes]);
 
   useEffect(() => {
-    if (!authLoading && (!isAuthenticated || !isAdmin)) {
+    if (!authLoading && (!isAuthenticated || !isStaff)) {
       setLocation("/portal/dashboard");
     }
   }, [authLoading, isAuthenticated, isAdmin, setLocation]);
@@ -175,7 +188,7 @@ export default function PortalAdmin() {
     );
   }
 
-  if (!isAuthenticated || !isAdmin) {
+  if (!isAuthenticated || !isStaff) {
     return null;
   }
 
@@ -439,6 +452,57 @@ export default function PortalAdmin() {
             ) : (inboxTab === "training" ? trainingLeads : adaptiveLeads).length ? (
               (inboxTab === "training" ? trainingLeads : adaptiveLeads).map((item) => renderInboxRow(item, "lead"))
             ) : <p className="text-gray-400 text-sm text-center py-6">No leads in this inbox yet.</p>}
+          </CardContent>
+        </Card>
+
+        <Card className="bg-[#121826] border-white/5 mb-6" data-testid="campaign-report">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-white flex items-center gap-2 text-base">
+              <BarChart3 className="h-5 w-5 text-[#FFB199]" /> Campaign & Funnel Report
+            </CardTitle>
+            <p className="text-xs text-gray-400">
+              Consent-aware analytics are shown alongside total leads. Totals may differ because analytics require visitor consent.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 pt-3">
+              <Select value={reportFunnel} onValueChange={(value: "training" | "adaptive_capacity") => setReportFunnel(value)}>
+                <SelectTrigger className="bg-[#0B0F14] border-white/10 text-white"><SelectValue /></SelectTrigger>
+                <SelectContent><SelectItem value="training">Training</SelectItem><SelectItem value="adaptive_capacity">Adaptive Capacity</SelectItem></SelectContent>
+              </Select>
+              {([["source", "UTM source"], ["medium", "UTM medium"], ["campaign", "UTM campaign"], ["landingPath", "Landing path"]] as const).map(([key, label]) => (
+                <Input
+                  key={key}
+                  value={reportFilters[key]}
+                  onChange={(event) => setReportFilters((current) => ({ ...current, [key]: event.target.value }))}
+                  placeholder={label}
+                  className="bg-[#0B0F14] border-white/10 text-white placeholder:text-gray-500"
+                />
+              ))}
+            </div>
+          </CardHeader>
+          <CardContent>
+            {campaignReportLoading ? <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-[#FFB199]" /></div> : (
+              <>
+                <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 mb-5">
+                  {[
+                    ["Page views", campaignReport?.totals?.pageViews],
+                    ["Funnel steps", campaignReport?.totals?.funnelSteps],
+                    ["Form starts", campaignReport?.totals?.formStarts],
+                    ["Submissions", campaignReport?.totals?.submissions],
+                    ["Successful leads", campaignReport?.totals?.successfulLeads],
+                    ["Total leads", campaignReport?.totals?.totalLeads],
+                    ["Consented sessions", campaignReport?.totals?.consentedSessions],
+                  ].map(([label, value]) => <div key={label as string} className="rounded-lg border border-white/5 bg-[#0B0F14] p-3"><p className="text-lg font-bold text-white">{value ?? 0}</p><p className="text-[11px] text-gray-500 leading-tight">{label as string}</p></div>)}
+                </div>
+                {!campaignReport?.breakdown?.length ? <p className="text-gray-400 text-sm text-center py-8">No campaign or consented analytics data matches these filters yet.</p> : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead><tr className="text-left text-xs text-gray-500 border-b border-white/10"><th className="p-2">Source / campaign</th><th className="p-2">Landing path</th><th className="p-2">Views</th><th className="p-2">Starts</th><th className="p-2">Submitted</th><th className="p-2">Successful</th><th className="p-2">Total leads</th></tr></thead>
+                      <tbody>{campaignReport.breakdown.map((row: any) => <tr key={`${row.source}-${row.medium}-${row.campaign}-${row.landingPath}`} className="border-b border-white/5 text-gray-300"><td className="p-2"><span className="text-white">{row.source}</span><span className="block text-xs text-gray-500">{row.medium} · {row.campaign}</span></td><td className="p-2 text-xs">{row.landingPath}</td><td className="p-2">{row.pageViews}</td><td className="p-2">{row.formStarts}</td><td className="p-2">{row.submissions}</td><td className="p-2 text-[#5EEBFF]">{row.successfulLeads}</td><td className="p-2 text-[#FFB199]">{row.totalLeads}</td></tr>)}</tbody>
+                    </table>
+                  </div>
+                )}
+              </>
+            )}
           </CardContent>
         </Card>
 
