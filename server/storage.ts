@@ -93,6 +93,7 @@ export interface IStorage {
   createTrialLead(lead: import("@shared/schema").InsertTrialLead): Promise<import("@shared/schema").TrialLead>;
   getTrialLeads(): Promise<import("@shared/schema").TrialLead[]>;
   createContactSubmission(data: import("@shared/schema").InsertContactSubmission): Promise<any>;
+  createAnalyticsEvent(data: import("@shared/schema").InsertAnalyticsEvent): Promise<import("@shared/schema").AnalyticsEvent>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -628,6 +629,12 @@ export class DatabaseStorage implements IStorage {
     const { contactSubmissions } = await import("@shared/schema");
     const [submission] = await db.insert(contactSubmissions).values(data).returning();
     return submission;
+  }
+
+  async createAnalyticsEvent(data: import("@shared/schema").InsertAnalyticsEvent): Promise<import("@shared/schema").AnalyticsEvent> {
+    const { analyticsEvents } = await import("@shared/schema");
+    const [event] = await db.insert(analyticsEvents).values(data).returning();
+    return event;
   }
 }
 

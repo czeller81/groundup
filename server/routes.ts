@@ -444,6 +444,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/analytics/events", publicRateLimit(), async (req, res) => {
+    try {
+      const { insertAnalyticsEventSchema } = await import("@shared/schema");
+      const parsed = insertAnalyticsEventSchema.safeParse({
+        event: req.body.event,
+        funnel: req.body.funnel,
+        sessionId: req.body.sessionId,
+        path: req.body.path,
+        properties: req.body.properties || {},
+      });
+      if (!parsed.success) return res.status(400).json({ message: "Invalid analytics event" });
+      await storage.createAnalyticsEvent(parsed.data);
+      res.status(204).end();
+    } catch (error) {
+      console.error("Analytics event error:", error);
+      res.status(500).json({ message: "Failed to record analytics event" });
+    }
+  });
+
   app.get("/api/portal/admin/trial-leads", requireRole("admin", "coach"), async (req, res) => {
     try {
       const leads = await storage.getTrialLeads();

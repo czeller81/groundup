@@ -27,6 +27,7 @@ import Navbar from "@/components/layout/navbar";
 import Footer from "@/components/layout/footer";
 import PortalNavbar from "@/components/layout/portal-navbar";
 import AdaptiveCapacity from "@/pages/adaptive-capacity";
+import AnalyticsConsent from "@/components/analytics-consent";
 
 function MainLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -115,6 +116,7 @@ function Router() {
 function App() {
   return (
     <HelmetProvider>
+      <AnalyticsConsent />
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <PortalAuthProvider>

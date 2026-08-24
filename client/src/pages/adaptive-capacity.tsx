@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { getAttribution, track } from "@/lib/analytics";
 
 const schema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -34,9 +35,10 @@ export default function AdaptiveCapacity() {
     mutationFn: (values: Values) => apiRequest("POST", "/api/trial-leads", {
       ...values, program: "adaptive-capacity", phone: "not-provided",
       source: "adaptive-capacity", consentedAt: new Date().toISOString(),
+      attribution: getAttribution(),
     }),
-    onSuccess: () => { setSubmitted(true); toast({ title: "You're on the interest list." }); },
-    onError: () => toast({ title: "Something went wrong", description: "Please try again.", variant: "destructive" }),
+    onSuccess: () => { setSubmitted(true); track("lead_form_succeeded", "adaptive_capacity"); toast({ title: "You're on the interest list." }); },
+    onError: () => { track("lead_form_failed", "adaptive_capacity"); toast({ title: "Something went wrong", description: "Please try again.", variant: "destructive" }); },
   });
 
   return (
@@ -53,7 +55,7 @@ export default function AdaptiveCapacity() {
             Work and life are changing quickly. Adaptive Capacity is a separate Ground Up product for building clearer thinking, better decisions, and the confidence to keep moving when the path is uncertain.
           </p>
           <div className="mt-10 flex flex-wrap gap-4">
-            <a href="#interest-list"><Button className="bg-[#FFB199] text-[#0B0F14] font-bold uppercase tracking-wider">Join the interest list <ArrowRight className="ml-2 h-4 w-4" /></Button></a>
+            <a href="#interest-list" onClick={() => track("cta_click", "adaptive_capacity", { cta: "hero_interest_list" })}><Button className="bg-[#FFB199] text-[#0B0F14] font-bold uppercase tracking-wider">Join the interest list <ArrowRight className="ml-2 h-4 w-4" /></Button></a>
             <Link href="/"><Button variant="outline" className="border-white/20 text-white bg-transparent">Explore physical training</Button></Link>
           </div>
           <p className="mt-5 text-sm text-gray-500">First cohort details will be shared as they are confirmed.</p>
@@ -76,7 +78,7 @@ export default function AdaptiveCapacity() {
           <p className="text-[#FFB199] uppercase tracking-[.25em] text-xs font-semibold mb-4">Stay close to the build</p>
           <h2 className="text-4xl md:text-5xl font-bold mb-5" style={{ fontFamily: "var(--font-display)" }}>GET THE FIRST WORD.</h2>
           {submitted ? <div className="p-8 rounded-2xl border border-[#5EEBFF]/30 bg-[#5EEBFF]/5"><CheckCircle2 className="text-[#5EEBFF] h-8 w-8 mb-4" /><h3 className="text-2xl font-bold">You’re on the list.</h3><p className="text-gray-300 mt-2">We’ll share the next confirmed details when they’re ready.</p></div> :
-            <form onSubmit={form.handleSubmit((v) => mutation.mutate(v))} className="space-y-5">
+            <form onFocus={() => track("lead_form_started", "adaptive_capacity")} onSubmit={form.handleSubmit((v) => { track("lead_form_submitted", "adaptive_capacity"); mutation.mutate(v); })} className="space-y-5">
               <div className="grid sm:grid-cols-2 gap-4"><Field label="First name" error={form.formState.errors.firstName?.message}><Input {...form.register("firstName")} /></Field><Field label="Last name" error={form.formState.errors.lastName?.message}><Input {...form.register("lastName")} /></Field></div>
               <Field label="Email" error={form.formState.errors.email?.message}><Input type="email" {...form.register("email")} /></Field>
               <div className="grid sm:grid-cols-2 gap-4"><Field label="Occupation or role (optional)"><Input {...form.register("occupation")} /></Field><Field label="Company (optional)"><Input {...form.register("company")} /></Field></div>

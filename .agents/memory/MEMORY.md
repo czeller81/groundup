@@ -1,1 +1,2 @@
 - [Platform alignment guardrails](platform-alignment.md) — keep Training and Adaptive Capacity distinct while sharing Ground Up’s human-resilience positioning.
+- [Database URL alignment](database-url-alignment.md) — schema sync and runtime can select different database environment variables.

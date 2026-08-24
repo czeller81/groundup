@@ -252,6 +252,7 @@ export const trialLeads = pgTable("trial_leads", {
   cohortTiming: text("cohort_timing"),
   company: text("company"),
   source: text("source"),
+  attribution: jsonb("attribution"),
   consentedAt: timestamp("consented_at"),
   status: text("status").notNull().default("new"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -281,11 +282,32 @@ export const insertTrialLeadSchema = createInsertSchema(trialLeads).omit({
   cohortTiming: z.string().trim().max(120).nullable().optional(),
   company: z.string().trim().max(160).nullable().optional(),
   source: z.string().trim().max(120).nullable().optional(),
+  attribution: z.record(z.string().max(200)).nullable().optional(),
   consentedAt: z.coerce.date().nullable().optional(),
 });
 
 export type InsertTrialLead = z.infer<typeof insertTrialLeadSchema>;
 export type TrialLead = typeof trialLeads.$inferSelect;
+
+export const analyticsEvents = pgTable("analytics_events", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  event: text("event").notNull(),
+  funnel: text("funnel").notNull(),
+  sessionId: text("session_id").notNull(),
+  path: text("path").notNull(),
+  properties: jsonb("properties").notNull().default({}),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertAnalyticsEventSchema = createInsertSchema(analyticsEvents).omit({ id: true, createdAt: true }).extend({
+  event: z.enum(["page_view", "cta_click", "funnel_step", "lead_form_started", "lead_form_submitted", "lead_form_succeeded", "lead_form_failed"]),
+  funnel: z.enum(["training", "adaptive_capacity"]),
+  sessionId: z.string().trim().min(1).max(100),
+  path: z.string().trim().max(300),
+  properties: z.record(z.unknown()).default({}),
+});
+export type InsertAnalyticsEvent = z.infer<typeof insertAnalyticsEventSchema>;
+export type AnalyticsEvent = typeof analyticsEvents.$inferSelect;
 
 export const contactSubmissions = pgTable("contact_submissions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),

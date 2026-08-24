@@ -17,6 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import SEO from "@/components/seo";
 import { SCHEDULE, CATEGORY_CONFIG, type ClassEntry } from "@/lib/schedule-data";
+import { getAttribution, track } from "@/lib/analytics";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -181,10 +182,13 @@ export default function Book() {
         classTitle: selectedClass?.title ?? (selectedProgram?.id === "personal-training" ? "Personal Training" : null),
         classDay: selectedClass?.day ?? null,
         classTime: selectedClass ? `${selectedClass.startTime}–${selectedClass.endTime}` : null,
+        source: "training-book",
+        attribution: getAttribution(),
       };
       return apiRequest("POST", "/api/trial-leads", payload);
     },
     onSuccess: (_, variables) => {
+      track("lead_form_succeeded", "training", { program: selectedProgram?.id });
       setConfirmedLead({
         firstName: variables.firstName,
         classTitle: selectedClass?.title ?? selectedProgram?.label ?? "your first class",
@@ -192,6 +196,7 @@ export default function Book() {
       setStep(3);
     },
     onError: () => {
+      track("lead_form_failed", "training", { program: selectedProgram?.id });
       toast({
         title: "Something went wrong",
         description: "Please try again or call us at (786) 757-1175.",
@@ -206,22 +211,26 @@ export default function Book() {
   const isOpen = selectedProgram?.id === "open";
 
   function handleProgramSelect(p: Program) {
+    track("funnel_step", "training", { step: "program_selected", program: p.id });
     setSelectedProgram(p);
     setSelectedClass(null);
     setStep(1);
   }
 
   function handleClassSelect(c: ClassEntry) {
+    track("funnel_step", "training", { step: "class_selected", classId: c.id });
     setSelectedClass(c);
     setStep(2);
   }
 
   function handleSkipClass() {
+    track("funnel_step", "training", { step: "class_skipped", program: selectedProgram?.id });
     setSelectedClass(null);
     setStep(2);
   }
 
   function onSubmit(data: DetailsForm) {
+    track("lead_form_submitted", "training", { program: selectedProgram?.id });
     mutation.mutate(data);
   }
 
