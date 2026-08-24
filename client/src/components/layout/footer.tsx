@@ -54,9 +54,9 @@ export default function Footer() {
                 <Phone className="h-4 w-4 flex-shrink-0" />
                 <span>(786) 757-1175</span>
               </a>
-              <a href="mailto:raymin33@gmail.com" className="flex items-center space-x-3 text-gray-400 hover:text-[#5EEBFF] text-sm transition-colors">
+              <a href="mailto:info@groundupbjj.com" className="flex items-center space-x-3 text-gray-400 hover:text-[#5EEBFF] text-sm transition-colors">
                 <Mail className="h-4 w-4 flex-shrink-0" />
-                <span>raymin33@gmail.com</span>
+                <span>info@groundupbjj.com</span>
               </a>
               <div className="flex items-center space-x-3 text-gray-400 text-sm">
                 <MapPin className="h-4 w-4 flex-shrink-0" />

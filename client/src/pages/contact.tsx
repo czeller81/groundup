@@ -255,13 +255,13 @@ export default function Contact() {
                       <div className="text-white group-hover:text-[#5EEBFF] transition-colors">(786) 757-1175</div>
                     </div>
                   </a>
-                  <a href="mailto:raymin33@gmail.com" className="flex items-start gap-4 group">
+                  <a href="mailto:info@groundupbjj.com" className="flex items-start gap-4 group">
                     <div className="w-10 h-10 rounded-lg bg-[#B06CFF]/10 flex items-center justify-center flex-shrink-0">
                       <Mail className="h-5 w-5 text-[#B06CFF]" />
                     </div>
                     <div>
                       <div className="text-gray-400 text-sm">Email</div>
-                      <div className="text-white group-hover:text-[#B06CFF] transition-colors">raymin33@gmail.com</div>
+                      <div className="text-white group-hover:text-[#B06CFF] transition-colors">info@groundupbjj.com</div>
                     </div>
                   </a>
                   <div className="flex items-start gap-4">

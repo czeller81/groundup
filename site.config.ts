@@ -11,7 +11,7 @@ export const siteConfig = {
   },
   
   phone: "(786) 757-1175",
-  email: "raymin33@gmail.com",
+  email: "info@groundupbjj.com",
   
   // Business Hours
   hours: {
@@ -90,7 +90,7 @@ export const siteConfig = {
   
   // Admin Settings
   admin: {
-    defaultEmail: "raymin33@gmail.com",
+    defaultEmail: "info@groundupbjj.com",
     maxBookingsPerDay: 50,
     exportFormats: ["csv", "pdf"]
   }

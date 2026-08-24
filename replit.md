@@ -112,7 +112,7 @@ Preferred communication style: Simple, everyday language.
 
 ## Business Info
 - Phone: (786) 757-1175
-- Email: raymin33@gmail.com
+- Email: info@groundupbjj.com
 - Location: Oxnard, CA
 - Trainer: Raymi Gonzalez, Purple Belt 3rd Degree
 - Sessions: 8am–5pm

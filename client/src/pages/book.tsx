@@ -563,10 +563,10 @@ export default function Book() {
                       <Phone className="h-4 w-4" /> (786) 757-1175
                     </a>
                     <a
-                      href="mailto:raymin33@gmail.com"
+                      href="mailto:info@groundupbjj.com"
                       className="flex items-center gap-2 text-[#5EEBFF] text-sm mb-3 hover:text-[#5EEBFF]/80 transition-colors"
                     >
-                      <Mail className="h-4 w-4" /> raymin33@gmail.com
+                      <Mail className="h-4 w-4" /> info@groundupbjj.com
                     </a>
                     <div className="flex items-center gap-2 text-gray-400 text-sm">
                       <MapPin className="h-4 w-4 flex-shrink-0" /> Oxnard, CA

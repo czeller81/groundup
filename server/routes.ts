@@ -89,7 +89,7 @@ const PAGE_CONTENT: Record<string, string> = {
 <a href="/contact">Book Your Free Session</a>`,
   "/contact": `<h1>Contact Ground Up Jiu-Jitsu &amp; Fitness — Oxnard, CA</h1>
 <p>Book your free trial class or get in touch with us. No experience needed to start your BJJ journey.</p>
-<p>Phone: (786) 757-1175 | Email: raymin33@gmail.com | Location: Oxnard, CA</p>
+<p>Phone: (786) 757-1175 | Email: info@groundupbjj.com | Location: Oxnard, CA</p>
 <a href="/contact">Book Your Free Trial</a>`,
   "/book": `<h1>Book Your Free Trial Class — Ground Up Jiu-Jitsu, Oxnard CA</h1>
 <p>Reserve your first free BJJ class. Choose your program, pick a time, and we'll see you on the mat.</p>
