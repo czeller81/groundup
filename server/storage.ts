@@ -109,6 +109,9 @@ export interface IStorage {
     totals: { pageViews: number; funnelSteps: number; formStarts: number; submissions: number; successfulLeads: number; totalLeads: number; consentedSessions: number };
     breakdown: Array<{ source: string; medium: string; campaign: string; landingPath: string; pageViews: number; funnelSteps: number; formStarts: number; submissions: number; successfulLeads: number; totalLeads: number; consentedSessions: number }>;
   }>;
+  createStaffNotification(data: { kind: string; title: string; message: string; href: string }): Promise<import("@shared/schema").StaffNotification>;
+  getStaffNotifications(): Promise<import("@shared/schema").StaffNotification[]>;
+  markStaffNotificationRead(id: string): Promise<import("@shared/schema").StaffNotification | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -732,6 +735,23 @@ export class DatabaseStorage implements IStorage {
       consentedSessions: total.consentedSessions + row.consentedSessions,
     }), { pageViews: 0, funnelSteps: 0, formStarts: 0, submissions: 0, successfulLeads: 0, totalLeads: 0, consentedSessions: 0 });
     return { funnel: filters.funnel, filters: Object.fromEntries(Object.entries(filters).filter(([, v]) => v)), totals, breakdown };
+  }
+
+  async createStaffNotification(data: { kind: string; title: string; message: string; href: string }) {
+    const { staffNotifications } = await import("@shared/schema");
+    const [notification] = await db.insert(staffNotifications).values(data).returning();
+    return notification;
+  }
+
+  async getStaffNotifications() {
+    const { staffNotifications } = await import("@shared/schema");
+    return db.select().from(staffNotifications).orderBy(desc(staffNotifications.createdAt)).limit(50);
+  }
+
+  async markStaffNotificationRead(id: string) {
+    const { staffNotifications } = await import("@shared/schema");
+    const [notification] = await db.update(staffNotifications).set({ readAt: new Date() }).where(eq(staffNotifications.id, id)).returning();
+    return notification;
   }
 }
 

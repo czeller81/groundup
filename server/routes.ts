@@ -414,7 +414,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!parsed.success) {
         return res.status(400).json({ message: "Invalid data", errors: parsed.error.errors });
       }
-      await storage.createContactSubmission(parsed.data);
+      const submission = await storage.createContactSubmission(parsed.data);
+      try {
+        await storage.createStaffNotification({
+          kind: "contact_message",
+          title: "New contact message",
+          message: `${submission.firstName} ${submission.lastName} sent a ${submission.subject.toLowerCase()} message.`,
+          href: "/portal/admin?inbox=messages",
+        });
+      } catch (notificationError) {
+        console.error("Staff notification failed for contact submission:", notificationError);
+      }
       res.json({ message: "Thank you for your message. We'll get back to you soon!" });
     } catch (error) {
       res.status(500).json({ message: "Failed to send message" });
@@ -437,6 +447,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         source: parsed.data.source || "training-book",
         consentedAt: parsed.data.consentedAt || new Date(),
       });
+      try {
+        const adaptive = lead.program === "adaptive-capacity";
+        await storage.createStaffNotification({
+          kind: adaptive ? "adaptive_lead" : "training_lead",
+          title: adaptive ? "New Adaptive Capacity signup" : "New training lead",
+          message: `${lead.firstName} ${lead.lastName} joined the ${adaptive ? "Adaptive Capacity interest list" : "training trial"} list.`,
+          href: `/portal/admin?inbox=${adaptive ? "adaptive" : "training"}`,
+        });
+      } catch (notificationError) {
+        console.error("Staff notification failed for trial lead:", notificationError);
+      }
       res.json({ message: lead.program === "adaptive-capacity" ? "You're on the interest list." : "Booking confirmed!" });
     } catch (error) {
       console.error("Trial lead error:", error);
@@ -478,6 +499,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Campaign report error:", error);
       res.status(500).json({ message: "Failed to build campaign report" });
+    }
+  });
+
+  app.get("/api/portal/notifications", requireRole("admin", "coach"), async (_req, res) => {
+    try {
+      res.json(await storage.getStaffNotifications());
+    } catch (error) {
+      console.error("Staff notification fetch failed:", error);
+      res.status(500).json({ message: "Failed to fetch notifications" });
+    }
+  });
+
+  app.patch("/api/portal/notifications/:id/read", requireRole("admin", "coach"), async (req, res) => {
+    try {
+      const notification = await storage.markStaffNotificationRead(req.params.id);
+      if (!notification) return res.status(404).json({ message: "Notification not found" });
+      res.json(notification);
+    } catch (error) {
+      console.error("Staff notification update failed:", error);
+      res.status(500).json({ message: "Failed to update notification" });
     }
   });
 

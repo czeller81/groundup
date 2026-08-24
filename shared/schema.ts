@@ -342,3 +342,14 @@ export type InsertContactSubmission = z.infer<typeof insertContactSubmissionSche
 export type ContactSubmission = typeof contactSubmissions.$inferSelect;
 export const contactStatuses = ["new", "acknowledged", "resolved", "archived"] as const;
 export type ContactStatus = typeof contactStatuses[number];
+
+export const staffNotifications = pgTable("staff_notifications", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  kind: text("kind").notNull(),
+  title: text("title").notNull(),
+  message: text("message").notNull(),
+  href: text("href").notNull(),
+  readAt: timestamp("read_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+export type StaffNotification = typeof staffNotifications.$inferSelect;

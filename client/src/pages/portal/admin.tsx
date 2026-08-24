@@ -55,6 +55,15 @@ export default function PortalAdmin() {
     queryKey: ["/api/portal/admin/contact-submissions"],
     enabled: isAuthenticated && isAdmin,
   });
+  const { data: notifications = [], isLoading: notificationsLoading } = useQuery<any[]>({
+    queryKey: ["/api/portal/notifications"],
+    enabled: isAuthenticated && isStaff,
+    refetchInterval: 30000,
+  });
+  const notificationReadMutation = useMutation({
+    mutationFn: async (id: string) => apiRequest("PATCH", `/api/portal/notifications/${id}/read`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["/api/portal/notifications"] }),
+  });
   const { data: campaignReport, isLoading: campaignReportLoading } = useQuery<any>({
     queryKey: ["/api/portal/admin/campaign-report", reportFunnel, reportFilters],
     queryFn: async () => {
@@ -179,6 +188,13 @@ export default function PortalAdmin() {
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery]);
+
+  useEffect(() => {
+    const inbox = new URLSearchParams(window.location.search).get("inbox");
+    if (inbox === "training" || inbox === "adaptive" || inbox === "messages") {
+      setInboxTab(inbox);
+    }
+  }, []);
 
   if (authLoading) {
     return (
@@ -431,6 +447,33 @@ export default function PortalAdmin() {
             <span className="text-xs text-orange-400 underline underline-offset-2">View all</span>
           </div>
         )}
+
+        <Card className="bg-[#121826] border-[#FFB199]/20 mb-6" data-testid="staff-notifications">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-white flex items-center gap-2 text-base">
+              <AlertCircle className="h-5 w-5 text-[#FFB199]" /> Staff alerts
+              {!!notifications.filter((item: any) => !item.readAt).length && <Badge className="bg-[#FFB199] text-[#0B0F14]">{notifications.filter((item: any) => !item.readAt).length} new</Badge>}
+            </CardTitle>
+            <p className="text-xs text-gray-400">New leads and contact messages appear here automatically.</p>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {notificationsLoading ? <div className="flex justify-center py-4"><Loader2 className="h-5 w-5 animate-spin text-[#FFB199]" /></div> : notifications.length === 0 ? (
+              <p className="text-sm text-gray-400 py-3">No staff alerts yet.</p>
+            ) : notifications.slice(0, 8).map((notification: any) => (
+              <div key={notification.id} className={`flex items-start justify-between gap-4 rounded-lg border p-3 ${notification.readAt ? "border-white/5 bg-[#0B0F14]/60" : "border-[#FFB199]/20 bg-[#FFB199]/5"}`}>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-white">{notification.title}</p>
+                  <p className="text-xs text-gray-400 mt-1">{notification.message}</p>
+                  <p className="text-[11px] text-gray-500 mt-1">{format(new Date(notification.createdAt), "MMM d, yyyy 'at' h:mm a")}</p>
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  {!notification.readAt && <button className="text-[11px] text-gray-400 hover:text-white" onClick={() => notificationReadMutation.mutate(notification.id)}>Mark read</button>}
+                  <a className="text-xs text-[#5EEBFF] hover:underline" href={notification.href}>Open inbox</a>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
 
         <Card className="bg-[#121826] border-white/5 mb-6">
           <CardHeader className="pb-3">
