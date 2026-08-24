@@ -28,6 +28,7 @@ import Footer from "@/components/layout/footer";
 import PortalNavbar from "@/components/layout/portal-navbar";
 import AdaptiveCapacity from "@/pages/adaptive-capacity";
 import AnalyticsConsent from "@/components/analytics-consent";
+import Privacy from "@/pages/privacy";
 
 function MainLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -65,6 +66,9 @@ function Router() {
       </Route>
       <Route path="/contact">
         <MainLayout><Contact /></MainLayout>
+      </Route>
+      <Route path="/privacy">
+        <MainLayout><Privacy /></MainLayout>
       </Route>
       <Route path="/schedule">
         <MainLayout><Schedule /></MainLayout>

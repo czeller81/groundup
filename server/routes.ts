@@ -42,6 +42,11 @@ const PAGE_META: Record<string, { title: string; description: string; canonical:
     description: "Ready to start your BJJ journey? Contact Ground Up Jiu-Jitsu & Fitness in Oxnard, CA to book your free trial class or ask us anything. No experience needed.",
     canonical: "https://groundupbjj.com/contact",
   },
+  "/privacy": {
+    title: "Privacy Policy | Ground Up BJJ",
+    description: "Learn how Ground Up BJJ in Oxnard collects, uses, and protects information submitted through our website, forms, and marketing channels.",
+    canonical: "https://groundupbjj.com/privacy",
+  },
   "/book": {
     title: "Book Your Free Trial Class — Ground Up Jiu-Jitsu & Fitness, Oxnard CA",
     description: "Reserve your first free BJJ class at Ground Up Jiu-Jitsu in Oxnard, CA. Women's BJJ, Kids Jiu-Jitsu, Self-Defense, and more. No experience needed. Takes 2 minutes.",
@@ -91,6 +96,11 @@ const PAGE_CONTENT: Record<string, string> = {
 <p>Book your free trial class or get in touch with us. No experience needed to start your BJJ journey.</p>
 <p>Phone: (786) 757-1175 | Email: info@groundupbjj.com | Location: Oxnard, CA</p>
 <a href="/contact">Book Your Free Trial</a>`,
+  "/privacy": `<h1>Privacy Policy | Ground Up BJJ</h1>
+<p>Ground Up BJJ / Ground Up explains how we collect, use, and protect information submitted through our website, forms, bookings, and marketing channels.</p>
+<p>Ground Up is located in Oxnard, California. Privacy questions can be sent to <a href="mailto:info@groundupbjj.com">info@groundupbjj.com</a>.</p>
+<h2>Information and choices</h2>
+<p>We may collect contact details, program interest, booking requests, form responses, website usage, and optional marketing attribution. We use this information to respond, administer programs, improve the site, and protect our community. See the full policy for details about Meta Instant Forms, service providers, analytics, retention, minors, and California privacy requests.</p>`,
   "/book": `<h1>Book Your Free Trial Class — Ground Up Jiu-Jitsu, Oxnard CA</h1>
 <p>Reserve your first free BJJ class. Choose your program, pick a time, and we'll see you on the mat.</p>
 <ul><li>Women's BJJ Fundamentals</li><li>Women's Self-Defense (8-week program)</li><li>Kids Jiu-Jitsu (Ages 4–14)</li><li>Strength &amp; Conditioning</li><li>Personal Training</li></ul>
@@ -197,6 +207,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   <url><loc>https://groundupbjj.com/coaches</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://groundupbjj.com/personal-training</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://groundupbjj.com/contact</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://groundupbjj.com/privacy</loc><lastmod>${today}</lastmod><changefreq>yearly</changefreq><priority>0.3</priority></url>
   <url><loc>https://groundupbjj.com/book</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>1.0</priority></url>
   <url><loc>https://groundupbjj.com/womens-self-defense</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://groundupbjj.com/kids</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>

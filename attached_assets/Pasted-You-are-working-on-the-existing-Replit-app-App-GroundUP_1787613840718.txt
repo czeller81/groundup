@@ -1,0 +1,483 @@
+You are working on the existing Replit app:
+
+**App:** `GroundUP`
+**Public domain:** `https://groundupbjj.com`
+
+This task is to make the live Ground Up website ready to support the Phase 1 Meta lead capture system that has already been built externally.
+
+Do not launch ads.
+
+Do not create Meta campaigns.
+
+Do not spend money.
+
+Do not recreate Malu’s local lead registry.
+
+Do not change unrelated brand messaging.
+
+Your job is to make the website production-ready for:
+
+* a valid Ground Up privacy policy
+* Meta Instant Forms
+* proper lead/contact handling
+* clean legal/privacy links
+* lead attribution readiness
+* reliable email/contact fallback
+* compatibility with the existing Ground Up lead capture workflow
+
+---
+
+# 1. PRIMARY BLOCKER — PRIVACY POLICY
+
+The current route:
+
+`https://groundupbjj.com/privacy`
+
+exists but is effectively empty.
+
+This blocks creation of the Meta Instant Form.
+
+Replace the current empty privacy page with a real Ground Up privacy policy.
+
+The policy must be branded specifically for:
+
+**Ground Up BJJ / Ground Up**
+
+Business email:
+
+`info@groundupbjj.com`
+
+Location:
+
+Oxnard, California
+
+Do not reuse Lime Digital, El Brujo, InteligenciaCR.ai, Xcloud, or any other company’s privacy policy.
+
+---
+
+# 2. PRIVACY POLICY SCOPE
+
+The privacy policy should clearly explain that Ground Up may collect information such as:
+
+* name
+* email
+* phone number
+* contact preferences
+* program interest
+* training experience
+* lead form responses
+* booking/trial requests
+* website usage data
+* marketing attribution data
+* cookies/analytics identifiers where applicable
+* information submitted through Meta Instant Forms
+* information submitted through contact forms
+
+If the site or portal collects additional information such as:
+
+* membership information
+* attendance
+* intake information
+* fitness-related information
+* child/minor information
+
+the privacy policy should address those categories appropriately.
+
+Do not claim data practices that are not actually implemented.
+
+If a section cannot be verified, use cautious, accurate language.
+
+---
+
+# 3. REQUIRED PRIVACY TOPICS
+
+The privacy policy should include:
+
+* What information is collected
+* How information is collected
+* Why Ground Up uses the information
+* How Ground Up communicates with leads/members
+* Whether service providers process data
+* How analytics/advertising technologies may be used
+* How Meta lead forms are handled
+* How long information may be retained
+* Basic security language
+* User choices
+* California privacy contact information
+* Children/minors
+* Contact information
+
+Use plain language.
+
+Do not write an overly technical legal document.
+
+Do not claim legal compliance certifications that have not been verified.
+
+Add a note where appropriate that the policy may be updated from time to time.
+
+---
+
+# 4. META LEAD FORM COMPATIBILITY
+
+The privacy page must be suitable as the privacy URL used by a Meta Instant Form.
+
+Verify that:
+
+* `https://groundupbjj.com/privacy` loads publicly
+* HTTP status is 200
+* the page is readable without login
+* no broken layout
+* no blank content
+* no JavaScript-only failure state
+* no redirect to login
+* no mixed-content errors
+* page title is correct
+* canonical URL is correct
+
+Recommended title:
+
+**Privacy Policy | Ground Up BJJ**
+
+Recommended description:
+
+**Learn how Ground Up BJJ in Oxnard collects, uses, and protects information submitted through our website, forms, and marketing channels.**
+
+---
+
+# 5. FOOTER / SITE LINKS
+
+Add the Privacy Policy link clearly to the public footer.
+
+Also verify that the public site includes appropriate links to:
+
+* Privacy Policy
+* Terms, if already available
+* Contact
+
+Do not create fake or empty legal links.
+
+If Terms does not exist, report it as a remaining task instead of linking to an empty page.
+
+---
+
+# 6. CONTACT FORM
+
+The prior audit found that the Ground Up contact form may show success without actually delivering or storing the message.
+
+Fix this if it is not already fixed.
+
+A successful contact submission must result in a durable action.
+
+At minimum:
+
+* store the contact request in the Ground Up database
+  OR
+* send a reliable notification
+  OR
+* both
+
+Preferred:
+
+1. Store the contact request
+2. Notify `info@groundupbjj.com`
+
+Do not show a success state unless the system actually accepted the request.
+
+Do not silently drop contact submissions.
+
+---
+
+# 7. CONTACT FORM DATA
+
+For contact requests, store:
+
+* first name
+* last name if available
+* email
+* phone if provided
+* message
+* source page
+* timestamp
+* status
+
+Do not log sensitive PII unnecessarily.
+
+Do not expose submissions publicly.
+
+---
+
+# 8. LEAD CAPTURE COMPATIBILITY
+
+Malu has already built a Phase 1 Meta lead system externally that:
+
+* polls Meta leads
+* stores leads in a dedicated Ground Up registry
+* preserves attribution
+* sends lead notifications to `info@groundupbjj.com`
+
+Replit should not duplicate that system.
+
+Instead, ensure the website supports future integration by having a clean lead model/API where practical.
+
+If the existing app already has a lead table/model, verify it is secure and production-safe.
+
+If there is already a `trial-leads` endpoint, audit it.
+
+Ensure:
+
+* no public lead listing
+* no unauthenticated admin read
+* no unsafe client-controlled status fields
+* input validation
+* rate limiting
+* timestamping
+* campaign/source fields can be stored
+
+---
+
+# 9. ATTRIBUTION FIELDS
+
+Prepare the website lead/contact data model to accept, where available:
+
+* source
+* medium
+* campaign
+* ad ID
+* ad set ID
+* form ID
+* landing page
+* referrer
+* UTM source
+* UTM medium
+* UTM campaign
+* UTM content
+* Meta click ID
+
+Do not require these fields.
+
+They should be optional.
+
+Do not invent attribution values when absent.
+
+---
+
+# 10. EMAIL
+
+Ground Up’s business email is:
+
+`info@groundupbjj.com`
+
+If the application already has email delivery configured, verify it works.
+
+Do not hardcode secrets.
+
+Do not expose API keys.
+
+If email service credentials are missing, fail safely and report exactly what environment variables/configuration are required.
+
+Do not claim delivery success if a provider request failed.
+
+---
+
+# 11. DO NOT BREAK MALU’S RESEND SETUP
+
+Malu currently has a working test notification pipeline using Resend.
+
+The interim sender is external until the Ground Up domain is verified.
+
+Do not interfere with that setup.
+
+Do not create conflicting DNS assumptions inside the application.
+
+Do not hardcode another sender domain.
+
+The site should simply be ready to work with:
+
+`info@groundupbjj.com`
+
+once domain verification is complete.
+
+---
+
+# 12. DNS / EMAIL DOMAIN
+
+Do not attempt to modify DNS from the Replit application.
+
+Just document that external DNS configuration may still be required for email sender verification.
+
+If a domain verification page or environment variable is needed, document it clearly.
+
+Do not embed DNS secrets or values in the public UI.
+
+---
+
+# 13. TERMS / LEGAL READINESS
+
+Audit whether Ground Up currently has:
+
+* Terms of Service
+* Waiver / assumption of risk
+* Guardian consent for minors
+* Cookie/analytics notice
+
+Do not fabricate legal compliance.
+
+If these do not exist, report them as remaining legal tasks.
+
+For this task, the privacy policy is the required launch blocker.
+
+---
+
+# 14. MOBILE / ACCESSIBILITY
+
+Make the Privacy page readable on mobile.
+
+Verify:
+
+* responsive typography
+* readable line length
+* no horizontal scrolling
+* proper heading hierarchy
+* accessible link contrast
+* keyboard accessibility
+
+---
+
+# 15. SEO / CRAWLING
+
+The Privacy page does not need to be aggressively search-optimized, but it must be crawlable and valid.
+
+Verify:
+
+* title
+* description
+* canonical
+* real 200 status
+* no soft error
+* no empty SSR response
+
+---
+
+# 16. SECURITY
+
+Audit any lead/contact endpoints used by the site.
+
+Ensure:
+
+* rate limiting
+* validation
+* no public PII listing
+* no client-controlled admin status
+* server-side authorization for admin views
+* no sensitive request logging
+* reasonable body limits
+
+Do not weaken security for convenience.
+
+---
+
+# 17. TESTS
+
+Add or update tests for:
+
+## Privacy
+
+* `/privacy` returns 200
+* contains meaningful content
+* contains Ground Up business identity
+* includes contact email
+* works without login
+
+## Contact
+
+* valid submission accepted
+* invalid submission rejected
+* failed persistence/email does not fake success
+* rate limiting works
+
+## Lead safety
+
+* unauthenticated user cannot list stored leads
+* unauthenticated user cannot modify lead status
+* PII is not exposed in public APIs
+
+---
+
+# 18. LIVE QA
+
+After implementation, verify the deployed app in preview/dev environment.
+
+Check:
+
+* `/privacy`
+* footer privacy link
+* contact page
+* contact submission
+* any lead endpoint touched
+* mobile rendering
+* page metadata
+* no broken routes
+
+Do not make real ad submissions.
+
+Do not create Meta Instant Forms.
+
+Malu will do the Meta-side creation after this website blocker is cleared.
+
+---
+
+# 19. FINAL REPORT
+
+Return:
+
+## A. Privacy Policy
+
+* created/updated
+* route
+* title
+* content status
+
+## B. Meta Form Readiness
+
+State whether `/privacy` is now valid for Meta Instant Form use.
+
+## C. Contact Form
+
+Explain what now happens after submission.
+
+## D. Lead API / Storage
+
+Explain any changes made.
+
+## E. Email
+
+Explain what is configured and what remains external.
+
+## F. Security
+
+List protections added or verified.
+
+## G. Tests
+
+Passed/failed totals.
+
+## H. Remaining External Tasks
+
+List things outside Replit, such as:
+
+* Resend DNS verification
+* Meta Instant Form creation
+* real lead submission test
+
+## I. Final Verdict
+
+Choose one:
+
+* `WEBSITE READY FOR META LEAD FORM`
+* `WEBSITE READY — EXTERNAL DNS STILL REQUIRED`
+* `PARTIAL — PRIVACY READY, LEAD FLOW NEEDS WORK`
+* `NOT READY`
+
+The immediate goal is simple:
+
+# Make `groundupbjj.com/privacy` valid, public, accurate, and usable by Meta so Malu can create the first Ground Up Instant Form safely.

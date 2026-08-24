@@ -32,6 +32,7 @@ export default function Footer() {
                 { href: "/adaptive-capacity", label: "Adaptive Capacity" },
                 { href: "/schedule", label: "Schedule" },
                 { href: "/contact", label: "Contact" },
+                 { href: "/privacy", label: "Privacy Policy" },
                 { href: "/portal/login", label: "Member Portal" },
               ].map((link) => (
                 <Link
