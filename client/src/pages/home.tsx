@@ -297,11 +297,10 @@ export default function Home() {
             Our Mission
           </div>
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-8 leading-tight" style={{ fontFamily: 'var(--font-display)' }}>
-            THIS IS NOT A <span className="gradient-text-purple">FIGHT GYM.</span>
-            <br />THIS IS SOMETHING BETTER.
+            BUILD THE CAPACITY TO <span className="gradient-text-cyan">ADAPT.</span>
           </h2>
           <p className="text-gray-300 text-lg leading-relaxed max-w-3xl mx-auto">
-            Ground Up Jiu-Jitsu is a boutique training studio designed around women, kids, and beginners. Small classes. Personal coaching. A warm, structured environment where you grow at your own pace. We believe training should feel <span className="text-white font-medium">safe, personal, and genuinely empowering</span> — not intimidating, not rushed, not performative.
+            Ground Up is a human resilience and capability platform. Our physical training foundation and our emerging Adaptive Capacity work share one belief: you can build the capacity to respond to change with more clarity, confidence, and agency. Start with the path that fits you.
           </p>
         </div>
       </Section>
@@ -317,7 +316,7 @@ export default function Home() {
               TRAINING BUILT <span className="gradient-text-cyan">AROUND YOU</span>
             </h2>
             <p className="text-gray-400 max-w-2xl mx-auto">
-              Whether you're a woman looking for self-defense, a parent enrolling a child, or a beginner taking your first step — there's a program here designed specifically for you.
+              Train your body, strengthen your confidence, or build practical capacity for a changing world. Related paths, clearly separated, all grounded in action.
             </p>
           </div>
 
@@ -371,7 +370,7 @@ export default function Home() {
             </div>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+           <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-6">
             {[
               {
                 title: "Women's BJJ Fundamentals",
@@ -402,6 +401,14 @@ export default function Home() {
                 highlights: ["1-on-1 sessions", "Custom goals", "Flexible schedule", "All levels welcome"],
                 img: personalTrainingImg,
                 accent: "#FFB199",
+              },
+              {
+                title: "Adaptive Capacity",
+                desc: "A separate learning path for clearer thinking, better decisions, and practical adaptability as work and life change.",
+                highlights: ["Practical learning", "Decision tools", "Reflection", "Interest list now open"],
+                img: facilityLoungeImg,
+                accent: "#5EEBFF",
+                link: "/adaptive-capacity",
               },
             ].map((program, i) => (
               <motion.div

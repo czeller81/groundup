@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#0B0F14"/>
+  <circle cx="980" cy="60" r="330" fill="#5EEBFF" opacity=".1"/>
+  <circle cx="160" cy="600" r="300" fill="#B06CFF" opacity=".1"/>
+  <rect x="78" y="78" width="10" height="474" rx="5" fill="#FFB199"/>
+  <text x="135" y="245" fill="#5EEBFF" font-family="Arial,sans-serif" font-size="24" font-weight="700" letter-spacing="7">GROUND UP</text>
+  <text x="135" y="340" fill="#FFFFFF" font-family="Arial,sans-serif" font-size="64" font-weight="700">BUILD THE CAPACITY</text>
+  <text x="135" y="418" fill="#FFFFFF" font-family="Arial,sans-serif" font-size="64" font-weight="700">TO ADAPT.</text>
+  <text x="138" y="490" fill="#AAB4C3" font-family="Arial,sans-serif" font-size="25">Human resilience. Practical capability. Whatever comes next.</text>
+</svg>

@@ -92,6 +92,7 @@ export interface IStorage {
 
   createTrialLead(lead: import("@shared/schema").InsertTrialLead): Promise<import("@shared/schema").TrialLead>;
   getTrialLeads(): Promise<import("@shared/schema").TrialLead[]>;
+  createContactSubmission(data: import("@shared/schema").InsertContactSubmission): Promise<any>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -621,6 +622,12 @@ export class DatabaseStorage implements IStorage {
   async getTrialLeads(): Promise<import("@shared/schema").TrialLead[]> {
     const { trialLeads } = await import("@shared/schema");
     return db.select().from(trialLeads).orderBy(desc(trialLeads.createdAt));
+  }
+
+  async createContactSubmission(data: import("@shared/schema").InsertContactSubmission): Promise<any> {
+    const { contactSubmissions } = await import("@shared/schema");
+    const [submission] = await db.insert(contactSubmissions).values(data).returning();
+    return submission;
   }
 }
 

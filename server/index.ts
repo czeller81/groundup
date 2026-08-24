@@ -8,11 +8,19 @@ const MemStore = MemoryStore(session);
 
 const app = express();
 app.set("trust proxy", 1);
-app.use(express.json());
+app.use((req, res, next) => {
+  if (req.path === "/api/stripe/webhook") return next();
+  return express.json({ limit: "32kb" })(req, res, next);
+});
 app.use(express.urlencoded({ extended: false }));
 
 app.use(session({
-  secret: process.env.SESSION_SECRET || "ground-up-bjj-secret-key-change-in-production",
+  secret: process.env.SESSION_SECRET || (() => {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("SESSION_SECRET must be set in production");
+    }
+    return "development-only-session-secret";
+  })(),
   resave: false,
   saveUninitialized: false,
   store: new MemStore({
@@ -22,7 +30,7 @@ app.use(session({
     secure: process.env.NODE_ENV === "production",
     httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000,
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax"
+     sameSite: "lax"
   }
 }));
 
@@ -41,10 +49,6 @@ app.use((req, res, next) => {
     const duration = Date.now() - start;
     if (path.startsWith("/api")) {
       let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-      if (capturedJsonResponse) {
-        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
-      }
-
       if (logLine.length > 80) {
         logLine = logLine.slice(0, 79) + "…";
       }
@@ -63,8 +67,9 @@ app.use((req, res, next) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
 
-    res.status(status).json({ message });
-    throw err;
+    if (!res.headersSent) {
+      res.status(status).json({ message });
+    }
   });
 
   // importantly only setup vite in development and after

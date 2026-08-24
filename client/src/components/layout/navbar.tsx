@@ -19,6 +19,7 @@ export default function Navbar() {
   const navItems = [
     { path: "/", label: "Home" },
     { path: "/personal-training", label: "Training" },
+    { path: "/adaptive-capacity", label: "Adaptive Capacity" },
     { path: "/schedule", label: "Schedule" },
     { path: "/coaches", label: "Coaches" },
     { path: "/pricing", label: "Programs" },
@@ -87,6 +88,9 @@ export default function Navbar() {
               variant="ghost"
               size="sm"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+              aria-expanded={mobileMenuOpen}
+              aria-controls="mobile-navigation"
               className="text-white hover:bg-white/10"
               data-testid="mobile-menu-toggle"
             >
@@ -102,6 +106,7 @@ export default function Navbar() {
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
               className="md:hidden overflow-hidden bg-[#121826] border-t border-white/5 rounded-b-xl"
+              id="mobile-navigation"
               data-testid="mobile-menu"
             >
               <div className="px-2 pt-2 pb-3 space-y-1">

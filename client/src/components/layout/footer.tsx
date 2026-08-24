@@ -15,8 +15,8 @@ export default function Footer() {
               </span>
             </div>
             <p className="text-gray-400 text-sm leading-relaxed">
-              Women's-only Brazilian Jiu-Jitsu & strength training in Oxnard, CA.
-              Building confidence, strength, and community one roll at a time.
+              Human resilience and capability, built from the ground up.
+              Physical training and practical learning for what comes next.
             </p>
           </div>
 
@@ -29,6 +29,7 @@ export default function Footer() {
                 { href: "/personal-training", label: "Personal Training" },
                 { href: "/coaches", label: "Coaches" },
                 { href: "/pricing", label: "Programs" },
+                { href: "/adaptive-capacity", label: "Adaptive Capacity" },
                 { href: "/schedule", label: "Schedule" },
                 { href: "/contact", label: "Contact" },
                 { href: "/portal/login", label: "Member Portal" },

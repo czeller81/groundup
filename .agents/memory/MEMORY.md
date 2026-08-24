@@ -1,0 +1,1 @@
+- [Platform alignment guardrails](platform-alignment.md) — keep Training and Adaptive Capacity distinct while sharing Ground Up’s human-resilience positioning.

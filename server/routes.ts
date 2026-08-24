@@ -1,4 +1,5 @@
 import type { Express, Request, Response, NextFunction } from "express";
+import express from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertBookingSchema } from "@shared/schema";
@@ -54,6 +55,11 @@ const PAGE_META: Record<string, { title: string; description: string; canonical:
     description: "Kids BJJ classes in Oxnard, CA for ages 4–14. Build confidence, discipline, coordination, and anti-bullying awareness in a small, structured program. First class free.",
     canonical: "https://groundupbjj.com/kids",
   },
+  "/adaptive-capacity": {
+    title: "Adaptive Capacity — Build the Capacity to Adapt | Ground Up",
+    description: "A Ground Up learning experience for building clearer thinking, better decisions, and practical adaptability as work and life change.",
+    canonical: "https://groundupbjj.com/adaptive-capacity",
+  },
 };
 
 const PAGE_CONTENT: Record<string, string> = {
@@ -97,6 +103,10 @@ const PAGE_CONTENT: Record<string, string> = {
 <ul><li>Ages 4–7: Kids Intro to Jiu-Jitsu</li><li>Ages 8–14: Youth Jiu-Jitsu</li><li>Max 6 kids per class</li><li>Belt progression system</li><li>Anti-bullying focus</li></ul>
 <p>First class is free. No gear required. Come see the mat.</p>
 <a href="/book">Book a Free Trial Class</a>`,
+  "/adaptive-capacity": `<h1>Adaptive Capacity — Build the Capacity to Adapt to Whatever Comes Next</h1>
+  <p>Ground Up is developing a separate learning experience for people who want practical tools for clearer thinking, better decisions, and more adaptable work and life.</p>
+  <p>Join the interest list to hear when the first cohort is ready. Details will be shared as they are confirmed.</p>
+  <a href="/adaptive-capacity">Join the interest list</a>`,
 };
 
 async function serveWithMeta(req: Request, res: Response, next: NextFunction) {
@@ -185,6 +195,23 @@ const requireRole = (...roles: string[]) => {
   };
 };
 
+const requestCounts = new Map<string, { count: number; resetAt: number }>();
+const publicRateLimit = (limit = 12, windowMs = 60 * 60 * 1000) =>
+  (req: Request, res: Response, next: NextFunction) => {
+    const key = `${req.ip}:${req.path}`;
+    const now = Date.now();
+    const current = requestCounts.get(key);
+    if (!current || current.resetAt <= now) {
+      requestCounts.set(key, { count: 1, resetAt: now + windowMs });
+      return next();
+    }
+    if (current.count >= limit) {
+      return res.status(429).json({ message: "Too many requests. Please try again later." });
+    }
+    current.count++;
+    next();
+  };
+
 export async function registerRoutes(app: Express): Promise<Server> {
 
   // ============================================
@@ -207,6 +234,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   <url><loc>https://groundupbjj.com/personal-training</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://groundupbjj.com/contact</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://groundupbjj.com/book</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://groundupbjj.com/womens-self-defense</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://groundupbjj.com/kids</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://groundupbjj.com/adaptive-capacity</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
 </urlset>`);
   });
 
@@ -269,7 +299,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ============================================
   // BOOKING ROUTES
   // ============================================
-  app.get("/api/bookings", async (req, res) => {
+  app.get("/api/bookings", requireRole("admin", "coach"), async (req, res) => {
     try {
       const bookingsList = await storage.getBookings();
       res.json(bookingsList);
@@ -278,7 +308,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/bookings", async (req, res) => {
+  app.post("/api/bookings", requireAuth, async (req, res) => {
     try {
       const bookingData = insertBookingSchema.parse(req.body);
       
@@ -296,7 +326,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Time slot is already booked" });
       }
 
-      const booking = await storage.createBooking(bookingData);
+      const booking = await storage.createUserBooking(req.session.userId!, bookingData);
       res.status(201).json(booking);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -306,7 +336,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/bookings/:id/status", async (req, res) => {
+  app.put("/api/bookings/:id/status", requireRole("admin", "coach"), async (req, res) => {
     try {
       const { status, stripeSessionId } = req.body;
       const booking = await storage.updateBookingStatus(req.params.id, status, stripeSessionId);
@@ -322,7 +352,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ============================================
   // STRIPE ROUTES
   // ============================================
-  app.post("/api/create-payment-intent", async (req, res) => {
+  app.post("/api/create-payment-intent", requireAuth, async (req, res) => {
     if (!stripe) {
       return res.status(500).json({ message: "Stripe is not configured" });
     }
@@ -343,11 +373,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/stripe/webhook", async (req, res) => {
+  app.post("/api/stripe/webhook", express.raw({ type: "application/json", limit: "256kb" }), async (req, res) => {
     if (!stripe) {
       return res.status(500).json({ message: "Stripe is not configured" });
     }
     const sig = req.headers['stripe-signature'] as string;
+    if (!process.env.STRIPE_WEBHOOK_SECRET || !sig) {
+      return res.status(400).json({ message: "Webhook signature is not configured" });
+    }
     let event;
     try {
       event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET!);
@@ -370,10 +403,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ============================================
   // CONTACT ROUTE
   // ============================================
-  app.post("/api/contact", async (req, res) => {
+  app.post("/api/contact", publicRateLimit(), async (req, res) => {
     try {
-      const { firstName, lastName, email, phone, subject, message } = req.body;
-      console.log("Contact form submission:", { firstName, lastName, email, phone, subject, message });
+      const { insertContactSubmissionSchema } = await import("@shared/schema");
+      const parsed = insertContactSubmissionSchema.safeParse({
+        ...req.body,
+        source: req.body.source || "contact",
+        consentedAt: req.body.consentedAt || null,
+      });
+      if (!parsed.success) {
+        return res.status(400).json({ message: "Invalid data", errors: parsed.error.errors });
+      }
+      await storage.createContactSubmission(parsed.data);
       res.json({ message: "Thank you for your message. We'll get back to you soon!" });
     } catch (error) {
       res.status(500).json({ message: "Failed to send message" });
@@ -383,16 +424,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ============================================
   // TRIAL LEAD CAPTURE (public booking funnel)
   // ============================================
-  app.post("/api/trial-leads", async (req, res) => {
+  app.post("/api/trial-leads", publicRateLimit(), async (req, res) => {
     try {
       const { insertTrialLeadSchema } = await import("@shared/schema");
       const parsed = insertTrialLeadSchema.safeParse(req.body);
       if (!parsed.success) {
         return res.status(400).json({ message: "Invalid data", errors: parsed.error.errors });
       }
-      const lead = await storage.createTrialLead(parsed.data);
-      console.log("New trial lead:", lead.firstName, lead.lastName, lead.email, lead.program);
-      res.json({ message: "Booking confirmed!", lead });
+      const lead = await storage.createTrialLead({
+        ...parsed.data,
+        program: parsed.data.program === "adaptive-capacity" ? "adaptive-capacity" : parsed.data.program,
+        source: parsed.data.source || "training-book",
+        consentedAt: parsed.data.consentedAt || new Date(),
+      });
+      res.json({ message: lead.program === "adaptive-capacity" ? "You're on the interest list." : "Booking confirmed!" });
     } catch (error) {
       console.error("Trial lead error:", error);
       res.status(500).json({ message: "Failed to save booking" });
@@ -420,7 +465,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     amount: z.number().optional().default(2000),
   });
 
-  app.post("/webhook/calendly", async (req, res) => {
+  app.post("/webhook/calendly", publicRateLimit(60), async (req, res) => {
     try {
       let payload = req.body;
       
@@ -901,7 +946,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ============================================
   // LEGACY ADMIN ROUTES
   // ============================================
-  app.post("/api/admin/login", async (req, res) => {
+  app.post("/api/admin/login", requireRole("admin"), async (req, res) => {
     try {
       const { email, password } = req.body;
       const admin = await storage.getAdminUser(email);
@@ -915,7 +960,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/admin/bookings", async (req, res) => {
+  app.get("/api/admin/bookings", requireRole("admin", "coach"), async (req, res) => {
     try {
       const bookingsList = await storage.getBookings();
       res.json(bookingsList);
@@ -924,7 +969,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/admin/bookings/:id/cancel", async (req, res) => {
+  app.put("/api/admin/bookings/:id/cancel", requireRole("admin", "coach"), async (req, res) => {
     try {
       const booking = await storage.cancelBooking(req.params.id);
       if (!booking) {
@@ -936,7 +981,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/admin/trainers/:id/availability", async (req, res) => {
+  app.put("/api/admin/trainers/:id/availability", requireRole("admin"), async (req, res) => {
     try {
       const { availability } = req.body;
       const trainer = await storage.updateTrainerAvailability(req.params.id, availability);

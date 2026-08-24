@@ -26,6 +26,7 @@ import PortalSchedule from "@/pages/portal/schedule";
 import Navbar from "@/components/layout/navbar";
 import Footer from "@/components/layout/footer";
 import PortalNavbar from "@/components/layout/portal-navbar";
+import AdaptiveCapacity from "@/pages/adaptive-capacity";
 
 function MainLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -75,6 +76,9 @@ function Router() {
       </Route>
       <Route path="/kids">
         <MainLayout><Kids /></MainLayout>
+      </Route>
+      <Route path="/adaptive-capacity">
+        <MainLayout><AdaptiveCapacity /></MainLayout>
       </Route>
       <Route path="/admin">
         <MainLayout><Admin /></MainLayout>

@@ -245,6 +245,14 @@ export const trialLeads = pgTable("trial_leads", {
   experience: text("experience").notNull().default("none"),
   childName: text("child_name"),
   childAge: text("child_age"),
+  occupation: text("occupation"),
+  workLifeChange: text("work_life_change"),
+  capabilityGoal: text("capability_goal"),
+  aiComfort: text("ai_comfort"),
+  cohortTiming: text("cohort_timing"),
+  company: text("company"),
+  source: text("source"),
+  consentedAt: timestamp("consented_at"),
   status: text("status").notNull().default("new"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
@@ -253,7 +261,57 @@ export const insertTrialLeadSchema = createInsertSchema(trialLeads).omit({
   id: true,
   status: true,
   createdAt: true,
+}).extend({
+  firstName: z.string().trim().min(1).max(80),
+  lastName: z.string().trim().min(1).max(80),
+  email: z.string().trim().email().max(254),
+  phone: z.string().trim().min(7).max(30),
+  program: z.string().trim().min(1).max(80),
+  classId: z.string().trim().max(120).nullable().optional(),
+  classTitle: z.string().trim().max(160).nullable().optional(),
+  classDay: z.string().trim().max(40).nullable().optional(),
+  classTime: z.string().trim().max(80).nullable().optional(),
+  experience: z.string().trim().max(40).default("none"),
+  childName: z.string().trim().max(80).nullable().optional(),
+  childAge: z.string().trim().max(10).nullable().optional(),
+  occupation: z.string().trim().max(120).nullable().optional(),
+  workLifeChange: z.string().trim().max(1200).nullable().optional(),
+  capabilityGoal: z.string().trim().max(1200).nullable().optional(),
+  aiComfort: z.string().trim().max(80).nullable().optional(),
+  cohortTiming: z.string().trim().max(120).nullable().optional(),
+  company: z.string().trim().max(160).nullable().optional(),
+  source: z.string().trim().max(120).nullable().optional(),
+  consentedAt: z.coerce.date().nullable().optional(),
 });
 
 export type InsertTrialLead = z.infer<typeof insertTrialLeadSchema>;
 export type TrialLead = typeof trialLeads.$inferSelect;
+
+export const contactSubmissions = pgTable("contact_submissions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name").notNull(),
+  email: text("email").notNull(),
+  phone: text("phone"),
+  subject: text("subject").notNull(),
+  message: text("message").notNull(),
+  source: text("source"),
+  consentedAt: timestamp("consented_at"),
+  status: text("status").notNull().default("new"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertContactSubmissionSchema = createInsertSchema(contactSubmissions).omit({
+  id: true, status: true, createdAt: true,
+}).extend({
+  firstName: z.string().trim().min(1).max(80),
+  lastName: z.string().trim().min(1).max(80),
+  email: z.string().trim().email().max(254),
+  phone: z.string().trim().max(30).nullable().optional(),
+  subject: z.string().trim().min(1).max(120),
+  message: z.string().trim().min(1).max(4000),
+  source: z.string().trim().max(120).nullable().optional(),
+  consentedAt: z.coerce.date().nullable().optional(),
+});
+
+export type InsertContactSubmission = z.infer<typeof insertContactSubmissionSchema>;
