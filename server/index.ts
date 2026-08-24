@@ -9,7 +9,7 @@ const MemStore = MemoryStore(session);
 const app = express();
 app.set("trust proxy", 1);
 app.use((req, res, next) => {
-  if (req.path === "/api/stripe/webhook") return next();
+  if (req.path === "/api/stripe/webhook" || req.path === "/webhook/calendly") return next();
   return express.json({ limit: "32kb" })(req, res, next);
 });
 app.use(express.urlencoded({ extended: false }));

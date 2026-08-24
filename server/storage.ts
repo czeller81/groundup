@@ -7,6 +7,7 @@ import {
   formResponses,
   memberships,
   sessionNotes,
+  webhookEvents,
   type Trainer, 
   type InsertTrainer,
   type Booking,
@@ -84,6 +85,8 @@ export interface IStorage {
   getCoachMembers(coachId: string): Promise<SafeUser[]>;
   
   createCalendlyBooking(data: { eventId: string; email: string; eventType: string; startTime: Date; paymentStatus: string; amount: number }): Promise<Booking>;
+  claimWebhookEvent(provider: string, eventId: string): Promise<boolean>;
+  getBookingByCalendlyEventId(eventId: string): Promise<Booking | undefined>;
   
   deleteFormResponse(userId: string, formId: string): Promise<void>;
 
@@ -592,6 +595,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createCalendlyBooking(data: { eventId: string; email: string; eventType: string; startTime: Date; paymentStatus: string; amount: number }): Promise<Booking> {
+    const existing = await this.getBookingByCalendlyEventId(data.eventId);
+    if (existing) return existing;
     let user = await this.getUserByEmail(data.email);
     if (!user) {
       await this.createUserFromWebhook(data.email, "New", "Member");
@@ -604,7 +609,8 @@ export class DatabaseStorage implements IStorage {
 
     const endTime = new Date(data.startTime.getTime() + 60 * 60 * 1000);
 
-    const [newBooking] = await db.insert(bookings).values({
+    try {
+      const [newBooking] = await db.insert(bookings).values({
       userId: user!.id,
       customerName: `${user!.firstName} ${user!.lastName}`,
       customerEmail: data.email,
@@ -618,8 +624,29 @@ export class DatabaseStorage implements IStorage {
       calendlyEventId: data.eventId,
       paymentStatus: data.paymentStatus,
       status: data.paymentStatus === "paid" ? "paid" : "pending"
-    }).returning();
-    return newBooking;
+      }).returning();
+      return newBooking;
+    } catch (error) {
+      // A concurrent delivery may have won the unique insert.
+      const duplicate = await this.getBookingByCalendlyEventId(data.eventId);
+      if (duplicate) return duplicate;
+      throw error;
+    }
+  }
+
+  async getBookingByCalendlyEventId(eventId: string): Promise<Booking | undefined> {
+    const [booking] = await db.select().from(bookings).where(eq(bookings.calendlyEventId, eventId));
+    return booking;
+  }
+
+  async claimWebhookEvent(provider: string, eventId: string): Promise<boolean> {
+    try {
+      await db.insert(webhookEvents).values({ id: `${provider}:${eventId}`, provider });
+      return true;
+    } catch (error: any) {
+      if (error?.code === "23505") return false;
+      throw error;
+    }
   }
 
   async getAdminUser(email: string): Promise<AdminUser | undefined> {

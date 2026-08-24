@@ -8,6 +8,8 @@ import Stripe from "stripe";
 import { addHours, addMinutes, format, parseISO } from "date-fns";
 import fs from "fs";
 import path from "path";
+import { parseRawJsonBody, verifyCalendlySignature, verifyStripeSignature } from "./webhook-security";
+import { bookingBelongsToUser, createPublicRateLimit, requireAuth, requireRole } from "./route-security";
 
 const PAGE_META: Record<string, { title: string; description: string; canonical: string }> = {
   "/": {
@@ -172,45 +174,7 @@ const SESSION_TYPES: Record<string, { name: string; duration: number; price: num
   PT60: { name: "60-Minute 1:1 Training", duration: 60, price: 20 },
   UNLIMITED: { name: "Monthly Unlimited", duration: 0, price: 280 }
 };
-
-const requireAuth = (req: Request, res: Response, next: NextFunction) => {
-  const userId = req.session?.userId;
-  if (!userId) {
-    return res.status(401).json({ message: "Not authenticated" });
-  }
-  next();
-};
-
-const requireRole = (...roles: string[]) => {
-  return (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.session?.userId;
-    const userRole = req.session?.userRole;
-    if (!userId) {
-      return res.status(401).json({ message: "Not authenticated" });
-    }
-    if (!roles.includes(userRole || "")) {
-      return res.status(403).json({ message: "Insufficient permissions" });
-    }
-    next();
-  };
-};
-
-const requestCounts = new Map<string, { count: number; resetAt: number }>();
-const publicRateLimit = (limit = 12, windowMs = 60 * 60 * 1000) =>
-  (req: Request, res: Response, next: NextFunction) => {
-    const key = `${req.ip}:${req.path}`;
-    const now = Date.now();
-    const current = requestCounts.get(key);
-    if (!current || current.resetAt <= now) {
-      requestCounts.set(key, { count: 1, resetAt: now + windowMs });
-      return next();
-    }
-    if (current.count >= limit) {
-      return res.status(429).json({ message: "Too many requests. Please try again later." });
-    }
-    current.count++;
-    next();
-  };
+const publicRateLimit = createPublicRateLimit;
 
 export async function registerRoutes(app: Express): Promise<Server> {
 
@@ -362,6 +326,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!sessionConfig) {
         return res.status(400).json({ message: "Invalid session type" });
       }
+      if (bookingId) {
+        const booking = await storage.getBooking(bookingId);
+        if (!bookingBelongsToUser(booking, req.session.userId)) {
+          return res.status(404).json({ message: "Booking not found" });
+        }
+      }
       const paymentIntent = await stripe.paymentIntents.create({
         amount: sessionConfig.price * 100,
         currency: "usd",
@@ -383,9 +353,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     let event;
     try {
-      event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET!);
+      event = verifyStripeSignature(stripe, req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
     } catch (err: any) {
       return res.status(400).send(`Webhook Error: ${err.message}`);
+    }
+    if (!(await storage.claimWebhookEvent("stripe", event.id))) {
+      return res.json({ received: true, duplicate: true });
     }
 
     switch (event.type) {
@@ -581,14 +554,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     event_id: z.string(),
     email: z.string().email(),
     event_type: z.string(),
-    start_time: z.string(),
+    start_time: z.string().refine((value) => !Number.isNaN(Date.parse(value)), "Invalid start time"),
     payment_status: z.string().optional().default("pending"),
     amount: z.number().optional().default(2000),
   });
 
   app.post("/webhook/calendly", publicRateLimit(60), async (req, res) => {
     try {
-      let payload = req.body;
+      const rawBody = req.body;
+      const signature = req.headers["calendly-webhook-signature"] as string | undefined;
+      if (!process.env.CALENDLY_WEBHOOK_SIGNING_KEY) {
+        return res.status(503).json({ message: "Calendly webhook is not configured" });
+      }
+      if (!verifyCalendlySignature(rawBody, signature, process.env.CALENDLY_WEBHOOK_SIGNING_KEY)) {
+        return res.status(401).json({ message: "Invalid webhook signature" });
+      }
+      let payload = parseRawJsonBody(rawBody) as Record<string, any>;
       
       if (payload.event === "invitee.created" && payload.payload) {
         payload = {
@@ -602,6 +583,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const validated = calendlyWebhookSchema.parse(payload);
+      if (!(await storage.claimWebhookEvent("calendly", validated.event_id))) {
+        const existing = await storage.getBookingByCalendlyEventId(validated.event_id);
+        return res.status(200).json({ message: "Webhook already processed", bookingId: existing?.id });
+      }
       
       const booking = await storage.createCalendlyBooking({
         eventId: validated.event_id,

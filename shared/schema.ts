@@ -1,5 +1,5 @@
 import { sql, relations } from "drizzle-orm";
-import { pgTable, text, varchar, integer, timestamp, jsonb, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, timestamp, jsonb, boolean, uniqueIndex } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -69,6 +69,14 @@ export const bookings = pgTable("bookings", {
   paymentStatus: text("payment_status"),
   status: text("status").notNull().default("pending"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  calendlyEventUnique: uniqueIndex("bookings_calendly_event_id_unique").on(table.calendlyEventId),
+}));
+
+export const webhookEvents = pgTable("webhook_events", {
+  id: varchar("id").primaryKey(),
+  provider: text("provider").notNull(),
+  receivedAt: timestamp("received_at").defaultNow().notNull(),
 });
 
 export const adminUsers = pgTable("admin_users", {
