@@ -29,6 +29,7 @@ import PortalNavbar from "@/components/layout/portal-navbar";
 import AdaptiveCapacity from "@/pages/adaptive-capacity";
 import AnalyticsConsent from "@/components/analytics-consent";
 import Privacy from "@/pages/privacy";
+import MetaPixel from "@/components/meta-pixel";
 
 function MainLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -121,6 +122,7 @@ function App() {
   return (
     <HelmetProvider>
       <AnalyticsConsent />
+      <MetaPixel />
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <PortalAuthProvider>
