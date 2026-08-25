@@ -10,6 +10,7 @@ import fs from "fs";
 import path from "path";
 import { parseRawJsonBody, verifyCalendlySignature, verifyStripeSignature } from "./webhook-security";
 import { bookingBelongsToUser, createPublicRateLimit, requireAuth, requireRole } from "./route-security";
+import { sendStaffNotificationEmail } from "./email";
 
 const PAGE_META: Record<string, { title: string; description: string; canonical: string }> = {
   "/": {
@@ -400,12 +401,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       const submission = await storage.createContactSubmission(parsed.data);
       try {
+        const notificationMessage = `${submission.firstName} ${submission.lastName} sent a ${submission.subject.toLowerCase()} message.`;
         await storage.createStaffNotification({
           kind: "contact_message",
           title: "New contact message",
-          message: `${submission.firstName} ${submission.lastName} sent a ${submission.subject.toLowerCase()} message.`,
+          message: notificationMessage,
           href: "/portal/admin?inbox=messages",
         });
+        try {
+          await sendStaffNotificationEmail({
+            subject: "New Ground Up contact message",
+            text: notificationMessage,
+            inboxPath: "/portal/admin?inbox=messages",
+          });
+        } catch (emailError) {
+          console.error("Staff email failed for contact submission:", emailError);
+        }
       } catch (notificationError) {
         console.error("Staff notification failed for contact submission:", notificationError);
       }
@@ -433,12 +444,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       try {
         const adaptive = lead.program === "adaptive-capacity";
+        const notificationTitle = adaptive ? "New Adaptive Capacity signup" : "New training lead";
+        const notificationMessage = `${lead.firstName} ${lead.lastName} joined the ${adaptive ? "Adaptive Capacity interest list" : "training trial"} list.`;
+        const inboxPath = `/portal/admin?inbox=${adaptive ? "adaptive" : "training"}`;
         await storage.createStaffNotification({
           kind: adaptive ? "adaptive_lead" : "training_lead",
-          title: adaptive ? "New Adaptive Capacity signup" : "New training lead",
-          message: `${lead.firstName} ${lead.lastName} joined the ${adaptive ? "Adaptive Capacity interest list" : "training trial"} list.`,
-          href: `/portal/admin?inbox=${adaptive ? "adaptive" : "training"}`,
+          title: notificationTitle,
+          message: notificationMessage,
+          href: inboxPath,
         });
+        try {
+          await sendStaffNotificationEmail({
+            subject: `Ground Up: ${notificationTitle}`,
+            text: notificationMessage,
+            inboxPath,
+          });
+        } catch (emailError) {
+          console.error("Staff email failed for trial lead:", emailError);
+        }
       } catch (notificationError) {
         console.error("Staff notification failed for trial lead:", notificationError);
       }
