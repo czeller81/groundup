@@ -65,8 +65,10 @@ export async function setupVite(app: Express, server: Server) {
          "/contact", "/privacy", "/book", "/womens-self-defense", "/kids", "/adaptive-capacity",
       ]);
       const isPortalPath = requestPath === "/portal" || requestPath.startsWith("/portal/");
-      res.status(knownPublicPaths.has(requestPath) || isPortalPath ? 200 : 404)
-        .set({ "Content-Type": "text/html" }).end(page);
+      if (!knownPublicPaths.has(requestPath) && !isPortalPath) {
+        return res.status(404).type("text").send("Not found");
+      }
+      res.status(200).set({ "Content-Type": "text/html" }).end(page);
     } catch (e) {
       vite.ssrFixStacktrace(e as Error);
       next(e);
@@ -83,7 +85,7 @@ export function serveStatic(app: Express) {
     );
   }
 
-  app.use(express.static(distPath));
+  app.use(express.static(distPath, { dotfiles: "ignore", index: false }));
 
   // Keep SPA navigation working, but give crawlers and clients a real 404 status
   // for routes that are not part of the public or portal application.
@@ -97,7 +99,9 @@ export function serveStatic(app: Express) {
        "/contact", "/privacy", "/book", "/womens-self-defense", "/kids", "/adaptive-capacity",
     ]);
     const isPortalPath = requestPath === "/portal" || requestPath.startsWith("/portal/");
-    res.status(knownPublicPaths.has(requestPath) || isPortalPath ? 200 : 404)
-      .sendFile(path.resolve(distPath, "index.html"));
+    if (!knownPublicPaths.has(requestPath) && !isPortalPath) {
+      return res.status(404).type("text").send("Not found");
+    }
+    res.status(200).sendFile(path.resolve(distPath, "index.html"));
   });
 }

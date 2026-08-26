@@ -2,7 +2,8 @@ import assert from "node:assert/strict";
 import crypto from "node:crypto";
 import test from "node:test";
 import Stripe from "stripe";
-import { bookingBelongsToUser, createPublicRateLimit, requireAuth, requireRole } from "./route-security";
+import { bookingBelongsToUser, createPublicRateLimit, createScannerProbeGuard, isScannerProbePath, requireAuth, requireRole } from "./route-security";
+import { applySecurityHeaders } from "./security-headers";
 import { verifyCalendlySignature, verifyStripeSignature } from "./webhook-security";
 
 function responseRecorder() {
@@ -10,7 +11,10 @@ function responseRecorder() {
   return {
     result,
     status(code: number) { result.statusCode = code; return this; },
+    set(_nameOrHeaders: string | Record<string, string>, _value?: string) { return this; },
+    type(_value: string) { return this; },
     json(body: unknown) { result.body = body; return this; },
+    send(body: unknown) { result.body = body; return this; },
   } as any;
 }
 
@@ -62,4 +66,38 @@ test("public rate limits count per IP and path", () => {
   limit(request, res, next);
   limit(request, res, next);
   assert.equal(res.result.statusCode, 429);
+});
+
+test("obvious vulnerability probe paths are identified and stopped before the SPA", () => {
+  assert.equal(isScannerProbePath("/admin.php"), true);
+  assert.equal(isScannerProbePath("/wp-admin/install.php?step=1"), true);
+  assert.equal(isScannerProbePath("/.env"), true);
+  assert.equal(isScannerProbePath("/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php"), true);
+  assert.equal(isScannerProbePath("/contact"), false);
+
+  const guard = createScannerProbeGuard(1, 60_000);
+  const request = { ip: "127.0.0.1", originalUrl: "/admin.php" } as any;
+  let res = responseRecorder();
+  guard(request, res, () => { throw new Error("probe reached application"); });
+  assert.equal(res.result.statusCode, 404);
+  assert.equal(res.result.body, "Not found");
+  res = responseRecorder();
+  guard(request, res, () => { throw new Error("probe reached application"); });
+  assert.equal(res.result.statusCode, 429);
+});
+
+test("baseline security headers are applied without exposing implementation details", () => {
+  const headers: Record<string, string> = {};
+  const res = {
+    set(nameOrHeaders: string | Record<string, string>, value?: string) {
+      if (typeof nameOrHeaders === "string") headers[nameOrHeaders] = value || "";
+      else Object.assign(headers, nameOrHeaders);
+      return this;
+    },
+  } as any;
+  applySecurityHeaders({ path: "/api/portal/me" } as any, res, () => {});
+  assert.equal(headers["X-Content-Type-Options"], "nosniff");
+  assert.equal(headers["Referrer-Policy"], "strict-origin-when-cross-origin");
+  assert.equal(headers["X-Frame-Options"], "SAMEORIGIN");
+  assert.equal(headers["Cache-Control"], "no-store");
 });

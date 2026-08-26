@@ -3,16 +3,25 @@ import session from "express-session";
 import MemoryStore from "memorystore";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { createScannerProbeGuard } from "./route-security";
+import { applySecurityHeaders } from "./security-headers";
+import { createRequire } from "module";
 
 const MemStore = MemoryStore(session);
+const require = createRequire(import.meta.url);
+const PgSession = require("connect-pg-simple")(session);
+const databaseUrl = process.env.NEON_DATABASE_URL || process.env.DATABASE_URL;
 
 const app = express();
+app.disable("x-powered-by");
 app.set("trust proxy", 1);
+app.use(applySecurityHeaders);
+app.use(createScannerProbeGuard());
 app.use((req, res, next) => {
   if (req.path === "/api/stripe/webhook" || req.path === "/webhook/calendly") return next();
-  return express.json({ limit: "32kb" })(req, res, next);
+  return express.json({ limit: "32kb", strict: true })(req, res, next);
 });
-app.use(express.urlencoded({ extended: false }));
+app.use(express.urlencoded({ extended: false, limit: "16kb" }));
 
 app.use(session({
   secret: process.env.SESSION_SECRET || (() => {
@@ -23,9 +32,9 @@ app.use(session({
   })(),
   resave: false,
   saveUninitialized: false,
-  store: new MemStore({
-    checkPeriod: 86400000
-  }),
+  store: process.env.NODE_ENV === "production" && databaseUrl
+    ? new PgSession({ conString: databaseUrl, tableName: "user_sessions", createTableIfMissing: true })
+    : new MemStore({ checkPeriod: 86400000 }),
   cookie: {
     secure: process.env.NODE_ENV === "production",
     httpOnly: true,
@@ -65,7 +74,11 @@ app.use((req, res, next) => {
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
+    const message = status >= 500
+      ? "Internal Server Error"
+      : status === 413
+        ? "Request body too large"
+        : "Invalid request";
 
     if (!res.headersSent) {
       res.status(status).json({ message });

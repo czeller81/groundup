@@ -186,8 +186,14 @@ const SESSION_TYPES: Record<string, { name: string; duration: number; price: num
   UNLIMITED: { name: "Monthly Unlimited", duration: 0, price: 280 }
 };
 const publicRateLimit = createPublicRateLimit;
+const authRateLimit = () => createPublicRateLimit(10, 15 * 60 * 1000);
+const bookingRateLimit = () => createPublicRateLimit(30, 15 * 60 * 1000);
+const staffMutationRateLimit = () => createPublicRateLimit(120, 15 * 60 * 1000);
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  app.use("/api/portal/admin", staffMutationRateLimit());
+  app.use("/api/admin", staffMutationRateLimit());
+  app.use("/api/bookings", staffMutationRateLimit());
 
   // ============================================
   // SEO: robots.txt and sitemap.xml
@@ -284,7 +290,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/bookings", requireAuth, async (req, res) => {
+  app.post("/api/bookings", bookingRateLimit(), requireAuth, async (req, res) => {
     try {
       const bookingData = insertBookingSchema.parse(req.body);
       
@@ -315,6 +321,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/bookings/:id/status", requireRole("admin", "coach"), async (req, res) => {
     try {
       const { status, stripeSessionId } = req.body;
+      if (!["pending", "paid", "canceled"].includes(status)) {
+        return res.status(400).json({ message: "Invalid booking status" });
+      }
       const booking = await storage.updateBookingStatus(req.params.id, status, stripeSessionId);
       if (!booking) {
         return res.status(404).json({ message: "Booking not found" });
@@ -328,7 +337,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ============================================
   // STRIPE ROUTES
   // ============================================
-  app.post("/api/create-payment-intent", requireAuth, async (req, res) => {
+  app.post("/api/create-payment-intent", bookingRateLimit(), requireAuth, async (req, res) => {
     if (!stripe) {
       return res.status(500).json({ message: "Stripe is not configured" });
     }
@@ -350,8 +359,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         metadata: { sessionType, bookingId: bookingId || "" },
       });
       res.json({ clientSecret: paymentIntent.client_secret });
-    } catch (error: any) {
-      res.status(500).json({ message: "Error creating payment intent: " + error.message });
+    } catch (error) {
+      console.error("Payment intent error:", error);
+      res.status(500).json({ message: "Failed to create payment intent" });
     }
   });
 
@@ -366,8 +376,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     let event;
     try {
       event = verifyStripeSignature(stripe, req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
-    } catch (err: any) {
-      return res.status(400).send(`Webhook Error: ${err.message}`);
+    } catch (err) {
+      console.error("Stripe webhook signature verification failed:", err);
+      return res.status(400).json({ message: "Invalid webhook signature" });
     }
     if (!(await storage.claimWebhookEvent("stripe", event.id))) {
       return res.json({ received: true, duplicate: true });
@@ -644,7 +655,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ============================================
   // PORTAL AUTHENTICATION ROUTES
   // ============================================
-  app.post("/api/portal/signup", async (req, res) => {
+  app.post("/api/portal/signup", authRateLimit(), async (req, res) => {
     try {
       const { email, password, firstName, lastName, phone } = req.body;
       
@@ -671,7 +682,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/portal/login", async (req, res) => {
+  app.post("/api/portal/login", authRateLimit(), async (req, res) => {
     try {
       const { email, password } = req.body;
       if (!email || !password) {
