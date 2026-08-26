@@ -1,0 +1,572 @@
+You are the Replit Agent responsible for Ground Up’s production website security.
+
+We have observed suspicious requests in Replit analytics that appear consistent with automated vulnerability scanning.
+
+Examples seen in the past day include:
+
+- /admin.php
+- /1.php
+- /this_is_a_new_hello_world.php
+
+These requests are not normal application routes and look like probes for exposed PHP admin panels, web shells, outdated WordPress/PHP files, or common backdoors.
+
+Your job is to perform an immediate security audit of the production app, determine exactly how those requests were handled, verify whether there is any sign of compromise, and harden the app against similar scanning.
+
+Do not make destructive changes.
+Do not remove legitimate functionality.
+Do not break the current live site.
+Do not rotate production secrets unless compromise is actually suspected and you explain why.
+
+The priorities are:
+
+1. Determine whether these probes were harmless 404 scans.
+2. Confirm that no PHP/web-shell files exist.
+3. Confirm that no suspicious request reached privileged application logic.
+4. Check for exploitation attempts.
+5. Fix any weaknesses found.
+6. Add reasonable protections against repeated automated scanning.
+7. Report clearly what happened.
+
+---
+
+# 1. INSPECT THE EXACT SUSPICIOUS ROUTES
+
+Investigate requests to:
+
+/admin.php
+/1.php
+/this_is_a_new_hello_world.php
+
+For each route determine:
+
+- HTTP method
+- HTTP status returned
+- response body type
+- timestamp(s)
+- source IP if logs expose it
+- user agent
+- referrer
+- query string
+- request body if any
+- whether it hit application routing
+- whether it hit static-file handling
+- whether it triggered an error
+- whether it generated a 200 response
+- whether it caused any application-side effect
+
+The desired behavior for these routes is normally:
+
+404 Not Found
+
+unless the app has an explicit safe route for them, which it should not.
+
+If any returned 200, 3xx to a real app page, 500, or exposed internal information, treat that as important.
+
+---
+
+# 2. SEARCH THE REPOSITORY FOR PHP OR WEB-SHELL-LIKE FILES
+
+Search the entire codebase and deployed artifacts for:
+
+- *.php
+- admin.php
+- 1.php
+- shell.php
+- cmd.php
+- upload.php
+- wp-login.php
+- xmlrpc.php
+- eval(
+- base64_decode
+- system(
+- exec(
+- passthru(
+- shell_exec(
+- suspicious encoded payloads
+- unexpected executable scripts
+- files that were not part of the intended app
+
+Ground Up is not supposed to be a PHP application.
+
+If PHP files exist, identify:
+
+- why they exist
+- when they were added
+- whether they are referenced
+- whether they are reachable publicly
+
+Do not delete anything until you understand it.
+
+---
+
+# 3. CHECK GIT / FILE HISTORY FOR UNEXPECTED CHANGES
+
+Review recent repository changes for:
+
+- unknown files
+- modified server routes
+- modified auth logic
+- secret handling changes
+- upload endpoints
+- suspicious dependencies
+- unexpected middleware
+- unexpected admin routes
+- changes not attributable to our recent work
+
+Pay special attention to changes after the site was published.
+
+Report anything suspicious.
+
+---
+
+# 4. CHECK SERVER / APP LOGS
+
+Review available logs for the last 48–72 hours.
+
+Look for:
+
+- repeated 404 probes
+- POST requests to unknown routes
+- PUT/PATCH/DELETE requests to unknown routes
+- multipart uploads
+- path traversal attempts
+- ../ sequences
+- encoded traversal
+- SQL injection strings
+- script tags
+- command injection patterns
+- requests for .env
+- requests for package.json
+- requests for .git
+- requests for wp-admin
+- requests for wp-login.php
+- requests for xmlrpc.php
+- requests for phpmyadmin
+- requests for vendor/phpunit
+- requests for shell/backdoor filenames
+- suspicious login attempts
+- repeated auth failures
+- repeated API calls from the same source
+- unusual spikes in 4xx/5xx
+
+Classify findings as:
+
+- benign scanner noise
+- suspicious
+- likely exploitation attempt
+- evidence of compromise
+
+Do not overstate.
+
+---
+
+# 5. VERIFY THERE IS NO COMPROMISE
+
+Check for signs of compromise such as:
+
+- new unauthorized users
+- changed passwords
+- unexpected admin sessions
+- modified environment variables
+- changed secrets
+- new cron jobs
+- new background jobs
+- unexpected outbound network requests
+- unexplained database writes
+- altered lead data
+- altered payment configuration
+- altered auth configuration
+- unfamiliar dependencies
+- changed startup commands
+- unusual files in writable directories
+
+If there is no evidence of compromise, say so clearly.
+
+If there is evidence, stop normal hardening work and report immediately with severity and containment steps.
+
+---
+
+# 6. VERIFY UNKNOWN ROUTES RETURN SAFE 404s
+
+Test at minimum:
+
+/admin.php
+/1.php
+/this_is_a_new_hello_world.php
+/wp-admin
+/wp-login.php
+/xmlrpc.php
+/.env
+/.git/config
+/phpmyadmin
+/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php
+
+Confirm they do not:
+
+- expose files
+- reveal stack traces
+- reveal server paths
+- reveal framework internals
+- redirect to privileged pages
+- return 200 with app content in a way that creates a soft-404
+
+Preferred response:
+
+- 404
+- minimal body
+- no stack trace
+- no internal details
+
+If the app currently serves the SPA shell with HTTP 200 for arbitrary unknown routes, fix that for clearly nonexistent attack-probe paths.
+
+---
+
+# 7. REVIEW LEGACY ADMIN / API SECURITY
+
+Previous audits identified legacy admin and booking/security concerns.
+
+Reverify that there are no unauthenticated or weakly protected endpoints for:
+
+- bookings
+- availability
+- trainer schedules
+- admin functions
+- lead data
+- user data
+- portal data
+- payment operations
+- contact submissions
+
+Check:
+
+- authentication
+- authorization
+- role checks
+- IDOR risk
+- CSRF protection where applicable
+- input validation
+- rate limiting
+- body-size limits
+
+Do not assume old fixes are still intact.
+
+---
+
+# 8. ADD RATE LIMITING
+
+If not already present, implement reasonable server-side rate limiting for:
+
+- auth/login
+- password-reset
+- contact form
+- lead endpoints
+- booking endpoints
+- admin endpoints
+- suspicious repeated 404 probing
+
+Do not make the site unusable for legitimate visitors.
+
+Use separate limits where appropriate.
+
+For example:
+- stricter limits on auth/admin
+- moderate limits on forms
+- general abuse protection for repeated unknown-route scans
+
+Do not rely solely on IP if the platform provides better request identifiers.
+
+---
+
+# 9. ADD BODY SIZE LIMITS
+
+Verify request body limits exist.
+
+Set sensible limits for:
+
+- JSON
+- URL-encoded forms
+- multipart uploads if any
+
+Reject oversized bodies.
+
+Document the limits.
+
+---
+
+# 10. SECURITY HEADERS
+
+Audit production response headers.
+
+At minimum evaluate:
+
+- Content-Security-Policy
+- Strict-Transport-Security
+- X-Content-Type-Options
+- Referrer-Policy
+- Permissions-Policy
+- frame-ancestors / X-Frame-Options
+- Cache-Control for sensitive routes
+
+Implement safe headers where missing.
+
+Do not break analytics, Meta Pixel, Resend, Stripe, or required integrations.
+
+---
+
+# 11. ERROR HANDLING
+
+Ensure production errors do not expose:
+
+- stack traces
+- source paths
+- environment names
+- secrets
+- database details
+- internal IDs unnecessarily
+
+Unknown routes should fail safely.
+
+---
+
+# 12. STATIC FILE / PATH SAFETY
+
+Verify static file serving cannot expose:
+
+- .env
+- .git
+- source maps if sensitive
+- server source files
+- config files
+- backups
+- temporary files
+- logs
+- database dumps
+
+Block dotfiles and backup extensions where appropriate.
+
+---
+
+# 13. DEPENDENCY AUDIT
+
+Run the appropriate dependency/security audit for the current stack.
+
+Check for:
+
+- known critical vulnerabilities
+- outdated high-risk packages
+- abandoned packages
+- unsafe transitive dependencies
+
+Do not blindly upgrade major versions.
+
+Patch only safe, compatible issues or report what requires review.
+
+---
+
+# 14. AUTH / SESSION HARDENING
+
+Verify:
+
+- production session secret is strong and not fallback/default
+- cookies use Secure
+- HttpOnly
+- appropriate SameSite
+- session expiration
+- production session storage is appropriate
+- no in-memory fallback in production if that was previously a concern
+
+Report current state.
+
+---
+
+# 15. LOGGING / PII
+
+Review logs for accidental exposure of:
+
+- names
+- email addresses
+- phone numbers
+- tokens
+- passwords
+- Stripe data
+- session cookies
+- auth headers
+
+Redact where appropriate.
+
+Do not delete logs needed for investigation until the audit is complete.
+
+---
+
+# 16. BOT / SCANNER HANDLING
+
+Implement a lightweight strategy for obvious automated vulnerability scans.
+
+Examples:
+
+- rapid repeated requests to nonexistent .php paths
+- wp-admin scans
+- phpMyAdmin scans
+- .env probes
+- known exploit paths
+
+Possible controls:
+
+- rate limiting
+- early 404
+- temporary IP throttling
+- hosting/WAF controls if available
+
+Do not spend major engineering effort trying to eliminate all internet scanning.
+
+The goal is safe handling, not zero bot traffic.
+
+---
+
+# 17. DO NOT BLOCK LEGITIMATE CRAWLERS BLINDLY
+
+Do not accidentally block:
+
+- Googlebot
+- Bingbot
+- legitimate SEO crawlers
+- Meta link preview/fetch systems
+- payment/webhook providers
+
+Use behavior and route patterns, not crude blanket blocking.
+
+---
+
+# 18. CHECK WEBHOOK SECURITY
+
+Reverify:
+
+- Stripe webhook signature verification
+- Meta/Calendly webhook verification if in use
+- replay protection
+- dedupe
+- raw-body handling where required
+
+A public scanner must not be able to forge webhook events.
+
+---
+
+# 19. VERIFY DATABASE / LEAD INTEGRITY
+
+Check recent records for:
+
+- unexplained lead creation
+- malformed records
+- suspicious booking entries
+- unexpected admin changes
+- test records not created by us
+
+Do not expose PII in the report.
+
+Summarize counts and anomalies only.
+
+---
+
+# 20. PRODUCTION TESTING
+
+After fixes:
+
+Run:
+
+- typecheck
+- tests if available
+- build
+- security checks
+- production smoke test
+
+Verify:
+
+- homepage works
+- free trial flow works
+- privacy page works
+- contact form works
+- lead capture works
+- portal/login works where intended
+- unknown attack routes return safe 404s
+- no new runtime errors
+
+Do not publish until checks pass.
+
+---
+
+# 21. REPORT FORMAT
+
+Return:
+
+## A. Incident Summary
+What the suspicious requests most likely were.
+
+## B. Evidence
+Exact route/status findings for:
+- /admin.php
+- /1.php
+- /this_is_a_new_hello_world.php
+
+## C. Compromise Assessment
+Choose:
+- NO EVIDENCE OF COMPROMISE
+- SUSPICIOUS ACTIVITY — NO CONFIRMED COMPROMISE
+- POSSIBLE COMPROMISE
+- CONFIRMED COMPROMISE
+
+## D. Repository Findings
+Any unexpected files or changes.
+
+## E. Log Findings
+Scanner patterns, POST attempts, exploit strings, unusual requests.
+
+## F. Authentication / Admin Findings
+Any exposed or weak endpoints.
+
+## G. Security Fixes Applied
+Every change made.
+
+## H. Rate Limiting
+What is protected and thresholds used.
+
+## I. Security Headers
+Current state.
+
+## J. Dependency Findings
+Critical/high issues.
+
+## K. Data Integrity
+Any suspicious lead/booking/user changes.
+
+## L. Remaining Risks
+What still needs attention.
+
+## M. Manual Actions Required
+Only if needed.
+
+## N. Final Verdict
+
+Choose exactly one:
+
+- `SAFE — AUTOMATED SCANNER TRAFFIC ONLY`
+- `SAFE — HARDENING APPLIED`
+- `NO COMPROMISE FOUND — MONITOR`
+- `SECURITY ISSUE FOUND — FIXED`
+- `POSSIBLE COMPROMISE — MANUAL REVIEW REQUIRED`
+- `CONFIRMED COMPROMISE — CONTAINMENT REQUIRED`
+
+---
+
+# IMPORTANT
+
+Do not assume these requests mean the site was hacked.
+
+But do not dismiss them either.
+
+We want evidence.
+
+The key question is:
+
+**Did these requests simply hit safe 404s, or did any of them reach something they should not have?**
+
+Investigate first, harden second, and report precisely.
