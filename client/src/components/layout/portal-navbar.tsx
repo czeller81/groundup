@@ -18,10 +18,11 @@ export default function PortalNavbar() {
 
   const navItems = [
     { path: "/portal/dashboard", label: "Dashboard" },
-    { path: "/portal/booking", label: "Book" },
-    { path: "/portal/schedule", label: "Schedule" },
+    { path: "/portal/schedule", label: "Classes" },
+    { path: "/portal/booking", label: "Book a Class" },
+    { path: "/portal/my-classes", label: "My Classes" },
     ...(isCoach || isAdmin ? [{ path: "/portal/coach", label: "Coach Center" }] : []),
-    ...(isAdmin ? [{ path: "/portal/admin", label: "Admin" }] : []),
+    ...(isAdmin ? [{ path: "/portal/class-admin", label: "Class Admin" }, { path: "/portal/admin", label: "Admin" }] : []),
   ];
 
   return (

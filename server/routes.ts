@@ -11,6 +11,7 @@ import path from "path";
 import { parseRawJsonBody, verifyCalendlySignature, verifyStripeSignature } from "./webhook-security";
 import { bookingBelongsToUser, createPublicRateLimit, requireAuth, requireRole } from "./route-security";
 import { sendStaffNotificationEmail } from "./email";
+import { registerClassBookingRoutes } from "./class-booking-routes";
 
 const PAGE_META: Record<string, { title: string; description: string; canonical: string }> = {
   "/": {
@@ -194,6 +195,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use("/api/portal/admin", staffMutationRateLimit());
   app.use("/api/admin", staffMutationRateLimit());
   app.use("/api/bookings", staffMutationRateLimit());
+  registerClassBookingRoutes(app);
 
   // ============================================
   // SEO: robots.txt and sitemap.xml

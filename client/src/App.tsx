@@ -15,14 +15,15 @@ import Admin from "@/pages/admin";
 import PortalLogin from "@/pages/portal/login";
 import PortalDashboard from "@/pages/portal/dashboard";
 import PortalForm from "@/pages/portal/form";
-import PortalBooking from "@/pages/portal/booking";
+import PortalClasses from "@/pages/portal/classes";
+import MyClasses from "@/pages/portal/my-classes";
+import ClassAdmin from "@/pages/portal/class-admin";
 import PortalAdminMembers from "@/pages/portal/admin";
 import PortalCoach from "@/pages/portal/coach";
-import Schedule from "@/pages/schedule";
-import Book from "@/pages/book";
+import LiveSchedule from "@/pages/live-schedule";
+import FirstVisitBooking from "@/pages/first-visit-booking";
 import WomensSelfDefense from "@/pages/womens-self-defense";
 import Kids from "@/pages/kids";
-import PortalSchedule from "@/pages/portal/schedule";
 import Navbar from "@/components/layout/navbar";
 import Footer from "@/components/layout/footer";
 import PortalNavbar from "@/components/layout/portal-navbar";
@@ -72,10 +73,10 @@ function Router() {
         <MainLayout><Privacy /></MainLayout>
       </Route>
       <Route path="/schedule">
-        <MainLayout><Schedule /></MainLayout>
+        <MainLayout><LiveSchedule /></MainLayout>
       </Route>
       <Route path="/book">
-        <MainLayout><Book /></MainLayout>
+        <MainLayout><FirstVisitBooking /></MainLayout>
       </Route>
       <Route path="/womens-self-defense">
         <MainLayout><WomensSelfDefense /></MainLayout>
@@ -99,16 +100,22 @@ function Router() {
         <PortalLayout><PortalForm /></PortalLayout>
       </Route>
       <Route path="/portal/booking">
-        <PortalLayout><PortalBooking /></PortalLayout>
+        <PortalLayout><PortalClasses /></PortalLayout>
+      </Route>
+      <Route path="/portal/my-classes">
+        <PortalLayout><MyClasses /></PortalLayout>
       </Route>
       <Route path="/portal/admin">
         <PortalLayout><PortalAdminMembers /></PortalLayout>
+      </Route>
+      <Route path="/portal/class-admin">
+        <PortalLayout><ClassAdmin /></PortalLayout>
       </Route>
       <Route path="/portal/coach">
         <PortalLayout><PortalCoach /></PortalLayout>
       </Route>
       <Route path="/portal/schedule">
-        <PortalLayout><PortalSchedule /></PortalLayout>
+        <PortalLayout><PortalClasses /></PortalLayout>
       </Route>
       
       <Route>

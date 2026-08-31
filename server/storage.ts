@@ -39,6 +39,13 @@ import {
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, gte, lte, desc, asc, sql, count, sum, or, ilike, inArray, isNotNull } from "drizzle-orm";
+
+export class ClassBookingError extends Error {
+  constructor(public code: string, message: string, public status = 400) {
+    super(message);
+    this.name = "ClassBookingError";
+  }
+}
 import { randomUUID } from "crypto";
 import bcrypt from "bcryptjs";
 
@@ -103,9 +110,12 @@ export interface IStorage {
   getClassType(id: string): Promise<ClassType | undefined>;
   createClassType(data: Omit<ClassType, "id" | "createdAt" | "updatedAt">): Promise<ClassType>;
   updateClassType(id: string, data: Partial<Omit<ClassType, "id" | "createdAt" | "updatedAt">>): Promise<ClassType | undefined>;
-  listClassOccurrences(from: Date, to: Date, firstVisitOnly?: boolean): Promise<Array<ClassOccurrence & { confirmedCount: number; waitlistCount: number; trainer: Trainer | null; classType: ClassType | null }>>;
+  listClassOccurrences(from: Date, to: Date, firstVisitOnly?: boolean, includeDisabled?: boolean): Promise<Array<ClassOccurrence & { confirmedCount: number; waitlistCount: number; trainer: Trainer | null; classType: ClassType | null }>>;
   getClassOccurrence(id: string): Promise<ClassOccurrence | undefined>;
+  getClassOccurrenceByGoogleEvent(calendarId: string, eventId: string): Promise<ClassOccurrence | undefined>;
   upsertClassOccurrence(data: Omit<ClassOccurrence, "id" | "createdAt" | "updatedAt">): Promise<ClassOccurrence>;
+  updateClassOccurrence(id: string, data: Partial<Pick<ClassOccurrence, "classTypeId" | "trainerId" | "instructorName" | "capacity" | "firstVisitEligible" | "bookingEnabled" | "audience" | "syncState" | "syncError">>): Promise<ClassOccurrence | undefined>;
+  reconcileMissingClassOccurrences(calendarId: string, from: Date, to: Date, seenEventIds: string[]): Promise<number>;
   markClassOccurrenceSyncError(id: string, error: string): Promise<void>;
   reserveClassOccurrence(input: {
     occurrenceId: string;
@@ -673,6 +683,389 @@ export class DatabaseStorage implements IStorage {
   async getBookingByCalendlyEventId(eventId: string): Promise<Booking | undefined> {
     const [booking] = await db.select().from(bookings).where(eq(bookings.calendlyEventId, eventId));
     return booking;
+  }
+
+  async getCalendarConnection(): Promise<CalendarConnection | undefined> {
+    const [connection] = await db.select().from(calendarConnections).where(eq(calendarConnections.provider, "google"));
+    return connection;
+  }
+
+  async saveCalendarConnection(data: Partial<CalendarConnection> & { provider?: string }): Promise<CalendarConnection> {
+    const provider = data.provider || "google";
+    const existing = await this.getCalendarConnection();
+    if (existing) {
+      const [updated] = await db.update(calendarConnections)
+        .set({ ...data, provider, updatedAt: new Date() })
+        .where(eq(calendarConnections.id, existing.id))
+        .returning();
+      return updated;
+    }
+    const [created] = await db.insert(calendarConnections).values({
+      provider,
+      calendarId: data.calendarId,
+      calendarName: data.calendarName,
+      timezone: data.timezone || "America/Los_Angeles",
+      status: data.status || "not_configured",
+      lastAttemptedAt: data.lastAttemptedAt,
+      lastSuccessfulAt: data.lastSuccessfulAt,
+      lastSyncedEventCount: data.lastSyncedEventCount || 0,
+      lastError: data.lastError,
+      syncToken: data.syncToken,
+    }).returning();
+    return created;
+  }
+
+  async getClassTypes(): Promise<ClassType[]> {
+    return db.select().from(classTypes).orderBy(asc(classTypes.name));
+  }
+
+  async getClassType(id: string): Promise<ClassType | undefined> {
+    const [classType] = await db.select().from(classTypes).where(eq(classTypes.id, id));
+    return classType;
+  }
+
+  async createClassType(data: Omit<ClassType, "id" | "createdAt" | "updatedAt">): Promise<ClassType> {
+    const [classType] = await db.insert(classTypes).values(data).returning();
+    return classType;
+  }
+
+  async updateClassType(id: string, data: Partial<Omit<ClassType, "id" | "createdAt" | "updatedAt">>): Promise<ClassType | undefined> {
+    const [classType] = await db.update(classTypes)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(classTypes.id, id))
+      .returning();
+    return classType;
+  }
+
+  async listClassOccurrences(from: Date, to: Date, firstVisitOnly = false, includeDisabled = false): Promise<Array<ClassOccurrence & { confirmedCount: number; waitlistCount: number; trainer: Trainer | null; classType: ClassType | null }>> {
+    const rows = await db.select({
+      occurrence: classOccurrences,
+      trainer: trainers,
+      classType: classTypes,
+    })
+      .from(classOccurrences)
+      .leftJoin(trainers, eq(classOccurrences.trainerId, trainers.id))
+      .leftJoin(classTypes, eq(classOccurrences.classTypeId, classTypes.id))
+      .where(and(
+        gte(classOccurrences.start, from),
+        lte(classOccurrences.start, to),
+        includeDisabled ? undefined : eq(classOccurrences.status, "active"),
+        includeDisabled ? undefined : eq(classOccurrences.bookingEnabled, true),
+        firstVisitOnly ? eq(classOccurrences.firstVisitEligible, true) : undefined,
+      ))
+      .orderBy(asc(classOccurrences.start));
+
+    if (!rows.length) return [];
+    const ids = rows.map(({ occurrence }) => occurrence.id);
+    const totals = await db.select({
+      occurrenceId: classReservations.occurrenceId,
+      confirmedCount: sql<number>`count(*) filter (where ${classReservations.status} = 'confirmed')::int`,
+      waitlistCount: sql<number>`count(*) filter (where ${classReservations.status} = 'waitlisted')::int`,
+    }).from(classReservations)
+      .where(inArray(classReservations.occurrenceId, ids))
+      .groupBy(classReservations.occurrenceId);
+    const counts = new Map(totals.map((row) => [row.occurrenceId, row]));
+    return rows.map(({ occurrence, trainer, classType }) => ({
+      ...occurrence,
+      trainer,
+      classType,
+      confirmedCount: counts.get(occurrence.id)?.confirmedCount || 0,
+      waitlistCount: counts.get(occurrence.id)?.waitlistCount || 0,
+    }));
+  }
+
+  async getClassOccurrence(id: string): Promise<ClassOccurrence | undefined> {
+    const [occurrence] = await db.select().from(classOccurrences).where(eq(classOccurrences.id, id));
+    return occurrence;
+  }
+
+  async getClassOccurrenceByGoogleEvent(calendarId: string, eventId: string): Promise<ClassOccurrence | undefined> {
+    const [occurrence] = await db.select().from(classOccurrences).where(and(
+      eq(classOccurrences.googleCalendarId, calendarId),
+      eq(classOccurrences.googleEventId, eventId),
+    ));
+    return occurrence;
+  }
+
+  async upsertClassOccurrence(data: Omit<ClassOccurrence, "id" | "createdAt" | "updatedAt">): Promise<ClassOccurrence> {
+    const [occurrence] = await db.insert(classOccurrences)
+      .values(data)
+      .onConflictDoUpdate({
+        target: [classOccurrences.googleCalendarId, classOccurrences.googleEventId],
+        set: {
+          googleRecurringEventId: data.googleRecurringEventId,
+          googleOriginalStartTime: data.googleOriginalStartTime,
+          title: data.title,
+          description: data.description,
+          start: data.start,
+          end: data.end,
+          location: data.location,
+          instructorName: data.instructorName,
+          trainerId: data.trainerId,
+          classTypeId: data.classTypeId,
+          status: data.status,
+          syncState: data.syncState,
+          syncError: data.syncError,
+          capacity: data.capacity,
+          firstVisitEligible: data.firstVisitEligible,
+          bookingEnabled: data.bookingEnabled,
+          audience: data.audience,
+          remoteUpdatedAt: data.remoteUpdatedAt,
+          lastSyncedAt: data.lastSyncedAt,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return occurrence;
+  }
+
+  async updateClassOccurrence(id: string, data: Partial<Pick<ClassOccurrence, "classTypeId" | "trainerId" | "instructorName" | "capacity" | "firstVisitEligible" | "bookingEnabled" | "audience" | "syncState" | "syncError">>): Promise<ClassOccurrence | undefined> {
+    const [occurrence] = await db.update(classOccurrences)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(classOccurrences.id, id))
+      .returning();
+    return occurrence;
+  }
+
+  async reconcileMissingClassOccurrences(calendarId: string, from: Date, to: Date, seenEventIds: string[]): Promise<number> {
+    const result = await db.update(classOccurrences).set({
+      status: "removed",
+      bookingEnabled: false,
+      syncState: "synced",
+      syncError: "Event no longer appears in the configured Google Calendar window.",
+      lastSyncedAt: new Date(),
+      updatedAt: new Date(),
+    }).where(and(
+      eq(classOccurrences.googleCalendarId, calendarId),
+      gte(classOccurrences.start, from),
+      lte(classOccurrences.start, to),
+      eq(classOccurrences.status, "active"),
+      seenEventIds.length ? sql`${classOccurrences.googleEventId} not in (${sql.join(seenEventIds.map((id) => sql`${id}`), sql`, `)})` : undefined,
+    )).returning({ id: classOccurrences.id });
+    return result.length;
+  }
+
+  async markClassOccurrenceSyncError(id: string, error: string): Promise<void> {
+    await db.update(classOccurrences).set({
+      syncState: "error",
+      syncError: error.slice(0, 500),
+      updatedAt: new Date(),
+    }).where(eq(classOccurrences.id, id));
+  }
+
+  async reserveClassOccurrence(input: {
+    occurrenceId: string;
+    userId?: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    experience?: string;
+    manageTokenHash?: string;
+  }): Promise<{ reservation: ClassReservation; occurrence: ClassOccurrence; promoted?: ClassReservation }> {
+    return db.transaction(async (tx) => {
+      await tx.execute(sql`select id from class_occurrences where id = ${input.occurrenceId} for update`);
+      const [occurrence] = await tx.select().from(classOccurrences).where(eq(classOccurrences.id, input.occurrenceId));
+      if (!occurrence) throw new ClassBookingError("OCCURRENCE_NOT_FOUND", "This class occurrence does not exist.", 404);
+      if (occurrence.status !== "active" || !occurrence.bookingEnabled) {
+        throw new ClassBookingError("OCCURRENCE_UNAVAILABLE", "This class is not available for booking.", 409);
+      }
+      if (occurrence.start <= new Date()) {
+        throw new ClassBookingError("OCCURRENCE_STARTED", "This class has already started.", 409);
+      }
+      if (!input.userId && !occurrence.firstVisitEligible) {
+        throw new ClassBookingError("MEMBERSHIP_REQUIRED", "This class requires a member account.", 403);
+      }
+
+      const personCondition = input.userId
+        ? eq(classReservations.userId, input.userId)
+        : sql`lower(${classReservations.visitorEmail}) = lower(${input.email})`;
+      const activeStatuses = ["confirmed", "waitlisted"];
+      const [duplicate] = await tx.select().from(classReservations).where(and(
+        eq(classReservations.occurrenceId, occurrence.id),
+        personCondition,
+        inArray(classReservations.status, activeStatuses),
+      )).limit(1);
+      if (duplicate) {
+        throw new ClassBookingError("DUPLICATE_RESERVATION", "You already have a reservation for this class.", 409);
+      }
+
+      const [overlap] = await tx.select({ id: classReservations.id })
+        .from(classReservations)
+        .innerJoin(classOccurrences, eq(classReservations.occurrenceId, classOccurrences.id))
+        .where(and(
+          personCondition,
+          eq(classReservations.status, "confirmed"),
+          sql`${classOccurrences.start} < ${occurrence.end}`,
+          sql`${classOccurrences.end} > ${occurrence.start}`,
+        ))
+        .limit(1);
+      if (overlap) {
+        throw new ClassBookingError("OVERLAPPING_RESERVATION", "You already have another class during this time.", 409);
+      }
+
+      const [confirmedTotal] = await tx.select({ value: count() }).from(classReservations).where(and(
+        eq(classReservations.occurrenceId, occurrence.id),
+        eq(classReservations.status, "confirmed"),
+      ));
+      const confirmedCount = Number(confirmedTotal?.value || 0);
+      let status = "confirmed";
+      let waitlistPosition: number | null = null;
+      if (confirmedCount >= occurrence.capacity) {
+        status = "waitlisted";
+        const [waitlistTotal] = await tx.select({ value: count() }).from(classReservations).where(and(
+          eq(classReservations.occurrenceId, occurrence.id),
+          eq(classReservations.status, "waitlisted"),
+        ));
+        waitlistPosition = Number(waitlistTotal?.value || 0) + 1;
+      }
+
+      const [reservation] = await tx.insert(classReservations).values({
+        occurrenceId: occurrence.id,
+        userId: input.userId,
+        visitorFirstName: input.firstName,
+        visitorLastName: input.lastName,
+        visitorEmail: input.email.toLowerCase(),
+        visitorPhone: input.phone,
+        experience: input.experience,
+        status,
+        waitlistPosition,
+        manageTokenHash: input.manageTokenHash,
+      }).returning();
+      await tx.insert(classReservationEvents).values({
+        reservationId: reservation.id,
+        occurrenceId: occurrence.id,
+        event: status === "confirmed" ? "reservation_confirmed" : "waitlist_joined",
+        metadata: { source: input.userId ? "member_portal" : "first_visit" },
+      });
+      return { reservation, occurrence };
+    });
+  }
+
+  async getUserClassReservations(userId: string): Promise<Array<ClassReservation & { occurrence: ClassOccurrence; trainer: Trainer | null; classType: ClassType | null }>> {
+    const rows = await db.select({
+      reservation: classReservations,
+      occurrence: classOccurrences,
+      trainer: trainers,
+      classType: classTypes,
+    }).from(classReservations)
+      .innerJoin(classOccurrences, eq(classReservations.occurrenceId, classOccurrences.id))
+      .leftJoin(trainers, eq(classOccurrences.trainerId, trainers.id))
+      .leftJoin(classTypes, eq(classOccurrences.classTypeId, classTypes.id))
+      .where(eq(classReservations.userId, userId))
+      .orderBy(desc(classOccurrences.start));
+    return rows.map(({ reservation, occurrence, trainer, classType }) => ({
+      ...reservation,
+      occurrence,
+      trainer,
+      classType,
+    }));
+  }
+
+  async getClassReservation(id: string): Promise<(ClassReservation & { occurrence: ClassOccurrence }) | undefined> {
+    const [row] = await db.select({ reservation: classReservations, occurrence: classOccurrences })
+      .from(classReservations)
+      .innerJoin(classOccurrences, eq(classReservations.occurrenceId, classOccurrences.id))
+      .where(eq(classReservations.id, id));
+    return row ? { ...row.reservation, occurrence: row.occurrence } : undefined;
+  }
+
+  async cancelClassReservation(input: { reservationId: string; userId?: string; manageTokenHash?: string; reason?: string }): Promise<{ reservation: ClassReservation; promoted?: ClassReservation }> {
+    return db.transaction(async (tx) => {
+      const [current] = await tx.select().from(classReservations).where(eq(classReservations.id, input.reservationId));
+      if (!current) throw new ClassBookingError("RESERVATION_NOT_FOUND", "Reservation not found.", 404);
+      await tx.execute(sql`select id from class_occurrences where id = ${current.occurrenceId} for update`);
+      const authorized = (input.userId && current.userId === input.userId)
+        || (input.manageTokenHash && current.manageTokenHash === input.manageTokenHash);
+      if (!authorized) throw new ClassBookingError("RESERVATION_FORBIDDEN", "You cannot manage this reservation.", 403);
+      if (!["confirmed", "waitlisted"].includes(current.status)) {
+        throw new ClassBookingError("RESERVATION_ALREADY_CLOSED", "This reservation is already closed.", 409);
+      }
+
+      const [reservation] = await tx.update(classReservations).set({
+        status: "cancelled",
+        cancelledAt: new Date(),
+        cancellationReason: input.reason?.slice(0, 240),
+        waitlistPosition: null,
+        updatedAt: new Date(),
+      }).where(eq(classReservations.id, current.id)).returning();
+      await tx.insert(classReservationEvents).values({
+        reservationId: reservation.id,
+        occurrenceId: reservation.occurrenceId,
+        event: "reservation_cancelled",
+        metadata: { previousStatus: current.status },
+      });
+
+      let promoted: ClassReservation | undefined;
+      if (current.status === "confirmed") {
+        const [next] = await tx.select().from(classReservations).where(and(
+          eq(classReservations.occurrenceId, current.occurrenceId),
+          eq(classReservations.status, "waitlisted"),
+        )).orderBy(asc(classReservations.waitlistPosition), asc(classReservations.createdAt)).limit(1);
+        if (next) {
+          [promoted] = await tx.update(classReservations).set({
+            status: "confirmed",
+            waitlistPosition: null,
+            updatedAt: new Date(),
+          }).where(eq(classReservations.id, next.id)).returning();
+          await tx.insert(classReservationEvents).values({
+            reservationId: promoted.id,
+            occurrenceId: promoted.occurrenceId,
+            event: "waitlist_promoted",
+          });
+        }
+      }
+      await tx.execute(sql`
+        with ranked as (
+          select id, row_number() over (order by waitlist_position nulls last, created_at) as position
+          from class_reservations
+          where occurrence_id = ${current.occurrenceId} and status = 'waitlisted'
+        )
+        update class_reservations
+        set waitlist_position = ranked.position
+        from ranked
+        where class_reservations.id = ranked.id
+      `);
+      return { reservation, promoted };
+    });
+  }
+
+  async getOccurrenceReservations(occurrenceId: string): Promise<{ confirmed: ClassReservation[]; waitlisted: ClassReservation[] }> {
+    const reservations = await db.select().from(classReservations)
+      .where(and(
+        eq(classReservations.occurrenceId, occurrenceId),
+        inArray(classReservations.status, ["confirmed", "waitlisted"]),
+      ))
+      .orderBy(asc(classReservations.waitlistPosition), asc(classReservations.createdAt));
+    return {
+      confirmed: reservations.filter((reservation) => reservation.status === "confirmed"),
+      waitlisted: reservations.filter((reservation) => reservation.status === "waitlisted"),
+    };
+  }
+
+  async updateClassReservation(id: string, updates: Partial<Pick<ClassReservation, "status" | "attendance" | "cancellationReason">>): Promise<ClassReservation | undefined> {
+    const [reservation] = await db.update(classReservations)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(classReservations.id, id))
+      .returning();
+    if (reservation) {
+      await this.recordClassReservationEvent({
+        reservationId: reservation.id,
+        occurrenceId: reservation.occurrenceId,
+        event: updates.attendance ? "attendance_updated" : "reservation_updated",
+        metadata: updates,
+      });
+    }
+    return reservation;
+  }
+
+  async recordClassReservationEvent(data: { reservationId?: string; occurrenceId?: string; event: string; metadata?: Record<string, unknown> }): Promise<void> {
+    await db.insert(classReservationEvents).values({
+      reservationId: data.reservationId,
+      occurrenceId: data.occurrenceId,
+      event: data.event,
+      metadata: data.metadata || {},
+    });
   }
 
   async claimWebhookEvent(provider: string, eventId: string): Promise<boolean> {

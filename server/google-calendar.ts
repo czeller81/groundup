@@ -44,8 +44,10 @@ function googleProxy() {
   return new ReplitConnectors();
 }
 
-async function googleRequest<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await googleProxy().proxy("google-calendar", `/calendar/v3${path}`, init);
+async function googleRequest<T>(path: string): Promise<T> {
+  const response = await googleProxy().proxy("google-calendar", `/calendar/v3${path}`, {
+    method: "GET",
+  });
   if (!response.ok) {
     const detail = await response.text().catch(() => "");
     throw new Error(`Google Calendar returned HTTP ${response.status}${detail ? `: ${detail.slice(0, 240)}` : ""}`);
