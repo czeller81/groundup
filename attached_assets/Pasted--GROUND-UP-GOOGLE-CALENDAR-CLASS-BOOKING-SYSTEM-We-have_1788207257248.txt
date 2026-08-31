@@ -1,0 +1,1504 @@
+# GROUND UP — GOOGLE CALENDAR CLASS BOOKING SYSTEM
+
+We have completed a full audit of the existing Ground Up application.
+
+We are now changing the booking architecture.
+
+The goal is to replace the current fragmented combination of:
+
+* static schedule data
+* Calendly
+* internal booking logic
+* separate availability logic
+
+with a simpler architecture built around:
+
+# GOOGLE CALENDAR + GROUND UP BOOKING ENGINE
+
+This task should focus specifically on the class booking system.
+
+Do NOT redesign the entire website.
+Do NOT rebuild unrelated portal features.
+Do NOT publish automatically.
+
+---
+
+# 1. ARCHITECTURE DECISION
+
+Ground Up will use:
+
+## Google Calendar as the authoritative class schedule
+
+Google Calendar determines:
+
+* what classes exist
+* class date
+* start time
+* end time
+* instructor/calendar
+* location
+* cancellations
+* schedule changes
+
+Ground Up should synchronize those class events into the application.
+
+## Ground Up as the authoritative reservation system
+
+Ground Up determines:
+
+* who booked
+* capacity
+* remaining spots
+* waitlist
+* member eligibility
+* first-time visitor eligibility
+* cancellation
+* attendance
+* no-show status
+* booking history
+
+Do NOT attempt to store participant capacity or reservation truth only inside Google Calendar.
+
+---
+
+# 2. CALENDLY TRANSITION
+
+Calendly should no longer be the normal booking system for Ground Up classes.
+
+Do NOT delete the integration immediately.
+
+Instead:
+
+1. inventory current Calendly dependencies;
+2. preserve existing historical Calendly IDs and bookings;
+3. implement Google Calendar synchronization;
+4. implement Ground Up reservations against synchronized class events;
+5. validate the new system;
+6. remove standard-class Calendly CTAs;
+7. retain Calendly only if Ground Up still wants it for private appointments or consultations.
+
+Do not destroy historical evidence.
+
+---
+
+# 3. GOOGLE CALENDAR CONNECTION
+
+Use a secure Google Calendar integration.
+
+Do not hard-code access tokens or credentials.
+
+Determine the correct Google authentication model for the existing Replit environment.
+
+The integration must support secure refresh/token handling where required.
+
+Do not expose Google credentials to the browser.
+
+All Google Calendar API access must occur server-side.
+
+---
+
+# 4. CALENDAR STRATEGY
+
+Prefer a dedicated Google Calendar for Ground Up classes.
+
+Example concept:
+
+**Ground Up Classes**
+
+This avoids mixing:
+
+* personal appointments
+* staff meetings
+* private calendar events
+* unrelated business events
+
+with public class schedules.
+
+If multiple instructor calendars are required later, architect cleanly for that possibility.
+
+For the initial implementation, one dedicated Ground Up Classes calendar is preferred unless the existing operational setup clearly requires multiple calendars.
+
+---
+
+# 5. GOOGLE EVENT → GROUND UP CLASS
+
+Each relevant Google Calendar event should synchronize into a local Ground Up class occurrence.
+
+Ground Up needs a local representation of the event.
+
+Store appropriate fields such as:
+
+* Google event ID
+* Google calendar ID
+* title
+* description
+* start date/time
+* end date/time
+* location
+* instructor reference if known
+* status
+* updated timestamp
+* Google sync timestamp
+* Ground Up capacity
+* Ground Up class type
+* first-visit eligibility
+* booking enabled
+* audience/eligibility
+* synchronization state
+
+Google's event ID must remain stable for reconciliation.
+
+Do not duplicate the same Google event on every sync.
+
+---
+
+# 6. SOURCE-OF-TRUTH RULES
+
+The system must have explicit ownership rules.
+
+## Google owns
+
+* class date
+* class start time
+* class end time
+* class title where appropriate
+* class cancellation/deletion
+* calendar event changes
+* basic location
+
+## Ground Up owns
+
+* reservations
+* capacity
+* waitlist
+* attendance
+* membership eligibility
+* first-visit eligibility
+* participant status
+* booking status
+* internal class metadata not appropriate for Google Calendar
+
+Document any exceptions.
+
+Avoid two-way ownership of the same field unless absolutely necessary.
+
+---
+
+# 7. SYNCHRONIZATION
+
+Implement reliable synchronization between Google Calendar and Ground Up.
+
+The application must be able to detect:
+
+* new class
+* changed class
+* cancelled/deleted class
+* changed time
+* changed location
+
+Synchronization should be idempotent.
+
+Repeated synchronization must not create duplicate class occurrences.
+
+Track:
+
+* last successful sync
+* last attempted sync
+* sync failure
+* event-specific error where relevant
+
+---
+
+# 8. SYNC STRATEGY
+
+Use the most reliable architecture supported by the current environment.
+
+Possible approaches include:
+
+* periodic synchronization
+* Google push notifications/webhooks
+* incremental sync tokens
+
+Prefer Google's incremental synchronization model where practical.
+
+If webhook/push notification complexity makes the first phase fragile, it is acceptable to use a reliable scheduled sync initially.
+
+Do not pretend real-time synchronization exists if it does not.
+
+Document expected synchronization delay.
+
+---
+
+# 9. FAILURE BEHAVIOR
+
+A Google API failure must NOT erase the existing Ground Up schedule.
+
+If synchronization fails:
+
+* preserve last-known valid class data;
+* mark synchronization health appropriately;
+* log operational error;
+* allow admin to see sync status;
+* do not silently empty the schedule.
+
+Fail safely.
+
+---
+
+# 10. TIMEZONE
+
+Ground Up is located in Oxnard, California.
+
+Standardize all booking behavior around:
+
+**America/Los_Angeles**
+
+Fix the existing America/New_York configuration drift found in the audit.
+
+Google event timestamps must be interpreted correctly.
+
+Store timestamps consistently and render them in Pacific Time for Ground Up users.
+
+Test daylight-saving transitions.
+
+---
+
+# 11. RECURRING GOOGLE CALENDAR EVENTS
+
+This is important.
+
+Google Calendar recurring events should work naturally.
+
+If an admin creates:
+
+Women's BJJ Fundamentals
+
+every Monday and Wednesday
+6:00 PM
+
+Google creates recurring event instances.
+
+Ground Up should synchronize the individual upcoming occurrences needed for booking.
+
+Ground Up must properly handle:
+
+* recurring series
+* individual occurrence override
+* changed individual occurrence
+* cancelled single occurrence
+* cancelled series
+
+Do not treat every recurrence as an unrelated duplicate.
+
+---
+
+# 12. CLASS METADATA
+
+Google Calendar alone does not know Ground Up business rules such as:
+
+* capacity
+* first-visit eligibility
+* membership eligibility
+* class category
+* beginner-friendly status
+
+Create an appropriate Ground Up metadata model associated with synchronized events or recurring class definitions.
+
+Do NOT require the business to encode complex machine-readable rules inside the Google Calendar event description.
+
+A minimal mapping should be manageable from the Ground Up admin interface.
+
+---
+
+# 13. ADMIN CLASS MAPPING
+
+When a new Google Calendar class event appears, Ground Up should try to map it to a known class type.
+
+Example:
+
+Google event title:
+
+Women's BJJ Fundamentals
+
+maps to Ground Up class type:
+
+Women's BJJ Fundamentals
+
+with:
+
+* default capacity 6
+* first visit allowed
+* beginner friendly
+* default coach Raymi
+
+The admin must be able to fix or change this mapping.
+
+Avoid fragile exact-string behavior as the only architecture.
+
+---
+
+# 14. CLASS TYPES
+
+Ground Up should maintain reusable class types.
+
+Examples:
+
+* Women's BJJ Fundamentals
+* Women's Self-Defense
+* Strength & Conditioning
+* Open Mat
+* Intro to Ground Up
+* Recovery / Mobility
+
+Class types should support:
+
+* display name
+* description
+* category
+* default capacity
+* beginner-friendly flag
+* first-visit eligibility
+* default instructor
+* membership requirement
+* active/inactive
+* booking enabled
+
+This metadata stays in Ground Up.
+
+---
+
+# 15. GOOGLE CALENDAR ADMIN WORKFLOW
+
+The operational goal is intentionally simple.
+
+Ground Up staff should be able to open Google Calendar and create:
+
+Women's BJJ Fundamentals
+Monday
+6 PM–7 PM
+Recurring weekly
+
+without editing source code.
+
+Ground Up should then discover the event and make it available through the booking application based on its mapping/configuration.
+
+This should be one of the main advantages of the architecture.
+
+---
+
+# 16. GROUND UP ADMIN WORKFLOW
+
+Ground Up admin should then be able to manage booking-specific information:
+
+* capacity
+* eligibility
+* booking enabled
+* roster
+* waitlist
+* attendance
+* participant cancellations
+* first-visit eligibility
+
+Do not force administrators to manage those items through Google Calendar.
+
+---
+
+# 17. PUBLIC SCHEDULE
+
+Replace the current static public schedule with synchronized Google Calendar occurrences.
+
+The public schedule should show LIVE Ground Up class information.
+
+Possible presentation:
+
+Today
+
+Tomorrow
+
+This Week
+
+Each class card should include:
+
+* class name
+* date
+* start time
+* duration
+* instructor
+* beginner-friendly indicator where relevant
+* spots remaining
+* booking state
+
+Example:
+
+Women's BJJ Fundamentals
+
+Monday · 6:00 PM
+
+Coach Raymi
+
+60 minutes
+
+Beginner Friendly
+
+**2 spots remaining**
+
+[Book Class]
+
+---
+
+# 18. DO NOT EXPOSE GOOGLE CALENDAR UI
+
+Do not embed the raw Google Calendar as the primary customer experience.
+
+Google Calendar is backend operational infrastructure.
+
+The customer experience should remain native Ground Up design.
+
+Users should not feel like they are leaving Ground Up to use Google Calendar.
+
+---
+
+# 19. FIRST-TIME VISITOR FLOW
+
+New visitors should be able to book eligible classes without first creating a member account.
+
+Flow:
+
+Website
+
+→ Book Your First Class
+
+→ Live Ground Up schedule
+
+→ only first-visit eligible classes
+
+→ select class
+
+→ class detail
+
+→ enter:
+
+* first name
+* last name
+* email
+* mobile number
+* experience level where needed
+
+→ reserve
+
+→ confirmed
+
+A successful reservation should result in a real Ground Up reservation tied to the synchronized Google event occurrence.
+
+---
+
+# 20. MEMBER FLOW
+
+Existing member:
+
+Portal
+
+→ Classes
+
+→ live synchronized schedule
+
+→ select class
+
+→ Book
+
+→ confirmed
+
+→ My Classes
+
+Members should be able to see:
+
+* upcoming bookings
+* waitlisted classes
+* cancelled classes
+* past attendance
+
+---
+
+# 21. CAPACITY
+
+Capacity is NOT controlled by Google Calendar attendee counts.
+
+Ground Up must enforce class capacity.
+
+Example:
+
+capacity = 6
+
+Ground Up confirmed reservations:
+
+6
+
+Result:
+
+class full
+
+The seventh user should not become confirmed.
+
+Implement atomic server-side protection.
+
+Two simultaneous users attempting to book the final spot must not both succeed.
+
+---
+
+# 22. GOOGLE EVENT ATTENDEES
+
+Do NOT automatically add every Ground Up participant as a Google Calendar attendee unless there is a strong operational reason.
+
+This could:
+
+* expose participant emails
+* cause Google invitation emails
+* create privacy problems
+* clutter calendars
+* make Google attendees look like reservation truth
+
+Ground Up should retain the authoritative participant roster internally.
+
+If later we explicitly choose to add attendees, make it an intentional opt-in architecture.
+
+For this phase:
+
+**Do not use Google attendee lists as the booking roster.**
+
+---
+
+# 23. WAITLIST
+
+When capacity is reached:
+
+show:
+
+**Class Full**
+
+[Join Waitlist]
+
+Ground Up maintains ordered waitlist positions.
+
+When a participant cancels:
+
+Ground Up should safely promote the next eligible waitlisted participant if automatic promotion is implemented.
+
+Any automatic promotion must be transactional and auditable.
+
+---
+
+# 24. DUPLICATE RESERVATIONS
+
+Prevent:
+
+same participant
+
+*
+
+same Google-synchronized class occurrence
+
+from having multiple active reservations.
+
+Enforce server-side/database integrity.
+
+---
+
+# 25. OVERLAPPING BOOKINGS
+
+Members should not normally be able to book two classes that overlap in time.
+
+Check confirmed reservations.
+
+Return a clear user-facing message.
+
+Admin override may exist if operationally necessary.
+
+---
+
+# 26. GOOGLE EVENT CHANGES AFTER BOOKINGS
+
+Important scenario:
+
+6 members are booked for:
+
+Monday 6 PM
+
+Admin changes the Google event to:
+
+Monday 7 PM
+
+Ground Up must synchronize the change WITHOUT losing reservations.
+
+The Ground Up occurrence should remain associated with the same Google event identity where appropriate.
+
+Participants should then see the updated class time.
+
+Track the change.
+
+Design the notification architecture so users can eventually be notified of schedule changes.
+
+---
+
+# 27. GOOGLE EVENT CANCELLATION
+
+If the class is cancelled in Google Calendar:
+
+Ground Up should mark the synchronized class occurrence cancelled.
+
+Do NOT delete booking history.
+
+The system should:
+
+* prevent new bookings;
+* preserve existing reservations;
+* clearly show cancellation;
+* identify affected participants;
+* support notification.
+
+---
+
+# 28. GOOGLE EVENT DELETION
+
+Treat deletion carefully.
+
+Do not hard-delete Ground Up history.
+
+If a synchronized event that previously existed disappears/cancels:
+
+mark local occurrence appropriately.
+
+Preserve:
+
+* reservations
+* waitlist history
+* attendance history
+* event ID
+* audit information
+
+---
+
+# 29. BOOKING STATES
+
+Use controlled server-owned states.
+
+Recommended:
+
+CONFIRMED
+
+WAITLISTED
+
+CANCELLED
+
+ATTENDED
+
+NO_SHOW
+
+Do not allow the frontend to choose arbitrary status.
+
+---
+
+# 30. SECURITY — FIX CURRENT UNSAFE BOOKING API
+
+The previous audit found that the existing generic booking API allows clients to submit sensitive fields such as:
+
+* amount
+* currency
+* booking status
+* customer identity
+* start/end times
+
+Do not carry this architecture forward.
+
+The browser should essentially send:
+
+classOccurrenceId
+
+plus permitted user/visitor information.
+
+The server resolves:
+
+* real occurrence
+* Google event
+* real start/end
+* capacity
+* status
+* eligibility
+* price if applicable
+* instructor
+* location
+
+The client sends intent.
+
+The server owns truth.
+
+---
+
+# 31. PAYMENT
+
+Normal Ground Up class reservations should NOT require Stripe merely to function unless the business explicitly charges per individual class.
+
+Keep booking architecture independent of payment.
+
+If future paid events are added:
+
+price and currency must be server-owned.
+
+Do not perpetuate client-controlled payment values.
+
+---
+
+# 32. MY CLASSES
+
+Create a clear My Classes experience.
+
+## Upcoming
+
+Show:
+
+* class
+* date
+* time
+* coach
+* status
+* waitlist position if applicable
+* cancel action
+
+## Past
+
+Show:
+
+* class
+* date
+* attended
+* no-show
+* cancelled
+
+Keep it straightforward.
+
+---
+
+# 33. CANCELLATION
+
+Member cancellation:
+
+My Classes
+
+→ Cancel
+
+→ confirm
+
+→ reservation becomes CANCELLED
+
+→ capacity becomes available
+
+→ waitlist logic executes
+
+Do not delete history.
+
+---
+
+# 34. ADMIN ROSTER
+
+Admin should be able to open a synchronized occurrence and see:
+
+Women's BJJ Fundamentals
+
+Monday
+6:00 PM
+
+Coach Raymi
+
+Google sync status: Synced
+
+Capacity: 6
+
+Confirmed: 5
+
+Waitlist: 2
+
+Then:
+
+### Confirmed
+
+participant list
+
+### Waitlist
+
+ordered participant list
+
+Admin actions:
+
+* manually add participant
+* cancel participant
+* promote participant
+* mark attendance
+* mark no-show
+
+---
+
+# 35. ATTENDANCE
+
+Attendance belongs to each reservation/class occurrence.
+
+Support:
+
+ATTENDED
+
+NO_SHOW
+
+Do not use only a total attendance counter.
+
+Historical attendance should remain queryable.
+
+---
+
+# 36. COACH PERMISSIONS
+
+Fix the authorization concern from the original audit.
+
+Coach access should be scoped appropriately.
+
+A coach must not be able to alter or inspect unrelated sensitive member information by modifying path IDs.
+
+Server-side authorization is mandatory.
+
+---
+
+# 37. GOOGLE SYNC ADMIN STATUS
+
+Add an operational Google Calendar sync status area.
+
+Admin should be able to see:
+
+Google Calendar
+
+CONNECTED / DISCONNECTED
+
+Last successful sync
+
+Last sync attempt
+
+Events synchronized
+
+Sync errors
+
+Do not expose credentials.
+
+If the connection fails, explain operationally what needs attention.
+
+---
+
+# 38. MANUAL SYNC
+
+Provide an authorized admin action:
+
+**Sync Google Calendar Now**
+
+This is useful for operational troubleshooting.
+
+Protect it appropriately.
+
+Rate-limit or guard against accidental repeated execution where needed.
+
+---
+
+# 39. EMAIL CONFIRMATIONS
+
+Use the existing Resend foundation.
+
+Implement:
+
+## Booking confirmed
+
+Include:
+
+* class
+* date
+* time
+* location
+* coach where applicable
+* cancellation/manage instructions
+
+## Waitlist joined
+
+## Waitlist promoted
+
+## Booking cancelled
+
+If a Google Calendar event changes significantly, architect for future:
+
+## Class schedule changed
+
+If a class is cancelled:
+
+## Class cancelled
+
+Do not claim an email was delivered unless the provider accepted it.
+
+Track failure.
+
+---
+
+# 40. FIRST-VISIT CONFIRMATION
+
+For first-time visitors, confirmation should also provide useful arrival instructions such as the existing Ground Up guidance where appropriate:
+
+* when to arrive
+* what to wear
+* gear expectations
+* what happens during the first class
+
+Reuse existing verified Ground Up content where applicable.
+
+Do not invent policies.
+
+---
+
+# 41. LOCATION
+
+If the Google event contains a valid Ground Up location, synchronize it.
+
+Do not expose private/internal Google event information.
+
+If location is missing, use business-approved Ground Up default location configuration.
+
+Do not invent an address.
+
+---
+
+# 42. GOOGLE EVENT DESCRIPTION
+
+Treat Google event descriptions cautiously.
+
+Do not automatically render arbitrary Google Calendar description HTML publicly.
+
+Sanitize any synchronized text.
+
+Prefer Ground Up class-type descriptions for customer-facing content.
+
+---
+
+# 43. PRIVATE GOOGLE EVENTS
+
+Only synchronize the dedicated approved Ground Up calendar or explicitly approved events.
+
+Never expose unrelated private calendar events.
+
+This is a hard privacy boundary.
+
+---
+
+# 44. CALENDAR FILTERING
+
+If the Google Calendar contains administrative or non-bookable events, support a safe inclusion rule.
+
+Examples:
+
+* only dedicated calendar;
+* approved class mappings;
+* explicit booking-enabled metadata.
+
+Do not make every calendar event publicly bookable by default.
+
+---
+
+# 45. DATABASE MODEL
+
+Create or adapt schema cleanly to distinguish:
+
+* Google calendar connection/configuration
+* class types
+* synchronized class occurrences
+* reservations
+* waitlist/order
+* attendance
+* sync state
+
+Do not create unnecessary duplicated models.
+
+Preserve historical bookings.
+
+---
+
+# 46. MIGRATION
+
+Before making changes:
+
+1. inspect existing static schedule;
+2. inspect existing internal bookings;
+3. inspect Calendly-linked bookings;
+4. determine active future reservations;
+5. preserve provider identifiers;
+6. avoid duplicate migration;
+7. document anything that cannot safely map to a Google occurrence.
+
+Never fabricate historical associations.
+
+---
+
+# 47. STATIC SCHEDULE RETIREMENT
+
+Once Google synchronization is functioning:
+
+public schedule
+
+and
+
+member schedule
+
+must read from synchronized Ground Up occurrences.
+
+Do not leave the static schedule operating independently.
+
+Historical static configuration may remain temporarily for migration evidence but must not remain a second production source of truth.
+
+---
+
+# 48. BOOKING CTA CLEANUP
+
+Standardize class-booking CTAs.
+
+Preferred public actions:
+
+**View Classes**
+
+**Book Your First Class**
+
+Existing members:
+
+**My Classes**
+
+**Book a Class**
+
+Do not route cold visitors into the member login merely to see class availability.
+
+---
+
+# 49. MOBILE UX
+
+The booking experience must be mobile-first.
+
+Verify approximately:
+
+375 px
+390 px
+412 px
+
+Test:
+
+* schedule
+* filters
+* class cards
+* booking
+* waitlist
+* first-visit form
+* confirmation
+* My Classes
+* cancellation
+
+No hidden horizontal overflow.
+
+---
+
+# 50. TEST REQUIREMENTS
+
+Add meaningful tests.
+
+## Google synchronization
+
+Test:
+
+* new event
+* updated event
+* cancelled occurrence
+* deleted/cancelled series
+* recurring events
+* duplicate sync
+* event override
+* timezone
+
+## Booking capacity
+
+5/6
+
+→ succeeds
+
+6/6
+
+→ waitlist/full
+
+simultaneous final-seat attempts
+
+→ only one confirmed
+
+## Duplicate
+
+same user + same occurrence
+
+→ cannot double book
+
+## Cancellation
+
+confirmed booking cancelled
+
+→ capacity restored
+
+## Waitlist
+
+full class
+
+→ waitlist
+
+cancellation
+
+→ correct promotion behavior
+
+## Authorization
+
+anonymous
+
+member
+
+coach
+
+unrelated coach
+
+admin
+
+## Client tampering
+
+attempt to send:
+
+* status
+* amount
+* currency
+* alternate time
+* capacity
+
+must not change server truth.
+
+---
+
+# 51. GOOGLE API TESTING
+
+Do not run destructive operations against real production classes unnecessarily.
+
+Use safe test data/calendar when possible.
+
+If production credentials are required but unavailable:
+
+implement through the safe boundary and report:
+
+GOOGLE_CONFIGURATION_REQUIRED
+
+Do not fake successful Google integration.
+
+---
+
+# 52. E2E TEST
+
+Create at least one safe end-to-end flow:
+
+Google test event
+
+→ synchronized into Ground Up
+
+→ appears on schedule
+
+→ test visitor selects class
+
+→ reservation succeeds
+
+→ capacity changes
+
+→ admin sees participant
+
+→ participant cancels
+
+→ capacity restores
+
+And member flow:
+
+member login
+
+→ class schedule
+
+→ book
+
+→ My Classes
+
+→ cancel
+
+---
+
+# 53. OBSERVABILITY
+
+Track meaningful operational events:
+
+google_sync_started
+
+google_sync_completed
+
+google_sync_failed
+
+google_event_created_local
+
+google_event_updated_local
+
+google_event_cancelled
+
+reservation_created
+
+reservation_cancelled
+
+waitlist_joined
+
+waitlist_promoted
+
+booking_email_failed
+
+Do not log private form contents.
+
+---
+
+# 54. HEALTH
+
+Google Calendar outages should not take down the entire application.
+
+Ground Up should continue serving the most recently synchronized schedule where safe.
+
+Clearly distinguish stale sync state to administrators.
+
+---
+
+# 55. IMPLEMENTATION PHASES
+
+Perform the work in controlled phases.
+
+## Phase 1 — Google Calendar architecture
+
+* connection
+* secure server integration
+* sync model
+* timezone
+* event identity
+* recurring event handling
+
+## Phase 2 — Ground Up class model
+
+* class types
+* synchronized occurrences
+* metadata mapping
+* capacity
+
+## Phase 3 — Reservation engine
+
+* confirmed reservations
+* waitlist
+* duplicates
+* capacity concurrency
+* cancellation
+
+## Phase 4 — Admin
+
+* class mappings
+* synchronized occurrence management
+* roster
+* attendance
+* sync status
+
+## Phase 5 — Public/member UX
+
+* live schedule
+* first visit
+* member booking
+* My Classes
+
+## Phase 6 — Email lifecycle
+
+* confirmation
+* waitlist
+* cancellation
+* promotion
+
+## Phase 7 — Calendly/static retirement
+
+Only after validation.
+
+## Phase 8 — QA
+
+* integration
+* authorization
+* concurrency
+* E2E
+* mobile
+* build
+* typecheck
+
+---
+
+# 56. DO NOT PUBLISH
+
+Do not automatically deploy or publish this task.
+
+We need to review the result first.
+
+---
+
+# 57. FINAL REPORT
+
+Return a detailed report with:
+
+# Executive Verdict
+
+One of:
+
+GOOGLE_BOOKING_READY_FOR_QA
+
+GOOGLE_BOOKING_PARTIAL
+
+GOOGLE_CONFIGURATION_REQUIRED
+
+GOOGLE_BOOKING_BLOCKED
+
+GOOGLE_BOOKING_NOT_SAFE
+
+Then provide:
+
+## Google Calendar architecture
+
+## Authentication/connection method
+
+## Calendar selected/configured
+
+## Synchronization model
+
+## Recurring event behavior
+
+## Ground Up class model
+
+## Capacity model
+
+## Reservation model
+
+## Waitlist model
+
+## Public first-visit flow
+
+## Member flow
+
+## Admin flow
+
+## Attendance
+
+## Coach authorization
+
+## Email behavior
+
+## Calendly status
+
+## Static schedule status
+
+## Historical booking migration
+
+## Timezone correction
+
+## Security remediation
+
+## Test results
+
+Exact pass/fail counts.
+
+## Google API integration tests
+
+## E2E results
+
+## Mobile QA
+
+## Known limitations
+
+## Required production configuration
+
+## Items intentionally deferred
+
+## Production status
+
+Must state:
+
+**NOT PUBLISHED BY THIS TASK**
+
+Finally:
+
+**READY_FOR_GOOGLE_BOOKING_QA**
+
+or
+
+**REMEDIATION_REQUIRED**
+
+---
+
+# DEFINITION OF DONE
+
+The desired system is:
+
+Ground Up staff creates/changes classes in Google Calendar
+
+↓
+
+Ground Up securely synchronizes those events
+
+↓
+
+Ground Up displays the live class schedule
+
+↓
+
+Customer selects a real class occurrence
+
+↓
+
+Ground Up checks eligibility/capacity
+
+↓
+
+Ground Up atomically reserves the seat
+
+↓
+
+Customer receives accurate confirmation
+
+↓
+
+Admin sees the participant on that class roster
+
+↓
+
+Waitlist works when capacity is reached
+
+↓
+
+Cancellations release seats safely
+
+↓
+
+Attendance is recorded in Ground Up
+
+↓
+
+Google Calendar remains easy for staff to maintain
+
+while
+
+Ground Up remains the authoritative system for participant bookings.
+
+No Calendly dependency for standard classes.
+
+No static fake availability.
+
+No Google attendee list used as reservation truth.
+
+No client-controlled booking status.
+
+No double-booking the final seat.
+
+No booking confirmation without a real reservation.
