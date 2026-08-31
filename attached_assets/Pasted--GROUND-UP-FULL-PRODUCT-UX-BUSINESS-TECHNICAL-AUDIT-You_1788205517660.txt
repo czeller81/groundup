@@ -1,0 +1,1110 @@
+# GROUND UP — FULL PRODUCT, UX, BUSINESS & TECHNICAL AUDIT
+
+You are auditing the existing **Ground Up** Replit application.
+
+This is an **AUDIT ONLY**.
+
+Do not redesign the application.
+Do not rewrite major sections.
+Do not delete anything.
+Do not change functionality.
+Do not publish.
+Do not migrate frameworks or databases.
+Do not add features unless required strictly to run a non-destructive diagnostic.
+
+The purpose of this task is to establish an accurate baseline of **what has actually been built**, what works, what is incomplete, what is broken, what conflicts with the current business model, and what should happen next.
+
+Be skeptical.
+
+Do not assume a feature works because code exists for it.
+
+Verify behavior whenever reasonably possible.
+
+---
+
+# 1. CURRENT BUSINESS CONTEXT
+
+Ground Up is being developed as a **women-only program/community in Oxnard, California**.
+
+The business should not present itself as a generic mixed-gender gym.
+
+The broader concept combines elements such as:
+
+* Brazilian Jiu-Jitsu / practical physical training
+* Confidence
+* Personal safety
+* Strength
+* Resilience
+* Discipline
+* Agency
+* Adaptive capacity
+* Personal development
+* Community
+* A structured transformation journey
+
+There has also been discussion around a **12-week Ground Up → Adaptive Capacity program**.
+
+The intended experience should feel safe, professional, empowering, premium, credible, and focused.
+
+It should NOT feel like:
+
+* a generic martial arts template
+* a macho fight gym
+* an AI-generated landing page
+* a random collection of services
+* a cheap fitness funnel
+* a mixed-gender gym
+* an unfinished prototype
+
+The audit must determine whether the existing application still reflects this direction.
+
+---
+
+# 2. EXECUTIVE AUDIT VERDICT
+
+Start the final report with one of these:
+
+**READY**
+**READY WITH MINOR FIXES**
+**NEEDS MATERIAL IMPROVEMENT**
+**NOT READY**
+**ARCHITECTURALLY UNSOUND**
+
+Then explain the verdict in plain English.
+
+Give scores from 0–100 for:
+
+* Brand clarity
+* Business-model alignment
+* Visitor trust
+* UX quality
+* Mobile UX
+* Conversion readiness
+* Booking readiness
+* Lead-capture readiness
+* Member experience
+* Admin/operations readiness
+* Technical quality
+* Security/privacy
+* Production readiness
+
+Also provide an overall score.
+
+Do not inflate scores.
+
+---
+
+# 3. APPLICATION INVENTORY
+
+Create a complete inventory of what currently exists.
+
+Identify:
+
+* frontend framework
+* backend framework
+* database
+* authentication system
+* session management
+* external services
+* email provider
+* payment provider
+* booking/calendar integrations
+* analytics
+* forms
+* APIs
+* file storage
+* environment variables
+* admin interfaces
+* customer/member interfaces
+* deployment setup
+
+List every meaningful route/page.
+
+For each route include:
+
+* route
+* purpose
+* audience
+* authentication requirement
+* current status
+* whether it appears complete
+* broken or missing behavior
+
+Example status labels:
+
+* WORKING
+* PARTIAL
+* PLACEHOLDER
+* BROKEN
+* DEAD ROUTE
+* NOT WIRED
+* UNKNOWN
+
+---
+
+# 4. HOMEPAGE AUDIT
+
+Audit the homepage as though you were a woman in Oxnard discovering Ground Up for the first time.
+
+Determine whether the first screen clearly answers:
+
+1. What is Ground Up?
+2. Who is it for?
+3. Is it women-only?
+4. What transformation is being offered?
+5. What do I actually do there?
+6. Why should I trust it?
+7. What should I do next?
+8. Is this BJJ, self-defense, fitness, personal development, or something broader?
+9. Is the 12-week journey clear?
+10. Is location clearly communicated?
+
+Evaluate:
+
+* hero headline
+* supporting copy
+* visual hierarchy
+* navigation
+* calls to action
+* trust
+* emotional resonance
+* specificity
+* information density
+* imagery
+* mobile appearance
+* repeated CTAs
+* confusing language
+* generic AI-generated copy
+
+Call out every section that is weak, redundant, unclear, or unnecessary.
+
+---
+
+# 5. BRAND & POSITIONING AUDIT
+
+Determine what the website currently appears to be selling.
+
+Do not infer intent from comments or unused code.
+
+Judge what the customer-facing product communicates.
+
+Compare the current site against these possible identities:
+
+* women-only BJJ gym
+* self-defense program
+* fitness studio
+* resilience program
+* adaptive-capacity program
+* women's empowerment community
+* 12-week cohort
+* membership facility
+* hybrid of the above
+
+State which one a visitor would currently believe it is.
+
+Identify positioning conflicts.
+
+Look specifically for outdated messaging suggesting:
+
+* mixed-gender participation
+* generic gym membership
+* unrelated AI classes
+* unclear age groups
+* contradictory program descriptions
+* multiple competing offers
+* old business concepts that survived previous iterations
+
+---
+
+# 6. WOMEN-ONLY EXPERIENCE
+
+This is critical.
+
+Audit the entire application for consistency with a women-only positioning.
+
+Search:
+
+* homepage
+* FAQ
+* forms
+* program descriptions
+* testimonials
+* booking flow
+* login/register flow
+* member portal
+* admin content
+* metadata
+* SEO
+* images
+* alt text
+* structured data
+* confirmation emails
+* legal pages
+* footer
+* hidden text
+* old routes
+
+Flag anywhere the language:
+
+* implies men can register
+* says "everyone"
+* uses generic gym language
+* contradicts the women-only mission
+* creates ambiguity
+
+Also evaluate whether the positioning feels empowering versus exclusionary or awkwardly worded.
+
+---
+
+# 7. CUSTOMER JOURNEY AUDIT
+
+Map the complete visitor journey.
+
+For example:
+
+Visitor
+→ Homepage
+→ Understand offer
+→ View program
+→ Build trust
+→ Book / Apply / Join
+→ Submit information
+→ Receive confirmation
+→ Attend intro/session
+→ Become member
+→ Access member experience
+
+Determine the actual journey implemented today.
+
+For each step classify it:
+
+* EXISTS AND WORKS
+* EXISTS BUT WEAK
+* PARTIAL
+* BROKEN
+* MISSING
+
+Identify where users can get stuck.
+
+---
+
+# 8. CALL-TO-ACTION AUDIT
+
+Inventory every CTA.
+
+Examples:
+
+* Join
+* Start
+* Book
+* Apply
+* Learn More
+* Get Started
+* Schedule
+* Contact
+* Login
+* Register
+
+For each CTA determine:
+
+* where it appears
+* destination
+* whether it works
+* whether destination matches intent
+* whether duplicate CTAs conflict
+* whether the CTA represents the desired business action
+
+Determine what the site's **primary conversion event** currently is.
+
+Then state whether that should actually be the primary event.
+
+---
+
+# 9. BOOKING SYSTEM AUDIT
+
+Inspect all booking functionality.
+
+Determine:
+
+* what users can book
+* available appointment/session types
+* schedule source
+* staff/instructor selection
+* available dates/times
+* capacity controls
+* duplicate booking protection
+* cancellation
+* rescheduling
+* reminders
+* confirmation messages
+* email confirmations
+* timezone behavior
+* database persistence
+* admin visibility
+* error states
+* empty-state behavior
+
+Actually test booking flow where safe and non-destructive.
+
+Do not create real external appointments unless a sandbox/test mechanism exists.
+
+Identify:
+
+* broken endpoints
+* fake buttons
+* mock availability
+* placeholder calendars
+* bookings that do not persist
+* bookings admins cannot manage
+
+Give booking readiness a PASS/PARTIAL/FAIL.
+
+---
+
+# 10. LEAD-CAPTURE AUDIT
+
+Inspect all lead-generation forms.
+
+Determine what fields are collected.
+
+Verify:
+
+* required-field validation
+* email validation
+* phone validation
+* spam protection
+* consent language
+* submission persistence
+* notification delivery
+* confirmation UX
+* duplicate handling
+* error handling
+* admin visibility
+* follow-up workflow
+
+The known Ground Up contact email has been:
+
+**[info@groundupbjj.com](mailto:info@groundupbjj.com)**
+
+Verify whether forms actually route where expected.
+
+Do not expose secrets.
+
+---
+
+# 11. AUTHENTICATION AUDIT
+
+If authentication exists, inspect:
+
+* registration
+* login
+* logout
+* password reset
+* email verification
+* session persistence
+* unauthorized-page handling
+* duplicate accounts
+* account enumeration risks
+* password storage
+* rate limiting
+* CSRF protections where applicable
+* cookies
+* secure-cookie settings
+* member/admin separation
+
+Determine whether an ordinary user could reach an admin page.
+
+Determine whether unauthenticated users can invoke protected APIs directly.
+
+---
+
+# 12. MEMBER PORTAL AUDIT
+
+If a member/customer portal exists, inventory everything available.
+
+Examples:
+
+* dashboard
+* profile
+* bookings
+* class schedule
+* progress
+* resources
+* lessons
+* payments
+* community
+* attendance
+* messages
+* support
+
+For each feature determine whether it is:
+
+* real
+* placeholder
+* mock data
+* disconnected
+* incomplete
+
+Assess whether there is enough value to justify creating an account.
+
+---
+
+# 13. ADMIN CENTER AUDIT
+
+Determine whether there is an admin interface.
+
+Audit:
+
+* dashboard
+* leads
+* members
+* bookings
+* instructors
+* schedules
+* attendance
+* program cohorts
+* content
+* payments
+* messages
+* forms
+* analytics
+* settings
+
+Verify authorization.
+
+Identify any data that administrators currently cannot manage without editing the database or source code.
+
+---
+
+# 14. 12-WEEK PROGRAM AUDIT
+
+Search the complete project for concepts related to:
+
+* 12-week program
+* cohort
+* adaptive capacity
+* resilience
+* curriculum
+* weekly progression
+* assessment
+* milestones
+* onboarding
+* graduation
+* certification
+* progress tracking
+
+Determine whether the 12-week concept is:
+
+* implemented
+* partially represented
+* purely marketing copy
+* absent
+
+If it exists, explain how it works today.
+
+Do NOT build it during this audit.
+
+---
+
+# 15. BJJ / SELF-DEFENSE PROGRAM AUDIT
+
+Determine exactly how physical training is represented.
+
+Audit:
+
+* beginner friendliness
+* intimidation level
+* expected fitness level
+* equipment requirements
+* uniforms
+* class structure
+* instructor information
+* safety practices
+* injury considerations
+* first-class expectations
+* age requirements
+* experience requirements
+
+Identify anything a first-time participant would still need to ask before attending.
+
+---
+
+# 16. SAFETY & TRUST AUDIT
+
+Because this is a women-focused physical program, trust is extremely important.
+
+Determine whether the site adequately communicates:
+
+* who runs the program
+* instructor credentials
+* location
+* safety
+* professionalism
+* expectations
+* privacy
+* contact information
+* policies
+* injury/medical disclaimer
+* cancellation/refund policy
+* participant conduct expectations
+
+Identify trust gaps.
+
+Do not invent credentials that are not already documented.
+
+---
+
+# 17. DESIGN AUDIT
+
+Review every major screen visually.
+
+Evaluate:
+
+* layout
+* typography
+* spacing
+* consistency
+* imagery
+* button styles
+* forms
+* card design
+* hierarchy
+* section length
+* contrast
+* readability
+* empty states
+* errors
+* loading states
+
+Identify whether design looks:
+
+* premium
+* generic
+* unfinished
+* template-like
+* overly AI-generated
+* visually inconsistent
+
+Call out exact sections/screens that need work.
+
+---
+
+# 18. MOBILE AUDIT
+
+Test major screens at realistic mobile sizes.
+
+At minimum:
+
+* small iPhone
+* larger iPhone
+* common Android width
+
+Check:
+
+* nav
+* hero
+* forms
+* buttons
+* text wrapping
+* modals
+* booking
+* login
+* dashboard
+* tables
+* images
+* footer
+* fixed/sticky UI
+* horizontal overflow
+
+Provide a list of mobile-specific defects.
+
+---
+
+# 19. ACCESSIBILITY AUDIT
+
+Inspect basic accessibility including:
+
+* semantic headings
+* form labels
+* keyboard navigation
+* button semantics
+* alt text
+* focus states
+* contrast
+* modal accessibility
+* ARIA misuse
+* screen-reader basics
+
+Give accessibility readiness:
+
+PASS / PARTIAL / FAIL.
+
+---
+
+# 20. PERFORMANCE AUDIT
+
+Inspect:
+
+* large assets
+* image optimization
+* unnecessary client bundles
+* loading behavior
+* repeated database calls
+* blocking requests
+* excessive third-party scripts
+* slow endpoints
+* caching
+* unnecessary re-renders
+
+Identify the most important performance issues, not theoretical micro-optimizations.
+
+---
+
+# 21. DATABASE AUDIT
+
+Inventory the major data models/tables.
+
+Explain what each stores.
+
+Look for:
+
+* unused tables
+* duplicate models
+* missing foreign keys
+* orphan risk
+* overly permissive nullable fields
+* inconsistent naming
+* unfinished schema migrations
+* fields that suggest abandoned product directions
+
+Do not expose customer information.
+
+Provide aggregate/schema findings only.
+
+---
+
+# 22. API AUDIT
+
+Inventory meaningful API endpoints.
+
+For each important endpoint specify:
+
+* method
+* purpose
+* authentication
+* authorization
+* validation
+* database writes
+* error behavior
+* production readiness
+
+Identify:
+
+* dead endpoints
+* duplicate APIs
+* unauthenticated sensitive endpoints
+* mock responses
+* incomplete functionality
+
+---
+
+# 23. EMAIL AUDIT
+
+Inventory transactional email behavior.
+
+Examples:
+
+* lead confirmation
+* admin lead alert
+* booking confirmation
+* booking reminder
+* registration
+* password reset
+* welcome
+* cancellation
+
+Determine:
+
+* which exist
+* provider used
+* whether configured
+* whether failure is handled
+* whether messages contain accurate Ground Up branding
+
+Do not send production emails during the audit unless a safe test recipient is explicitly configured.
+
+---
+
+# 24. PAYMENT AUDIT
+
+If payments exist, determine:
+
+* provider
+* products/prices
+* membership billing
+* one-time payments
+* subscriptions
+* checkout
+* webhooks
+* payment status persistence
+* cancellation
+* refunds
+* failed-payment handling
+* access provisioning
+
+If Stripe or another provider exists but is incomplete, state that clearly.
+
+Do not initiate real transactions.
+
+---
+
+# 25. ANALYTICS AUDIT
+
+Determine whether the site tracks:
+
+* visitors
+* CTA clicks
+* lead form submissions
+* booking starts
+* booking completion
+* registration
+* login
+* conversion
+* checkout
+* successful payment
+
+Identify analytics provider.
+
+Determine whether Ground Up can currently answer:
+
+* How many people visited?
+* Where did they come from?
+* How many leads were generated?
+* Which campaign generated them?
+* How many booked?
+* How many joined?
+* What is conversion rate?
+
+---
+
+# 26. SEO / SOCIAL AUDIT
+
+Inspect:
+
+* title tags
+* meta descriptions
+* canonical tags
+* Open Graph
+* social preview
+* favicon
+* robots
+* sitemap
+* structured data
+* location keywords
+* Ground Up naming consistency
+* Oxnard relevance
+* women-only positioning
+* BJJ / self-defense search relevance
+
+Identify missing or misleading metadata.
+
+---
+
+# 27. PRIVACY & LEGAL AUDIT
+
+Determine whether the application currently includes appropriate:
+
+* privacy policy
+* terms
+* cookie disclosure if needed
+* liability waiver
+* photo/media consent if relevant
+* SMS consent if texting users
+* email consent
+* refund/cancellation policies
+* medical/injury disclaimer
+
+Do not provide legal conclusions.
+
+Simply identify absent or weak operational/legal surfaces requiring professional review.
+
+---
+
+# 28. SECURITY AUDIT
+
+Perform a pragmatic application security review.
+
+Inspect:
+
+* secret handling
+* exposed API keys
+* auth boundaries
+* admin routes
+* object-level authorization
+* SQL/query safety
+* validation
+* XSS
+* CSRF
+* file uploads
+* rate limiting
+* email abuse
+* brute-force protection
+* session security
+* CORS
+* debug endpoints
+* logging of sensitive data
+
+Do not run destructive exploitation.
+
+Classify findings:
+
+CRITICAL
+HIGH
+MEDIUM
+LOW
+
+---
+
+# 29. DEAD CODE / OLD DIRECTION AUDIT
+
+Ground Up has evolved.
+
+Search for remnants of old concepts.
+
+Examples:
+
+* mixed-gender gym
+* AI classes
+* unrelated educational programs
+* old pricing
+* discontinued membership types
+* old branding
+* old CTAs
+* unused routes
+* abandoned database tables
+* outdated comments/configuration
+
+Identify them but do not delete them yet.
+
+---
+
+# 30. PRODUCTION DEPLOYMENT AUDIT
+
+Determine:
+
+* whether the application is currently deployed
+* deployment type
+* environment
+* production database
+* custom domain status if visible
+* build health
+* startup behavior
+* health endpoints
+* logging
+* crash handling
+
+Identify anything that would make production fragile.
+
+---
+
+# 31. TESTING AUDIT
+
+Inventory:
+
+* unit tests
+* integration tests
+* end-to-end tests
+* authentication tests
+* booking tests
+* form tests
+* admin authorization tests
+
+Run existing safe tests.
+
+Do not rewrite the test suite during this audit.
+
+Report exact pass/fail counts where possible.
+
+---
+
+# 32. BUSINESS OPERATIONS AUDIT
+
+Evaluate whether Ground Up can actually operate using the system today.
+
+Can an operator:
+
+* receive leads
+* contact prospects
+* schedule sessions
+* manage bookings
+* see members
+* track attendance
+* communicate with participants
+* manage cohorts
+* see payments
+* see cancellations
+* manage schedules
+* update program information
+* review business performance
+
+Identify what still requires manual work.
+
+---
+
+# 33. CONVERSION FUNNEL VERDICT
+
+Describe the current funnel exactly:
+
+Traffic
+→ ?
+→ ?
+→ ?
+→ Customer
+
+Then identify:
+
+* primary leak
+* secondary leak
+* trust leak
+* UX leak
+* technical leak
+
+State the **single biggest reason the existing website may fail to convert traffic into actual Ground Up participants**.
+
+---
+
+# 34. WHAT SHOULD NOT BE BUILT YET
+
+Based on the current maturity of the application, identify features that would be premature.
+
+Examples might include:
+
+* complex gamification
+* AI coaching
+* advanced community features
+* sophisticated adaptive assessments
+* mobile app
+* elaborate LMS
+* complicated membership tiers
+
+Only include features you believe would distract from getting the core business operational.
+
+---
+
+# 35. PRIORITIZED REMEDIATION BACKLOG
+
+Create four groups:
+
+## P0 — Must fix before sending traffic
+
+Critical issues that directly affect:
+
+* trust
+* safety
+* conversion
+* broken functionality
+* security
+* booking
+* lead capture
+
+## P1 — Must fix before serious launch
+
+## P2 — Important improvement
+
+## P3 — Later enhancement
+
+Every backlog item should include:
+
+* problem
+* impact
+* recommended outcome
+* effort: XS / S / M / L / XL
+* dependencies
+* whether it is safe to fix independently
+
+Do not implement the backlog yet.
+
+---
+
+# 36. KEEP / FIX / REMOVE / BUILD MATRIX
+
+Create four explicit lists.
+
+## KEEP
+
+What is already good and should remain.
+
+## FIX
+
+What exists but needs repair.
+
+## REMOVE OR RETIRE
+
+What conflicts with the current direction.
+
+## BUILD
+
+What is genuinely missing.
+
+---
+
+# 37. FINAL EXECUTIVE SUMMARY
+
+End with:
+
+### What Ground Up is today
+
+Describe the application as it actually exists.
+
+### What Ground Up appears to the customer to be
+
+Describe the external perception.
+
+### What is working
+
+### What is broken
+
+### What is missing
+
+### Biggest business risk
+
+### Biggest UX risk
+
+### Biggest technical risk
+
+### Biggest trust risk
+
+### Fastest path to launch
+
+### Recommended next development phase
+
+Then state one of:
+
+**READY TO REMEDIATE**
+or
+**ARCHITECTURE DECISION REQUIRED FIRST**
+
+---
+
+# IMPORTANT AUDIT RULES
+
+1. Do not assume functionality based only on source-code presence.
+2. Test behavior where safe.
+3. Distinguish clearly between:
+
+   * verified working behavior
+   * inferred behavior
+   * configured but unverified behavior
+   * missing behavior
+4. Do not hide failures.
+5. Do not quietly fix things during the audit.
+6. Do not rewrite the application.
+7. Do not publish.
+8. Do not expose secrets or personal data.
+9. Do not fabricate business facts or instructor credentials.
+10. Be extremely critical of anything that could damage user trust.
+11. Prioritize business viability over impressive technical complexity.
+12. A simple working booking and lead funnel is more valuable right now than sophisticated features that customers do not need.
+13. Preserve historical evidence of the current implementation so we have a true baseline before remediation.
+
+The final deliverable should be a comprehensive audit report that I can use to decide exactly what Replit should fix next.
