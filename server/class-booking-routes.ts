@@ -275,7 +275,7 @@ export function registerClassBookingRoutes(app: Express) {
     }
   });
 
-  app.get("/api/portal/admin/class-booking/occurrences", requireRole("admin", "coach"), async (req, res) => {
+  app.get("/api/portal/admin/class-booking/occurrences", requireRole("admin"), async (req, res) => {
     try {
       const { from, to } = dateRange(req);
       res.json(await storage.listClassOccurrences(from, to, false, true));
@@ -311,7 +311,7 @@ export function registerClassBookingRoutes(app: Express) {
     }
   });
 
-  app.get("/api/portal/admin/class-booking/occurrences/:id/roster", requireRole("admin", "coach"), async (req, res) => {
+  app.get("/api/portal/admin/class-booking/occurrences/:id/roster", requireRole("admin"), async (req, res) => {
     try {
       const occurrence = await storage.getClassOccurrence(req.params.id);
       if (!occurrence) return res.status(404).json({ message: "Occurrence not found." });
@@ -325,7 +325,7 @@ export function registerClassBookingRoutes(app: Express) {
     }
   });
 
-  app.patch("/api/portal/admin/class-booking/reservations/:id", requireRole("admin", "coach"), async (req, res) => {
+  app.patch("/api/portal/admin/class-booking/reservations/:id", requireRole("admin"), async (req, res) => {
     try {
       const data = z.object({
         attendance: z.enum(["present", "absent", "late", "excused"]).nullable().optional(),

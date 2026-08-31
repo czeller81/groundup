@@ -9,6 +9,7 @@ import {
   listGoogleEvents,
   sanitizeCalendarText,
 } from "./google-calendar";
+import { sendClassLifecycleEmail } from "./email";
 
 export class CalendarConfigurationError extends Error {
   code = "GOOGLE_CALENDAR_NOT_CONFIGURED";
@@ -144,6 +145,10 @@ export async function syncGoogleClassSchedule(now = new Date()) {
             syncError: null,
             lastSyncedAt: now,
           });
+          const reservations = await storage.cancelOccurrenceReservations(existing.id, "The class was cancelled on the academy calendar.");
+          for (const reservation of reservations) {
+            void sendCancellationEmail(reservation, existing);
+          }
           cancelled += 1;
         }
         continue;
@@ -186,7 +191,13 @@ export async function syncGoogleClassSchedule(now = new Date()) {
       classType ? synced++ : unmapped++;
     }
 
-    const removed = await storage.reconcileMissingClassOccurrences(connection.calendarId, from, to, seenEventIds);
+    const removedOccurrences = await storage.reconcileMissingClassOccurrences(connection.calendarId, from, to, seenEventIds);
+    for (const occurrence of removedOccurrences) {
+      const reservations = await storage.cancelOccurrenceReservations(occurrence.id, "The class was removed from the academy calendar.");
+      for (const reservation of reservations) {
+        void sendCancellationEmail(reservation, occurrence);
+      }
+    }
     await storage.saveCalendarConnection({
       status: "healthy",
       lastSuccessfulAt: new Date(),
@@ -201,9 +212,9 @@ export async function syncGoogleClassSchedule(now = new Date()) {
       synced,
       unmapped,
       cancelled,
-      removed,
+      removed: removedOccurrences.length,
     }));
-    return { received: events.length, synced, unmapped, cancelled, removed, from, to };
+    return { received: events.length, synced, unmapped, cancelled, removed: removedOccurrences.length, from, to };
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown Google Calendar synchronization error";
     await storage.saveCalendarConnection({
@@ -212,6 +223,28 @@ export async function syncGoogleClassSchedule(now = new Date()) {
     });
     console.error(JSON.stringify({ event: "google_calendar_sync_failed", message }));
     throw error;
+  }
+}
+
+async function sendCancellationEmail(
+  reservation: { visitorEmail: string | null; visitorFirstName: string | null; waitlistPosition: number | null },
+  occurrence: { title: string; start: Date },
+) {
+  if (!reservation.visitorEmail) return;
+  try {
+    await sendClassLifecycleEmail({
+      to: reservation.visitorEmail,
+      firstName: reservation.visitorFirstName || "there",
+      classTitle: occurrence.title,
+      startsAt: occurrence.start,
+      status: "cancelled",
+      waitlistPosition: reservation.waitlistPosition,
+    });
+  } catch (error) {
+    console.error(JSON.stringify({
+      event: "class_cancellation_email_failed",
+      error: error instanceof Error ? error.message : "Unknown email error",
+    }));
   }
 }
 

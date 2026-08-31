@@ -115,7 +115,8 @@ export interface IStorage {
   getClassOccurrenceByGoogleEvent(calendarId: string, eventId: string): Promise<ClassOccurrence | undefined>;
   upsertClassOccurrence(data: Omit<ClassOccurrence, "id" | "createdAt" | "updatedAt">): Promise<ClassOccurrence>;
   updateClassOccurrence(id: string, data: Partial<Pick<ClassOccurrence, "classTypeId" | "trainerId" | "instructorName" | "capacity" | "firstVisitEligible" | "bookingEnabled" | "audience" | "syncState" | "syncError">>): Promise<ClassOccurrence | undefined>;
-  reconcileMissingClassOccurrences(calendarId: string, from: Date, to: Date, seenEventIds: string[]): Promise<number>;
+  reconcileMissingClassOccurrences(calendarId: string, from: Date, to: Date, seenEventIds: string[]): Promise<ClassOccurrence[]>;
+  cancelOccurrenceReservations(occurrenceId: string, reason: string): Promise<ClassReservation[]>;
   markClassOccurrenceSyncError(id: string, error: string): Promise<void>;
   reserveClassOccurrence(input: {
     occurrenceId: string;
@@ -827,7 +828,7 @@ export class DatabaseStorage implements IStorage {
     return occurrence;
   }
 
-  async reconcileMissingClassOccurrences(calendarId: string, from: Date, to: Date, seenEventIds: string[]): Promise<number> {
+  async reconcileMissingClassOccurrences(calendarId: string, from: Date, to: Date, seenEventIds: string[]): Promise<ClassOccurrence[]> {
     const result = await db.update(classOccurrences).set({
       status: "removed",
       bookingEnabled: false,
@@ -841,8 +842,8 @@ export class DatabaseStorage implements IStorage {
       lte(classOccurrences.start, to),
       eq(classOccurrences.status, "active"),
       seenEventIds.length ? sql`${classOccurrences.googleEventId} not in (${sql.join(seenEventIds.map((id) => sql`${id}`), sql`, `)})` : undefined,
-    )).returning({ id: classOccurrences.id });
-    return result.length;
+    )).returning();
+    return result;
   }
 
   async markClassOccurrenceSyncError(id: string, error: string): Promise<void> {
@@ -878,7 +879,10 @@ export class DatabaseStorage implements IStorage {
       }
 
       const personCondition = input.userId
-        ? eq(classReservations.userId, input.userId)
+        ? or(
+            eq(classReservations.userId, input.userId),
+            sql`lower(${classReservations.visitorEmail}) = lower(${input.email})`,
+          )
         : sql`lower(${classReservations.visitorEmail}) = lower(${input.email})`;
       const activeStatuses = ["confirmed", "waitlisted"];
       const [duplicate] = await tx.select().from(classReservations).where(and(
@@ -1041,6 +1045,31 @@ export class DatabaseStorage implements IStorage {
       confirmed: reservations.filter((reservation) => reservation.status === "confirmed"),
       waitlisted: reservations.filter((reservation) => reservation.status === "waitlisted"),
     };
+  }
+
+  async cancelOccurrenceReservations(occurrenceId: string, reason: string): Promise<ClassReservation[]> {
+    return db.transaction(async (tx) => {
+      await tx.execute(sql`select id from class_occurrences where id = ${occurrenceId} for update`);
+      const cancelled = await tx.update(classReservations).set({
+        status: "cancelled",
+        cancellationReason: reason.slice(0, 240),
+        cancelledAt: new Date(),
+        waitlistPosition: null,
+        updatedAt: new Date(),
+      }).where(and(
+        eq(classReservations.occurrenceId, occurrenceId),
+        inArray(classReservations.status, ["confirmed", "waitlisted"]),
+      )).returning();
+      if (cancelled.length) {
+        await tx.insert(classReservationEvents).values(cancelled.map((reservation) => ({
+          reservationId: reservation.id,
+          occurrenceId,
+          event: "occurrence_cancelled",
+          metadata: { reason },
+        })));
+      }
+      return cancelled;
+    });
   }
 
   async updateClassReservation(id: string, updates: Partial<Pick<ClassReservation, "status" | "attendance" | "cancellationReason">>): Promise<ClassReservation | undefined> {
