@@ -1,5 +1,5 @@
 import { sql, relations } from "drizzle-orm";
-import { pgTable, text, varchar, integer, timestamp, jsonb, boolean, uniqueIndex } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, timestamp, jsonb, boolean, uniqueIndex, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -361,3 +361,123 @@ export const staffNotifications = pgTable("staff_notifications", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 export type StaffNotification = typeof staffNotifications.$inferSelect;
+
+// Google Calendar is the schedule source; these tables are the Ground Up
+// reservation boundary. Existing `bookings` remains for legacy/private sessions.
+export const calendarConnections = pgTable("calendar_connections", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  provider: text("provider").notNull().default("google"),
+  calendarId: text("calendar_id"),
+  calendarName: text("calendar_name"),
+  timezone: text("timezone").notNull().default("America/Los_Angeles"),
+  status: text("status").notNull().default("not_configured"),
+  lastAttemptedAt: timestamp("last_attempted_at"),
+  lastSuccessfulAt: timestamp("last_successful_at"),
+  lastSyncedEventCount: integer("last_synced_event_count").notNull().default(0),
+  lastError: text("last_error"),
+  syncToken: text("sync_token"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  providerUnique: uniqueIndex("calendar_connections_provider_unique").on(table.provider),
+}));
+
+export const classTypes = pgTable("class_types", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  description: text("description"),
+  category: text("category").notNull().default("jiu-jitsu"),
+  matchPattern: text("match_pattern"),
+  defaultCapacity: integer("default_capacity").notNull().default(6),
+  beginnerFriendly: boolean("beginner_friendly").notNull().default(false),
+  firstVisitEligible: boolean("first_visit_eligible").notNull().default(false),
+  defaultTrainerId: varchar("default_trainer_id").references(() => trainers.id),
+  membershipRequired: boolean("membership_required").notNull().default(false),
+  active: boolean("active").notNull().default(true),
+  bookingEnabled: boolean("booking_enabled").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  nameUnique: uniqueIndex("class_types_name_unique").on(table.name),
+}));
+
+export const classOccurrences = pgTable("class_occurrences", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  calendarConnectionId: varchar("calendar_connection_id").notNull().references(() => calendarConnections.id),
+  googleCalendarId: text("google_calendar_id").notNull(),
+  googleEventId: text("google_event_id").notNull(),
+  googleRecurringEventId: text("google_recurring_event_id"),
+  googleOriginalStartTime: timestamp("google_original_start_time"),
+  title: text("title").notNull(),
+  description: text("description"),
+  start: timestamp("start").notNull(),
+  end: timestamp("end").notNull(),
+  location: text("location"),
+  instructorName: text("instructor_name"),
+  trainerId: varchar("trainer_id").references(() => trainers.id),
+  classTypeId: varchar("class_type_id").references(() => classTypes.id),
+  status: text("status").notNull().default("active"),
+  syncState: text("sync_state").notNull().default("unmapped"),
+  syncError: text("sync_error"),
+  capacity: integer("capacity").notNull().default(6),
+  firstVisitEligible: boolean("first_visit_eligible").notNull().default(false),
+  bookingEnabled: boolean("booking_enabled").notNull().default(false),
+  audience: text("audience").notNull().default("members"),
+  remoteUpdatedAt: timestamp("remote_updated_at"),
+  lastSyncedAt: timestamp("last_synced_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  googleEventUnique: uniqueIndex("class_occurrences_google_event_unique").on(table.googleCalendarId, table.googleEventId),
+  startIndex: index("class_occurrences_start_idx").on(table.start),
+  statusIndex: index("class_occurrences_status_idx").on(table.status),
+}));
+
+export const classReservations = pgTable("class_reservations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  occurrenceId: varchar("occurrence_id").notNull().references(() => classOccurrences.id),
+  userId: varchar("user_id").references(() => users.id),
+  visitorFirstName: text("visitor_first_name"),
+  visitorLastName: text("visitor_last_name"),
+  visitorEmail: text("visitor_email"),
+  visitorPhone: text("visitor_phone"),
+  experience: text("experience"),
+  status: text("status").notNull().default("confirmed"),
+  waitlistPosition: integer("waitlist_position"),
+  attendance: text("attendance"),
+  cancellationReason: text("cancellation_reason"),
+  manageTokenHash: text("manage_token_hash"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  cancelledAt: timestamp("cancelled_at"),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  occurrenceIndex: index("class_reservations_occurrence_idx").on(table.occurrenceId),
+  userIndex: index("class_reservations_user_idx").on(table.userId),
+  visitorEmailIndex: index("class_reservations_visitor_email_idx").on(table.visitorEmail),
+}));
+
+export const classReservationEvents = pgTable("class_reservation_events", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  reservationId: varchar("reservation_id").references(() => classReservations.id),
+  occurrenceId: varchar("occurrence_id").references(() => classOccurrences.id),
+  event: text("event").notNull(),
+  metadata: jsonb("metadata").notNull().default({}),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  reservationIndex: index("class_reservation_events_reservation_idx").on(table.reservationId),
+}));
+
+export const insertCalendarConnectionSchema = createInsertSchema(calendarConnections).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertClassTypeSchema = createInsertSchema(classTypes).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertClassOccurrenceSchema = createInsertSchema(classOccurrences).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertClassReservationSchema = createInsertSchema(classReservations).omit({ id: true, createdAt: true, updatedAt: true });
+
+export type CalendarConnection = typeof calendarConnections.$inferSelect;
+export type ClassType = typeof classTypes.$inferSelect;
+export type ClassOccurrence = typeof classOccurrences.$inferSelect;
+export type ClassReservation = typeof classReservations.$inferSelect;
+export type ClassReservationEvent = typeof classReservationEvents.$inferSelect;
+export type InsertCalendarConnection = z.infer<typeof insertCalendarConnectionSchema>;
+export type InsertClassType = z.infer<typeof insertClassTypeSchema>;
+export type InsertClassOccurrence = z.infer<typeof insertClassOccurrenceSchema>;
+export type InsertClassReservation = z.infer<typeof insertClassReservationSchema>;

@@ -8,6 +8,11 @@ import {
   memberships,
   sessionNotes,
   webhookEvents,
+  calendarConnections,
+  classTypes,
+  classOccurrences,
+  classReservations,
+  classReservationEvents,
   type Trainer, 
   type InsertTrainer,
   type Booking,
@@ -26,10 +31,14 @@ import {
   type Membership,
   type InsertMembership,
   type SessionNote,
-  type InsertSessionNote
+  type InsertSessionNote,
+  type CalendarConnection,
+  type ClassType,
+  type ClassOccurrence,
+  type ClassReservation
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, gte, lte, desc, sql, count, sum, or, ilike, inArray } from "drizzle-orm";
+import { eq, and, gte, lte, desc, asc, sql, count, sum, or, ilike, inArray, isNotNull } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import bcrypt from "bcryptjs";
 
@@ -87,6 +96,33 @@ export interface IStorage {
   createCalendlyBooking(data: { eventId: string; email: string; eventType: string; startTime: Date; paymentStatus: string; amount: number }): Promise<Booking>;
   claimWebhookEvent(provider: string, eventId: string): Promise<boolean>;
   getBookingByCalendlyEventId(eventId: string): Promise<Booking | undefined>;
+
+  getCalendarConnection(): Promise<CalendarConnection | undefined>;
+  saveCalendarConnection(data: Partial<CalendarConnection> & { provider?: string }): Promise<CalendarConnection>;
+  getClassTypes(): Promise<ClassType[]>;
+  getClassType(id: string): Promise<ClassType | undefined>;
+  createClassType(data: Omit<ClassType, "id" | "createdAt" | "updatedAt">): Promise<ClassType>;
+  updateClassType(id: string, data: Partial<Omit<ClassType, "id" | "createdAt" | "updatedAt">>): Promise<ClassType | undefined>;
+  listClassOccurrences(from: Date, to: Date, firstVisitOnly?: boolean): Promise<Array<ClassOccurrence & { confirmedCount: number; waitlistCount: number; trainer: Trainer | null; classType: ClassType | null }>>;
+  getClassOccurrence(id: string): Promise<ClassOccurrence | undefined>;
+  upsertClassOccurrence(data: Omit<ClassOccurrence, "id" | "createdAt" | "updatedAt">): Promise<ClassOccurrence>;
+  markClassOccurrenceSyncError(id: string, error: string): Promise<void>;
+  reserveClassOccurrence(input: {
+    occurrenceId: string;
+    userId?: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    experience?: string;
+    manageTokenHash?: string;
+  }): Promise<{ reservation: ClassReservation; occurrence: ClassOccurrence; promoted?: ClassReservation }>;
+  getUserClassReservations(userId: string): Promise<Array<ClassReservation & { occurrence: ClassOccurrence; trainer: Trainer | null; classType: ClassType | null }>>;
+  getClassReservation(id: string): Promise<(ClassReservation & { occurrence: ClassOccurrence }) | undefined>;
+  cancelClassReservation(input: { reservationId: string; userId?: string; manageTokenHash?: string; reason?: string }): Promise<{ reservation: ClassReservation; promoted?: ClassReservation }>;
+  getOccurrenceReservations(occurrenceId: string): Promise<{ confirmed: ClassReservation[]; waitlisted: ClassReservation[] }>;
+  updateClassReservation(id: string, updates: Partial<Pick<ClassReservation, "status" | "attendance" | "cancellationReason">>): Promise<ClassReservation | undefined>;
+  recordClassReservationEvent(data: { reservationId?: string; occurrenceId?: string; event: string; metadata?: Record<string, unknown> }): Promise<void>;
   
   deleteFormResponse(userId: string, formId: string): Promise<void>;
 
