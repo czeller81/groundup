@@ -1,0 +1,9 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "kL7QWmYymchWkNrkSGHdy"
+uri = "file://GROUND_UP_AUDIT_REPORT.md"
+type = "text"
+title = "Ground Up audit report"
+description = "Comprehensive product, UX, business, security, booking, operations, and production-readiness baseline audit dated August 31, 2026."
