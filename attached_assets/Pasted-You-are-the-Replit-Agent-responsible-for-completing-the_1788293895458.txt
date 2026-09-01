@@ -1,0 +1,1535 @@
+You are the Replit Agent responsible for completing the full Ground Up remediation and public-site rebuild.
+
+A comprehensive audit has already been completed.
+
+The development environment is now being published so that the current workspace architecture becomes the production baseline.
+
+This task is no longer an audit.
+
+# THIS IS THE IMPLEMENTATION PHASE.
+
+You are authorized to remediate the issues identified by the audit, but you must do so in controlled phases with verification gates.
+
+Do not blindly rewrite the application.
+
+Do not replace stable systems unnecessarily.
+
+Do not fabricate business rules that are still unknown.
+
+Do not destroy historical data.
+
+Do not expose secrets or PII.
+
+Do not make payment charges.
+
+Do not create test leads or appointments against real customers unless a safe test fixture is explicitly used.
+
+---
+
+# 0. BUSINESS SOURCE OF TRUTH
+
+Ground Up is:
+
+# A WOMEN-ONLY TRAINING CENTER IN OXNARD, CALIFORNIA.
+
+This is the authoritative public positioning.
+
+Ground Up offers or intends to communicate:
+
+- women-only Brazilian Jiu-Jitsu
+- practical self-defense
+- strength & conditioning
+- movement
+- personal coaching
+- beginner-friendly training
+- small-group environment
+- confidence
+- capability
+- skill development
+- connection with other women
+- no fight-gym atmosphere
+- no requirement to already be athletic
+
+The public philosophy is:
+
+# WE’VE SPENT ENOUGH TIME BEING TAUGHT TO FOCUS ON HOW OUR BODIES LOOK.
+# IT’S TIME TO DISCOVER WHAT OUR BODIES CAN DO.
+
+Supporting language:
+
+# COME MOVE.
+# COME LEARN.
+# COME FIND YOUR STRENGTH.
+
+And:
+
+# LET’S BUILD FROM THE GROUND UP.
+
+---
+
+# 1. YOUTH / GIRLS BUSINESS RULE
+
+Ground Up is not a mixed-gender kids martial arts academy.
+
+When youth programming exists, it means:
+
+# GIRLS / FEMALE YOUTH.
+
+When family participation is discussed, the intended relationship is:
+
+# MOTHER + DAUGHTER.
+
+Do not use generic “kids” or “children” wording in public acquisition copy unless it is immediately qualified as girls/female youth.
+
+Do not imply that boys are eligible.
+
+Do not imply that men can enroll.
+
+If an exact age range is not authoritative in current source/configuration:
+
+DO NOT INVENT ONE.
+
+Instead:
+
+- locate all conflicting age ranges;
+- define one temporary configuration constant only if the business rule already exists elsewhere;
+- otherwise preserve a clearly marked admin/configuration TODO and avoid publishing false ages.
+
+The prior audit found conflicting youth age values.
+
+Resolve business-rule conflicts before surfacing them publicly.
+
+---
+
+# 2. DEPLOYMENT BASELINE CHECK
+
+Because the development build has just been published, begin by verifying that production now matches the reviewed workspace.
+
+Check:
+
+- `/`
+- `/schedule`
+- `/book`
+- `/contact`
+- `/privacy`
+- `/portal/login`
+- `/api/classes`
+- `/api/portal/me`
+
+Confirm:
+
+- production `/api/classes` now exists;
+- no development test occurrences appear publicly;
+- production headers match source;
+- the Google Calendar-backed class architecture is actually present;
+- the static legacy deployment is no longer the public build.
+
+If production still does not match workspace:
+
+STOP broad remediation.
+
+Fix deployment parity first.
+
+Do not continue building against a stale release.
+
+---
+
+# 3. CREATE A REMEDIATION BRANCH / CHECKPOINT
+
+Before modifying major systems:
+
+- create a clear implementation checkpoint;
+- preserve current production-capable state;
+- use logical commits or snapshots by phase;
+- do not mix unrelated changes into one giant unreviewable modification.
+
+Recommended logical phases:
+
+1. Security + authority
+2. Booking consolidation
+3. Women-only business rules
+4. Conversion funnel
+5. Spanish/bilingual architecture
+6. Analytics / SEO / trust
+7. Accessibility / performance
+8. Cleanup + final QA
+
+---
+
+# 4. PHASE 1 — P0 SECURITY AND INTEGRITY
+
+Address the P0 findings first.
+
+Do not begin the marketing rewrite until the security/integrity gate passes.
+
+---
+
+# 5. COACH → MEMBER OBJECT-LEVEL AUTHORIZATION
+
+The audit found broad coach object access.
+
+Fix object-level authorization for every sensitive member read/write.
+
+Audit routes involving:
+
+- member profile
+- intake/forms
+- session notes
+- belt/rank updates
+- attendance
+- reservations
+- booking history
+- private notes
+- status updates
+- coach-facing member search
+
+Role = coach is NOT sufficient authorization.
+
+Implement explicit scope checks.
+
+A coach must only access the member records they are legitimately authorized to manage under the existing application model.
+
+If no assignment model exists:
+
+do not silently invent unrestricted access.
+
+Create the minimum safe association required.
+
+Add negative tests proving:
+
+- Coach A cannot access Coach B’s unrelated member
+- a member cannot access another member
+- a normal member cannot call coach/admin APIs
+- unauthenticated clients cannot retrieve sensitive member data
+
+---
+
+# 6. WEBHOOK RETRY SAFETY
+
+Fix Stripe and Calendly webhook processing.
+
+Current issue:
+
+events may be marked/claimed before all side effects succeed.
+
+Implement a robust state model such as:
+
+- RECEIVED
+- PROCESSING
+- COMPLETED
+- FAILED_RETRYABLE
+- FAILED_TERMINAL
+
+Requirements:
+
+- verify provider signature first;
+- persist event identity;
+- side effects must be idempotent;
+- do not mark COMPLETED until all required side effects succeed;
+- provider retries must safely resume or repeat idempotently;
+- duplicates after successful completion must be no-ops;
+- failures must be observable.
+
+Add tests for:
+
+- duplicate delivery
+- side-effect failure
+- retry after failure
+- signature failure
+- stale timestamp
+- tampered payload
+
+---
+
+# 7. CSRF / ORIGIN PROTECTION
+
+Add explicit protection for cookie-session mutation routes.
+
+At minimum:
+
+- validate Origin / Referer for browser state-changing requests where appropriate;
+- use CSRF tokens where the architecture requires them;
+- preserve SameSite cookie protections;
+- do not break legitimate API/webhook traffic;
+- webhooks must use provider signatures rather than browser CSRF.
+
+Test:
+
+- valid same-origin mutation
+- invalid cross-origin mutation
+- webhook still works
+- authenticated API still works
+
+---
+
+# 8. AUTH LIFECYCLE
+
+Implement or complete:
+
+- password reset
+- email verification
+- account recovery
+- secure reset tokens
+- expiry
+- one-time token use
+- password autocomplete attributes
+- appropriate login throttling
+
+MFA can remain future/admin-hardening if the existing architecture does not support it cleanly, but document the decision.
+
+Do not require cold first-visit prospects to create accounts.
+
+---
+
+# 9. PHASE 1 SECURITY GATE
+
+Before continuing:
+
+Run:
+
+- unit tests
+- integration tests
+- auth/authorization tests
+- webhook tests
+- security probe tests
+- typecheck
+- build
+
+If critical security tests fail:
+
+STOP.
+
+Do not proceed into marketing work.
+
+---
+
+# 10. PHASE 2 — ONE BOOKING AUTHORITY
+
+The audit found parallel systems:
+
+- Google Calendar class architecture
+- legacy `/api/bookings`
+- trainer availability
+- Calendly
+- Stripe-connected booking paths
+- portal booking routes
+
+We need explicit ownership.
+
+Use this principle:
+
+# GROUP CLASSES
+
+Google Calendar:
+schedule source / recurrence / provider cancellation
+
+Ground Up database:
+reservations / capacity / waitlist / attendance / eligibility / cancellations / audit history
+
+# PRIVATE / TRANSITION SESSIONS
+
+Calendly may remain only if it is truly still required for private-session workflows.
+
+It must not compete with group-class booking.
+
+# LEGACY BOOKING
+
+Legacy paths that are no longer authoritative must be:
+
+- retired,
+- disabled,
+- admin-only,
+- or clearly isolated by service type.
+
+Do not leave two public systems capable of booking the same class.
+
+---
+
+# 11. GOOGLE CALENDAR VALIDATION
+
+Fully validate the current class architecture using safe fixtures.
+
+Test:
+
+- one-time class
+- recurring weekly class
+- recurrence override
+- provider cancellation
+- occurrence reschedule
+- Pacific timezone
+- daylight-saving behavior
+- class capacity
+- simultaneous reservation attempts
+- duplicate reservation prevention
+- overlapping bookings
+- waitlist
+- waitlist promotion after cancellation
+- member cancellation
+- anonymous first-visit cancellation
+- attendance
+- lifecycle emails
+
+Do not use fake development events in production.
+
+Use isolated test fixtures where possible.
+
+Remove or hide any test occurrences before final deployment.
+
+---
+
+# 12. RESCHEDULE
+
+Add a clear visitor/member reschedule workflow if the current architecture supports it safely.
+
+If automatic rescheduling would complicate capacity or Google recurrence semantics:
+
+implement:
+
+cancel existing reservation
+→ select another valid occurrence
+→ create new reservation
+
+Preserve audit history.
+
+---
+
+# 13. EMAIL DELIVERY RELIABILITY
+
+Current asynchronous email failures can be lost.
+
+Improve lifecycle email observability.
+
+For critical confirmations:
+
+- persist email intent/status;
+- retry transient failures;
+- log failure reason safely;
+- never lose the reservation because email failed.
+
+Confirm:
+
+reservation persistence occurs before email.
+
+---
+
+# 14. WOMEN-ONLY ELIGIBILITY
+
+Booking and membership flows must align with the business rule.
+
+Public copy is not enough.
+
+Audit whether class/program records can indicate:
+
+- women-only adult
+- girls/female youth
+- mother + daughter where applicable
+
+Do not create an invasive gender-verification process.
+
+This is primarily:
+
+- clear eligibility language
+- class/program configuration
+- booking guidance
+- correct program labels
+
+Avoid unnecessary sensitive data collection.
+
+---
+
+# 15. GUARDIAN / MINOR FLOW
+
+If girls/female youth are bookable:
+
+implement a legitimate guardian pathway.
+
+Collect only required information.
+
+Support:
+
+- guardian identity
+- minor name
+- age or DOB only if operationally necessary
+- guardian contact
+- required consent/waiver acknowledgment
+- class eligibility
+
+Do not reuse an adult booking form as if the minor booked herself.
+
+If legal/waiver language is not approved, create operational placeholders rather than fabricating legal language.
+
+---
+
+# 16. PHASE 2 BOOKING GATE
+
+Before continuing verify:
+
+- one group-class authority
+- no conflicting public booking paths
+- production class API works
+- capacity is atomic
+- waitlist works
+- cancellations work
+- emails work or safely retry
+- no test data public
+- correct timezone
+
+---
+
+# 17. PHASE 3 — REBUILD PUBLIC POSITIONING
+
+Now align the marketing site.
+
+The most important rule:
+
+# A VISITOR MUST UNDERSTAND “WOMEN ONLY” WITHIN THE FIRST VIEWPORT.
+
+Not implied.
+
+Not hidden in FAQ.
+
+Explicit.
+
+---
+
+# 18. HOME HERO
+
+Rebuild the hero around:
+
+# WOMEN ONLY • OXNARD
+
+Primary conceptual headline:
+
+# DISCOVER WHAT YOUR BODY CAN DO.
+
+Supporting copy should communicate:
+
+Ground Up is a women-only training space in Oxnard where women can build strength, learn Brazilian Jiu-Jitsu and practical self-defense, move differently, and discover what they are capable of.
+
+Requirements:
+
+- beginner friendly
+- no experience required
+- no pressure
+- supportive small groups
+- no fight-gym atmosphere
+
+Primary CTA:
+
+# START YOUR FIRST CLASS
+
+or:
+
+# BOOK YOUR FIRST CLASS
+
+Use one naming convention across the site.
+
+If the first class is free and that remains authoritative:
+
+communicate that consistently.
+
+Do not alternate between:
+
+- free intro
+- free trial
+- free session
+- complimentary intro
+- first class
+
+Choose one authoritative offer.
+
+---
+
+# 19. MESSAGE HIERARCHY
+
+Use this hierarchy throughout the public experience:
+
+1. Women-only
+2. Discover what your body can do
+3. Beginner-friendly
+4. BJJ + practical self-defense + strength + movement
+5. Supportive small-group coaching
+6. Girls/female youth + mother/daughter
+7. Connection with other women
+8. What your first class is like
+9. One first-visit CTA
+10. Trust / proof
+
+---
+
+# 20. REMOVE CONTRADICTORY LANGUAGE
+
+Search repository and metadata for:
+
+- anyone
+- everyone
+- open to all
+- men
+- boys
+- adults
+- kids
+- children
+- youth
+- family
+- beginners
+- women, kids & beginners
+- women, kids & adults
+
+Remove or qualify conflicting phrases.
+
+Examples:
+
+BAD:
+“Anyone is welcome.”
+
+GOOD:
+“Women of all experience levels are welcome.”
+
+BAD:
+“Kids Jiu-Jitsu.”
+
+GOOD:
+“Girls Jiu-Jitsu.”
+
+BAD:
+“Adult classes.”
+
+GOOD:
+“Women’s adult classes.”
+
+BAD:
+“Strength training open to all.”
+
+GOOD:
+“Women’s strength & movement.”
+
+---
+
+# 21. PUBLIC INFORMATION ARCHITECTURE
+
+Restructure navigation around the actual business.
+
+Recommended public navigation:
+
+- Home
+- Women’s BJJ
+- Self-Defense
+- Strength & Movement
+- Girls / Mother + Daughter
+- Schedule
+- Start Here
+- About
+- FAQ
+- Contact
+
+Member Login:
+
+secondary utility action.
+
+Do not let the portal compete with the primary acquisition CTA.
+
+Adaptive Capacity should remain a secondary/separate experience unless specifically needed on the main nav.
+
+Do not let it dilute the training identity.
+
+---
+
+# 22. WOMEN’S BJJ PAGE
+
+Create or rewrite clearly around:
+
+- women only
+- beginner friendly
+- fundamentals
+- confidence
+- movement
+- skill
+- practical control
+- physical capability
+- no competitive experience required
+
+Answer:
+
+- What is BJJ?
+- Do I need experience?
+- Will I train with men?
+- What do I wear?
+- Am I too old?
+- Do I need to be in shape first?
+- What happens in the first class?
+
+---
+
+# 23. SELF-DEFENSE PAGE
+
+Position self-defense around:
+
+- awareness
+- confidence
+- movement
+- boundary creation
+- practical skills
+- escape
+- control
+- physical confidence
+
+Avoid:
+
+- fear bait
+- crime panic
+- violent imagery
+- guaranteed safety claims
+
+---
+
+# 24. STRENGTH & MOVEMENT PAGE
+
+Do not make this a bodybuilding page.
+
+Position around:
+
+- useful strength
+- mobility
+- movement
+- resilience
+- confidence
+- injury-aware progression
+- capability
+
+Tie it directly to:
+
+# WHAT CAN YOUR BODY DO?
+
+---
+
+# 25. GIRLS / MOTHER + DAUGHTER PAGE
+
+Create a dedicated path.
+
+Clearly state:
+
+- girls/female youth only
+- available age range only if authoritative
+- beginner friendly
+- mother/daughter participation if actually offered
+- skill
+- confidence
+- self-defense
+- movement
+- healthy challenge
+
+Do not advertise boys.
+
+Do not imply generic family classes.
+
+---
+
+# 26. COMMUNITY LANGUAGE
+
+Do not overuse abstract “sisterhood” claims.
+
+Build credibility through:
+
+- women training together
+- learning together
+- partner drills
+- progress
+- encouragement
+- real photos
+- real stories
+- mother/daughter participation
+
+Preferred idea:
+
+# HER STRENGTH DOESN’T TAKE AWAY FROM YOURS.
+
+Use sparingly if it fits the existing brand voice.
+
+Community should feel earned, not manufactured.
+
+---
+
+# 27. FIRST-VISIT PAGE
+
+Create one authoritative first-visit flow.
+
+It should answer:
+
+- who Ground Up is for
+- women-only policy
+- girls eligibility
+- whether you need experience
+- what to wear
+- what happens on arrival
+- how long class lasts
+- whether equipment is required
+- how booking works
+- what happens after booking
+- cancellation/reschedule
+- location
+- parking/arrival where known
+
+Primary CTA:
+
+book available class.
+
+No login required.
+
+No credit card required if that remains the business rule.
+
+---
+
+# 28. REMOVE COLD-TRAFFIC LOGIN WALLS
+
+Audit every public CTA.
+
+No cold visitor CTA should send to:
+
+`/portal/login`
+
+unless the CTA explicitly says:
+
+Member Login.
+
+Change public acquisition CTAs to the first-visit flow.
+
+Keep member portal separate.
+
+---
+
+# 29. TRUST LAYER
+
+Improve trust using verified information only.
+
+Add or better surface:
+
+- coach
+- real credentials
+- real facility imagery
+- exact Oxnard location/address if authoritative
+- parking/arrival instructions if known
+- contact phone/email
+- what first class looks like
+- safety FAQ
+- women-only answer
+- mother/daughter answer
+- testimonials/reviews ONLY if real and approved
+
+Do not invent reviews.
+
+Do not fabricate testimonials.
+
+---
+
+# 30. PHASE 4 — BILINGUAL ARCHITECTURE
+
+Ground Up is actively acquiring Spanish-speaking women in Oxnard.
+
+The Spanish campaign must not land in an English-only funnel.
+
+Build a proper bilingual experience.
+
+Preferred architecture:
+
+- `/` English
+- `/es` Spanish
+
+or another locale architecture consistent with the current React app.
+
+Avoid duplicating business logic.
+
+Use shared structured content/components where practical.
+
+---
+
+# 31. SPANISH LANGUAGE STYLE
+
+Use natural California/Mexican Spanish.
+
+Do not use mechanical word-for-word translation.
+
+Core philosophy:
+
+English:
+
+“We’ve spent enough time being taught to focus on how our bodies look. It’s time to discover what our bodies can do.”
+
+Preferred Spanish concept:
+
+“Ya pasamos demasiado tiempo pensando en cómo se ve nuestro cuerpo. Es hora de descubrir de lo que es capaz.”
+
+Review phrasing for naturalness before publishing.
+
+Other concepts:
+
+Women only:
+“Solo para mujeres”
+
+No experience needed:
+“No necesitas experiencia”
+
+Discover your strength:
+“Descubre tu fuerza”
+
+Practical self-defense:
+“Defensa personal”
+
+Beginner-friendly:
+use natural conversational Spanish rather than a literal awkward translation.
+
+---
+
+# 32. BILINGUAL COVERAGE
+
+Translate/localize:
+
+- homepage
+- nav
+- program pages
+- Start Here
+- schedule labels
+- booking
+- forms
+- validation
+- success confirmation
+- FAQ
+- contact
+- key lifecycle emails
+
+Allow the selected language to persist through:
+
+ad
+→ landing page
+→ booking
+→ confirmation
+
+If using query parameters/UTMs, preserve attribution.
+
+---
+
+# 33. LANGUAGE SWITCHER
+
+Add a simple:
+
+English | Español
+
+control.
+
+Requirements:
+
+- accessible
+- persistent
+- does not reset the visitor unnecessarily
+- does not break route state
+- maintains equivalent destination where possible
+
+---
+
+# 34. SPANISH SEO
+
+Add appropriate localized:
+
+- titles
+- meta descriptions
+- canonical
+- hreflang if architecture supports it cleanly
+- Open Graph
+
+Avoid keyword stuffing.
+
+Examples of relevant intent:
+
+- jiu jitsu para mujeres Oxnard
+- defensa personal para mujeres Oxnard
+- clases para mujeres Oxnard
+- jiu jitsu para niñas Oxnard
+- defensa personal madre e hija Oxnard
+
+Use only naturally where appropriate.
+
+---
+
+# 35. PHASE 5 — ANALYTICS / ATTRIBUTION
+
+Create a clear funnel model.
+
+Track:
+
+- landing page
+- CTA click
+- booking start
+- booking completed
+- trial scheduled
+- trial attended
+- membership conversion
+
+Preserve:
+
+- UTM source
+- medium
+- campaign
+- content
+- term where present
+
+Tie conversion to source where legally/technically appropriate.
+
+Do not fabricate attribution if cookies/consent are unavailable.
+
+---
+
+# 36. META
+
+Current Meta Pixel exists.
+
+Audit and improve event naming.
+
+Recommended events:
+
+- PageView
+- ViewContent
+- InitiateCheckout equivalent is NOT appropriate unless purchasing
+- Schedule / custom FirstClassStart
+- Lead
+- CompleteRegistration only when truly appropriate
+
+Do not send sensitive information to Meta.
+
+If implementing Conversions API:
+
+ensure browser/server dedupe via event ID.
+
+Only add it if implementation can be done safely and compliantly.
+
+---
+
+# 37. GA4
+
+If GA4 configuration already exists in environment:
+
+integrate consent-aware GA4.
+
+If no production measurement ID exists:
+
+prepare configuration support but do not fabricate credentials.
+
+Do not block launch solely for GA4.
+
+---
+
+# 38. SEO / LOCAL SEO
+
+Fix:
+
+- women-only metadata
+- girls terminology
+- canonical consistency
+- OG asset mismatch
+- sitemap
+- robots
+- LocalBusiness schema
+- address consistency
+- hours consistency
+- social profile URLs
+
+Use verified Ground Up data only.
+
+---
+
+# 39. LOCAL BUSINESS STRUCTURED DATA
+
+Add appropriate schema only if factual data exists.
+
+Possible type:
+
+HealthAndBeautyBusiness
+or
+SportsActivityLocation
+
+Choose the best valid schema.
+
+Include:
+
+- name
+- URL
+- address
+- phone
+- sameAs
+- openingHours only if authoritative
+
+Do not publish conflicting training hours as business hours unless they are actually the same.
+
+---
+
+# 40. SOCIAL LINKS
+
+Fix generic Instagram links.
+
+Use the actual Ground Up Instagram profile where already known/configured.
+
+Do not use unrelated brands.
+
+---
+
+# 41. PRIVACY / FORMS
+
+Improve public-form clarity.
+
+Include appropriate:
+
+- privacy link
+- submission acknowledgment
+- consent where actually required
+- guardian context for minors
+
+Do not make marketing consent mandatory unless required for that workflow.
+
+Separate operational contact from optional marketing consent.
+
+---
+
+# 42. SPAM PROTECTION
+
+Current public forms mainly rely on rate limiting.
+
+Add low-friction abuse protection.
+
+Prefer:
+
+- hidden honeypot
+- server timing checks
+- rate limits
+- duplicate suppression
+
+Do not add a high-friction CAPTCHA unless actual abuse requires it.
+
+---
+
+# 43. ACCESSIBILITY
+
+Fix major issues found in audit.
+
+Check:
+
+- color contrast
+- focus states
+- dialog focus
+- keyboard navigation
+- screen reader labels
+- async state announcements
+- heading hierarchy
+- password autocomplete
+- mobile nav
+
+Preserve reduced-motion handling.
+
+---
+
+# 44. MOBILE
+
+Test at:
+
+- 320px
+- 375px
+- 390px
+- tablet
+- desktop
+
+Critical pages:
+
+- Home
+- Women’s BJJ
+- Self-Defense
+- Girls / Mother + Daughter
+- Schedule
+- Start Here
+- Book
+- Contact
+
+Ensure:
+
+- no horizontal overflow
+- CTA easy to reach
+- consent banner does not cover critical controls
+- video/text readable
+- booking usable one-handed
+
+---
+
+# 45. PERFORMANCE
+
+Address major performance problems.
+
+Current audit found:
+
+- ~837 kB JS minified
+- >500 kB Vite warning
+- large 1.3–1.7 MB images
+- autoplay video
+
+Improve:
+
+- image compression/responsive sizing
+- route-level code splitting
+- lazy loading
+- video poster/preload strategy
+- unnecessary bundle imports
+
+Do not damage visual quality unnecessarily.
+
+---
+
+# 46. LEGACY CLEANUP
+
+After the new systems pass production QA:
+
+identify safe-to-retire legacy code.
+
+Candidates:
+
+- static legacy schedule
+- old booking API
+- obsolete trainer booking
+- obsolete Stripe booking
+- duplicate portal booking routes
+- stale admin routes
+- stale config
+- old noscript content
+- unused Calendly integration
+
+Do not delete historical data.
+
+Do not remove Calendly if an actual private-session workflow still relies on it.
+
+Document what is retained and why.
+
+---
+
+# 47. CONFIGURATION RECONCILIATION
+
+Fix conflicting configuration:
+
+- Pacific timezone
+- current coach
+- group class flags
+- pricing references
+- booking flags
+- feature availability
+- age policies
+- metadata
+
+Use one authoritative configuration source wherever practical.
+
+Do not leave hidden stale constants that conflict with UI.
+
+---
+
+# 48. TEST SUITE EXPANSION
+
+Add tests for all critical new behavior.
+
+Minimum coverage:
+
+## Security
+- coach object scope
+- role access
+- CSRF/origin
+- webhook retry
+
+## Booking
+- schedule
+- capacity
+- concurrency
+- duplicate
+- waitlist
+- cancellation
+- recurrence
+- timezone
+
+## Public acquisition
+- no cold CTA → login
+- public booking works
+- women-only copy
+- girls terminology
+
+## Localization
+- `/es`
+- language persistence
+- booking Spanish
+- validation Spanish
+
+## SEO
+- metadata
+- sitemap
+- localized URLs
+
+---
+
+# 49. FINAL BUILD GATE
+
+Run:
+
+- `npm test`
+- `npm run check`
+- `npm run build`
+
+Fix failures.
+
+Then perform production smoke tests.
+
+---
+
+# 50. PRODUCTION SMOKE TESTS
+
+Verify:
+
+- `/`
+- `/es`
+- `/schedule`
+- `/book`
+- `/contact`
+- `/privacy`
+- `/portal/login`
+- `/api/classes`
+- expected auth endpoints
+- scanner probe paths
+
+Confirm:
+
+- women-only above fold
+- no mixed-gender ambiguity
+- no cold CTA login wall
+- Spanish works
+- booking works
+- no test classes
+- no stack traces
+- security headers correct
+- mobile usable
+
+---
+
+# 51. CONTENT QA
+
+Search the complete repository again for:
+
+- anyone is welcome
+- open to all
+- adults
+- kids
+- children
+- boys
+- men
+- women, kids
+- free intro
+- free trial
+- free session
+- New York timezone
+- Sofia Martinez
+- stale price values
+
+Every remaining match must be:
+
+- intentional
+- internal-only
+- historical
+- or fixed.
+
+Report exceptions.
+
+---
+
+# 52. DO NOT TURN THIS INTO GENERIC WOMEN’S FITNESS
+
+Ground Up should NOT become:
+
+- pink generic fitness
+- weight-loss marketing
+- beauty transformation
+- fear-based self-defense
+- aggressive fight gym
+- generic “girl power”
+
+The brand is:
+
+# CAPABILITY.
+
+What can your body do?
+
+---
+
+# 53. VISUAL DIRECTION
+
+Preserve the existing strong Ground Up visual identity where it works.
+
+The audit specifically found the visual system distinctive and stronger than generic women’s fitness branding.
+
+Do not redesign for the sake of redesigning.
+
+Improve hierarchy and clarity.
+
+Preferred feeling:
+
+- modern
+- capable
+- strong
+- warm
+- local
+- real
+- women-centered
+
+---
+
+# 54. FINAL REPORT
+
+At completion return:
+
+# GROUND UP FULL REMEDIATION REPORT
+
+Include:
+
+## A. Executive Verdict
+
+## B. Production Parity
+What was published and verified.
+
+## C. Security
+What was fixed.
+
+## D. Booking
+Final source of truth.
+
+## E. Legacy Systems
+Retained / disabled / removed.
+
+## F. Women-Only Positioning
+Exact changes.
+
+## G. Girls / Mother-Daughter
+Exact business-rule implementation.
+
+## H. Public Navigation
+Final IA.
+
+## I. First-Visit Funnel
+Final customer path.
+
+## J. Spanish
+Routes/content/forms/email coverage.
+
+## K. Analytics
+Events + attribution.
+
+## L. SEO / Local SEO
+
+## M. Accessibility
+
+## N. Mobile
+
+## O. Performance
+
+## P. Testing
+Exact results.
+
+## Q. Production QA
+Exact routes tested.
+
+## R. Remaining Risks
+
+## S. Manual Decisions Still Needed
+
+Do not hide unresolved issues.
+
+---
+
+# 55. FINAL SCORECARD
+
+Re-score:
+
+- Women-only clarity
+- Buyer clarity
+- Brand differentiation
+- Beginner reassurance
+- Girls / mother-daughter clarity
+- Spanish readiness
+- Conversion path
+- Booking readiness
+- Trust
+- Mobile
+- SEO
+- Analytics
+- Accessibility
+- Security
+- Backend architecture
+- Maintainability
+
+Show:
+
+BEFORE
+vs
+AFTER.
+
+Use the original audit scores as baseline.
+
+---
+
+# 56. FINAL VERDICT
+
+End with exactly one:
+
+`GROUND UP REMEDIATION COMPLETE — PRODUCTION READY`
+
+or
+
+`GROUND UP REMEDIATION COMPLETE — READY WITH DOCUMENTED LIMITATIONS`
+
+or
+
+`GROUND UP REMEDIATION BLOCKED — SECURITY`
+
+or
+
+`GROUND UP REMEDIATION BLOCKED — BOOKING`
+
+or
+
+`GROUND UP REMEDIATION BLOCKED — PRODUCTION`
+
+---
+
+# FINAL OPERATING PRINCIPLE
+
+Ground Up must now have one coherent truth from:
+
+# AD
+→ WEBSITE
+→ BOOKING
+→ FIRST CLASS
+→ MEMBER EXPERIENCE.
+
+That truth is:
+
+# GROUND UP IS A WOMEN-ONLY TRAINING CENTER IN OXNARD.
+
+Women build:
+
+# STRENGTH.
+# SKILL.
+# CONFIDENCE.
+# CAPABILITY.
+
+Girls/female youth are welcome only under the actual approved youth rules.
+
+Mother + daughter should be clear where offered.
+
+Spanish-speaking women should receive a real Spanish experience, not a translated advertisement followed by an English funnel.
+
+Do the work in dependency order.
+
+Secure the system.
+
+Make booking authoritative.
+
+Align the business rules.
+
+Then make the marketing impossible to misunderstand.
+
+Complete the full remediation, test it, verify production, and report the evidence.
