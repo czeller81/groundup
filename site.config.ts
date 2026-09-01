@@ -1,6 +1,6 @@
 export const siteConfig = {
   name: "Ground Up BJJ",
-  description: "Personal training gym specializing in 1-on-1 jiu-jitsu and strength & conditioning for female athletes. Perfect for weight loss, building muscle, and overall growth in Oxnard, CA.",
+  description: "A women-only training center in Oxnard for Brazilian Jiu-Jitsu, practical self-defense, strength, movement, and personal coaching. Beginner-friendly and no experience required.",
   
   // Contact Information
   address: {
@@ -43,8 +43,8 @@ export const siteConfig = {
   },
   
   // Business Settings
-  business: {
-    timezone: "America/New_York",
+    business: {
+    timezone: "America/Los_Angeles",
     currency: "USD",
     locale: "en-US",
     
@@ -73,7 +73,7 @@ export const siteConfig = {
       founded: "2020",
       affiliations: ["IBJJF", "UAEJJF"],
       lineage: "Gracie Barra",
-      headInstructor: "Sofia Martinez",
+      headInstructor: "Raymi Gonzalez",
       specialization: "Women-only BJJ training and empowerment"
     }
   },
@@ -85,7 +85,7 @@ export const siteConfig = {
     emailNotifications: true,
     calendarIntegration: true,
     membershipPlans: false, // Could be enabled in the future
-    groupClasses: false     // Currently only personal training
+    groupClasses: true
   },
   
   // Admin Settings

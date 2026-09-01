@@ -81,8 +81,8 @@ export default function Home() {
   return (
     <div className="flex flex-col bg-[#0B0F14]">
       <SEO
-        title="Ground Up BJJ — Boutique BJJ & Self-Defense Studio in Oxnard, CA"
-        description="Ground Up Jiu-Jitsu is a boutique training studio in Oxnard, CA for women, kids, and beginners. Personal coaching, small classes, and a genuinely welcoming environment. First class free."
+        title="Women-Only BJJ & Self-Defense in Oxnard | Ground Up"
+        description="Ground Up is a women-only training center in Oxnard for Brazilian Jiu-Jitsu, practical self-defense, strength, and movement. Beginner-friendly small-group coaching. Book your free first visit."
         canonical="/"
       />
 
@@ -115,7 +115,7 @@ export default function Home() {
               transition={{ delay: 0.2, duration: 0.5 }}
               className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/15 bg-white/5 text-gray-300 text-xs font-semibold uppercase tracking-widest mb-6"
             >
-              Boutique BJJ &amp; Self-Defense Studio · Oxnard, CA
+              WOMEN ONLY · OXNARD, CA
             </motion.div>
 
             <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold leading-[0.9] mb-6 tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>
@@ -125,7 +125,7 @@ export default function Home() {
               <br />
               <span className="gradient-text-purple">HERE.</span>
               <br />
-              <span className="text-white text-3xl md:text-4xl lg:text-5xl font-semibold">for women, kids &amp; beginners</span>
+              <span className="text-white text-3xl md:text-4xl lg:text-5xl font-semibold">discover what your body can do</span>
             </h1>
 
             <motion.p
@@ -134,7 +134,7 @@ export default function Home() {
               transition={{ delay: 0.4, duration: 0.6 }}
               className="text-lg md:text-xl text-gray-300 max-w-xl mb-10 leading-relaxed"
             >
-              A supportive, small-group studio where you build real self-defense skills, strength, and confidence — with personal coaching, at your own pace. No intimidation. Ever.
+              Ground Up is a women-only training space where you can build strength, learn Brazilian Jiu-Jitsu and practical self-defense, and move with more confidence. Beginner-friendly. No experience required. No fight-gym atmosphere.
             </motion.p>
 
             <motion.div
@@ -150,7 +150,7 @@ export default function Home() {
                 data-testid="hero-cta-book"
               >
                 <Link href="/book">
-                  Start Your Free Trial
+                   Book Your Free First Visit
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
@@ -176,7 +176,7 @@ export default function Home() {
             {[
               { icon: Users, label: "Personalized Attention", desc: "Coaching tailored to you" },
               { icon: Shield, label: "Safe & Welcoming", desc: "Judgment-free environment" },
-              { icon: Heart, label: "Women & Kids Focus", desc: "Programs built for you" },
+                   { icon: Heart, label: "Women-Centered", desc: "A space built around women" },
               { icon: Award, label: "Beginner Friendly", desc: "No experience needed" },
             ].map((item, i) => (
               <motion.div
@@ -350,7 +350,7 @@ export default function Home() {
                 <div className="flex flex-wrap gap-3">
                   <Button asChild className="bg-[#FFB199] text-[#0B0F14] font-bold uppercase tracking-wider hover:bg-[#FFB199]/90 w-fit">
                     <Link href="/book">
-                      Start Your Free Trial <ArrowRight className="ml-2 h-4 w-4" />
+                       Book Your Free First Visit <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
                   </Button>
                   <Button asChild variant="outline" className="border-[#FFB199]/30 text-[#FFB199] hover:bg-[#FFB199]/10 uppercase tracking-wider w-fit bg-transparent">
@@ -381,12 +381,12 @@ export default function Home() {
                 link: "/womens-self-defense",
               },
               {
-                title: "Kids Jiu-Jitsu",
-                desc: "A positive program designed to help kids develop confidence, discipline, coordination, and anti-bullying awareness.",
-                highlights: ["Ages 4–14", "Confidence building", "Discipline", "Anti-bullying focus"],
-                img: kidsClassImg,
+                 title: "Girls / Mother + Daughter",
+                 desc: "A women-centered youth path for girls and female youth. Ask about current eligibility, guardian requirements, and mother-daughter participation.",
+                 highlights: ["Girls / female youth", "Mother + daughter", "Guardian guidance", "Eligibility confirmed"],
+                 img: kidsClassImg,
                 accent: "#B06CFF",
-                link: "/kids",
+                 link: "/girls",
               },
               {
                 title: "Strength & Conditioning",
@@ -538,7 +538,7 @@ export default function Home() {
                   { icon: Users, title: "Personalized Attention", desc: "Every student gets direct coaching attention — no one gets lost in the crowd.", accent: "#5EEBFF" },
                   { icon: Award, title: "Personalized Coaching", desc: "Programs and sessions are tailored to your goals, fitness level, and pace.", accent: "#B06CFF" },
                   { icon: Heart, title: "Safe & Welcoming", desc: "A judgment-free space where you can learn, grow, and feel completely at ease.", accent: "#FFB199" },
-                  { icon: Shield, title: "Built for Women, Kids & Beginners", desc: "Our programs are designed specifically around your needs, not repurposed from a competitive fight gym.", accent: "#5EEBFF" },
+                   { icon: Shield, title: "Women-Only by Design", desc: "Our programs are built around capability, coaching, and a supportive small-group environment.", accent: "#5EEBFF" },
                 ].map((item) => (
                   <motion.div
                     key={item.title}
@@ -565,7 +565,7 @@ export default function Home() {
               />
               <div className="absolute -bottom-5 left-4 right-4 p-4 rounded-xl border border-[#FFB199]/20 bg-[#FFB199]/10 backdrop-blur-sm flex items-center gap-3">
                 <Zap className="h-5 w-5 text-[#FFB199] flex-shrink-0" />
-                <span className="text-[#FFB199] text-sm font-semibold leading-snug">Free community self-defense class every 2 weeks — open to all women in Oxnard.</span>
+                <span className="text-[#FFB199] text-sm font-semibold leading-snug">Practical self-defense in a women-only space for women in Oxnard.</span>
               </div>
             </div>
           </div>
@@ -594,10 +594,10 @@ export default function Home() {
                 </p>
               </div>
               <p className="text-gray-300 leading-relaxed mb-6">
-                Raymi founded Ground Up Jiu-Jitsu with one goal: to build a safe, empowering home for women, kids, and beginners. With deep expertise in BJJ, self-defense, and strength & conditioning, she brings personal attention and real-world skill to every session.
+                 Raymi founded Ground Up Jiu-Jitsu with one goal: to build a safe, empowering home for women and beginners. With deep expertise in BJJ, self-defense, strength & conditioning, and movement, she brings personal attention and real-world skill to every session.
               </p>
               <div className="flex flex-wrap gap-2 mb-8">
-                {["Women's Self-Defense", "Kids BJJ", "Strength & Conditioning", "Personal Training"].map((tag) => (
+                 {["Women's Self-Defense", "Women's BJJ", "Strength & Movement", "Personal Training"].map((tag) => (
                   <span key={tag} className="px-3 py-1.5 text-xs rounded-full border border-white/10 text-gray-300 bg-white/5">
                     {tag}
                   </span>
@@ -819,8 +819,8 @@ export default function Home() {
               answer="Yes. Our women's self-defense program is designed specifically for practical real-world confidence and protection — no competitive training or sparring required."
             />
             <FAQ
-              question="Do you offer kids classes?"
-              answer="Yes. Our kids program (ages 4–14) focuses on confidence, discipline, anti-bullying awareness, and physical development in a positive, supportive environment."
+              question="Do you offer girls or mother-daughter training?"
+              answer="When youth programming is available, it is for girls and female youth. We confirm eligibility, age range, guardian requirements, and mother-daughter options before booking so families receive accurate information."
             />
             <FAQ
               question="What is the free community self-defense class?"
@@ -854,7 +854,7 @@ export default function Home() {
               className="bg-[#FFB199] text-[#0B0F14] font-bold uppercase tracking-wider hover:bg-[#FFB199]/90 text-base px-10 h-14"
             >
               <Link href="/book">
-                Start Your Free Trial
+                Book Your Free First Visit
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>

@@ -58,14 +58,14 @@ const PROGRAMS: Program[] = [
     categories: ["jiu-jitsu"],
   },
   {
-    id: "kids",
-    label: "Kids Jiu-Jitsu",
-    tagline: "Ages 4–14 — confidence, discipline, and real self-defense",
+     id: "girls",
+     label: "Girls / Mother + Daughter",
+     tagline: "Female-youth eligibility and family participation confirmed before booking",
     icon: Star,
     accent: "#FFB199",
     bg: "bg-[#FFB199]/10",
     border: "border-[#FFB199]/30",
-    audiences: ["kids", "youth"],
+     audiences: ["girls", "female-youth"],
     categories: ["kids"],
     forKids: true,
   },
@@ -237,8 +237,8 @@ export default function Book() {
   return (
     <>
       <SEO
-        title="Book Your Free Trial Class | Ground Up Jiu-Jitsu & Fitness Oxnard"
-        description="Reserve your first free BJJ class at Ground Up Jiu-Jitsu in Oxnard, CA. No experience needed. Takes 2 minutes."
+        title="Book Your Free First Visit | Ground Up Oxnard"
+        description="Reserve a free first visit at Ground Up, a women-only training center in Oxnard. No account, credit card, or previous experience required."
         canonical="/book"
       />
 

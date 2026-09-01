@@ -9,24 +9,24 @@ import { addHours, addMinutes, format, parseISO } from "date-fns";
 import fs from "fs";
 import path from "path";
 import { parseRawJsonBody, verifyCalendlySignature, verifyStripeSignature } from "./webhook-security";
-import { bookingBelongsToUser, createPublicRateLimit, requireAuth, requireRole } from "./route-security";
+import { bookingBelongsToUser, coachCanManageMember, createPublicRateLimit, requireAuth, requireRole } from "./route-security";
 import { sendStaffNotificationEmail } from "./email";
 import { registerClassBookingRoutes } from "./class-booking-routes";
 
 const PAGE_META: Record<string, { title: string; description: string; canonical: string }> = {
   "/": {
-    title: "Master Brazilian Jiu-Jitsu in Oxnard, CA | Ground Up Jiu-Jitsu & Fitness",
-    description: "Ground Up Jiu-Jitsu & Fitness offers beginner-friendly BJJ classes for women, kids, and adults in Oxnard, CA. No experience needed. Book your free trial class today.",
+    title: "Women-Only BJJ & Self-Defense in Oxnard | Ground Up",
+    description: "Ground Up is a women-only training center in Oxnard for Brazilian Jiu-Jitsu, practical self-defense, strength, and movement. Beginner-friendly small-group coaching. Book your free first visit.",
     canonical: "https://groundupbjj.com/",
   },
   "/schedule": {
-    title: "Class Schedule — BJJ, Kids & Women's Classes in Oxnard, CA | Ground Up Jiu-Jitsu",
-    description: "View the full weekly class schedule at Ground Up Jiu-Jitsu in Oxnard, CA. Women's BJJ, Kids Jiu-Jitsu, Strength & Conditioning, and more. Max 6 students per class.",
+    title: "Women-Only Class Schedule in Oxnard | Ground Up",
+    description: "View the live Google Calendar schedule for Ground Up's women-only Brazilian Jiu-Jitsu, self-defense, strength, and movement classes in Oxnard.",
     canonical: "https://groundupbjj.com/schedule",
   },
   "/pricing": {
-    title: "BJJ Programs & Pricing — Women's, Kids & Adult Classes | Ground Up Jiu-Jitsu Oxnard",
-    description: "Explore BJJ programs and pricing at Ground Up Jiu-Jitsu in Oxnard, CA. Women's self-defense, kids BJJ, strength & conditioning, and personal training. Beginner friendly.",
+    title: "Women-Only Training Programs in Oxnard | Ground Up",
+    description: "Explore women-only Brazilian Jiu-Jitsu, practical self-defense, strength, movement, and personal coaching at Ground Up in Oxnard. Beginner-friendly and no experience required.",
     canonical: "https://groundupbjj.com/pricing",
   },
   "/coaches": {
@@ -40,8 +40,8 @@ const PAGE_META: Record<string, { title: string; description: string; canonical:
     canonical: "https://groundupbjj.com/personal-training",
   },
   "/contact": {
-    title: "Contact Us — Book Your Free Trial Class in Oxnard, CA | Ground Up Jiu-Jitsu",
-    description: "Ready to start your BJJ journey? Contact Ground Up Jiu-Jitsu & Fitness in Oxnard, CA to book your free trial class or ask us anything. No experience needed.",
+    title: "Contact Ground Up | Women-Only Training in Oxnard",
+    description: "Questions about women-only Brazilian Jiu-Jitsu, practical self-defense, strength, movement, or girls/female-youth eligibility? Contact Ground Up in Oxnard.",
     canonical: "https://groundupbjj.com/contact",
   },
   "/privacy": {
@@ -50,8 +50,8 @@ const PAGE_META: Record<string, { title: string; description: string; canonical:
     canonical: "https://groundupbjj.com/privacy",
   },
   "/book": {
-    title: "Book Your Free Trial Class — Ground Up Jiu-Jitsu & Fitness, Oxnard CA",
-    description: "Reserve your first free BJJ class at Ground Up Jiu-Jitsu in Oxnard, CA. Women's BJJ, Kids Jiu-Jitsu, Self-Defense, and more. No experience needed. Takes 2 minutes.",
+    title: "Book Your Free First Visit | Ground Up Oxnard",
+    description: "Reserve a free first visit at Ground Up, a women-only training center in Oxnard. No account, credit card, or previous experience required.",
     canonical: "https://groundupbjj.com/book",
   },
   "/womens-self-defense": {
@@ -60,9 +60,44 @@ const PAGE_META: Record<string, { title: string; description: string; canonical:
     canonical: "https://groundupbjj.com/womens-self-defense",
   },
   "/kids": {
-    title: "Kids Jiu-Jitsu in Oxnard, CA — Ages 4–14 | Ground Up Jiu-Jitsu",
-    description: "Kids BJJ classes in Oxnard, CA for ages 4–14. Build confidence, discipline, coordination, and anti-bullying awareness in a small, structured program. First class free.",
-    canonical: "https://groundupbjj.com/kids",
+    title: "Girls & Female Youth Training | Ground Up Oxnard",
+    description: "Ground Up's women-centered girls and female-youth path in Oxnard. Ask about current eligibility, guardian requirements, and mother-daughter options.",
+    canonical: "https://groundupbjj.com/girls",
+  },
+  "/girls": {
+    title: "Girls & Mother-Daughter Training | Ground Up Oxnard",
+    description: "Explore Ground Up's girls and female-youth training path in Oxnard. Ask about current eligibility, beginner-friendly classes, and mother-daughter options.",
+    canonical: "https://groundupbjj.com/girls",
+  },
+  "/es": {
+    title: "Jiu-Jitsu y Defensa Personal Solo para Mujeres en Oxnard",
+    description: "Ground Up es un centro de entrenamiento solo para mujeres en Oxnard: jiu-jitsu brasileño, defensa personal, fuerza y movimiento. No necesitas experiencia.",
+    canonical: "https://groundupbjj.com/es",
+  },
+  "/es/horario": {
+    title: "Horario de Clases para Mujeres en Oxnard",
+    description: "Consulta el horario en vivo de las clases de Ground Up para mujeres en Oxnard.",
+    canonical: "https://groundupbjj.com/es/horario",
+  },
+  "/es/reservar": {
+    title: "Reserva tu Primera Visita Gratis | Ground Up Oxnard",
+    description: "Reserva una primera visita gratis en Ground Up. No necesitas cuenta, tarjeta ni experiencia previa.",
+    canonical: "https://groundupbjj.com/es/reservar",
+  },
+  "/es/programas": {
+    title: "Programas de Entrenamiento para Mujeres en Oxnard",
+    description: "Conoce los programas de jiu-jitsu, defensa personal, fuerza, movimiento y entrenamiento personal de Ground Up.",
+    canonical: "https://groundupbjj.com/es/programas",
+  },
+  "/es/contacto": {
+    title: "Contacta a Ground Up | Entrenamiento para Mujeres en Oxnard",
+    description: "Comunícate con Ground Up para preguntas sobre clases para mujeres, defensa personal, fuerza o elegibilidad juvenil.",
+    canonical: "https://groundupbjj.com/es/contacto",
+  },
+  "/es/privacidad": {
+    title: "Política de Privacidad | Ground Up BJJ",
+    description: "Conoce cómo Ground Up protege la información enviada a través del sitio, formularios y reservas.",
+    canonical: "https://groundupbjj.com/es/privacidad",
   },
   "/adaptive-capacity": {
     title: "Adaptive Capacity — Build the Capacity to Adapt | Ground Up",
@@ -72,51 +107,52 @@ const PAGE_META: Record<string, { title: string; description: string; canonical:
 };
 
 const PAGE_CONTENT: Record<string, string> = {
-  "/": `<h1>Master Brazilian Jiu-Jitsu from the Ground Up in Oxnard, CA</h1>
-<p>A structured, foundational approach to BJJ for beginners and advanced practitioners.</p>
-<p>Ground Up Jiu-Jitsu &amp; Fitness offers Brazilian Jiu-Jitsu classes for women, kids, and beginners in Oxnard, CA. No experience needed.</p>
-<ul><li>Women's BJJ Fundamentals</li><li>Kids Jiu-Jitsu (Ages 6–14)</li><li>Women's Self-Defense Program</li><li>Strength &amp; Conditioning</li><li>Personal Training</li></ul>
-<p>Head Coach: Raymi Gonzalez — Purple Belt, 3rd Degree, Gracie Barra Lineage. 5+ years coaching experience in Oxnard, CA.</p>
-<a href="/contact">Book Your Free Trial</a> <a href="/schedule">View Class Schedule</a>`,
-  "/schedule": `<h1>Class Schedule — Ground Up Jiu-Jitsu &amp; Fitness, Oxnard CA</h1>
-<p>Weekly BJJ classes for women, kids, and beginners in Oxnard, CA. Max 6 students per class.</p>
-<ul><li>Women's BJJ — Monday, Wednesday, Friday</li><li>Kids Jiu-Jitsu — Tuesday, Thursday, Saturday</li><li>Women's Self-Defense — Wednesday evenings</li><li>Strength &amp; Conditioning — Monday, Wednesday, Friday</li></ul>
-<a href="/contact">Book Your Free Trial</a>`,
-  "/pricing": `<h1>BJJ Programs &amp; Pricing — Ground Up Jiu-Jitsu, Oxnard CA</h1>
-<p>Beginner-friendly Brazilian Jiu-Jitsu programs for women, kids, and adults. No experience required.</p>
-<ul><li>Women's Self-Defense — 8-week program, 2 classes per week</li><li>Women's BJJ Fundamentals — ongoing membership</li><li>Kids Jiu-Jitsu (Ages 6–14)</li><li>Strength &amp; Conditioning</li><li>Personal Training — first session free</li></ul>
-<a href="/contact">Book Your Free Trial</a>`,
+  "/": `<h1>Women-Only Brazilian Jiu-Jitsu and Self-Defense in Oxnard</h1>
+ <p>Ground Up is a women-only training center for Brazilian Jiu-Jitsu, practical self-defense, strength, movement, and personal coaching.</p>
+ <p>Women of all experience levels can start here. No prior experience is required.</p>
+ <ul><li>Women's BJJ</li><li>Women's Self-Defense</li><li>Strength &amp; Movement</li><li>Personal Training</li><li>Girls / Female Youth — eligibility confirmed before booking</li></ul>
+ <p>Head Coach: Raymi Gonzalez — Purple Belt, 3rd Degree, Gracie Barra Lineage. 5+ years coaching experience in Oxnard, CA.</p>
+ <a href="/book">Book Your Free First Visit</a> <a href="/schedule">View Class Schedule</a>`,
+  "/schedule": `<h1>Women-Only Class Schedule — Ground Up, Oxnard</h1>
+ <p>See live availability for women-only Brazilian Jiu-Jitsu, self-defense, strength, and movement classes in Oxnard.</p>
+ <a href="/book">Book Your Free First Visit</a>`,
+  "/pricing": `<h1>Women-Only Training Programs — Ground Up, Oxnard</h1>
+ <p>Beginner-friendly Brazilian Jiu-Jitsu, practical self-defense, strength, movement, and personal coaching for women.</p>
+ <ul><li>Women's BJJ</li><li>Women's Self-Defense</li><li>Strength &amp; Movement</li><li>Personal Training</li><li>Girls / Female Youth — eligibility confirmed before booking</li></ul>
+ <a href="/book">Book Your Free First Visit</a>`,
   "/coaches": `<h1>BJJ Instructor — Raymi Gonzalez | Ground Up Jiu-Jitsu, Oxnard CA</h1>
 <p>Meet Raymi Gonzalez, Purple Belt (3rd Degree) under the Gracie Barra lineage. 5+ years of coaching experience in Oxnard, CA.</p>
-<p>Specialties: Women's Self-Defense, Kids BJJ, Strength &amp; Conditioning, Personal Training.</p>
-<a href="/contact">Book Your Free Trial</a>`,
+ <p>Specialties: Women's Self-Defense, Women's BJJ, Strength &amp; Movement, Personal Training.</p>
+ <a href="/book">Book Your Free First Visit</a>`,
   "/personal-training": `<h1>Personal Training in Oxnard, CA — 1-on-1 BJJ &amp; Fitness Coaching</h1>
 <p>Private personal training sessions at Ground Up Jiu-Jitsu in Oxnard, CA. Custom coaching tailored to your goals. Your first session is free.</p>
 <ul><li>1-on-1 personalized sessions</li><li>Monday through Saturday, 8am–5pm</li><li>All fitness levels welcome</li><li>First session free</li></ul>
-<a href="/contact">Book Your Free Session</a>`,
+ <a href="/book">Book Your Free First Visit</a>`,
   "/contact": `<h1>Contact Ground Up Jiu-Jitsu &amp; Fitness — Oxnard, CA</h1>
-<p>Book your free trial class or get in touch with us. No experience needed to start your BJJ journey.</p>
+ <p>Book your free first visit or get in touch with us. No experience needed to start your women-only training journey.</p>
 <p>Phone: (786) 757-1175 | Email: info@groundupbjj.com | Location: Oxnard, CA</p>
-<a href="/contact">Book Your Free Trial</a>`,
+ <a href="/book">Book Your Free First Visit</a>`,
   "/privacy": `<h1>Privacy Policy | Ground Up BJJ</h1>
 <p>Ground Up BJJ / Ground Up explains how we collect, use, and protect information submitted through our website, forms, bookings, and marketing channels.</p>
 <p>Ground Up is located in Oxnard, California. Privacy questions can be sent to <a href="mailto:info@groundupbjj.com">info@groundupbjj.com</a>.</p>
 <h2>Information and choices</h2>
 <p>We may collect contact details, program interest, booking requests, form responses, website usage, and optional marketing attribution. We use this information to respond, administer programs, improve the site, and protect our community. See the full policy for details about Meta Instant Forms, service providers, analytics, retention, minors, and California privacy requests.</p>`,
-  "/book": `<h1>Book Your Free Trial Class — Ground Up Jiu-Jitsu, Oxnard CA</h1>
-<p>Reserve your first free BJJ class. Choose your program, pick a time, and we'll see you on the mat.</p>
-<ul><li>Women's BJJ Fundamentals</li><li>Women's Self-Defense (8-week program)</li><li>Kids Jiu-Jitsu (Ages 4–14)</li><li>Strength &amp; Conditioning</li><li>Personal Training</li></ul>
-<p>No experience needed. No gear required. First class is completely free.</p>`,
+  "/book": `<h1>Book Your Free First Visit — Ground Up, Oxnard</h1>
+ <p>Reserve an available women-only class. No account, credit card, or previous experience is required.</p>
+ <p>Girls/female-youth eligibility and guardian requirements are confirmed before booking.</p>`,
   "/womens-self-defense": `<h1>Women's Self-Defense Program — 8 Weeks in Oxnard, CA</h1>
 <p>A structured 8-week Women's Self-Defense program at Ground Up Jiu-Jitsu in Oxnard, CA. Practical BJJ-based techniques for real situations.</p>
 <ul><li>Awareness &amp; prevention</li><li>Breaking grips &amp; escaping</li><li>Ground defense</li><li>Confident body language</li><li>Scenario practice</li></ul>
 <p>Women-only class. Max 6 students. No experience needed. First class free.</p>
-<a href="/book">Book Your Free Trial</a>`,
-  "/kids": `<h1>Kids Jiu-Jitsu in Oxnard, CA — Ages 4–14 | Ground Up Jiu-Jitsu</h1>
-<p>Kids BJJ classes for ages 4–14 at Ground Up Jiu-Jitsu in Oxnard, CA. Build confidence, discipline, coordination, and anti-bullying awareness.</p>
-<ul><li>Ages 4–7: Kids Intro to Jiu-Jitsu</li><li>Ages 8–14: Youth Jiu-Jitsu</li><li>Max 6 kids per class</li><li>Belt progression system</li><li>Anti-bullying focus</li></ul>
-<p>First class is free. No gear required. Come see the mat.</p>
-<a href="/book">Book a Free Trial Class</a>`,
+ <a href="/book">Book Your Free First Visit</a>`,
+  "/kids": `<h1>Girls and Female Youth Training — Ground Up, Oxnard</h1>
+ <p>Ground Up's youth path is for girls and female youth, not a generic mixed-gender kids academy.</p>
+ <p>Eligibility, age range, guardian requirements, and mother-daughter options are confirmed before booking.</p>
+ <a href="/girls">Learn about girls training</a>`,
+  "/girls": `<h1>Girls and Mother-Daughter Training — Ground Up, Oxnard</h1>
+ <p>Ground Up is a women-only training center. When youth programming is available, it is for girls and female youth.</p>
+ <p>Contact us to confirm current eligibility, guardian requirements, and mother-daughter options before booking.</p>
+ <a href="/contact">Ask about eligibility</a>`,
   "/adaptive-capacity": `<h1>Adaptive Capacity — Build the Capacity to Adapt to Whatever Comes Next</h1>
   <p>Ground Up is developing a separate learning experience for people who want practical tools for clearer thinking, better decisions, and more adaptable work and life.</p>
   <p>Join the interest list to hear when the first cohort is ready. Details will be shared as they are confirmed.</p>
@@ -219,7 +255,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   <url><loc>https://groundupbjj.com/privacy</loc><lastmod>${today}</lastmod><changefreq>yearly</changefreq><priority>0.3</priority></url>
   <url><loc>https://groundupbjj.com/book</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>1.0</priority></url>
   <url><loc>https://groundupbjj.com/womens-self-defense</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://groundupbjj.com/kids</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://groundupbjj.com/girls</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://groundupbjj.com/es</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://groundupbjj.com/es/programas</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://groundupbjj.com/es/horario</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://groundupbjj.com/es/reservar</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://groundupbjj.com/es/contacto</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://groundupbjj.com/es/privacidad</loc><lastmod>${today}</lastmod><changefreq>yearly</changefreq><priority>0.3</priority></url>
   <url><loc>https://groundupbjj.com/adaptive-capacity</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
 </urlset>`);
   });
@@ -285,7 +327,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ============================================
   app.get("/api/bookings", requireRole("admin", "coach"), async (req, res) => {
     try {
-      const bookingsList = await storage.getBookings();
+      const bookingsList = req.session.userRole === "admin"
+        ? await storage.getBookings()
+        : await storage.getBookings({ coachId: req.session.userId! });
       res.json(bookingsList);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch bookings" });
@@ -326,7 +370,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!["pending", "paid", "canceled"].includes(status)) {
         return res.status(400).json({ message: "Invalid booking status" });
       }
-      const booking = await storage.updateBookingStatus(req.params.id, status, stripeSessionId);
+      const booking = req.session.userRole === "admin"
+        ? await storage.updateBookingStatus(req.params.id, status, stripeSessionId)
+        : await storage.updateBookingStatusForCoach(req.params.id, req.session.userId!, status, stripeSessionId);
       if (!booking) {
         return res.status(404).json({ message: "Booking not found" });
       }
@@ -382,18 +428,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Stripe webhook signature verification failed:", err);
       return res.status(400).json({ message: "Invalid webhook signature" });
     }
-    if (!(await storage.claimWebhookEvent("stripe", event.id))) {
+    if (!(await storage.startWebhookEvent("stripe", event.id))) {
       return res.json({ received: true, duplicate: true });
     }
-
-    switch (event.type) {
-      case 'payment_intent.succeeded':
-        const paymentIntent = event.data.object;
-        const bookingId = paymentIntent.metadata.bookingId;
-        if (bookingId) {
-          await storage.updateBookingStatus(bookingId, "paid", paymentIntent.id);
+    try {
+      switch (event.type) {
+        case 'payment_intent.succeeded': {
+          const paymentIntent = event.data.object;
+          const bookingId = paymentIntent.metadata.bookingId;
+          if (bookingId) {
+            const booking = await storage.getBooking(bookingId);
+            if (!booking || booking.amountCents !== paymentIntent.amount || booking.currency.toLowerCase() !== paymentIntent.currency.toLowerCase()) {
+              await storage.failWebhookEvent("stripe", event.id, "Payment intent does not match a known booking.", true);
+              return res.status(400).json({ message: "Invalid payment reference" });
+            }
+            await storage.updateBookingStatus(bookingId, "paid", paymentIntent.id);
+          }
+          break;
         }
-        break;
+      }
+      await storage.completeWebhookEvent("stripe", event.id);
+    } catch (error) {
+      await storage.failWebhookEvent("stripe", event.id, error instanceof Error ? error.message : "Stripe processing failed");
+      throw error;
     }
     res.json({ received: true });
   });
@@ -630,21 +687,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const validated = calendlyWebhookSchema.parse(payload);
-      if (!(await storage.claimWebhookEvent("calendly", validated.event_id))) {
+      if (!(await storage.startWebhookEvent("calendly", validated.event_id))) {
         const existing = await storage.getBookingByCalendlyEventId(validated.event_id);
         return res.status(200).json({ message: "Webhook already processed", bookingId: existing?.id });
       }
-      
-      const booking = await storage.createCalendlyBooking({
-        eventId: validated.event_id,
-        email: validated.email,
-        eventType: validated.event_type,
-        startTime: new Date(validated.start_time),
-        paymentStatus: validated.payment_status,
-        amount: validated.amount,
-      });
-
-      res.status(201).json({ message: "Booking created", bookingId: booking.id });
+      try {
+        const booking = await storage.createCalendlyBooking({
+          eventId: validated.event_id,
+          email: validated.email,
+          eventType: validated.event_type,
+          startTime: new Date(validated.start_time),
+          paymentStatus: validated.payment_status,
+          amount: validated.amount,
+        });
+        await storage.completeWebhookEvent("calendly", validated.event_id);
+        res.status(201).json({ message: "Booking created", bookingId: booking.id });
+      } catch (error) {
+        await storage.failWebhookEvent("calendly", validated.event_id, error instanceof Error ? error.message : "Calendly processing failed");
+        throw error;
+      }
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid webhook payload", errors: error.errors });
@@ -673,7 +734,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Email already registered" });
       }
 
-      const user = await storage.createUser(email, password, firstName, lastName, phone);
+      const user = await storage.createUser(email.trim().toLowerCase(), password, firstName.trim(), lastName.trim(), phone);
+      await new Promise<void>((resolve, reject) => req.session.regenerate((error) => error ? reject(error) : resolve()));
       req.session.userId = user.id;
       req.session.userRole = user.role;
       
@@ -696,6 +758,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Invalid email or password" });
       }
 
+      await new Promise<void>((resolve, reject) => req.session.regenerate((error) => error ? reject(error) : resolve()));
       req.session.userId = user.id;
       req.session.userRole = user.role;
       
@@ -711,6 +774,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (err) {
         return res.status(500).json({ message: "Logout failed" });
       }
+      res.clearCookie("connect.sid", { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production" });
       res.json({ message: "Logged out successfully" });
     });
   });
@@ -724,6 +788,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const user = await storage.getUserById(userId);
       if (!user) {
+        req.session.destroy(() => undefined);
         return res.status(401).json({ message: "User not found" });
       }
 
@@ -960,6 +1025,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/portal/admin/members/:id/belt", requireRole("admin", "coach"), async (req, res) => {
     try {
+      if (req.session.userRole === "coach" && !coachCanManageMember(await storage.getUserById(req.params.id), req.session.userId)) {
+        return res.status(404).json({ message: "Member not found" });
+      }
       const { beltRank } = req.body;
       const user = await storage.updateUser(req.params.id, { beltRank });
       if (!user) {
@@ -973,6 +1041,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/portal/admin/members/:id/attendance", requireRole("admin", "coach"), async (req, res) => {
     try {
+      if (req.session.userRole === "coach" && !coachCanManageMember(await storage.getUserById(req.params.id), req.session.userId)) {
+        return res.status(404).json({ message: "Member not found" });
+      }
       const { attendanceCount } = req.body;
       const user = await storage.updateUser(req.params.id, { attendanceCount });
       if (!user) {
@@ -1007,6 +1078,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ============================================
   app.get("/api/portal/session-notes/:userId", requireRole("admin", "coach"), async (req, res) => {
     try {
+      if (req.session.userRole === "coach" && !coachCanManageMember(await storage.getUserById(req.params.userId), req.session.userId)) {
+        return res.status(404).json({ message: "Member not found" });
+      }
       const notes = await storage.getSessionNotes(req.params.userId);
       res.json(notes);
     } catch (error) {
@@ -1016,6 +1090,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/portal/session-notes/:userId", requireRole("admin", "coach"), async (req, res) => {
     try {
+      if (req.session.userRole === "coach" && !coachCanManageMember(await storage.getUserById(req.params.userId), req.session.userId)) {
+        return res.status(404).json({ message: "Member not found" });
+      }
       const coachId = req.session.userId!;
       const { notes, sessionDate } = req.body;
       if (!notes || typeof notes !== "string") {
@@ -1115,7 +1192,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/admin/bookings", requireRole("admin", "coach"), async (req, res) => {
     try {
-      const bookingsList = await storage.getBookings();
+      const bookingsList = req.session.userRole === "admin"
+        ? await storage.getBookings()
+        : await storage.getBookings({ coachId: req.session.userId! });
       res.json(bookingsList);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch bookings" });
@@ -1124,7 +1203,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/admin/bookings/:id/cancel", requireRole("admin", "coach"), async (req, res) => {
     try {
-      const booking = await storage.cancelBooking(req.params.id);
+      const booking = req.session.userRole === "admin"
+        ? await storage.cancelBooking(req.params.id)
+        : await storage.cancelBookingForCoach(req.params.id, req.session.userId!);
       if (!booking) {
         return res.status(404).json({ message: "Booking not found" });
       }

@@ -119,7 +119,7 @@ export default function WomensSelfDefense() {
                 style={{ backgroundColor: "#FF6B8A", color: "#0B0F14" }}
               >
                 <Link href="/book">
-                  Start Your Free Trial <ArrowRight className="ml-2 h-5 w-5" />
+                  Book Your Free First Visit <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
               <Button
@@ -241,7 +241,7 @@ export default function WomensSelfDefense() {
                 style={{ backgroundColor: "#FF6B8A", color: "#0B0F14" }}
               >
                 <Link href="/book">
-                  Start Your Free Trial <ArrowRight className="ml-2 h-4 w-4" />
+                  Book Your Free First Visit <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
             </div>
@@ -358,7 +358,7 @@ export default function WomensSelfDefense() {
             style={{ backgroundColor: "#FF6B8A", color: "#0B0F14" }}
           >
             <Link href="/book">
-              Start Your Free Trial <ArrowRight className="ml-2 h-5 w-5" />
+              Book Your Free First Visit <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
           </Button>
           <p className="text-gray-600 text-xs mt-4">No credit card required · Oxnard, CA · (786) 757-1175</p>

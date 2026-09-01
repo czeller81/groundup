@@ -77,6 +77,12 @@ export const webhookEvents = pgTable("webhook_events", {
   id: varchar("id").primaryKey(),
   provider: text("provider").notNull(),
   receivedAt: timestamp("received_at").defaultNow().notNull(),
+  status: text("status").notNull().default("received"),
+  attempts: integer("attempts").notNull().default(0),
+  processingStartedAt: timestamp("processing_started_at"),
+  lockedUntil: timestamp("locked_until"),
+  processedAt: timestamp("processed_at"),
+  lastError: text("last_error"),
 });
 
 export const adminUsers = pgTable("admin_users", {
@@ -310,7 +316,7 @@ export const analyticsEvents = pgTable("analytics_events", {
 });
 
 export const insertAnalyticsEventSchema = createInsertSchema(analyticsEvents).omit({ id: true, createdAt: true }).extend({
-  event: z.enum(["page_view", "cta_click", "funnel_step", "lead_form_started", "lead_form_submitted", "lead_form_succeeded", "lead_form_failed"]),
+  event: z.enum(["page_view", "cta_click", "funnel_step", "lead_form_started", "lead_form_submitted", "lead_form_succeeded", "lead_form_failed", "reservation_succeeded", "reservation_failed"]),
   funnel: z.enum(["training", "adaptive_capacity"]),
   sessionId: z.string().trim().min(1).max(100),
   path: z.string().trim().max(300),

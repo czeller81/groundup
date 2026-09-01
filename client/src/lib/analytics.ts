@@ -6,7 +6,9 @@ export type AnalyticsEvent =
   | "lead_form_started"
   | "lead_form_submitted"
   | "lead_form_succeeded"
-  | "lead_form_failed";
+  | "lead_form_failed"
+  | "reservation_succeeded"
+  | "reservation_failed";
 
 export interface Attribution {
   utm_source?: string;
@@ -57,7 +59,7 @@ export function captureAttribution(): Attribution {
     if (value) attribution[key] = value.slice(0, 200);
   }
   const existing = getAttribution();
-  const merged = { ...attribution, ...existing };
+  const merged = { ...existing, ...attribution };
   window.localStorage.setItem(ATTRIBUTION_KEY, JSON.stringify(merged));
   return merged;
 }

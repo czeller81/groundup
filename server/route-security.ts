@@ -4,6 +4,20 @@ export function bookingBelongsToUser(booking: { userId: string | null } | undefi
   return Boolean(booking && userId && booking.userId === userId);
 }
 
+export function coachCanManageMember(member: { assignedCoachId?: string | null } | undefined, coachId: string | undefined) {
+  return Boolean(member && coachId && member.assignedCoachId === coachId);
+}
+
+export function isPublicOccurrenceText(title?: string | null, description?: string | null, location?: string | null) {
+  return ![title, description, location].some((value) => value?.toLowerCase().includes("test"));
+}
+
+export function canRetryWebhook(status: string, lockedUntil: Date | null | undefined, now = new Date()) {
+  if (status === "completed" || status === "failed_terminal") return false;
+  if (status === "processing" && lockedUntil && lockedUntil > now) return false;
+  return true;
+}
+
 export const requireAuth = (req: Request, res: Response, next: NextFunction) => {
   if (!req.session?.userId) return res.status(401).json({ message: "Not authenticated" });
   next();
@@ -16,6 +30,42 @@ export const requireRole = (...roles: string[]) => (req: Request, res: Response,
   }
   next();
 };
+
+export function createOriginProtection() {
+  const safeMethods = new Set(["GET", "HEAD", "OPTIONS"]);
+  const webhookPaths = new Set(["/api/stripe/webhook", "/webhook/calendly"]);
+
+  return (req: Request, res: Response, next: NextFunction) => {
+    if (safeMethods.has(req.method) || webhookPaths.has(req.path) || !req.path.startsWith("/api/")) {
+      return next();
+    }
+
+    const fetchSite = req.get("sec-fetch-site");
+    if (fetchSite === "cross-site") {
+      return res.status(403).json({ message: "Cross-site mutation blocked" });
+    }
+
+    const expectedOrigin = `${req.protocol}://${req.get("host")}`;
+    const origin = req.get("origin");
+    const referer = req.get("referer");
+
+    if (origin && origin !== expectedOrigin) {
+      return res.status(403).json({ message: "Invalid request origin" });
+    }
+
+    if (!origin && referer) {
+      try {
+        if (new URL(referer).origin !== expectedOrigin) {
+          return res.status(403).json({ message: "Invalid request origin" });
+        }
+      } catch {
+        return res.status(403).json({ message: "Invalid request origin" });
+      }
+    }
+
+    next();
+  };
+}
 
 export function createPublicRateLimit(limit = 12, windowMs = 60 * 60 * 1000) {
   const requestCounts = new Map<string, { count: number; resetAt: number }>();

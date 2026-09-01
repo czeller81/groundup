@@ -120,7 +120,7 @@ export function registerClassBookingRoutes(app: Express) {
   app.get("/api/classes", async (req, res) => {
     try {
       const { from, to } = dateRange(req);
-      const occurrences = await storage.listClassOccurrences(from, to, req.query.firstVisit === "true");
+      const occurrences = await storage.listClassOccurrences(from, to, req.query.firstVisit === "true", false, "all");
       const connection = await storage.getCalendarConnection();
       res.json({
         timezone: "America/Los_Angeles",

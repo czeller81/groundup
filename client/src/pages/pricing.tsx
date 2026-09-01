@@ -53,8 +53,8 @@ export default function Pricing() {
   return (
     <div className="flex flex-col bg-[#0B0F14] min-h-screen">
       <SEO
-        title="BJJ Programs & Pricing — Women's, Kids & Adult Classes in Oxnard"
-        description="Explore BJJ programs and pricing at Ground Up Jiu-Jitsu in Oxnard, CA. Women's self-defense, kids BJJ, strength & conditioning, and personal training. Beginner friendly."
+        title="Women-Only Training Programs in Oxnard | Ground Up"
+        description="Explore women-only Brazilian Jiu-Jitsu, practical self-defense, strength, movement, and personal coaching at Ground Up in Oxnard. Beginner-friendly and no experience required."
         canonical="/pricing"
       />
 
@@ -72,11 +72,11 @@ export default function Pricing() {
             Start Your Training<br />at <span className="text-[#5EEBFF]">Ground Up</span>
           </h1>
           <p className="text-gray-300 text-base sm:text-lg max-w-xl mx-auto leading-relaxed mb-8">
-            Small-group coaching for women, kids, beginners, and anyone looking to build confidence through jiu-jitsu, self-defense, and strength &amp; conditioning.
+            A women-only training center for Brazilian Jiu-Jitsu, practical self-defense, strength, movement, and personal coaching. Beginners are welcome, and no prior experience is required.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center mb-8">
             <Button asChild size="lg" className="bg-[#FFB199] text-[#0B0F14] font-bold uppercase tracking-wider hover:bg-[#FFB199]/90 px-8">
-              <Link href="/portal/login">Book Free Intro <ArrowRight className="ml-2 h-4 w-4" /></Link>
+              <Link href="/book">Book Your Free First Visit <ArrowRight className="ml-2 h-4 w-4" /></Link>
             </Button>
             <Button asChild variant="ghost" size="lg" className="border border-white/10 text-gray-300 hover:text-white hover:bg-white/5 px-8 uppercase tracking-wider">
               <Link href="/schedule">View Schedule</Link>
@@ -104,7 +104,7 @@ export default function Pricing() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {[
               { icon: "🥋", title: "Women",                   desc: "A safe, empowering space built specifically for women of all skill levels." },
-              { icon: "⭐", title: "Kids & Youth",            desc: "Age-appropriate jiu-jitsu that builds confidence, focus, and life skills." },
+               { icon: "⭐", title: "Girls / Female Youth",    desc: "Ask about the current girls program and family participation options." },
               { icon: "👋", title: "Beginners",               desc: "No experience needed — ever. We guide you from day one." },
               { icon: "💪", title: "Strength & Conditioning", desc: "Functional fitness training designed for athletes and everyday movers." },
             ].map((card, i) => (
@@ -114,7 +114,7 @@ export default function Pricing() {
                   <h3 className="text-white font-bold text-base mb-2">{card.title}</h3>
                   <p className="text-gray-400 text-sm leading-relaxed flex-1 mb-5">{card.desc}</p>
                   <Button asChild size="sm" variant="ghost" className="w-full border border-white/8 text-gray-300 hover:text-white hover:bg-white/5 text-xs font-semibold uppercase tracking-wider">
-                    <Link href="/portal/login">Book Free Intro</Link>
+                     <Link href="/book">Book Your Free First Visit</Link>
                   </Button>
                 </div>
               </Reveal>
@@ -141,15 +141,15 @@ export default function Pricing() {
                 accent: "#B06CFF",
               },
               {
-                title: "Kids Jiu-Jitsu",
-                desc: "Fun, structured jiu-jitsu for ages 4 and up. Kids build discipline, coordination, and self-confidence through guided movement and play.",
-                note: "Classes for ages 4–7 and 8+",
+                 title: "Girls / Mother + Daughter",
+                 desc: "A women-centered youth path for girls and female youth. Ask about current eligibility, guardian requirements, and mother-daughter participation.",
+                 note: "Eligibility confirmed before booking",
                 accent: "#FFB199",
               },
               {
                 title: "Strength & Conditioning",
-                desc: "Functional training built for grapplers and everyday athletes. Mobility, strength, and injury prevention — open to all.",
-                note: "Classes available daily · All fitness levels welcome",
+                 desc: "Useful strength, mobility, and movement for women at every starting point. Build capability without a bodybuilding or fight-gym atmosphere.",
+                 note: "Beginner-friendly · Women-only",
                 accent: "#5EEBFF",
               },
             ].map((prog, i) => (
@@ -160,7 +160,7 @@ export default function Pricing() {
                   <p className="text-gray-400 text-sm leading-relaxed flex-1 mb-4">{prog.desc}</p>
                   <p className="text-xs mb-5" style={{ color: prog.accent }}>{prog.note}</p>
                   <Button asChild size="sm" className="w-full font-bold text-[#0B0F14] hover:opacity-90 text-xs uppercase tracking-wider" style={{ backgroundColor: prog.accent }}>
-                    <Link href="/portal/login">Book Free Intro</Link>
+                     <Link href="/book">Book Your Free First Visit</Link>
                   </Button>
                 </div>
               </Reveal>
@@ -193,7 +193,7 @@ export default function Pricing() {
                 </div>
                 <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                   <Button asChild size="lg" className="bg-[#B06CFF] text-white font-bold uppercase tracking-wider hover:bg-[#B06CFF]/90">
-                    <Link href="/portal/login">Book Your Free Intro <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                     <Link href="/book">Book Your Free First Visit <ArrowRight className="ml-2 h-4 w-4" /></Link>
                   </Button>
                 </div>
               </div>
@@ -231,7 +231,7 @@ export default function Pricing() {
           <Reveal>
             <p className="text-gray-500 text-sm italic mb-6">No pressure. We'll help you find the best class for your goals.</p>
             <Button asChild size="lg" className="bg-[#FFB199] text-[#0B0F14] font-bold uppercase tracking-wider hover:bg-[#FFB199]/90 px-8">
-              <Link href="/portal/login">Book Your Free Intro <ArrowRight className="ml-2 h-4 w-4" /></Link>
+               <Link href="/book">Book Your Free First Visit <ArrowRight className="ml-2 h-4 w-4" /></Link>
             </Button>
           </Reveal>
         </div>
@@ -250,10 +250,10 @@ export default function Pricing() {
               {[
                 { question: "Do I need experience to join?",         answer: "Not at all. Every program is built for beginners. You'll start from the basics in a safe, supportive environment — no prior experience required." },
                 { question: "What happens at the free intro?",       answer: "You come in, meet Coach Raymi, see the space, and try a class. No commitment, no sales pressure. It's just a chance to feel comfortable and find the right fit." },
-                { question: "Who are your classes designed for?",    answer: "Primarily women, kids, and beginners — but anyone is welcome. We specialize in creating environments where people who've never trained before feel completely at home." },
+                { question: "Who are your classes designed for?",    answer: "Ground Up is a women-only training center. Women of all experience levels are welcome, including complete beginners. Ask us about current girls/female-youth availability and mother-daughter options." },
                 { question: "What should I wear?",                   answer: "Comfortable workout clothes work great for your first visit. We'll guide you on any gear you might need once you've chosen a program." },
                 { question: "How do I know which program is right?", answer: "That's what the free intro is for. After a short conversation, we'll point you to the best-fit class for your goals, schedule, and comfort level." },
-                { question: "What age can kids start?",              answer: "Kids can start as young as 4 in our Kids Intro to Jiu-Jitsu class. We also have youth classes for ages 8 and up — both are fun, structured, and age-appropriate." },
+                { question: "Do you offer girls or mother-daughter training?", answer: "Youth availability and age eligibility are confirmed before booking so we do not give families outdated information. Contact us to ask about the current girls/female-youth and mother-daughter options." },
               ].map((faq, i) => <FAQ key={i} question={faq.question} answer={faq.answer} />)}
             </div>
           </Reveal>
@@ -272,13 +272,13 @@ export default function Pricing() {
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Button asChild size="lg" className="bg-[#FFB199] text-[#0B0F14] font-bold uppercase tracking-wider hover:bg-[#FFB199]/90 px-8">
-              <Link href="/portal/login">Book Free Intro <ArrowRight className="ml-2 h-4 w-4" /></Link>
+               <Link href="/book">Book Your Free First Visit <ArrowRight className="ml-2 h-4 w-4" /></Link>
             </Button>
             <Button asChild variant="outline" size="lg" className="border-white/15 text-white hover:bg-white/5 px-8 uppercase tracking-wider">
               <Link href="/contact">Contact Us</Link>
             </Button>
           </div>
-          <p className="text-gray-600 text-xs mt-6">Women, kids, and beginners welcome · Oxnard, CA</p>
+           <p className="text-gray-600 text-xs mt-6">Women-only training · Beginner-friendly · Oxnard, CA</p>
         </Reveal>
       </section>
 

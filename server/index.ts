@@ -3,7 +3,7 @@ import session from "express-session";
 import MemoryStore from "memorystore";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
-import { createScannerProbeGuard } from "./route-security";
+import { createOriginProtection, createScannerProbeGuard } from "./route-security";
 import { applySecurityHeaders } from "./security-headers";
 import { createRequire } from "module";
 
@@ -39,9 +39,10 @@ app.use(session({
     secure: process.env.NODE_ENV === "production",
     httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000,
-     sameSite: "lax"
+    sameSite: "lax"
   }
 }));
+app.use(createOriginProtection());
 
 app.use((req, res, next) => {
   const start = Date.now();

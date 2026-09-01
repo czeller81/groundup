@@ -38,7 +38,7 @@ import {
   type ClassReservation
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, gte, lte, desc, asc, sql, count, sum, or, ilike, inArray, isNotNull } from "drizzle-orm";
+import { eq, and, gte, lte, desc, asc, sql, count, sum, or, ilike, inArray, isNotNull, not } from "drizzle-orm";
 
 export class ClassBookingError extends Error {
   constructor(public code: string, message: string, public status = 400) {
@@ -48,6 +48,7 @@ export class ClassBookingError extends Error {
 }
 import { randomUUID } from "crypto";
 import bcrypt from "bcryptjs";
+import { canRetryWebhook, isPublicOccurrenceText } from "./route-security";
 
 export interface IStorage {
   getUserById(id: string): Promise<User | undefined>;
@@ -77,11 +78,14 @@ export interface IStorage {
   createTrainer(trainer: InsertTrainer): Promise<Trainer>;
   updateTrainerAvailability(id: string, availability: any): Promise<Trainer | undefined>;
   
-  getBookings(filters?: { trainerId?: string; status?: string; startDate?: Date; endDate?: Date }): Promise<BookingWithTrainer[]>;
+  getBookings(filters?: { trainerId?: string; status?: string; startDate?: Date; endDate?: Date; coachId?: string }): Promise<BookingWithTrainer[]>;
+  getBookingForCoach(id: string, coachId: string): Promise<BookingWithTrainer | undefined>;
   getBooking(id: string): Promise<BookingWithTrainer | undefined>;
   createBooking(booking: InsertBooking): Promise<Booking>;
   updateBookingStatus(id: string, status: string, stripeSessionId?: string): Promise<Booking | undefined>;
+  updateBookingStatusForCoach(id: string, coachId: string, status: string, stripeSessionId?: string): Promise<Booking | undefined>;
   cancelBooking(id: string): Promise<Booking | undefined>;
+  cancelBookingForCoach(id: string, coachId: string): Promise<Booking | undefined>;
   getTrainerBookings(trainerId: string, startDate: Date, endDate: Date): Promise<Booking[]>;
   
   getAllUsers(search?: string, page?: number, limit?: number, incompleteFormsOnly?: boolean): Promise<{ users: (SafeUser & { missingFormsCount?: number })[]; total: number }>;
@@ -101,7 +105,9 @@ export interface IStorage {
   getCoachMembers(coachId: string): Promise<SafeUser[]>;
   
   createCalendlyBooking(data: { eventId: string; email: string; eventType: string; startTime: Date; paymentStatus: string; amount: number }): Promise<Booking>;
-  claimWebhookEvent(provider: string, eventId: string): Promise<boolean>;
+  startWebhookEvent(provider: string, eventId: string): Promise<boolean>;
+  completeWebhookEvent(provider: string, eventId: string): Promise<void>;
+  failWebhookEvent(provider: string, eventId: string, error: string, terminal?: boolean): Promise<void>;
   getBookingByCalendlyEventId(eventId: string): Promise<Booking | undefined>;
 
   getCalendarConnection(): Promise<CalendarConnection | undefined>;
@@ -378,17 +384,37 @@ export class DatabaseStorage implements IStorage {
     return updated;
   }
 
-  async getBookings(filters?: { trainerId?: string; status?: string; startDate?: Date; endDate?: Date }): Promise<BookingWithTrainer[]> {
+  async getBookings(filters?: { trainerId?: string; status?: string; startDate?: Date; endDate?: Date; coachId?: string }): Promise<BookingWithTrainer[]> {
+    const conditions = [
+      filters?.trainerId ? eq(bookings.trainerId, filters.trainerId) : undefined,
+      filters?.status ? eq(bookings.status, filters.status) : undefined,
+      filters?.startDate ? gte(bookings.start, filters.startDate) : undefined,
+      filters?.endDate ? lte(bookings.end, filters.endDate) : undefined,
+      filters?.coachId ? eq(users.assignedCoachId, filters.coachId) : undefined,
+    ];
     const result = await db
       .select()
       .from(bookings)
       .leftJoin(trainers, eq(bookings.trainerId, trainers.id))
+      .leftJoin(users, eq(bookings.userId, users.id))
+      .where(and(...conditions))
       .orderBy(desc(bookings.start));
     
     return result.map(row => ({
       ...row.bookings,
       trainer: row.trainers!
     }));
+  }
+
+  async getBookingForCoach(id: string, coachId: string): Promise<BookingWithTrainer | undefined> {
+    const [result] = await db
+      .select()
+      .from(bookings)
+      .leftJoin(trainers, eq(bookings.trainerId, trainers.id))
+      .innerJoin(users, eq(bookings.userId, users.id))
+      .where(and(eq(bookings.id, id), eq(users.assignedCoachId, coachId)));
+    if (!result) return undefined;
+    return { ...result.bookings, trainer: result.trainers! };
   }
 
   async getBooking(id: string): Promise<BookingWithTrainer | undefined> {
@@ -425,6 +451,12 @@ export class DatabaseStorage implements IStorage {
     return updated;
   }
 
+  async updateBookingStatusForCoach(id: string, coachId: string, status: string, stripeSessionId?: string): Promise<Booking | undefined> {
+    const booking = await this.getBookingForCoach(id, coachId);
+    if (!booking) return undefined;
+    return this.updateBookingStatus(id, status, stripeSessionId);
+  }
+
   async cancelBooking(id: string): Promise<Booking | undefined> {
     const [updated] = await db
       .update(bookings)
@@ -432,6 +464,12 @@ export class DatabaseStorage implements IStorage {
       .where(eq(bookings.id, id))
       .returning();
     return updated;
+  }
+
+  async cancelBookingForCoach(id: string, coachId: string): Promise<Booking | undefined> {
+    const booking = await this.getBookingForCoach(id, coachId);
+    if (!booking) return undefined;
+    return this.cancelBooking(id);
   }
 
   async getTrainerBookings(trainerId: string, startDate: Date, endDate: Date): Promise<Booking[]> {
@@ -738,7 +776,7 @@ export class DatabaseStorage implements IStorage {
     return classType;
   }
 
-  async listClassOccurrences(from: Date, to: Date, firstVisitOnly = false, includeDisabled = false): Promise<Array<ClassOccurrence & { confirmedCount: number; waitlistCount: number; trainer: Trainer | null; classType: ClassType | null }>> {
+  async listClassOccurrences(from: Date, to: Date, firstVisitOnly = false, includeDisabled = false, audience: "all" | "members" | "any" = "any"): Promise<Array<ClassOccurrence & { confirmedCount: number; waitlistCount: number; trainer: Trainer | null; classType: ClassType | null }>> {
     const rows = await db.select({
       occurrence: classOccurrences,
       trainer: trainers,
@@ -753,11 +791,17 @@ export class DatabaseStorage implements IStorage {
         includeDisabled ? undefined : eq(classOccurrences.status, "active"),
         includeDisabled ? undefined : eq(classOccurrences.bookingEnabled, true),
         firstVisitOnly ? eq(classOccurrences.firstVisitEligible, true) : undefined,
+        audience === "all" ? eq(classOccurrences.audience, "all") : undefined,
+        audience === "members" ? eq(classOccurrences.audience, "members") : undefined,
+        !includeDisabled ? not(ilike(classOccurrences.title, "%test%")) : undefined,
+        !includeDisabled ? not(ilike(classOccurrences.description, "%test%")) : undefined,
+        !includeDisabled ? not(ilike(classOccurrences.location, "%test%")) : undefined,
       ))
       .orderBy(asc(classOccurrences.start));
 
-    if (!rows.length) return [];
-    const ids = rows.map(({ occurrence }) => occurrence.id);
+    const visibleRows = rows.filter(({ occurrence }) => includeDisabled || isPublicOccurrenceText(occurrence.title, occurrence.description, occurrence.location));
+    if (!visibleRows.length) return [];
+    const ids = visibleRows.map(({ occurrence }) => occurrence.id);
     const totals = await db.select({
       occurrenceId: classReservations.occurrenceId,
       confirmedCount: sql<number>`count(*) filter (where ${classReservations.status} = 'confirmed')::int`,
@@ -766,7 +810,7 @@ export class DatabaseStorage implements IStorage {
       .where(inArray(classReservations.occurrenceId, ids))
       .groupBy(classReservations.occurrenceId);
     const counts = new Map(totals.map((row) => [row.occurrenceId, row]));
-    return rows.map(({ occurrence, trainer, classType }) => ({
+    return visibleRows.map(({ occurrence, trainer, classType }) => ({
       ...occurrence,
       trainer,
       classType,
@@ -1097,12 +1141,57 @@ export class DatabaseStorage implements IStorage {
     });
   }
 
-  async claimWebhookEvent(provider: string, eventId: string): Promise<boolean> {
+  async startWebhookEvent(provider: string, eventId: string): Promise<boolean> {
+    const id = `${provider}:${eventId}`;
+    const now = new Date();
+    const retryUntil = new Date(now.getTime() + 10 * 60 * 1000);
     try {
-      await db.insert(webhookEvents).values({ id: `${provider}:${eventId}`, provider });
+      await db.insert(webhookEvents).values({
+        id,
+        provider,
+        status: "processing",
+        attempts: 1,
+        processingStartedAt: now,
+        lockedUntil: retryUntil,
+      });
       return true;
     } catch (error: any) {
-      if (error?.code === "23505") return false;
+      if (error?.code !== "23505") throw error;
+      const [existing] = await db.select().from(webhookEvents).where(eq(webhookEvents.id, id));
+       if (!existing || !canRetryWebhook(existing.status, existing.lockedUntil, now)) return false;
+      await db.update(webhookEvents).set({
+        status: "processing",
+        attempts: existing.attempts + 1,
+        processingStartedAt: now,
+        lockedUntil: retryUntil,
+        lastError: null,
+      }).where(eq(webhookEvents.id, id));
+      return true;
+    }
+  }
+
+  async completeWebhookEvent(provider: string, eventId: string): Promise<void> {
+    await db.update(webhookEvents).set({
+      status: "completed",
+      processedAt: new Date(),
+      lockedUntil: null,
+      lastError: null,
+    }).where(eq(webhookEvents.id, `${provider}:${eventId}`));
+  }
+
+  async failWebhookEvent(provider: string, eventId: string, error: string, terminal = false): Promise<void> {
+    await db.update(webhookEvents).set({
+      status: terminal ? "failed_terminal" : "failed_retryable",
+      lockedUntil: null,
+      lastError: error.slice(0, 500),
+    }).where(eq(webhookEvents.id, `${provider}:${eventId}`));
+  }
+
+  async claimWebhookEvent(provider: string, eventId: string): Promise<boolean> {
+    // Compatibility wrapper for callers outside the webhook routes.
+    try {
+      return await this.startWebhookEvent(provider, eventId);
+    } catch (error) {
       throw error;
     }
   }

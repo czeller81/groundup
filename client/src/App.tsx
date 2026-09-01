@@ -23,7 +23,7 @@ import PortalCoach from "@/pages/portal/coach";
 import LiveSchedule from "@/pages/live-schedule";
 import FirstVisitBooking from "@/pages/first-visit-booking";
 import WomensSelfDefense from "@/pages/womens-self-defense";
-import Kids from "@/pages/kids";
+import Girls from "@/pages/girls";
 import Navbar from "@/components/layout/navbar";
 import Footer from "@/components/layout/footer";
 import PortalNavbar from "@/components/layout/portal-navbar";
@@ -31,6 +31,7 @@ import AdaptiveCapacity from "@/pages/adaptive-capacity";
 import AnalyticsConsent from "@/components/analytics-consent";
 import Privacy from "@/pages/privacy";
 import MetaPixel from "@/components/meta-pixel";
+import { SpanishHome, SpanishPrograms, SpanishSchedule, SpanishBooking, SpanishContact, SpanishPrivacy } from "@/pages/spanish";
 
 function MainLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -81,11 +82,32 @@ function Router() {
       <Route path="/womens-self-defense">
         <MainLayout><WomensSelfDefense /></MainLayout>
       </Route>
+      <Route path="/girls">
+        <MainLayout><Girls /></MainLayout>
+      </Route>
       <Route path="/kids">
-        <MainLayout><Kids /></MainLayout>
+        <Redirect to="/girls" />
       </Route>
       <Route path="/adaptive-capacity">
         <MainLayout><AdaptiveCapacity /></MainLayout>
+      </Route>
+      <Route path="/es">
+        <SpanishHome />
+      </Route>
+      <Route path="/es/programas">
+        <SpanishPrograms />
+      </Route>
+      <Route path="/es/horario">
+        <SpanishSchedule />
+      </Route>
+      <Route path="/es/reservar">
+        <SpanishBooking />
+      </Route>
+      <Route path="/es/contacto">
+        <SpanishContact />
+      </Route>
+      <Route path="/es/privacidad">
+        <SpanishPrivacy />
       </Route>
       <Route path="/admin">
         <MainLayout><Admin /></MainLayout>

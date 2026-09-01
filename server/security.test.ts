@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import crypto from "node:crypto";
 import test from "node:test";
 import Stripe from "stripe";
-import { bookingBelongsToUser, createPublicRateLimit, createScannerProbeGuard, isScannerProbePath, requireAuth, requireRole } from "./route-security";
+import { bookingBelongsToUser, canRetryWebhook, coachCanManageMember, createOriginProtection, createPublicRateLimit, createScannerProbeGuard, isPublicOccurrenceText, isScannerProbePath, requireAuth, requireRole } from "./route-security";
 import { applySecurityHeaders } from "./security-headers";
 import { verifyCalendlySignature, verifyStripeSignature } from "./webhook-security";
 
@@ -55,6 +55,41 @@ test("payment creation cannot use another member's booking", () => {
   assert.equal(bookingBelongsToUser({ userId: "member-a" }, "member-b"), false);
   assert.equal(bookingBelongsToUser({ userId: "member-a" }, "member-a"), true);
   assert.equal(bookingBelongsToUser(undefined, "member-a"), false);
+});
+
+test("coach access stays scoped to assigned members across member-owned objects", () => {
+  assert.equal(coachCanManageMember({ assignedCoachId: "coach-a" }, "coach-a"), true);
+  assert.equal(coachCanManageMember({ assignedCoachId: "coach-a" }, "coach-b"), false);
+  assert.equal(coachCanManageMember({ assignedCoachId: null }, "coach-a"), false);
+});
+
+test("browser mutations reject cross-site origins but allow same-origin and webhooks", () => {
+  const guard = createOriginProtection();
+  const next = () => {};
+  let res = responseRecorder();
+  guard({ method: "POST", path: "/api/contact", protocol: "https", get: (name: string) => name === "host" ? "groundupbjj.com" : name === "origin" ? "https://evil.example" : undefined } as any, res, next);
+  assert.equal(res.result.statusCode, 403);
+  let called = false;
+  guard({ method: "POST", path: "/api/contact", protocol: "https", get: (name: string) => name === "host" ? "groundupbjj.com" : name === "origin" ? "https://groundupbjj.com" : undefined } as any, responseRecorder(), () => { called = true; });
+  assert.equal(called, true);
+  called = false;
+  guard({ method: "POST", path: "/api/stripe/webhook", protocol: "https", get: () => "https://evil.example" } as any, responseRecorder(), () => { called = true; });
+  assert.equal(called, true);
+});
+
+test("webhook retries only after a retryable failure is unlocked", () => {
+  const now = new Date("2026-09-01T20:00:00.000Z");
+  assert.equal(canRetryWebhook("completed", null, now), false);
+  assert.equal(canRetryWebhook("failed_terminal", null, now), false);
+  assert.equal(canRetryWebhook("processing", new Date("2026-09-01T20:05:00.000Z"), now), false);
+  assert.equal(canRetryWebhook("failed_retryable", null, now), true);
+  assert.equal(canRetryWebhook("processing", new Date("2026-09-01T19:55:00.000Z"), now), true);
+});
+
+test("public occurrence filtering excludes test-marked records without deleting them", () => {
+  assert.equal(isPublicOccurrenceText("Women’s BJJ", "Beginner class", "Oxnard"), true);
+  assert.equal(isPublicOccurrenceText("BOOKING READINESS TEST SERIES", "Internal test", "Oxnard"), false);
+  assert.equal(isPublicOccurrenceText("Women’s BJJ", null, "TEST LOCATION"), false);
 });
 
 test("public rate limits count per IP and path", () => {

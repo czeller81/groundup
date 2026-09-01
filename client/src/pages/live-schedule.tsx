@@ -46,7 +46,7 @@ export default function LiveSchedule() {
           </div>
         )}
         <div className="mt-8 text-center">
-          <Button asChild variant="outline" className="border-white/15 bg-transparent text-white"><Link href="/portal/login">Already a member? Sign in</Link></Button>
+          <Button asChild variant="outline" className="border-white/15 bg-transparent text-white"><Link href="/portal/login">Member login</Link></Button>
         </div>
       </main>
     </div>

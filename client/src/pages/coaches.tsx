@@ -102,7 +102,7 @@ export default function Coaches() {
                 asChild
                 className="bg-[#FFB199] text-[#0B0F14] font-bold uppercase tracking-wider hover:bg-[#FFB199]/90"
               >
-                <Link href="/portal/login">
+                <Link href="/book">
                   Book a Session
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>

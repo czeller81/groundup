@@ -78,8 +78,8 @@ export default function Contact() {
   return (
     <div className="flex flex-col bg-[#0B0F14]">
       <SEO
-        title="Contact Us — Book Your Free Trial Class in Oxnard, CA"
-        description="Ready to start your BJJ journey? Contact Ground Up Jiu-Jitsu & Fitness in Oxnard, CA to book your free trial class or ask us anything. No experience needed."
+        title="Contact Ground Up | Women-Only Training in Oxnard"
+        description="Questions about women-only Brazilian Jiu-Jitsu, practical self-defense, strength, movement, or girls/female-youth eligibility? Contact Ground Up in Oxnard."
         canonical="/contact"
       />
       <section className="relative pt-32 pb-20 overflow-hidden">
@@ -295,7 +295,7 @@ export default function Contact() {
                   className="w-full bg-[#5EEBFF] text-[#0B0F14] font-bold uppercase tracking-wider hover:bg-[#5EEBFF]/90"
                 >
                   <Link href="/book">
-                    Start Your Free Trial
+                    Book Your Free First Visit
                   </Link>
                 </Button>
               </div>

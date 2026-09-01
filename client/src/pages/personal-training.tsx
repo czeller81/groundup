@@ -51,7 +51,7 @@ export default function PersonalTraining() {
             size="lg"
             className="bg-[#FFB199] text-[#0B0F14] font-bold uppercase tracking-wider hover:bg-[#FFB199]/90 text-base px-10 h-14"
           >
-            <Link href="/portal/login">
+            <Link href="/book">
               Book Your Session
               <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
@@ -133,7 +133,7 @@ export default function PersonalTraining() {
                 asChild
                 className="bg-[#FFB199] text-[#0B0F14] font-bold uppercase tracking-wider hover:bg-[#FFB199]/90"
               >
-                <Link href="/portal/login">
+                <Link href="/book">
                   Sign Up to Book
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
@@ -157,7 +157,7 @@ export default function PersonalTraining() {
             size="lg"
             className="bg-[#FFB199] text-[#0B0F14] font-bold uppercase tracking-wider hover:bg-[#FFB199]/90 text-base px-10 h-14"
           >
-            <Link href="/portal/login">
+            <Link href="/book">
               Book Your Free Trial
               <ArrowRight className="ml-2 h-5 w-5" />
             </Link>

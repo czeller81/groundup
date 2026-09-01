@@ -18,7 +18,9 @@ export default function Navbar() {
 
   const navItems = [
     { path: "/", label: "Home" },
-    { path: "/personal-training", label: "Training" },
+    { path: "/personal-training", label: "Women’s Training" },
+    { path: "/womens-self-defense", label: "Self-Defense" },
+    { path: "/girls", label: "Girls / Mother + Daughter" },
     { path: "/adaptive-capacity", label: "Adaptive Capacity" },
     { path: "/schedule", label: "Schedule" },
     { path: "/coaches", label: "Coaches" },
@@ -72,13 +74,16 @@ export default function Navbar() {
             >
               Member Login
             </Link>
+            <Link href="/es" className="ml-2 px-2 py-2 text-xs font-bold uppercase tracking-wide text-[#5EEBFF] hover:text-white" data-testid="nav-link-es">
+              Español
+            </Link>
             <Link href="/book">
               <Button
                 size="sm"
                 className="ml-2 bg-[#FFB199] text-[#0B0F14] font-semibold hover:bg-[#FFB199]/90 uppercase tracking-wider text-xs"
                 data-testid="nav-link-book"
               >
-                Start Free Trial
+                Book Your Free First Visit
               </Button>
             </Link>
           </div>
@@ -134,11 +139,18 @@ export default function Navbar() {
                   Member Login
                 </Link>
                 <Link
+                  href="/es"
+                  className="block px-4 py-3 text-sm font-semibold tracking-wide uppercase text-[#5EEBFF] hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Español
+                </Link>
+                <Link
                   href="/book"
                   className="block px-4 py-3 text-sm font-semibold tracking-wide uppercase text-[#0B0F14] bg-[#FFB199] rounded-lg text-center mt-2"
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  Start Free Trial
+                  Book Your Free First Visit
                 </Link>
               </div>
             </motion.div>

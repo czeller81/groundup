@@ -122,8 +122,8 @@ export default function Schedule() {
   return (
     <div className="min-h-screen bg-[#0B0F14]">
       <SEO
-        title="Class Schedule — BJJ, Kids & Women's Classes in Oxnard, CA"
-        description="View the full weekly class schedule at Ground Up Jiu-Jitsu in Oxnard, CA. Women's BJJ, Kids Jiu-Jitsu, Strength & Conditioning, and more. Max 6 students per class."
+        title="Women-Only Class Schedule in Oxnard | Ground Up"
+        description="View the live Google Calendar schedule for Ground Up's women-only Brazilian Jiu-Jitsu, self-defense, strength, and movement classes in Oxnard."
         canonical="/schedule"
       />
       {/* Hero */}
@@ -141,7 +141,7 @@ export default function Schedule() {
               Train With <span className="text-[#B06CFF]">Purpose</span>
             </h1>
             <p className="text-gray-400 text-lg max-w-2xl mx-auto leading-relaxed mb-4">
-              Intentionally small classes designed for women, kids, and performance-focused students. Jiu-jitsu, self-defense, and strength &amp; conditioning.
+              Intentionally small classes designed for women. Jiu-jitsu, self-defense, strength, and movement with real coaching.
             </p>
             <p className="text-[#5EEBFF] text-sm font-medium tracking-wide">Small group coaching. Real progress.</p>
           </motion.div>
@@ -244,9 +244,9 @@ export default function Schedule() {
         {/* Program Spotlights */}
         <div className="mt-14 grid sm:grid-cols-3 gap-4">
           {[
-            { title: "Women's Jiu-Jitsu", desc: "A safe, structured environment built for women. Learn real techniques with personalized coaching.", color: "text-[#B06CFF]", bg: "bg-[#B06CFF]/10", border: "border-[#B06CFF]/20", href: "/portal/login" },
-            { title: "Kids Program",       desc: "Fun, age-appropriate jiu-jitsu for ages 4–7 and 8+. Build confidence, focus, and discipline.", color: "text-[#FFB199]", bg: "bg-[#FFB199]/10", border: "border-[#FFB199]/20", href: "/personal-training" },
-            { title: "Strength & Cond.",   desc: "Functional performance training designed for grapplers and athletes of all experience levels.",  color: "text-emerald-400", bg: "bg-emerald-400/10", border: "border-emerald-400/20", href: "/pricing" },
+             { title: "Women's Jiu-Jitsu", desc: "A safe, structured environment built for women. Learn real techniques with personalized coaching.", color: "text-[#B06CFF]", bg: "bg-[#B06CFF]/10", border: "border-[#B06CFF]/20", href: "/book" },
+             { title: "Girls / Mother + Daughter", desc: "Ask about current female-youth eligibility, guardian requirements, and family participation.", color: "text-[#FFB199]", bg: "bg-[#FFB199]/10", border: "border-[#FFB199]/20", href: "/girls" },
+             { title: "Strength & Movement", desc: "Build useful strength, mobility, and confidence at your own starting point.", color: "text-emerald-400", bg: "bg-emerald-400/10", border: "border-emerald-400/20", href: "/pricing" },
           ].map((sp) => (
             <Link key={sp.title} href={sp.href}>
               <div className={`group rounded-2xl border ${sp.border} ${sp.bg} p-5 hover:brightness-110 transition-all duration-200 cursor-pointer h-full`}>
@@ -273,7 +273,7 @@ export default function Schedule() {
           </p>
           <div className="flex flex-wrap justify-center gap-3">
             <Button asChild size="lg" className="bg-[#FFB199] text-[#0B0F14] font-bold hover:bg-[#FFB199]/90 uppercase tracking-wider">
-              <Link href="/portal/login">Book a Free Intro</Link>
+              <Link href="/book">Book Your Free First Visit</Link>
             </Button>
             <Button asChild size="lg" variant="outline" className="border-[#B06CFF]/40 text-[#B06CFF] hover:bg-[#B06CFF]/10 uppercase tracking-wider">
               <Link href="/contact">Contact Us</Link>

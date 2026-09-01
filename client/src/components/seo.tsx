@@ -30,6 +30,7 @@ export default function SEO({
       <meta name="description" content={description} />
       {noIndex && <meta name="robots" content="noindex, nofollow" />}
       {canonicalUrl && <link rel="canonical" href={canonicalUrl} />}
+      {canonicalUrl && <link rel="alternate" hrefLang="en" href={canonicalUrl} />}
 
       <meta property="og:title" content={fullTitle} />
       <meta property="og:description" content={description} />
@@ -43,7 +44,7 @@ export default function SEO({
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={`${BASE_URL}${ogImage}`} />
 
-      <meta name="keywords" content="Brazilian Jiu-Jitsu, BJJ Oxnard, Women's BJJ, Kids BJJ, self-defense Oxnard CA, beginner BJJ, Gracie Barra lineage, martial arts Oxnard, women's self-defense" />
+      <meta name="keywords" content="women-only BJJ Oxnard, women's Brazilian Jiu-Jitsu, women's self-defense Oxnard CA, beginner BJJ, girls BJJ Oxnard, martial arts Oxnard" />
       <meta name="geo.region" content="US-CA" />
       <meta name="geo.placename" content="Oxnard" />
     </Helmet>
