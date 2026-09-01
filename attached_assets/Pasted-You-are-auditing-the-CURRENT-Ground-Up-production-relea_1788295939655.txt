@@ -1,0 +1,647 @@
+You are auditing the CURRENT Ground Up production release for Google crawl/index readiness.
+
+The site has just been updated and published.
+
+Do NOT redesign anything.
+Do NOT change public copy unless there is a technical SEO/crawl defect that clearly requires it.
+Do NOT make speculative SEO changes.
+
+Your job is to verify whether the production site is correctly exposing the new site structure to Google and other search engines.
+
+Target production site:
+
+https://groundupbjj.com/
+
+---
+
+# 1. VERIFY PRODUCTION FIRST
+
+Do not inspect only local source.
+
+Check the actual published production responses.
+
+Verify:
+
+- homepage is the new women-only version
+- `/girls` is live
+- `/kids` redirects correctly
+- `/es` is live
+- `/es/programas`
+- `/es/horario`
+- `/es/reservar`
+- `/es/contacto`
+- `/es/privacidad`
+- `/schedule`
+- `/book`
+- `/contact`
+- `/privacy`
+
+Report the HTTP status of each.
+
+Also verify whether production is serving:
+
+- correct titles
+- correct meta descriptions
+- canonical tags
+- robots directives
+- hreflang where applicable
+- structured data
+
+---
+
+# 2. ROBOTS.TXT
+
+Fetch:
+
+https://groundupbjj.com/robots.txt
+
+Report the exact production contents.
+
+Verify:
+
+- HTTP 200
+- `User-agent: *`
+- public marketing pages are NOT blocked
+- `/es` and Spanish routes are NOT blocked
+- `/girls` is NOT blocked
+- `/book` is crawlable if intended
+- `/schedule` is crawlable if intended
+- portal/admin/private routes are blocked where appropriate
+- sitemap URL is present
+- no stale path rules exist
+- no accidental global `Disallow: /`
+
+Specifically look for old or obsolete rules left from the previous release.
+
+Do not weaken security just to make private routes crawlable.
+
+---
+
+# 3. SITEMAP.XML
+
+Fetch the actual production sitemap.
+
+Likely:
+
+https://groundupbjj.com/sitemap.xml
+
+Report every URL currently included.
+
+Verify that the sitemap reflects the NEW site.
+
+Expected important public routes include, where appropriate:
+
+English:
+- `/`
+- `/girls`
+- `/schedule`
+- `/book`
+- `/contact`
+- `/privacy`
+
+Plus current public program/service pages.
+
+Spanish:
+- `/es`
+- `/es/programas`
+- `/es/horario`
+- `/es/reservar`
+- `/es/contacto`
+- `/es/privacidad`
+
+Check for:
+
+- old `/kids` URL incorrectly listed
+- duplicate URLs
+- obsolete routes
+- portal/admin/login routes incorrectly included
+- broken URLs
+- non-200 URLs
+- redirecting URLs
+- inconsistent www vs non-www
+- inconsistent trailing slashes
+- stale legacy pages
+
+The sitemap should contain canonical public URLs only.
+
+---
+
+# 4. CANONICAL AUDIT
+
+For every major public page, inspect the rendered HTML `<head>`.
+
+Verify canonical URLs.
+
+Important rules:
+
+- homepage canonical should point to the preferred production domain
+- `/girls` canonical should point to `/girls`
+- Spanish pages should canonicalize to themselves, not to English
+- no canonical should point to `/kids`
+- no canonical should point to an old legacy URL
+- no accidental localhost/Replit URLs
+- no `www`/non-`www` mismatch unless deliberate
+- no duplicate canonicals
+
+Report the canonical for every inspected page.
+
+---
+
+# 5. WWW VS NON-WWW
+
+Test both:
+
+https://groundupbjj.com/
+https://www.groundupbjj.com/
+
+Determine which is authoritative.
+
+Verify the non-preferred hostname performs a proper permanent redirect to the preferred hostname.
+
+Check:
+
+- 301/308 preferred
+- not 302 unless intentional
+- canonical agrees with redirect
+- sitemap agrees with canonical
+- Open Graph URLs agree where applicable
+
+We do not want Google indexing both versions.
+
+---
+
+# 6. HTTP VS HTTPS
+
+Test:
+
+http://groundupbjj.com/
+http://www.groundupbjj.com/
+
+Verify all HTTP variants permanently redirect to HTTPS.
+
+Report redirect chains.
+
+Prefer one-hop redirects where possible.
+
+---
+
+# 7. INDEXABILITY
+
+For every public route inspect:
+
+- HTTP status
+- `robots` meta tag
+- `X-Robots-Tag`
+- canonical
+- response headers
+
+Verify intended public pages do NOT contain:
+
+`noindex`
+
+or:
+
+`nofollow`
+
+unless intentionally required.
+
+Report any accidental `noindex`.
+
+---
+
+# 8. HREFLANG — ENGLISH / SPANISH
+
+Because the new site is bilingual, audit language relationships.
+
+Check whether English and Spanish equivalents have valid alternate tags.
+
+Example pattern:
+
+English page:
+`hreflang="en"`
+→ English URL
+
+`hreflang="es"`
+→ Spanish equivalent
+
+Spanish page:
+must return the reciprocal English and Spanish relationship.
+
+Also consider:
+
+`x-default`
+
+for the primary entry page if appropriate.
+
+Do not fabricate one-to-one relationships where an equivalent Spanish route does not exist.
+
+Report:
+
+- which pages contain hreflang
+- reciprocal validity
+- missing equivalents
+- malformed language codes
+- canonical/hreflang conflicts
+
+Do not automatically change to `es-MX` or `es-US` unless there is a deliberate reason.
+
+---
+
+# 9. PAGE TITLES / META DESCRIPTIONS
+
+Check production metadata.
+
+The NEW positioning should clearly reflect:
+
+- women-only
+- Oxnard
+- Brazilian Jiu-Jitsu
+- self-defense
+- strength/movement where relevant
+- girls/female youth on the girls page
+
+Flag stale metadata such as:
+
+- women, kids & beginners
+- generic kids
+- open to all
+- adults without women qualification
+- old coach
+- old age ranges
+- mixed-gender implications
+
+Spanish pages should contain proper Spanish metadata.
+
+Do not accept a translated visible page with English metadata.
+
+---
+
+# 10. OLD GOOGLE CONTENT CHECK
+
+Search the repository for old SEO strings that may still be emitted server-side.
+
+Search for:
+
+- `women, kids & beginners`
+- `women, kids, and beginners`
+- `Kids Jiu-Jitsu`
+- `Ages 4–14`
+- `Ages 6–14`
+- `open to all`
+- `anyone is welcome`
+- `women, kids & adults`
+- `adults`
+- `/kids`
+
+Determine whether these strings still appear in:
+
+- metadata
+- SSR/server fallback
+- noscript
+- JSON-LD
+- Open Graph
+- sitemap
+- old route files
+- generated static assets
+- production bundle
+
+We especially want to know whether Google could still crawl OLD copy even though the browser UI looks correct.
+
+This is critical.
+
+---
+
+# 11. NOSCRIPT / SERVER FALLBACK
+
+Inspect the raw production HTML returned before JavaScript executes.
+
+Google can render JavaScript, but raw HTML still matters.
+
+Verify the raw response reflects the new positioning.
+
+Look for:
+
+- women-only
+- Girls / Female Youth
+- correct coach
+- correct Oxnard location
+- correct CTA
+- no old kids/mixed messaging
+
+If server fallback content is stale, report it as HIGH priority.
+
+---
+
+# 12. STRUCTURED DATA
+
+Inspect all JSON-LD on production.
+
+Report every schema type found.
+
+Verify:
+
+- business name
+- URL
+- canonical domain
+- phone
+- address
+- social links
+- service descriptions
+- business category
+- opening hours if present
+
+Check for stale language such as generic kids/mixed-gender positioning.
+
+Verify no incorrect or conflicting age/program claims exist in schema.
+
+If LocalBusiness / SportsActivityLocation or similar is present, validate it structurally.
+
+---
+
+# 13. OPEN GRAPH / SOCIAL METADATA
+
+Verify:
+
+- `og:title`
+- `og:description`
+- `og:url`
+- `og:image`
+- Twitter card fields
+
+Check:
+
+- image exists
+- HTTP 200
+- correct domain
+- correct new positioning
+- Spanish pages have appropriate Spanish social metadata where implemented
+
+Flag old copy.
+
+---
+
+# 14. REDIRECTS
+
+Audit:
+
+`/kids`
+
+Expected behavior:
+
+permanent redirect to:
+
+`/girls`
+
+Verify:
+
+- status code
+- only one redirect
+- canonical destination
+- sitemap excludes `/kids`
+
+Also identify any other legacy URLs that now redirect.
+
+Make sure there are no redirect loops.
+
+---
+
+# 15. 404 / SOFT 404
+
+Test several invalid routes.
+
+Examples:
+
+`/this-page-does-not-exist-123`
+`/old-kids-page-test`
+
+Verify:
+
+- proper 404 response
+- not HTTP 200 with SPA shell masquerading as valid content
+- no indexable soft-404 page
+- no server error
+
+Keep scanner protections intact.
+
+---
+
+# 16. SITEMAP FRESHNESS
+
+Determine whether the sitemap is:
+
+- generated dynamically from current routes
+or
+- static
+
+If static, verify it was updated with this release.
+
+If dynamic, verify the generator includes the new Spanish and girls routes.
+
+Report whether the sitemap requires manual maintenance.
+
+---
+
+# 17. ROBOTS FRESHNESS
+
+Determine whether robots.txt is:
+
+- static
+- generated
+- middleware-produced
+
+Confirm the production file corresponds to the current source.
+
+We specifically want to rule out:
+
+“New website deployed but old robots.txt still served.”
+
+---
+
+# 18. SEARCH ENGINE CRAWL READINESS SCORE
+
+Score each 1–10:
+
+- Robots
+- Sitemap
+- Canonicals
+- Redirect consistency
+- Indexability
+- Raw HTML freshness
+- English metadata
+- Spanish metadata
+- Hreflang
+- Structured data
+- Social metadata
+- Legacy content cleanup
+
+Provide evidence for every score.
+
+---
+
+# 19. FIX SAFE TECHNICAL ISSUES
+
+You are authorized to fix straightforward crawl/index technical defects such as:
+
+- stale sitemap URLs
+- stale robots rules
+- incorrect canonical
+- missing Spanish sitemap URLs
+- invalid hreflang
+- old `/kids` sitemap entry
+- wrong OG URL
+- stale raw fallback SEO copy
+- duplicate canonical tags
+
+Do NOT make major content or application architecture changes.
+
+Do NOT change business messaging beyond reconciling stale old SEO content with the already approved new site.
+
+---
+
+# 20. AFTER ANY FIX
+
+Run:
+
+`npm run check`
+`npm test`
+`npm run build`
+
+Then verify the actual production-ready output again.
+
+Do not claim production is fixed unless the published site is actually checked after deployment.
+
+If another Publish action is required, clearly say so.
+
+---
+
+# 21. GOOGLE SEARCH CONSOLE READINESS
+
+We cannot assume Google has recrawled yet.
+
+Prepare a manual Search Console checklist based on what you verify.
+
+Identify the exact URLs we should request indexing for first.
+
+Prioritize:
+
+1. homepage
+2. Spanish homepage
+3. Girls / Mother + Daughter
+4. English first-visit booking
+5. Spanish first-visit booking
+6. schedule
+7. Spanish schedule
+8. major service/program pages
+
+Also state whether the sitemap is ready to resubmit.
+
+Do not claim you submitted to Google unless you actually have Search Console access and performed the action.
+
+---
+
+# 22. REQUIRED FINAL REPORT
+
+Return:
+
+# GROUND UP GOOGLE CRAWL READINESS AUDIT
+
+## A. Production Release
+- current release verified YES/NO
+
+## B. robots.txt
+- URL
+- status
+- exact important rules
+- PASS/FAIL
+
+## C. sitemap.xml
+- URL
+- status
+- number of URLs
+- missing new routes
+- stale old routes
+- PASS/FAIL
+
+## D. Canonicals
+Table:
+Page | Canonical | Result
+
+## E. Redirects
+- www
+- non-www
+- HTTP
+- HTTPS
+- `/kids`
+- PASS/FAIL
+
+## F. Indexability
+List any public noindex/blocked pages.
+
+## G. English SEO Metadata
+PASS/FAIL + stale strings.
+
+## H. Spanish SEO Metadata
+PASS/FAIL.
+
+## I. Hreflang
+PASS/FAIL + relationships.
+
+## J. Raw HTML / Noscript
+Is Google still being served old wording anywhere?
+
+## K. Structured Data
+Schemas + findings.
+
+## L. Open Graph
+PASS/FAIL.
+
+## M. Legacy SEO Content
+List every remaining old string/path.
+
+## N. Fixes Performed
+Exact files changed.
+
+## O. Tests
+- check
+- tests
+- build
+
+## P. Search Console Actions
+Exact URLs to request indexing.
+
+## Q. Final Verdict
+
+Use exactly one:
+
+`GOOGLE CRAWL READY — REQUEST REINDEX`
+
+`GOOGLE CRAWL READY — SITEMAP RESUBMIT RECOMMENDED`
+
+`GOOGLE CRAWL NOT READY — TECHNICAL FIXES REQUIRED`
+
+`GOOGLE CRAWL NOT READY — PRODUCTION STILL STALE`
+
+`BLOCKED`
+
+---
+
+# FINAL QUESTION TO ANSWER
+
+We need a definitive answer to:
+
+# Is Google now able to discover and crawl the NEW Ground Up women-only + bilingual website correctly?
+
+Do not answer based only on what React renders in the browser.
+
+Verify:
+
+robots
++ sitemap
++ raw HTML
++ metadata
++ canonical
++ redirects
++ hreflang
++ production.
+
+Then report the evidence.
