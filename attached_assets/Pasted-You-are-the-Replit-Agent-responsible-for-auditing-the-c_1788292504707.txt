@@ -1,0 +1,1397 @@
+You are the Replit Agent responsible for auditing the complete Ground Up website and application.
+
+We are preparing for a major messaging and conversion cleanup, but this task is:
+
+# AUDIT FIRST. DO NOT REDESIGN OR REWRITE THE SITE YET.
+
+We need an evidence-based assessment of what the Ground Up website currently says, how it behaves, where the messaging is inconsistent, where users experience friction, and where the implementation creates technical/security/conversion problems.
+
+After this audit, we will use your report to issue a separate implementation prompt.
+
+Do not make broad changes during this task.
+
+Minor read-only inspection, tests, and diagnostic scripts are allowed.
+
+Do not publish a redesign.
+
+Do not rewrite pages yet.
+
+Do not delete existing content.
+
+Do not change pricing, schedules, services, booking logic, or member data.
+
+---
+
+# 1. CORE BUSINESS POSITIONING — SOURCE OF TRUTH
+
+Ground Up is:
+
+# A WOMEN-ONLY TRAINING CENTER IN OXNARD, CALIFORNIA.
+
+That needs to become unambiguous across the entire public experience.
+
+The intended positioning includes:
+
+- women-only training
+- Brazilian Jiu-Jitsu
+- practical self-defense
+- strength & conditioning
+- personal training / coaching
+- beginner-friendly
+- confidence
+- capability
+- movement
+- learning
+- connection with other women
+- small-group environment
+- supportive environment
+- no fight-gym atmosphere
+- no requirement to already be athletic
+- women discovering what their bodies can DO
+
+Current broader brand philosophy:
+
+**We’ve spent enough time being taught to focus on how our bodies look. It’s time to discover what our bodies can DO.**
+
+Supporting theme:
+
+**Come move. Come learn. Come find your strength.**
+
+And:
+
+**Let’s build from the ground up.**
+
+---
+
+# 2. IMPORTANT: WHAT “KIDS” MEANS
+
+Ground Up is NOT becoming a mixed-gender kids academy.
+
+When the website refers to:
+
+- kids
+- youth
+- family
+- parent-child
+- mother/child classes
+
+the intended audience is:
+
+# GIRLS / FEMALE YOUTH
+
+Examples:
+
+- mothers and daughters
+- girls learning BJJ
+- girls learning self-defense
+- female youth participating with women
+- age-appropriate female beginner programs
+
+We do NOT want public messaging to imply:
+
+- boys' classes
+- mixed-gender youth academy
+- general children's martial arts
+- future mixed-gender enrollment
+
+Audit every occurrence of:
+
+- kids
+- children
+- youth
+- family
+- parents
+- boys
+- girls
+- teens
+- juniors
+
+and identify where the wording currently creates ambiguity.
+
+Do not rewrite it yet.
+
+Report it.
+
+---
+
+# 3. PRIMARY AUDIT QUESTION
+
+The most important question is:
+
+# If a woman in Oxnard discovers Ground Up today, does the website immediately make it clear who Ground Up is for, what she can do there, why it is different, and what she should do next?
+
+We need to know where the answer is:
+
+- clear
+- confusing
+- contradictory
+- outdated
+- technically broken
+- unnecessarily difficult
+
+---
+
+# 4. AUDIT THE ENTIRE REPOSITORY FIRST
+
+Before judging the visible website, understand the implementation.
+
+Inspect:
+
+- app structure
+- frontend framework
+- backend
+- database
+- auth
+- portal
+- booking
+- payment
+- email
+- forms
+- admin interfaces
+- environment configuration
+- deployment structure
+- routing
+- public vs authenticated routes
+- analytics/tracking
+- Meta integrations
+- Google integrations
+- Calendly if still present
+- Google Calendar if present
+- Stripe if present
+- Resend
+- session management
+
+Create a concise technical architecture map.
+
+Do not rely on old documentation.
+
+Repository source is the truth.
+
+---
+
+# 5. ROUTE INVENTORY
+
+Inventory every route.
+
+Classify each as:
+
+- public marketing
+- conversion/booking
+- authentication
+- member portal
+- trainer/coach portal
+- admin
+- API
+- webhook
+- legacy
+- unused
+- unknown
+
+For each route report:
+
+- purpose
+- public/authenticated
+- source file
+- whether linked from UI
+- whether it works
+- whether it conflicts with current Ground Up strategy
+
+Pay special attention to:
+
+- /
+- /book
+- /schedule
+- /contact
+- /privacy
+- /portal/login
+- member routes
+- admin routes
+- booking routes
+- trial routes
+- class routes
+
+---
+
+# 6. COMPLETE PUBLIC COPY AUDIT
+
+Extract and review all public-facing copy.
+
+Audit:
+
+- homepage
+- nav
+- hero
+- sections
+- services
+- programs
+- calls-to-action
+- schedule
+- booking
+- testimonials
+- footer
+- FAQ
+- privacy/legal copy
+- metadata
+- Open Graph
+- structured data
+- forms
+- confirmation messages
+
+Identify every statement that conflicts with the current positioning.
+
+Specifically flag language that makes Ground Up sound like:
+
+- mixed gender
+- general martial arts
+- kids academy
+- fight gym
+- generic fitness studio
+- traditional BJJ academy
+- luxury gym
+- bodybuilding/weight-loss center
+- male-oriented martial arts environment
+
+---
+
+# 7. WOMEN-ONLY CLARITY AUDIT
+
+Search repository + rendered pages for terms such as:
+
+- women
+- woman
+- female
+- ladies
+- girls
+- kids
+- youth
+- children
+- family
+- all ages
+- everyone
+- beginners
+- men
+- boys
+- mixed
+- community
+- fitness
+- BJJ
+- jiu-jitsu
+
+Determine whether:
+
+**Women-only**
+
+is unmistakable:
+
+- above the fold
+- navigation
+- service descriptions
+- booking
+- trial CTA
+- schedule
+- FAQ
+- social metadata
+
+Report every place where the visitor could reasonably believe men or boys can enroll.
+
+---
+
+# 8. AUDIENCE AUDIT
+
+Determine which audiences the current website appears to serve.
+
+Possible audiences:
+
+- adult women
+- girls
+- mothers
+- mothers + daughters
+- beginners
+- experienced BJJ practitioners
+- women returning to fitness
+- women interested in self-defense
+- women interested in strength
+- personal training clients
+
+Compare current presentation against intended priority.
+
+Recommend later segmentation, but do not implement it yet.
+
+---
+
+# 9. BRAND MESSAGE AUDIT
+
+Assess whether the website communicates:
+
+## Identity
+Women-only.
+
+## Transformation
+Strength, confidence, capability.
+
+## Activity
+BJJ, self-defense, movement, strength.
+
+## Emotional promise
+A place where women can learn what they are capable of.
+
+## Environment
+Supportive, small-group, non-intimidating.
+
+## Action
+Easy first visit / trial / booking.
+
+Score each from 1–10.
+
+Explain why.
+
+---
+
+# 10. NEW BRAND CAMPAIGN ALIGNMENT
+
+We are currently promoting:
+
+**We’ve spent enough time being taught to focus on how our bodies look. It’s time to discover what our bodies can DO.**
+
+Audit whether the website supports that philosophy.
+
+Look for messaging centered excessively on:
+
+- appearance
+- fitness aesthetics
+- calories
+- weight loss
+- generic gym language
+
+Identify opportunities where future copy could shift toward:
+
+- capability
+- learning
+- useful strength
+- self-defense
+- movement
+- confidence
+- discovery
+- community
+
+Do not rewrite yet.
+
+---
+
+# 11. BILINGUAL / SPANISH AUDIT
+
+Oxnard has a very large Hispanic/Latino population, and current Ground Up advertising is testing Spanish-language messaging.
+
+Audit whether the website is prepared for:
+
+- Spanish-speaking visitors
+- bilingual visitors
+- Spanish ad traffic
+
+Check:
+
+- language support
+- Spanish pages
+- translated booking experience
+- CTA continuity
+- Calendly language
+- forms
+- confirmation messages
+- email
+- mobile experience
+
+Report whether a woman clicking a Spanish advertisement lands in an English-only experience.
+
+Recommend future bilingual architecture.
+
+Do not build translations yet.
+
+---
+
+# 12. CONVERSION AUDIT
+
+Map the current customer journey:
+
+Ad / Google / social
+→ website
+→ understand Ground Up
+→ learn program
+→ trial CTA
+→ booking
+→ confirmation
+→ follow-up
+→ membership
+
+Identify all friction.
+
+Look specifically for:
+
+- unnecessary login
+- account creation before trial
+- confusing CTA
+- too many CTA types
+- dead buttons
+- duplicate booking systems
+- inconsistent destinations
+- confusing schedule
+- unclear offer
+- pricing uncertainty
+- missing trust
+- poor mobile flow
+
+---
+
+# 13. CTA AUDIT
+
+Inventory every CTA.
+
+Examples:
+
+- Start Your Free Trial
+- Book Free Intro
+- Book Your Session
+- Sign Up to Book
+- Learn More
+- View Schedule
+- Contact
+- Join
+- Register
+
+For each report:
+
+- page
+- label
+- destination
+- whether functional
+- whether public
+- whether login-gated
+- whether appropriate for cold traffic
+
+Find inconsistent CTA destinations.
+
+Previously some trial CTAs routed through `/portal/login`.
+
+Reverify from source and runtime.
+
+---
+
+# 14. BOOKING SYSTEM AUDIT
+
+Audit the current booking architecture fully.
+
+Determine:
+
+- what booking system is currently live
+- whether Calendly remains
+- whether Google Calendar exists
+- whether booking data is internal
+- how availability is controlled
+- how coaches/trainers are represented
+- public booking flow
+- authenticated booking flow
+- cancellation
+- rescheduling
+- confirmation emails
+- reminders
+
+Identify conflicting booking systems.
+
+Do not migrate anything.
+
+---
+
+# 15. SCHEDULE AUDIT
+
+Determine whether:
+
+- schedule shown publicly matches actual bookable availability
+- program names match marketing
+- women-only status is clear
+- girls/mother-daughter offerings are labeled correctly
+- empty/stale schedules exist
+- timezone is correct
+
+Previous audits found timezone inconsistencies.
+
+Verify current source.
+
+---
+
+# 16. MEMBER PORTAL AUDIT
+
+Audit:
+
+- login
+- registration
+- password reset
+- profile
+- booking
+- schedule
+- membership
+- payments
+- forms
+- role enforcement
+
+Determine whether member functionality is incorrectly exposed in public acquisition flows.
+
+The member portal should serve existing members.
+
+It should not make cold prospects create accounts prematurely.
+
+---
+
+# 17. ADMIN SECURITY AUDIT
+
+Perform a full admin/security review.
+
+Prior audits found legacy admin/API security concerns.
+
+Verify current state.
+
+Inspect:
+
+- admin routes
+- authorization
+- role checks
+- legacy `/admin`
+- unauthenticated APIs
+- booking mutation endpoints
+- trainer availability endpoints
+- lead data endpoints
+- user data
+- payment actions
+- IDOR
+- session security
+- CSRF
+- rate limiting
+- body limits
+
+Report anything unsafe.
+
+Do not expose secrets.
+
+---
+
+# 18. INTERNET SCANNER / ATTACK HARDENING STATUS
+
+We recently observed public probes for paths such as:
+
+- /admin.php
+- /1.php
+- /this_is_a_new_hello_world.php
+
+Reverify:
+
+- safe 404 behavior
+- no PHP
+- no soft 200 routes
+- no directory leakage
+- no stack traces
+- rate limiting
+- dotfile protection
+- error handling
+
+Report whether hardening remains intact.
+
+---
+
+# 19. AUTHENTICATION AUDIT
+
+Check:
+
+- sessions
+- cookies
+- session store
+- production secret
+- password hashing
+- reset flow
+- role enforcement
+- admin login
+- member login
+- trainer login
+
+Identify legacy or redundant auth implementations.
+
+---
+
+# 20. API AUDIT
+
+Inventory all API endpoints.
+
+Classify:
+
+- public
+- authenticated
+- admin-only
+- webhook
+
+Check for:
+
+- missing auth
+- missing authorization
+- excessive data exposure
+- unsafe writes
+- IDOR
+- validation
+- rate limiting
+- error leakage
+
+---
+
+# 21. FORM AUDIT
+
+Inventory all forms:
+
+- contact
+- lead
+- trial
+- registration
+- portal
+- support
+- booking
+
+Determine:
+
+- where data persists
+- whether email alerts fire
+- validation
+- spam protection
+- errors
+- success state
+- privacy notice
+- mobile usability
+
+---
+
+# 22. LEAD SYSTEM AUDIT
+
+Review any Ground Up lead registry/storage.
+
+Determine:
+
+- source
+- persistence
+- statuses
+- email notification
+- dedupe
+- attribution
+- Meta lead integration
+
+Do not expose lead PII.
+
+---
+
+# 23. EMAIL AUDIT
+
+Verify:
+
+- Resend
+- sender domain
+- `info@groundupbjj.com`
+- contact emails
+- trial alerts
+- lead alerts
+- booking confirmations
+
+Check failures and fallback behavior.
+
+---
+
+# 24. PAYMENT AUDIT
+
+If Stripe/payment functionality exists, audit:
+
+- public payment routes
+- checkout
+- webhook verification
+- price authority
+- client-controlled fields
+- duplicate/replay protection
+- payment status
+
+Do not create charges.
+
+---
+
+# 25. ANALYTICS / MARKETING TRACKING
+
+Audit current state of:
+
+- Meta Pixel
+- Conversions API
+- GA4
+- Google Tag Manager
+- UTMs
+- lead events
+- booking events
+- trial scheduled
+- trial completed
+- membership conversion
+
+We need to eventually attribute:
+
+campaign
+→ lead
+→ trial
+→ member
+
+Report gaps.
+
+---
+
+# 26. SEO AUDIT
+
+Review:
+
+- titles
+- meta descriptions
+- canonical URLs
+- sitemap
+- robots.txt
+- Open Graph
+- Twitter cards
+- schema
+- local business schema
+- headings
+- image alt text
+- page performance
+- soft 404s
+
+Evaluate target search intent such as:
+
+- women's BJJ Oxnard
+- women-only gym Oxnard
+- women's self-defense Oxnard
+- girls BJJ Oxnard
+- mother daughter self-defense Oxnard
+- women's strength training Oxnard
+
+Do not keyword-stuff.
+
+---
+
+# 27. LOCAL SEO / GOOGLE BUSINESS READINESS
+
+Audit whether the website clearly supports local search.
+
+Verify:
+
+- Oxnard appears naturally
+- address/contact
+- phone
+- hours
+- services
+- map/local signals
+- LocalBusiness schema
+- consistency
+
+Do not create or modify Google Business Profile in this task.
+
+---
+
+# 28. MOBILE AUDIT
+
+Most ad traffic is mobile.
+
+Audit every core acquisition page at common mobile widths.
+
+Check:
+
+- hero
+- navigation
+- CTA visibility
+- video
+- forms
+- schedule
+- booking
+- contact
+- footer
+
+Identify:
+
+- text overflow
+- awkward spacing
+- tiny buttons
+- horizontal scroll
+- CTA below excessive content
+- slow sections
+- modal problems
+
+---
+
+# 29. PERFORMANCE AUDIT
+
+Measure:
+
+- page load
+- bundle size
+- images
+- video loading
+- third-party scripts
+- layout shift
+- rendering bottlenecks
+
+Identify high-impact fixes only.
+
+---
+
+# 30. ACCESSIBILITY AUDIT
+
+Check:
+
+- contrast
+- semantic headings
+- form labels
+- keyboard nav
+- focus states
+- alt text
+- ARIA
+- button/link semantics
+
+Report major accessibility problems.
+
+---
+
+# 31. VISUAL DESIGN AUDIT
+
+Evaluate:
+
+- brand consistency
+- typography
+- imagery
+- hierarchy
+- density
+- spacing
+- credibility
+- authenticity
+
+Ground Up should feel:
+
+- modern
+- strong
+- welcoming
+- women-centered
+- local
+- capable
+
+Not:
+
+- overly aggressive
+- generic pink “women's fitness”
+- masculine fight gym
+- luxury health club
+- cheap template
+
+---
+
+# 32. IMAGE / VIDEO AUDIT
+
+Inventory major marketing media.
+
+Determine whether images show:
+
+- women
+- girls appropriately
+- actual Ground Up
+- real training
+- mixed-gender imagery
+- irrelevant stock images
+- advanced-only athletes
+
+Flag visuals that contradict women-only positioning.
+
+---
+
+# 33. TRUST AUDIT
+
+Assess whether a new visitor sees enough trust before being asked to book.
+
+Check:
+
+- coach introduction
+- credentials
+- real photos
+- testimonials
+- reviews
+- FAQ
+- safety
+- beginner reassurance
+- what first class is like
+- address/location
+- contact information
+
+Identify gaps.
+
+---
+
+# 34. BEGINNER EXPERIENCE
+
+Audit how well the website answers:
+
+- Do I need experience?
+- Do I need to be fit?
+- What should I wear?
+- What happens my first day?
+- Will I train with men?
+- Is it really women-only?
+- Can I bring a friend?
+- Can my daughter attend?
+- What ages for girls?
+- Is this competitive?
+- Will I get hurt?
+- How do I book?
+
+List unanswered questions.
+
+---
+
+# 35. MOTHER + DAUGHTER / GIRLS AUDIT
+
+Specifically identify whether there is currently a clear path for:
+
+**mothers and daughters**
+
+and:
+
+**girls / female youth**
+
+Determine:
+
+- current page/content
+- age definition
+- schedule
+- booking
+- safety/consent
+- messaging
+
+Flag anything that accidentally sounds mixed-gender.
+
+Do not invent age ranges.
+
+Use actual configuration if it exists.
+
+---
+
+# 36. PRICING AUDIT
+
+Inventory all pricing references.
+
+Determine whether:
+
+- pricing is current
+- duplicated
+- contradictory
+- public/private
+- membership names are consistent
+- old packages remain
+
+Do not change pricing.
+
+Flag uncertainty.
+
+---
+
+# 37. CONTENT CONSISTENCY AUDIT
+
+Identify contradictions involving:
+
+- coach names
+- programs
+- pricing
+- schedule
+- ages
+- booking
+- gender
+- class types
+- timezone
+- location
+- trial offer
+- contact info
+
+Source code/runtime truth wins over stale docs.
+
+---
+
+# 38. LEGAL / PRIVACY AUDIT
+
+Check:
+
+- privacy page
+- terms if applicable
+- cookies/tracking disclosure
+- Meta lead language
+- minors
+- parental consent where needed
+- photo/video consent if implemented
+
+Do not provide legal conclusions beyond identifying implementation gaps.
+
+---
+
+# 39. DEAD CODE / LEGACY SYSTEM AUDIT
+
+Identify:
+
+- unused routes
+- legacy booking
+- abandoned admin
+- stale components
+- duplicate systems
+- feature flags
+- dead integrations
+- old Calendly references
+- old coach data
+- unused forms
+
+Recommend removal later, but do not delete now.
+
+---
+
+# 40. TEST SUITE / BUILD HEALTH
+
+Run appropriate:
+
+- typecheck
+- lint
+- tests
+- build
+- route smoke tests
+
+Do not hide failures.
+
+Report:
+
+- passed
+- failed
+- skipped
+- warnings
+
+---
+
+# 41. PRODUCTION RUNTIME QA
+
+Inspect the actually published Ground Up site.
+
+Verify critical paths:
+
+- homepage
+- schedule
+- booking
+- contact
+- privacy
+- login
+- mobile
+
+Do not judge only from source.
+
+Compare source vs production behavior.
+
+---
+
+# 42. COMPETITOR MESSAGE COMPARISON — LIGHTWEIGHT
+
+Do not spend excessive time on outside research.
+
+But compare Ground Up's current visible positioning against typical:
+
+- BJJ academies
+- women's fitness studios
+- self-defense programs
+
+The key question:
+
+Does Ground Up visibly feel different?
+
+No need for a giant market report here.
+
+---
+
+# 43. SCORECARD
+
+Score 1–10:
+
+- Women-only clarity
+- Buyer clarity
+- Brand differentiation
+- Beginner reassurance
+- Mother/daughter clarity
+- Spanish readiness
+- Conversion path
+- Booking
+- Trust
+- Mobile
+- SEO
+- Analytics
+- Accessibility
+- Security
+- Backend architecture
+- Maintainability
+
+Give evidence for every score.
+
+---
+
+# 44. PRIORITIZE ISSUES
+
+Classify findings:
+
+## P0 — Critical
+Security, privacy, broken payments, exposed data, broken conversion.
+
+## P1 — High
+Women-only confusion, broken booking, severe conversion friction, contradictory core messaging.
+
+## P2 — Medium
+SEO, accessibility, content consistency, tracking.
+
+## P3 — Improvement
+Visual polish, secondary features, optimization.
+
+---
+
+# 45. DO NOT FIX EVERYTHING YET
+
+This is extremely important.
+
+Do NOT turn the audit into a giant uncontrolled refactor.
+
+After the audit:
+
+STOP.
+
+Return findings.
+
+We will decide which changes to authorize.
+
+Only fix something during this task if:
+
+- it is an immediate production security vulnerability
+- active data loss is occurring
+- production is broken
+
+If that happens, document exactly why the emergency change was necessary.
+
+---
+
+# 46. REQUIRED FINAL REPORT
+
+Produce:
+
+# GROUND UP 2026 FULL WEBSITE + PLATFORM AUDIT
+
+Include:
+
+## A. Executive Verdict
+
+Overall state.
+
+## B. Current Architecture
+
+How the system actually works.
+
+## C. Public Positioning Today
+
+What a new visitor currently believes Ground Up is.
+
+## D. Intended Positioning Gap
+
+What needs to change to become unmistakably women-only.
+
+## E. Women-Only Messaging Audit
+
+Every significant contradiction/ambiguity.
+
+## F. Girls / Mother-Daughter Audit
+
+Current state and gaps.
+
+## G. English / Spanish Readiness
+
+Current state.
+
+## H. Conversion Journey
+
+Current funnel and friction.
+
+## I. Booking System
+
+Current truth.
+
+## J. Member Portal
+
+Current truth.
+
+## K. Admin + Security
+
+Findings.
+
+## L. Forms + Lead Capture
+
+Findings.
+
+## M. Marketing Analytics
+
+Pixel/CAPI/GA4/UTM/etc.
+
+## N. SEO / Local SEO
+
+Findings.
+
+## O. Mobile / Performance
+
+Findings.
+
+## P. Accessibility
+
+Findings.
+
+## Q. Content / Visual Design
+
+Findings.
+
+## R. Trust / Beginner Experience
+
+Findings.
+
+## S. Technical Debt / Legacy Systems
+
+Findings.
+
+## T. Test Results
+
+Exact commands/results.
+
+## U. P0 Issues
+
+## V. P1 Issues
+
+## W. P2 Issues
+
+## X. P3 Improvements
+
+## Y. Recommended New Information Architecture
+
+Do not implement — propose only.
+
+## Z. Recommended Messaging Architecture
+
+Do not implement — propose only.
+
+---
+
+# 47. PROPOSE THE FUTURE SITE STRUCTURE
+
+At the end, propose a possible public structure such as:
+
+- Home
+- Women’s BJJ
+- Self-Defense
+- Strength
+- Girls / Mother + Daughter
+- First Class / Start Here
+- Schedule
+- About
+- FAQ
+- Contact
+
+But derive the recommendation from the audit.
+
+Do not force this exact structure if the source suggests a better one.
+
+---
+
+# 48. PROPOSE THE FUTURE MESSAGE HIERARCHY
+
+Evaluate whether something like this should become the future message order:
+
+1. WOMEN ONLY
+2. Discover what your body can do
+3. Beginner-friendly
+4. Strength + self-defense + movement
+5. No fight-gym atmosphere
+6. Small-group coaching
+7. Girls / mother + daughter
+8. Community
+9. First-class CTA
+
+Again: recommend only.
+
+Do not rewrite pages yet.
+
+---
+
+# 49. RECOMMEND IMPLEMENTATION PHASES
+
+After the audit, create a proposed implementation plan:
+
+## Phase 1
+P0 security/conversion.
+
+## Phase 2
+Brand/message alignment.
+
+## Phase 3
+Booking + public acquisition.
+
+## Phase 4
+Spanish/bilingual experience.
+
+## Phase 5
+SEO/tracking/performance.
+
+## Phase 6
+Cleanup/deprecation.
+
+Estimate complexity:
+
+- Small
+- Medium
+- Large
+
+Do not provide fake time estimates.
+
+---
+
+# 50. FINAL VERDICT
+
+End with exactly one:
+
+- `GROUND UP AUDIT COMPLETE — READY FOR MESSAGE REBUILD`
+- `GROUND UP AUDIT COMPLETE — SECURITY FIXES REQUIRED FIRST`
+- `GROUND UP AUDIT COMPLETE — CONVERSION PATH NEEDS REPAIR FIRST`
+- `GROUND UP AUDIT COMPLETE — ARCHITECTURE CLEANUP REQUIRED`
+- `GROUND UP AUDIT INCOMPLETE — BLOCKED`
+
+---
+
+# FINAL BUSINESS TRUTH
+
+Ground Up is:
+
+# WOMEN ONLY.
+
+If youth participate, they are:
+
+# GIRLS / FEMALE YOUTH.
+
+Mother-child positioning means:
+
+# MOTHER + DAUGHTER.
+
+The public website should eventually make this impossible to misunderstand.
+
+But first:
+
+# AUDIT THE CURRENT SITE COMPLETELY.
+
+Do not start rewriting from assumptions.
+
+Read the repository.
+
+Inspect production.
+
+Test the flows.
+
+Reconcile the truth.
+
+Then tell us exactly what needs to change.
