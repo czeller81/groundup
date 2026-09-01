@@ -4,4 +4,4 @@ Allow: /
 Disallow: /portal/
 Disallow: /admin
 
-Sitemap: https://groundupbjj.com/sitemap.xml
+Sitemap: https://www.groundupbjj.com/sitemap.xml

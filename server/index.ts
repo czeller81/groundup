@@ -15,6 +15,17 @@ const databaseUrl = process.env.NEON_DATABASE_URL || process.env.DATABASE_URL;
 const app = express();
 app.disable("x-powered-by");
 app.set("trust proxy", 1);
+app.use((req, res, next) => {
+  if (
+    process.env.NODE_ENV === "production" &&
+    req.hostname === "groundupbjj.com" &&
+    !req.path.startsWith("/api/") &&
+    !req.path.startsWith("/webhook/")
+  ) {
+    return res.redirect(301, `https://www.groundupbjj.com${req.originalUrl}`);
+  }
+  next();
+});
 app.use(applySecurityHeaders);
 app.use(createScannerProbeGuard());
 app.use((req, res, next) => {

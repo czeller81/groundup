@@ -17,93 +17,108 @@ const PAGE_META: Record<string, { title: string; description: string; canonical:
   "/": {
     title: "Women-Only BJJ & Self-Defense in Oxnard | Ground Up",
     description: "Ground Up is a women-only training center in Oxnard for Brazilian Jiu-Jitsu, practical self-defense, strength, and movement. Beginner-friendly small-group coaching. Book your free first visit.",
-    canonical: "https://groundupbjj.com/",
+    canonical: "https://www.groundupbjj.com/",
   },
   "/schedule": {
     title: "Women-Only Class Schedule in Oxnard | Ground Up",
     description: "View the live Google Calendar schedule for Ground Up's women-only Brazilian Jiu-Jitsu, self-defense, strength, and movement classes in Oxnard.",
-    canonical: "https://groundupbjj.com/schedule",
+    canonical: "https://www.groundupbjj.com/schedule",
   },
   "/pricing": {
     title: "Women-Only Training Programs in Oxnard | Ground Up",
     description: "Explore women-only Brazilian Jiu-Jitsu, practical self-defense, strength, movement, and personal coaching at Ground Up in Oxnard. Beginner-friendly and no experience required.",
-    canonical: "https://groundupbjj.com/pricing",
+    canonical: "https://www.groundupbjj.com/pricing",
   },
   "/coaches": {
     title: "Our BJJ Coach — Raymi Gonzalez, Gracie Barra Lineage | Ground Up Jiu-Jitsu Oxnard",
     description: "Meet Coach Raymi Gonzalez, Purple Belt (3rd Degree) under the Gracie Barra lineage. Head instructor at Ground Up Jiu-Jitsu & Fitness in Oxnard, CA with 5+ years of coaching experience.",
-    canonical: "https://groundupbjj.com/coaches",
+    canonical: "https://www.groundupbjj.com/coaches",
   },
   "/personal-training": {
     title: "Personal Training in Oxnard, CA — 1-on-1 BJJ & Fitness Coaching | Ground Up BJJ",
     description: "Book a private personal training session at Ground Up Jiu-Jitsu in Oxnard, CA. Custom 1-on-1 coaching for all fitness levels. Your first session is free.",
-    canonical: "https://groundupbjj.com/personal-training",
+    canonical: "https://www.groundupbjj.com/personal-training",
   },
   "/contact": {
     title: "Contact Ground Up | Women-Only Training in Oxnard",
     description: "Questions about women-only Brazilian Jiu-Jitsu, practical self-defense, strength, movement, or girls/female-youth eligibility? Contact Ground Up in Oxnard.",
-    canonical: "https://groundupbjj.com/contact",
+    canonical: "https://www.groundupbjj.com/contact",
   },
   "/privacy": {
     title: "Privacy Policy | Ground Up BJJ",
     description: "Learn how Ground Up BJJ in Oxnard collects, uses, and protects information submitted through our website, forms, and marketing channels.",
-    canonical: "https://groundupbjj.com/privacy",
+    canonical: "https://www.groundupbjj.com/privacy",
   },
   "/book": {
     title: "Book Your Free First Visit | Ground Up Oxnard",
     description: "Reserve a free first visit at Ground Up, a women-only training center in Oxnard. No account, credit card, or previous experience required.",
-    canonical: "https://groundupbjj.com/book",
+    canonical: "https://www.groundupbjj.com/book",
   },
   "/womens-self-defense": {
     title: "Women's Self-Defense Program — 8 Weeks in Oxnard, CA | Ground Up Jiu-Jitsu",
     description: "An 8-week Women's Self-Defense program in Oxnard, CA. Practical BJJ-based techniques, situational awareness, and confidence in a women-only class. First class free.",
-    canonical: "https://groundupbjj.com/womens-self-defense",
+    canonical: "https://www.groundupbjj.com/womens-self-defense",
   },
   "/kids": {
     title: "Girls & Female Youth Training | Ground Up Oxnard",
     description: "Ground Up's women-centered girls and female-youth path in Oxnard. Ask about current eligibility, guardian requirements, and mother-daughter options.",
-    canonical: "https://groundupbjj.com/girls",
+    canonical: "https://www.groundupbjj.com/girls",
   },
   "/girls": {
     title: "Girls & Mother-Daughter Training | Ground Up Oxnard",
     description: "Explore Ground Up's girls and female-youth training path in Oxnard. Ask about current eligibility, beginner-friendly classes, and mother-daughter options.",
-    canonical: "https://groundupbjj.com/girls",
+    canonical: "https://www.groundupbjj.com/girls",
   },
   "/es": {
     title: "Jiu-Jitsu y Defensa Personal Solo para Mujeres en Oxnard",
     description: "Ground Up es un centro de entrenamiento solo para mujeres en Oxnard: jiu-jitsu brasileño, defensa personal, fuerza y movimiento. No necesitas experiencia.",
-    canonical: "https://groundupbjj.com/es",
+    canonical: "https://www.groundupbjj.com/es",
   },
   "/es/horario": {
     title: "Horario de Clases para Mujeres en Oxnard",
     description: "Consulta el horario en vivo de las clases de Ground Up para mujeres en Oxnard.",
-    canonical: "https://groundupbjj.com/es/horario",
+    canonical: "https://www.groundupbjj.com/es/horario",
   },
   "/es/reservar": {
     title: "Reserva tu Primera Visita Gratis | Ground Up Oxnard",
     description: "Reserva una primera visita gratis en Ground Up. No necesitas cuenta, tarjeta ni experiencia previa.",
-    canonical: "https://groundupbjj.com/es/reservar",
+    canonical: "https://www.groundupbjj.com/es/reservar",
   },
   "/es/programas": {
     title: "Programas de Entrenamiento para Mujeres en Oxnard",
     description: "Conoce los programas de jiu-jitsu, defensa personal, fuerza, movimiento y entrenamiento personal de Ground Up.",
-    canonical: "https://groundupbjj.com/es/programas",
+    canonical: "https://www.groundupbjj.com/es/programas",
   },
   "/es/contacto": {
     title: "Contacta a Ground Up | Entrenamiento para Mujeres en Oxnard",
     description: "Comunícate con Ground Up para preguntas sobre clases para mujeres, defensa personal, fuerza o elegibilidad juvenil.",
-    canonical: "https://groundupbjj.com/es/contacto",
+    canonical: "https://www.groundupbjj.com/es/contacto",
   },
   "/es/privacidad": {
     title: "Política de Privacidad | Ground Up BJJ",
     description: "Conoce cómo Ground Up protege la información enviada a través del sitio, formularios y reservas.",
-    canonical: "https://groundupbjj.com/es/privacidad",
+    canonical: "https://www.groundupbjj.com/es/privacidad",
   },
   "/adaptive-capacity": {
     title: "Adaptive Capacity — Build the Capacity to Adapt | Ground Up",
     description: "A Ground Up learning experience for building clearer thinking, better decisions, and practical adaptability as work and life change.",
-    canonical: "https://groundupbjj.com/adaptive-capacity",
+    canonical: "https://www.groundupbjj.com/adaptive-capacity",
   },
+};
+
+const HREFLANG_PAIRS: Record<string, { en?: string; es?: string; xDefault?: string }> = {
+  "/": { en: "https://www.groundupbjj.com/", es: "https://www.groundupbjj.com/es", xDefault: "https://www.groundupbjj.com/" },
+  "/es": { en: "https://www.groundupbjj.com/", es: "https://www.groundupbjj.com/es", xDefault: "https://www.groundupbjj.com/" },
+  "/pricing": { en: "https://www.groundupbjj.com/pricing", es: "https://www.groundupbjj.com/es/programas" },
+  "/es/programas": { en: "https://www.groundupbjj.com/pricing", es: "https://www.groundupbjj.com/es/programas" },
+  "/schedule": { en: "https://www.groundupbjj.com/schedule", es: "https://www.groundupbjj.com/es/horario" },
+  "/es/horario": { en: "https://www.groundupbjj.com/schedule", es: "https://www.groundupbjj.com/es/horario" },
+  "/book": { en: "https://www.groundupbjj.com/book", es: "https://www.groundupbjj.com/es/reservar" },
+  "/es/reservar": { en: "https://www.groundupbjj.com/book", es: "https://www.groundupbjj.com/es/reservar" },
+  "/contact": { en: "https://www.groundupbjj.com/contact", es: "https://www.groundupbjj.com/es/contacto" },
+  "/es/contacto": { en: "https://www.groundupbjj.com/contact", es: "https://www.groundupbjj.com/es/contacto" },
+  "/privacy": { en: "https://www.groundupbjj.com/privacy", es: "https://www.groundupbjj.com/es/privacidad" },
+  "/es/privacidad": { en: "https://www.groundupbjj.com/privacy", es: "https://www.groundupbjj.com/es/privacidad" },
 };
 
 const PAGE_CONTENT: Record<string, string> = {
@@ -189,7 +204,27 @@ async function serveWithMeta(req: Request, res: Response, next: NextFunction) {
       .replace(
         /<link rel="canonical"[^>]*>/,
         `<link rel="canonical" href="${meta.canonical}" />`
+      )
+      .replace(
+        /<meta property="og:url"[^>]*>/,
+        `<meta property="og:url" content="${meta.canonical}" />`
+      )
+      .replace(
+        /<meta name="twitter:title"[^>]*>/,
+        `<meta name="twitter:title" content="${title}" />`
+      )
+      .replace(
+        /<meta name="twitter:description"[^>]*>/,
+        `<meta name="twitter:description" content="${desc}" />`
       );
+
+    const alternates = HREFLANG_PAIRS[routePath] || { en: meta.canonical };
+    const hreflangLinks = [
+      alternates.en && `<link rel="alternate" hreflang="en" href="${alternates.en}" />`,
+      alternates.es && `<link rel="alternate" hreflang="es" href="${alternates.es}" />`,
+      alternates.xDefault && `<link rel="alternate" hreflang="x-default" href="${alternates.xDefault}" />`,
+    ].filter(Boolean).join("\n");
+    html = html.replace("</head>", `${hreflangLinks}\n</head>`);
 
     const content = PAGE_CONTENT[routePath] || "";
     if (content) {
@@ -238,7 +273,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ============================================
   app.get("/robots.txt", (_req, res) => {
     res.set("Content-Type", "text/plain").send(
-      `User-agent: *\nAllow: /\nDisallow: /portal/\nDisallow: /admin\n\nSitemap: https://groundupbjj.com/sitemap.xml\n`
+       `User-agent: *\nAllow: /\nDisallow: /portal/\nDisallow: /admin\n\nSitemap: https://www.groundupbjj.com/sitemap.xml\n`
     );
   });
 
@@ -246,25 +281,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const today = new Date().toISOString().split("T")[0];
     res.set("Content-Type", "application/xml").send(`<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://groundupbjj.com/</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>1.0</priority></url>
-  <url><loc>https://groundupbjj.com/schedule</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://groundupbjj.com/pricing</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://groundupbjj.com/coaches</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://groundupbjj.com/personal-training</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://groundupbjj.com/contact</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://groundupbjj.com/privacy</loc><lastmod>${today}</lastmod><changefreq>yearly</changefreq><priority>0.3</priority></url>
-  <url><loc>https://groundupbjj.com/book</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>1.0</priority></url>
-  <url><loc>https://groundupbjj.com/womens-self-defense</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://groundupbjj.com/girls</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://groundupbjj.com/es</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://groundupbjj.com/es/programas</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://groundupbjj.com/es/horario</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://groundupbjj.com/es/reservar</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://groundupbjj.com/es/contacto</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
-  <url><loc>https://groundupbjj.com/es/privacidad</loc><lastmod>${today}</lastmod><changefreq>yearly</changefreq><priority>0.3</priority></url>
-  <url><loc>https://groundupbjj.com/adaptive-capacity</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://www.groundupbjj.com/</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://www.groundupbjj.com/schedule</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://www.groundupbjj.com/pricing</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://www.groundupbjj.com/coaches</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://www.groundupbjj.com/personal-training</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://www.groundupbjj.com/contact</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://www.groundupbjj.com/privacy</loc><lastmod>${today}</lastmod><changefreq>yearly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://www.groundupbjj.com/book</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://www.groundupbjj.com/womens-self-defense</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://www.groundupbjj.com/girls</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://www.groundupbjj.com/es</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://www.groundupbjj.com/es/programas</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://www.groundupbjj.com/es/horario</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://www.groundupbjj.com/es/reservar</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://www.groundupbjj.com/es/contacto</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://www.groundupbjj.com/es/privacidad</loc><lastmod>${today}</lastmod><changefreq>yearly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://www.groundupbjj.com/adaptive-capacity</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
 </urlset>`);
   });
+
+  app.get("/kids", (_req, res) => res.redirect(301, "/girls"));
 
   // ============================================
   // TRAINER ROUTES

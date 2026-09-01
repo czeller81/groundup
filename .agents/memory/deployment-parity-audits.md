@@ -7,4 +7,4 @@ The published Ground Up site and the workspace can represent different releases;
 
 **Why:** The workspace registered the Google Calendar class API while the published site still served the older booking experience and returned 404 for that API.
 
-**How to apply:** For future release or booking audits, verify production route existence, response shape, and representative data separately from local tests before calling a cutover ready.
+**How to apply:** For future release or booking audits, verify production route existence, response shape, and representative data separately from local tests before calling a cutover ready. Treat the published primary URL from deployment metadata as the authority for canonicals, social URLs, robots, and sitemaps.
