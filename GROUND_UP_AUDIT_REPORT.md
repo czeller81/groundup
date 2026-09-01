@@ -1,1155 +1,724 @@
-# Ground Up — Product, UX, Business & Technical Audit
+# GROUND UP 2026 FULL WEBSITE + PLATFORM AUDIT
 
-**Audit date:** August 31, 2026  
-**Scope:** Existing repository, local development preview, safe read-only HTTP checks, build/test commands, and deployment logs  
-**Method:** Audit only. No application code, database data, secrets, external appointments, payments, production emails, or deployment settings were changed.
+**Audit date:** September 1, 2026  
+**Scope:** Current repository, current development workflow, and the actually published site at `https://www.groundupbjj.com`.  
+**Method:** Read-only audit. No pricing, schedules, services, booking logic, member data, secrets, payments, production emails, external appointments, or deployment settings were changed.
 
-## Evidence notation
+## Evidence standard
 
-- **Verified:** observed directly in source, a safe local/runtime check, command output, or deployment log.
-- **Inferred:** strongly indicated by source behavior, but not independently exercised end-to-end.
-- **Unknown:** cannot be confirmed without production configuration, credentials, provider dashboards, or a safe test account.
+- **Verified:** observed in source, a safe request, the running workflow, a screenshot, or a passing command.
+- **Inferred:** strongly indicated by source or behavior but not independently exercised end to end.
+- **Unknown:** requires a provider dashboard, production account, real inbox, or a controlled test appointment.
+
+## Important source-versus-production finding
+
+The workspace and the published site are not the same release:
+
+- The workspace contains the Google Calendar-backed class system and currently renders development test occurrences such as `ADULT JIU-JITSU - BOOKING READINESS TEST SERIES`.
+- The published site renders the older static/legacy experience. Its `/api/classes` endpoint returns **404**, while the workspace registers that endpoint.
+- Therefore, the Google Calendar class-booking implementation is **not live in production**, and the development test occurrences must not be treated as production availability.
+- The site is published and publicly visible, but that does not mean the current booking architecture is production-cut over.
 
 ---
 
-# 1. Executive verdict
+# A. Executive Verdict
 
-## NOT READY
+## Overall state: NOT READY
 
-Ground Up is a substantial, polished-looking React/Express application with a working public site, member portal, lead persistence, admin tools, signed webhook helpers, and a passing baseline test suite. It is not ready to send meaningful traffic or accept production bookings yet.
+Ground Up has a polished, distinctive visual system, real public routes, a member portal, lead persistence, staff notifications, signed webhook helpers, and a new Google Calendar booking architecture in the workspace. The current public experience still presents an undecided product and the published deployment is behind the workspace.
 
-The primary problem is not that the project lacks code. It is that the customer-facing product is internally undecided: the site presents a broad BJJ and fitness studio for “women, kids & beginners,” while the current business direction calls for a focused women-only Ground Up community and a 12-week Ground Up → Adaptive Capacity journey. At the same time, the site describes an 8-week self-defense offer, uses multiple conversion paths, and sends some visitors to an account wall before they can request an introduction.
+The primary readiness blockers are:
 
-There are also material operational and security blockers:
+1. **Production drift:** the published site does not contain the current `/api/classes` implementation.
+2. **Security and integrity:** legacy booking/payment/webhook paths and broad coach access still require hardening.
+3. **Positioning:** the intended identity is a women-only training center, but public copy repeatedly says “women, kids, and beginners,” “anyone is welcome,” “adults,” and uses generic children’s-program language.
+4. **Acquisition friction:** several prominent trial CTAs send cold visitors to `/portal/login`, requiring account creation or login before a first-visit request.
+5. **Booking uncertainty:** the new Google Calendar flow is not validated with representative production events, cancellations, recurrence overrides, concurrency, waitlists, and real email delivery.
+6. **Operational inconsistency:** source contains old timezone, coach, age, pricing, feature-flag, Calendly, and personal-booking configuration alongside the newer class system.
 
-1. A generic booking API accepts client-controlled price/status fields.
-2. Coach object-level authorization is incomplete for sensitive member data.
-3. Webhook events are claimed before side effects finish, so valid provider events can be permanently lost after an error.
-4. A legacy admin surface contains plaintext credential handling and a shipped default credential in client code, even though the legacy endpoint is currently session-protected.
-5. Booking capacity/overlap behavior is not transactionally safe.
-6. Production readiness is not demonstrated: Stripe is disabled in the current development environment, actual provider setup is unknown, and deployment logs show repeated startup health-check failures before eventual startup.
+No redesign or implementation phase should begin until the P0 security/integrity and production-release questions are closed.
 
-The fastest path is to resolve the business model and women-only rules first, then consolidate the visitor journey around one truthful first-visit request/booking flow, harden booking/auth/webhooks, and publish the trust/legal surfaces needed for a women-focused physical program.
-
-## Scores
+## High-level score
 
 | Area | Score | Assessment |
 |---|---:|---|
-| Brand clarity | 52 | Strong visual identity and recognizable BJJ/self-defense language, but too many identities compete. |
-| Business-model alignment | 38 | Current copy conflicts with the stated women-only and 12-week direction. |
-| Visitor trust | 54 | Real facility imagery, named coach, safety language, and useful first-class guidance help; address, policies, and proof are thin. |
-| UX quality | 62 | Coherent, thoughtfully built flows, but long pages, competing CTAs, and mixed funnel logic add friction. |
-| Mobile UX | 62 | Responsive patterns are present in source; a dedicated device-width visual pass was not directly verifiable. |
-| Conversion readiness | 43 | Lead form exists, but status language, CTA destinations, and positioning are inconsistent. |
-| Booking readiness | 35 | External Calendly and internal booking paths exist, but capacity, payment, and integrity controls are not production-safe. |
-| Lead-capture readiness | 62 | Persistence, validation, notifications, and staff email attempts exist; consent, spam, confirmation, and deduplication are incomplete. |
-| Member experience | 55 | Useful forms, membership, bookings, schedule, and cancellation features; no real progress, messaging, or profile/account recovery. |
-| Admin/operations readiness | 54 | Admin inbox, members, attendance, notes, and reporting exist; schedule, capacity, content, payments, refunds, and cohorts are missing. |
-| Technical quality | 64 | Clear TypeScript/Drizzle structure and passing checks; some legacy duplication, unbounded queries, and configuration drift remain. |
-| Security/privacy | 42 | Good baseline headers, hashing, signatures, and generic errors; high-risk authorization, credential, CSRF, validation, and privacy gaps remain. |
-| Production readiness | 39 | Build passes, but provider configuration, health behavior, observability, recovery, and critical business integrity are unproven. |
-| **Overall** | **49** | Capable baseline, not safe or clear enough for production traffic. |
+| Women-only clarity | 4/10 | Strong hints, but explicit language is inconsistent and some copy says anyone is welcome. |
+| Buyer clarity | 6/10 | Adult women, girls, beginners, private clients, and Adaptive Capacity all compete for attention. |
+| Brand differentiation | 7/10 | Strong visual identity and resilience/capability theme; product identity is not yet singular. |
+| Beginner reassurance | 8/10 | No experience, safe, small-group, and first-class explanations are present. |
+| Girls / mother-daughter clarity | 3/10 | Girls are not clearly named as the intended youth audience; mother-daughter path is absent. |
+| Spanish readiness | 1/10 | The experience is English-only; no translated route, booking, form, email, or confirmation path was found. |
+| Conversion path | 4/10 | Many CTAs exist, but destinations and login requirements conflict. |
+| Booking readiness | 3/10 | Workspace architecture is promising; production is old and full validation is incomplete. |
+| Trust | 5/10 | Coach, photos, safety FAQ, contact details, and beginner reassurance help; address, proof, reviews, and policies are thin. |
+| Mobile | 6/10 | Responsive source patterns and a mobile menu exist; a real-device pass is still required. |
+| SEO | 6/10 | Titles, descriptions, sitemap, robots, canonicals, OG, and noscript content exist; local schema and consistency need work. |
+| Analytics | 5/10 | Consent-aware first-party events, UTMs, and Meta Pixel exist; GA4/CAPI and complete funnel attribution do not. |
+| Accessibility | 6/10 | Labels, keyboard-oriented components, and reduced-motion support exist; contrast, focus, dialog, and dynamic-state QA remain. |
+| Security | 4/10 | Good baseline headers, hashing, rate limits, role checks, and signatures; authorization, CSRF, replay side effects, and legacy paths remain. |
+| Backend architecture | 6/10 | Clear Express/Drizzle separation and additive class schema; duplicate booking systems and configuration drift remain. |
+| Maintainability | 5/10 | TypeScript and focused modules are good; large client bundle, stale config, and parallel legacy systems increase risk. |
 
 ---
 
-# 2. Application inventory
+# B. Current Architecture
 
-## Stack and infrastructure
+## Stack
 
-| Component | Current state | Evidence |
-|---|---|---|
-| Frontend | React 18 + TypeScript, Vite, Wouter, Tailwind/shadcn-Radix, Framer Motion, TanStack Query, React Hook Form/Zod | `package.json`; `vite.config.ts`; `client/src/App.tsx` |
-| Backend | Express 4 + TypeScript | `package.json`; `server/index.ts`; `server/routes.ts` |
-| Database | PostgreSQL through Drizzle ORM and Neon serverless driver | `server/db.ts`; `shared/schema.ts` |
-| Sessions | `express-session`; PostgreSQL-backed in production when a DB URL is present, in-memory store otherwise | `server/index.ts:26-44` |
-| Authentication | Custom email/password authentication with bcrypt and cookie sessions; not Replit Login in the implemented routes | `server/routes.ts:658-733`; `server/storage.ts:131-165` |
-| Email | Resend through the installed Replit connector | `server/email.ts`; connector metadata |
-| Payments | Stripe client/payment-intent support and webhook handler; no complete customer checkout/subscription flow visible | `server/routes.ts:340-397`; `client/src/lib/stripe.ts` |
-| Booking/calendar | Calendly embed and signed Calendly webhook; separate internal booking API and static schedule | `client/src/pages/portal/booking.tsx`; `server/routes.ts:607-653`; `client/src/lib/schedule-data.ts` |
-| Analytics | First-party event persistence, consent UI, UTM/session attribution, and Meta Pixel | `client/src/lib/analytics.ts`; `client/src/lib/meta-pixel.ts`; `server/routes.ts:486-501` |
-| File storage | No application file-upload/storage path found | Repository search |
-| External links | Google Fonts, Unsplash reference, social links, and external `1club.ai` progress link | `client/index.html`; `client/src/pages/portal/dashboard.tsx` |
-| Deployment | Replit Node 20/web/PostgreSQL 16, port 5000, autoscale build/start configuration | `.replit`; `package.json` |
+| Layer | Current implementation |
+|---|---|
+| Frontend | React 18, TypeScript, Vite, Wouter, Tailwind/shadcn-Radix, Framer Motion, TanStack Query, React Hook Form/Zod. |
+| Backend | Express 4 with TypeScript, one server serving APIs and the built client. |
+| Database | PostgreSQL through Drizzle ORM/Neon; additive class-booking tables are in the workspace schema. |
+| Sessions | `express-session`; PostgreSQL-backed in production when a database URL is available, in-memory fallback otherwise. |
+| Authentication | Custom email/password plus bcrypt and cookie sessions. The implemented portal is not Replit Auth. |
+| Email | Resend adapter and lifecycle email functions. Connector is installed/configured; actual delivery was not sent during this audit. |
+| Payments | Stripe payment intents and webhook handler remain in the legacy path. No production charge was created. |
+| Calendar | Calendly remains as a transition/private-session webhook. New class scheduling is intended to be server-side Google Calendar read/sync plus internal reservations. |
+| Analytics | Consent-gated first-party events, UTM/session attribution, and Meta Pixel. No GA4/GTM/CAPI implementation was found. |
+| Deployment | Published autoscale deployment at `https://www.groundupbjj.com`; workspace workflow is `npm run dev` on port 5000. |
 
-### Configuration and environment observations
+## Intended data ownership
 
-- The runtime supports `NEON_DATABASE_URL` and `DATABASE_URL`; the current repository also includes a broad `.env.example` with Stripe, Resend, session, admin, analytics, calendar, and legacy settings.
-- The current development workflow logged `STRIPE_SECRET_KEY not found. Stripe functionality will be disabled.` This is a verified local condition, not proof of production configuration.
-- The actual values of secrets and production environment variables were not accessed.
-- Configuration drift is visible: `site.config.ts` says `America/New_York` and names Sofia Martinez, while customer-facing/seed content centers Raymi Gonzalez and Oxnard. This is a business and timezone risk.
+The new class architecture correctly separates:
 
-## Frontend route inventory
+- Google Calendar: schedule, recurrence, overrides, cancellations, occurrence source.
+- Ground Up database: reservations, capacity, waitlists, eligibility, attendance, cancellations, history, and audit events.
+- Calendly: transition/private sessions only.
 
-Routes are declared in `client/src/App.tsx:53-117`. Status means current observed/source status, not a claim that every flow has passed end-to-end testing.
+This ownership model is not yet the production truth because the current deployment is behind the workspace and validation is incomplete.
 
-| Route | Purpose/audience | Auth requirement | Status | Notes |
-|---|---|---|---|---|
-| `/` | Public marketing homepage | None | WORKING | Safe preview returned 200 and rendered. Strong visual polish; positioning is broad. |
-| `/personal-training` | Public PT information | None | WORKING / source-verified | Contains women-only PT positioning; booking CTAs frequently go to portal login. |
-| `/coaches` | Public coach profile | None | WORKING / source-verified | Names Raymi and describes credentials/lineage; actual credential verification is unknown. |
-| `/pricing` | Public programs/pricing | None | WORKING / source-verified | Contains “anyone” language that conflicts with a women-only direction. |
-| `/contact` | Public contact form | None | WORKING / source-verified | Posts to `/api/contact`; persistence and staff notification are implemented. |
-| `/privacy` | Public privacy policy | None | WORKING / source-verified | Privacy page exists; other key operational/legal pages do not. |
-| `/schedule` | Public class schedule | None | WORKING / source-verified | Static client-side schedule; not a live capacity calendar. |
-| `/book` | Public trial/first-visit lead funnel | None | WORKING / source-verified | Three-step request form; does not itself reserve an appointment. |
-| `/womens-self-defense` | Public women’s program page | None | WORKING / source-verified | Strongest women-only positioning; calls the program 8 weeks. |
-| `/kids` | Public kids program page | None | WORKING / source-verified | Creates a second audience and business identity. |
-| `/adaptive-capacity` | Public interest-list page | None | WORKING / source-verified | Interest list only; cohort details are not confirmed. |
-| `/admin` | Legacy admin UI | Should be staff-only | DEAD ROUTE / BROKEN | Safe runtime request returned 404 despite a client route and legacy code existing. Legacy API code remains. |
-| `/ln/login` | Legacy login alias | None | PARTIAL | Client redirect to `/portal/login`. |
-| `/portal/login` | Member login/signup | None | WORKING / source-verified | Safe preview rendered. No password reset or verification flow. |
-| `/portal/dashboard` | Member dashboard | Member session | PARTIAL | Frontend redirects unauthenticated users; authenticated behavior not exercised with a test account. |
-| `/portal/forms/:slug` | Member intake/waiver form | Member session | PARTIAL | Draft/save/submit/retake behavior exists; server-side answer enforcement is weak. |
-| `/portal/booking` | Authenticated Calendly booking | Member session | PARTIAL | Embed exists; actual Calendly setup and webhook mapping are unknown. |
-| `/portal/schedule` | Portal schedule display | Should be member-only | PARTIAL / access concern | Component has no visible auth check; content is static. Safe unauthenticated GET returned 200. |
-| `/portal/admin` | Modern admin/staff center | Admin/coach | PARTIAL | UI and server role checks exist; schedule/content/payment/cohort operations are missing. |
-| `/portal/coach` | Coach center | Coach/admin | PARTIAL | Assigned-member UI exists, but sensitive API object authorization is too broad. |
-| Catch-all | Not-found page | None | WORKING | Unmatched client paths use a not-found page where the SPA is reached. |
+## Configuration drift
 
-## Meaningful API inventory
+`site.config.ts` still contains legacy values that conflict with current UI and architecture:
 
-All routes are in `server/routes.ts`. The table groups related endpoints while retaining the important method/auth behavior.
+- `America/New_York` while the new class routes explicitly expose `America/Los_Angeles`.
+- A legacy `headInstructor` value of Sofia Martinez while public pages identify Raymi Gonzalez.
+- `groupClasses: false` while group class routes and UI exist.
+- Legacy PT60 and UNLIMITED pricing values despite the current public free-intro funnel.
+- `calendarIntegration: true` and `stripePayments: true` describe capabilities but not verified production configuration.
 
-| Endpoint group | Auth | Main behavior | Current assessment |
-|---|---|---|---|
-| `GET /robots.txt`, `GET /sitemap.xml` | None | Serves SEO files | WORKING; verified 200 locally. |
-| `GET /api/trainers`, `GET /api/trainers/:id`, `GET /api/trainers/:id/availability` | None | Public trainer/availability reads | WORKING/source-verified; availability is not the same as reservable capacity. |
-| `GET /api/bookings` | Admin/coach | Staff booking list | Protected, but unbounded and backed by a storage method that ignores filters. |
-| `POST /api/bookings` | Authenticated + rate-limited | Creates internal booking | HIGH RISK; broad client insert schema accepts client-controlled financial/status/time fields. |
-| `PUT /api/bookings/:id/status` | Admin/coach | Staff status update | Protected; business-rule validation needs review. |
-| `POST /api/create-payment-intent` | Authenticated + rate-limited | Creates Stripe intent | Partial; ownership check exists, but booking/amount/status/currency consistency is not fully verified. |
-| `POST /api/stripe/webhook` | Stripe signature expected | Marks booking paid on `payment_intent.succeeded` | Signature helper is good; event claim/retry and amount/booking consistency are not production-safe. |
-| `POST /api/contact` | Public + rate-limited | Validates/persists contact message, creates staff notification, attempts staff email | Functional baseline; no public CAPTCHA, duplicate handling, or visitor confirmation email. |
-| `POST /api/trial-leads` | Public + rate-limited | Validates/persists trial/adaptive lead, creates notification, attempts staff email | Functional baseline; response semantics and consent/confirmation need improvement. |
-| `POST /api/analytics/events` | Public + rate-limited | Persists event and arbitrary properties | Returns 204 locally; server-side PII scrubbing/retention limits are absent. |
-| `GET /api/portal/admin/campaign-report` | Admin/coach | Aggregates funnel/UTM report | Exists; loads data in memory and has no date range/time-series comparison. |
-| Notification list/read endpoints | Admin/coach | Staff inbox and read state | Implemented; current notification queue is shared rather than per-staff. |
-| Trial lead list/status endpoints | Admin/coach | Staff lead review/status | Implemented; follow-up workflow remains manual. |
-| Contact list/status endpoints | Admin | Staff contact inbox/status | Implemented. |
-| `POST /webhook/calendly` | Signed webhook + rate-limited | Validates/deduplicates event, creates user/booking | Signature and idempotency baseline exists; claim-before-side-effect is a high-risk failure mode. |
-| Signup/login/logout/me | Public except current-user read | Custom account/session lifecycle | Login/signup/logout exist; reset, verification, MFA, lockout, revocation, and session regeneration are absent. |
-| Form list/detail/save/retake/submit | Authenticated | Member intake and waiver lifecycle | Implemented; server does not adequately validate dynamic required fields/types. |
-| Member booking list/create/cancel | Authenticated | Member booking lifecycle | Implemented; availability, overlap, capacity, and rescheduling are incomplete. |
-| Admin stats/members/member detail/notes/role/belt/attendance/forms/bookings | Role-protected | Admin/staff operations | Substantial baseline; authorization and validation need tightening. |
-| Membership and session-note endpoints | Authenticated/admin/coach | Membership creation/read and coach notes | Partial; little server-side validation, and coach scope is too broad for member data. |
-| Legacy admin login/booking/trainer endpoints | Mixed role-protected | Older admin implementation | Retain historical evidence for now, but retire after a controlled migration. Legacy credential handling is unsafe. |
-
-## Database inventory
-
-Verified Drizzle tables in `shared/schema.ts`:
-
-| Table | Stores | Audit finding |
-|---|---|---|
-| `users` | Identity, contact, password hash, role, belt, attendance, coach assignment, admin notes | `assignedCoachId` is not visibly declared as a foreign key; role is free text. |
-| `forms` | Dynamic form definitions and required/retakeable flags | Flexible but shifts correctness into runtime JSON. |
-| `form_responses` | Per-user answers and draft/submitted state | Foreign keys exist; no visible unique constraint preventing duplicate responses for a user/form pair. |
-| `trainers` | Coach profile, specialties, belt, JSON availability | Availability is flexible JSON, not an authoritative slot/capacity model. |
-| `bookings` | Customer identity, session, times, trainer, price/currency, Stripe/Calendly IDs, status | Calendly event uniqueness exists; no database-level overlap/capacity guard. |
-| `webhook_events` | Provider event claims/idempotency records | Claim lifecycle does not visibly distinguish pending, succeeded, and failed processing. |
-| `admin_users` | Legacy admin email/password | Plaintext password field and legacy direct comparison are high-risk historical remnants. |
-| `memberships` | User membership type/status, price, dates | No visible enum/business constraints; admin can create active records with weak validation. |
-| `session_notes` | Member/coach notes and date | Sensitive; coach authorization is not sufficiently scoped. |
-| `trial_leads` | Training/adaptive leads, child/program data, attribution, consent, status | Contains minor and potentially sensitive lead information; no visible dedupe/retention workflow. |
-| `analytics_events` | Event/session/path/properties | Arbitrary JSON properties create privacy and storage-abuse risk. |
-| `contact_submissions` | Contact identity, subject/message, consent/status | No visible duplicate/retention workflow. |
-| `staff_notifications` | Shared staff inbox notifications and read time | Useful operational baseline; no per-staff queue model. |
-
-Startup seed behavior creates Raymi Gonzalez and seven forms if absent, including intake/waiver, media release, gym rules, and minor consent forms. Seed failure is logged asynchronously rather than making readiness fail.
+These values should be treated as stale until reconciled, not as business truth.
 
 ---
 
-# 3. Homepage and brand audit
+# C. Public Positioning Today
 
-## What a first-time Oxnard visitor understands
+A new visitor currently sees Ground Up as a boutique BJJ/self-defense and fitness studio in Oxnard for “women, kids & beginners,” with:
 
-The first screen answers some important questions well:
-
-- **What is it?** A “Boutique BJJ & Self-Defense Studio · Oxnard, CA.”
-- **Where is it?** Oxnard, CA is visible immediately.
-- **What benefit is offered?** “CONFIDENCE BUILT HERE” and real self-defense skills, strength, and confidence.
-- **Is it beginner-friendly?** Yes: “No intimidation. Ever.”
-- **What action is available?** “Start Your Free Trial.”
-
-It does **not** answer the following clearly enough:
-
-- Is the core program women-only, or is the gym for women, kids, adults, and anyone?
-- Is Ground Up primarily BJJ, self-defense, fitness, personal development, or a broader resilience platform?
-- Is the actual flagship a free first class, an 8-week self-defense program, a membership, or a future 12-week Adaptive Capacity cohort?
-- What happens after the form is submitted: is the appointment booked or is it only a request?
-- What is the full location/address, and what should a first-time visitor expect on arrival?
-
-## Strong elements
-
-- The hero copy is concrete about activity, emotional outcome, and location (`client/src/pages/home.tsx:116-138`).
-- The first-class guidance is unusually useful: arrive 15 minutes early, meet Coach Raymi, no sparring in the first session, comfortable athletic clothing, and no gear required (`home.tsx:201-289`).
-- The site uses actual facility and training imagery and explicitly claims “no stock photos, no actors” (`home.tsx:628-640`).
-- Small-group and coaching language supports a premium, personal experience.
-- Named coach, lineage, safety language, and testimonials create a credible base.
-
-## Weak, redundant, or confusing sections
-
-1. **Hero audience conflict:** “for women, kids & beginners” is incompatible with a simple women-only promise.
-2. **Too many product frames:** The homepage shifts from studio to “human resilience and capability platform,” then offers five paths: Women’s Self-Defense, Women’s BJJ, Kids, Strength & Conditioning, and Adaptive Capacity (`home.tsx:292-412`).
-3. **Competing primary actions:** The page repeatedly cycles through free trial, book intro, schedule, program links, and portal login.
-4. **Program duplication:** Women’s self-defense, women’s BJJ, and Adaptive Capacity are related in emotional language but not clearly sequenced.
-5. **Long page density:** Many sections, uppercase display text, animations, gradients, cards, facility gallery, testimonials, FAQs, and repeated CTAs make the page feel more like a broad template than a focused offer.
-6. **Trust content arrives late:** Full location, policy, and operational detail are not prominent enough before the visitor is asked to act.
-7. **Hero video risk:** Autoplay background video is visually attractive but can be expensive on mobile and does not appear necessary to explain the offer.
-
-## Positioning conclusion
-
-Customer-facing perception today: **a boutique BJJ/fitness studio with women’s programs, kids classes, beginner training, self-defense, and an adjacent Adaptive Capacity concept.**
-
-It does not currently read as a focused women-only Ground Up community. The code and copy support several identities simultaneously:
-
-- women-only BJJ/self-defense program;
-- kids martial arts;
-- general strength and conditioning;
+- women’s BJJ fundamentals;
+- an 8-week women’s self-defense program;
+- kids jiu-jitsu;
+- strength and conditioning;
 - personal training;
-- 8-week self-defense course;
-- future Adaptive Capacity interest list;
-- broader resilience/capability platform.
+- a separate Adaptive Capacity learning path.
 
-That breadth may be intentional, but it does not match the stated direction and weakens conversion.
+The homepage is visually confident and clearly beginner-friendly. It communicates “No intimidation. Ever.”, personal coaching, small groups, confidence, self-defense, and resilience. The current dominant promise is closer to **inclusive beginner BJJ and fitness with a women’s focus** than the required **women-only training center, with girls/female youth and mother-daughter participation clearly defined**.
 
----
-
-# 4. Women-only experience audit
-
-## Consistent or strong language
-
-- Women-only language is clear on the self-defense page: “A welcoming, women-only space” and “Women-only class” (`client/src/pages/womens-self-defense.tsx:102-110`).
-- The self-defense FAQ confirms women-only sessions (`womens-self-defense.tsx:335-340`).
-- Personal training includes a “Women Only” benefit (`personal-training.tsx:73-80`).
-- The public trial page includes “Women’s BJJ Fundamentals” and “Women’s Self-Defense” as explicit selections.
-- The footer currently says “Ground Up Women’s BJJ.”
-
-## Conflicts and ambiguity
-
-- Pricing says training is for “women, kids, beginners, and anyone” and its FAQ says “anyone is welcome” (`pricing.tsx:74-76`, `251-255`).
-- The member dashboard advertises a free community event as “open to everyone” and “No experience or registration required” (`portal/dashboard.tsx:341-360`).
-- Static schedule entries use `audience: ["all"]` for beginner BJJ, strength, recovery, and open mat; open mat is explicitly tagged “Open to All” (`client/src/lib/schedule-data.ts:36-66`).
-- Account signup is open to any person and does not collect program/eligibility context (`portal/login.tsx:142-218`).
-- Trial leads have no women-only eligibility or program-policy field (`shared/schema.ts:242-295`).
-- SEO/JSON-LD repeatedly describe “women, kids, and beginners,” not a focused women-only program (`client/index.html:11-46`).
-- The application includes a kids program and minor consent flow, which may be valid but must be explicitly separated from the women-only adult core offer.
-
-## Required business decision
-
-Ground Up needs one explicit rule set before copy and flows can be remediated:
-
-1. Which offerings are women-only?
-2. Are kids a separate program under the same brand?
-3. Are strength/recovery/open-mat sessions genuinely open to all, and if so, why and how are they described?
-4. Is the public community self-defense event women-only or intentionally open?
-5. Is “12-week Ground Up → Adaptive Capacity” the flagship, a later product, or only a future experiment?
-
-Until those decisions are made, any copy fix risks moving the contradiction rather than resolving it.
+The production screenshot confirms this broad framing: the hero says “FOR WOMEN, KIDS & BEGINNERS,” not “women-only,” and the navigation has no explicit women-only label.
 
 ---
 
-# 5. Customer journey and CTA audit
+# D. Intended Positioning Gap
 
-## Implemented journey today
+The stated business truth is:
 
-```text
-Traffic
-  → Homepage / program page / schedule
-  → Multiple possible actions
-  → /book lead request OR /portal/login
-  → Manual staff follow-up OR authenticated Calendly embed
-  → Webhook/internal booking record (configuration and integrity partly unknown)
-  → Member portal, forms, membership, schedule, cancellation
-```
+> Ground Up is a women-only training center in Oxnard, California.
 
-## Journey step assessment
+The current public experience must eventually make all of the following unambiguous:
 
-| Step | Status | Evidence and friction |
+- women-only adult training;
+- girls/female youth rather than a generic mixed-gender kids academy;
+- mother + daughter as the family relationship, if offered;
+- BJJ, practical self-defense, strength, movement, capability, learning, and connection;
+- beginner-friendly and non-intimidating;
+- no requirement to already be athletic;
+- no fight-gym atmosphere;
+- one clear next step for a first visit.
+
+The largest gap is not a missing slogan. It is a rule that is absent from the navigation, repeated service descriptions, schedule labels, booking eligibility, metadata, and youth path.
+
+---
+
+# E. Women-Only Messaging Audit
+
+## Clear or helpful
+
+- Homepage hero: “for women, kids & beginners.”
+- Women’s Self-Defense page: “Women-only class.”
+- Pricing page: “women-only environment — safe, supportive, judgment-free.”
+- Login page: “Women’s Training Center.”
+- Women’s program descriptions repeatedly name women and women-only environments.
+- Imagery is predominantly women training together.
+
+## Ambiguous or contradictory
+
+| Location | Current wording/behavior | Why it matters |
 |---|---|---|
-| Discover Ground Up | EXISTS AND WORKS | Homepage renders and communicates BJJ/self-defense/Oxnard. |
-| Understand the flagship offer | EXISTS BUT WEAK | Multiple audiences and offers compete; 8-week and 12-week concepts diverge. |
-| Build trust | EXISTS BUT WEAK | Coach, facility, safety, and first-class guidance help; address and policies are missing. |
-| Choose next action | PARTIAL | CTAs alternate between free trial, book intro, schedule, join, and login. |
-| Submit a lead | EXISTS AND WORKS, with gaps | `/book` persists a lead and creates staff notification/email attempt. |
-| Receive visitor confirmation | PARTIAL | UI says staff will reach out; API says “Booking confirmed!”; no visitor confirmation email is visible. |
-| Get a real appointment | PARTIAL | Authenticated Calendly path exists; public lead path does not reserve a slot. |
-| Pay | PARTIAL / NOT WIRED END-TO-END | Stripe intent/webhook code exists; complete checkout and reconciliation are not demonstrated. |
-| Attend first session | UNKNOWN | Instructions exist; real schedule/capacity/reminder behavior is unverified. |
-| Become a member | PARTIAL | Membership records and portal status exist; billing/access provisioning are not complete. |
-| Complete intake/waivers | EXISTS AND WORKS in UI | Draft/save/submit forms exist; server-side required-field enforcement is weak. |
-| Continue member journey | EXISTS BUT WEAK | Static schedule and booking/cancellation exist; progress link leaves the app and no cohort model exists. |
+| Homepage hero and metadata | “women, kids, and beginners”; “anyone is welcome” in FAQ | A visitor can reasonably infer men may enroll. |
+| Homepage mission | “human resilience and capability platform” | Differentiates the philosophy but dilutes the first-visit training offer. |
+| Homepage program grid | “Kids Jiu-Jitsu,” “Personal Training,” “Strength & Conditioning” | These do not state women-only or female-youth eligibility. |
+| Pricing metadata and page | “women’s, kids & adult classes”; strength “open to all” | “Open to all” directly conflicts with women-only positioning. |
+| Schedule metadata | “women’s, kids & adult classes” | “Adult” without gender qualification implies mixed adult enrollment. |
+| `PAGE_CONTENT` noscript copy | Lists “women, kids, and adults” | Search/crawler-visible fallback is less specific than the intended strategy. |
+| Contact page | “Book your free trial class” without women-only qualification | Conversion action is not self-filtering. |
+| Login | “Women’s Training Center” | Helpful, but encountered after some cold visitors are already sent to login. |
+| Footer | “Ground Up Women’s BJJ” | Stronger than the header, but inconsistent with the broad public language. |
+| Nav | “Training,” “Programs,” “Schedule” | No explicit women-only or girls/female-youth route. |
+| Social metadata | Women’s BJJ appears among generic BJJ/kids terms | Search and ad landing context can still look mixed. |
 
-## CTA inventory
+## Where a visitor could believe men or boys can enroll
 
-| CTA pattern | Appears on | Destination | Assessment |
-|---|---|---|---|
-| Start Your Free Trial | Homepage and public pages | `/book` | Good cold-traffic destination, but “trial” can imply an immediately bookable appointment. |
-| Book Free Intro | Program cards/homepage | Mixed: `/book` or `/portal/login` | Conflicting intent; public visitors should not hit an unexplained account wall. |
-| Book Your Session | Program and portal surfaces | `/book`, `/portal/booking`, or login | Naming does not distinguish request from confirmed appointment. |
-| Learn More | Event/cards | `/contact` or informational page | Appropriate for low-intent actions, but should not compete with the primary event. |
-| Join the interest list | Adaptive Capacity | `/adaptive-capacity` form | Correct for an unconfirmed cohort. |
-| Member Login | Navbar | `/portal/login` | Correct for existing members. |
-| Register/Sign Up | Portal login | Signup tab | Account creation is available without a clearly defined member eligibility path. |
-| Track My Progress | Member dashboard | External `1club.ai` | Breaks the member experience and introduces an external dependency. |
-
-### Primary conversion event today
-
-The practical primary conversion is a **trial lead submission**, but the copy and API incorrectly blur “request submitted” and “booking confirmed.” This should be renamed and measured as one truthful event such as:
-
-> “Request a first visit” → lead received → staff confirms a specific time.
-
-If instant scheduling is intended, the public flow should actually reserve a real slot and show the confirmed appointment. The current public flow does not do that.
+The reasonable ambiguity comes from “anyone is welcome,” “adults,” “open to all,” generic “kids,” and absence of a women-only label above the fold and in the main navigation. The site does not explicitly offer boys’ classes, but it also does not consistently exclude them. That is enough to create avoidable questions and mismatched leads.
 
 ---
 
-# 6. Booking system audit
+# F. Girls / Mother-Daughter Audit
 
-## What exists
+## Current state
 
-1. Static public schedule with client-side day/filter controls.
-2. Authenticated Calendly embed at `https://calendly.com/groundupbjj`.
-3. Calendly signed webhook with event validation and deduplication.
-4. Internal booking API with member creation/list/cancellation.
-5. Stripe payment-intent creation and payment-intent webhook.
-6. Staff booking list/status endpoints.
+- The workspace has a `/kids` page and a class type concept for youth.
+- Public copy uses ages 4–14 in several places; the legacy `PAGE_CONTENT` says ages 6–14; the pricing page says ages 4 and up and “4–7 and 8+.”
+- The current copy says “kids,” “children,” “parents,” and “anti-bullying,” but does not consistently say girls or female youth.
+- No clear mother + daughter program, landing page, schedule label, or combined booking flow was found.
+- No explicit parental-consent or guardian workflow is visible in the first-visit class booking form.
+- The privacy policy acknowledges child/minor information and says a parent/guardian should submit it, but operational consent is not demonstrated in booking.
 
-## What is not demonstrated
+## Gap
 
-- Live provider configuration, event types, staff selection, reminders, and timezone mapping.
-- Real capacity enforcement for “max 6.”
-- Public appointment reservation from `/book`.
-- Rescheduling.
-- Visitor/member confirmation email.
-- Cancellation/refund/payment reconciliation.
-- A complete checkout UI.
-- Admin schedule editing.
-- A transaction or database constraint preventing two users from taking the same slot.
-- Safe retry/dead-letter handling for provider webhooks.
+The intended audience is girls/female youth, including mothers and daughters—not a mixed-gender kids academy. The current public language would attract parents of boys and make the business explain eligibility manually.
 
-## Verified/inferred defects
-
-- `/book` only creates a lead; it does not create an appointment.
-- Portal booking uses Calendly, while internal API booking is a separate path. The two sources of truth are not clearly unified.
-- Availability checks only consider `status = 'paid'` and can miss pending bookings and partial interval overlaps (`server/storage.ts:390-401`).
-- Check-then-insert booking behavior has no transaction or exclusion/capacity constraint (`server/routes.ts:301-311`, `851-856`; `shared/schema.ts:54-74`).
-- Pending records can remain abandoned and do not reliably reserve a slot.
-- The generic `POST /api/bookings` accepts broad insert-schema fields including client-controlled `amountCents`, `currency`, `status`, customer identity, and start/end data (`server/routes.ts:293-317`).
-- Payment intent creation does not fully bind the payment amount/currency and booking state to a server-owned booking record.
-
-## Booking readiness: FAIL
-
-The UI is substantial, but financial integrity, capacity, source-of-truth, and provider configuration are not strong enough for production booking.
+Do not infer or invent an age range beyond the conflicting source values. The first required decision is the authoritative girls/youth age policy, followed by schedule, guardian, and booking rules.
 
 ---
 
-# 7. Lead-capture and email audit
+# G. English / Spanish Readiness
 
-## Lead forms
+## Current state: English-only
 
-### `/book`
+Repository search found no Spanish pages, locale switcher, translated strings, `es-MX`/`es-US` handling, bilingual form labels, Spanish confirmation states, or Spanish email templates.
 
-- Three steps: program selection, optional static class preference, and contact/experience details (`client/src/pages/book.tsx:176-205`, `264-505`).
-- Captures first name, last name, email, phone, program, experience, and preferences.
-- Uses client validation and posts to `/api/trial-leads`.
-- The UI says the coach will reach out, which is more accurate than the API response.
-- No CAPTCHA or bot challenge.
-- No visible duplicate handling.
-- No explicit consent checkbox on the core training/contact flows.
-- No visitor confirmation email visible.
-- “Max 6” is marketing copy, not enforced in this path.
+A woman clicking Spanish advertising would land in:
 
-### `/contact`
+- English navigation and page copy;
+- English-only `/book` or `/portal/login`;
+- English-only validation and error messages;
+- English-only confirmation and email content;
+- no language continuity parameter or localized route.
 
-- Captures identity, email, phone, subject, message, and consent-related payload fields.
-- Zod validation and persistence exist.
-- Creates a staff notification and attempts a Resend email to staff.
-- Email/notification failures are logged and swallowed so the user can still receive a success response.
-- No clear consent copy, duplicate handling, CAPTCHA, response-time promise, or visitor confirmation email is visible.
-
-### `/adaptive-capacity`
-
-- Captures identity, email, role/company, work-life change, capability goal, AI comfort, cohort timing, and explicit interest-list consent.
-- The form correctly distinguishes an interest list from training leads.
-- Copy says details will be shared when confirmed.
-- It is not a program enrollment, cohort registration, payment, or curriculum experience.
-
-## Email inventory
-
-| Email | Status |
-|---|---|
-| Staff alert for contact submission | Implemented as a Resend attempt; actual delivery unknown. |
-| Staff alert for training lead | Implemented as a Resend attempt; actual delivery unknown. |
-| Staff alert for Adaptive Capacity interest | Implemented as a Resend attempt; actual delivery unknown. |
-| Visitor lead confirmation | Not found. |
-| Booking confirmation | Not demonstrated. |
-| Booking reminder | Not found in application code. |
-| Registration/welcome | Not found. |
-| Password reset | Not found. |
-| Cancellation/refund | Not found. |
-
-## Lead-capture readiness: PARTIAL
-
-The lead path is operationally useful but should not be described as a confirmed booking, and staff should not depend on best-effort email alone. Database inbox visibility exists and is a positive fallback.
+This is a major acquisition mismatch for Spanish-language campaigns. The future architecture should define locale-aware routes or a controlled bilingual content layer before Spanish campaigns scale.
 
 ---
 
-# 8. Authentication and member portal audit
+# H. Conversion Journey
 
-## Authentication
+## Current paths
 
-### Positive findings
+1. Ad, search, social, or referral.
+2. Homepage or a program page.
+3. Visitor reads broad women/kids/beginner positioning.
+4. Visitor clicks one of several variants of “Start Free Trial,” “Book Free Intro,” “Book Your Free Session,” “Book Free Intro,” or “Contact.”
+5. Destination varies:
+   - `/book` is a public first-visit class reservation in the workspace.
+   - several program and pricing CTAs go to `/portal/login`.
+   - contact sends a lead message rather than booking.
+6. Confirmation behavior varies between lead acknowledgment, account/dashboard navigation, and the new class reservation confirmation.
 
-- Normal user passwords are bcrypt-hashed.
-- `SafeUser` responses omit `passwordHash`.
-- Sessions use HttpOnly cookies, Secure in production, SameSite=Lax, and 24-hour expiry.
-- Role middleware returns 401/403 and is used on the modern admin routes.
-- Anonymous access to `/api/portal/me` and `/api/portal/admin/stats` returned 401 in safe runtime checks.
+## Friction
 
-### Gaps
+- Cold visitors can be sent to member login/signup before a trial.
+- `/pricing` uses “pricing” as a page title but the visible content does not present actual prices, so the user may expect a pricing answer and instead receives an intro funnel.
+- The homepage’s “Explore Programs” button links to `/pricing`, while the schedule, contact, and book paths have separate terminology and mechanics.
+- “Book your first class,” “free intro,” “free trial,” and “first session free” are not clearly one offer.
+- Schedule and booking cannot be trusted as one production system until the new deployment is published and validated.
+- Contact, lead, legacy personal training, Calendly, and Google Calendar paths coexist.
+- There is no visible visitor-facing reschedule path in the new first-visit flow.
+- The first-visit form collects phone as required in the workspace, which may reduce completion for cold traffic.
 
-- Login and signup set session fields without regenerating the session ID, creating session-fixation risk.
-- No password reset, email verification, MFA, login lockout, or session revocation mechanism is visible.
-- Signup has a minimum password length but no robust shared schema for email/name/phone/password quality.
-- CSRF protection is implicit through SameSite behavior; there is no CSRF token or explicit Origin/Referer validation.
-- Rate limits are process-local `Map` instances and do not coordinate across autoscale instances.
-- In non-production or degraded production configuration, sessions can fall back to an in-memory store.
+## Strong points
 
-## Authorization
-
-- Modern admin endpoints generally require admin or coach roles.
-- Coach/member UI suggests assigned-member scope.
-- Server routes allow coaches to read/create session notes and update belt rank/attendance for arbitrary path-supplied member IDs; no assigned-coach check is visible (`server/routes.ts:959-1031`).
-- This is especially sensitive because forms and session notes can contain health, injury, emergency, minor, or training information.
-- The legacy `/api/admin/login` is itself behind `requireRole("admin")`, so it is not a verified anonymous bypass. It is still unsafe as a retained design.
-
-## Member portal value
-
-The account has enough real value to justify an account for an existing member:
-
-- dashboard;
-- membership status;
-- upcoming/past bookings;
-- booking cancellation;
-- required forms and submitted answers;
-- static class schedule;
-- staff notes/attendance are admin-side.
-
-It does not yet provide a complete member relationship:
-
-- no profile editing;
-- no password recovery;
-- no payment history or subscription management;
-- no rescheduling;
-- no member messaging/support;
-- no in-app progress/cohort milestones;
-- progress tracking leaves the app for `1club.ai`.
+- “No account or credit card required” is an excellent friction reducer in the new workspace flow.
+- Beginner FAQs answer experience, clothing, safety, and first-visit questions.
+- Public schedule cards expose availability and waitlist state in the new workspace.
 
 ---
 
-# 9. Admin and operations audit
+# I. Booking System
 
-## What an operator can do today
+## Current truth
 
-| Operation | Status |
-|---|---|
-| See KPI stats | Exists for admin. |
-| Review training/adaptive/contact leads | Exists through inboxes and statuses. |
-| Receive in-app staff notifications | Exists; shared queue. |
-| Receive attempted email alert | Exists through Resend; delivery unknown. |
-| Search/paginate members | Exists. |
-| View member profile/forms/bookings/notes | Exists for admin. |
-| Set role | Exists for admin. |
-| Set belt rank/attendance | Exists for admin/coach; coach scope is too broad. |
-| Add session notes | Exists for admin/coach; scope is too broad. |
-| View/cancel bookings | Exists. |
-| Create memberships | Exists. |
-| Edit class schedule/capacity | Missing or not wired. |
-| Manage instructors through modern UI | Limited; legacy availability API exists. |
-| Manage cohorts/curriculum/milestones | Missing. |
-| Process payments/refunds/failed billing | Missing or incomplete. |
-| Export/retention/access audit | Not found. |
-| Update public content without source edits | Missing. |
-| Performance/time-series reporting | Partial; current campaign report is aggregate/in-memory. |
+### Published production
 
-The old `/admin` implementation remains in source but is a dead runtime route. Its “Edit Schedule” UI action is non-wired. Keeping two admin concepts increases future authorization and maintenance risk.
+- The published `/schedule` screenshot shows the legacy static schedule with weekday filters and sample-looking class content.
+- The published `/book` screenshot shows a three-step-style program selection flow that says Ground Up will reach out to confirm a spot.
+- `GET https://www.groundupbjj.com/api/classes` returns **404**.
+- Therefore production is not using the new Google Calendar reservation API.
 
----
+### Workspace
 
-# 10. 12-week and Adaptive Capacity audit
+- `GET /api/classes` reads internal occurrences and reports Google Calendar as the intended source.
+- `POST /api/classes/reservations` supports anonymous first-visit reservations and returns a management token.
+- Authenticated members use `/api/portal/classes`, `/api/portal/class-reservations`, and `/api/portal/my-classes`.
+- Cancellations exist for anonymous token holders and authenticated members.
+- Admins can select a Google calendar, sync, review occurrences, edit manual overrides, see rosters, and mark attendance.
+- Capacity, duplicate/overlap checks, waitlists, cancellation promotion, and reservation audit events are implemented in storage.
+- Resend lifecycle email functions are called asynchronously.
 
-## 12-week journey
+## Remaining booking gaps
 
-**Status: ABSENT as an implemented product; current marketing uses a different 8-week offer.**
-
-Customer-facing content consistently describes an **8-week self-defense program**, two classes per week, and 16 sessions (`home.tsx:337-344`; `womens-self-defense.tsx:213-228`; `pricing.tsx:179-192`).
-
-No implemented model or UI was found for:
-
-- week-by-week progression;
-- cohort dates or enrollment;
-- milestones;
-- assessment;
-- graduation/certification;
-- onboarding sequence;
-- progress tracking;
-- cohort attendance/progression.
-
-## Adaptive Capacity
-
-**Status: PARTIALLY REPRESENTED / INTEREST LIST ONLY.**
-
-The page presents Adaptive Capacity as a separate Ground Up product, describes conceptual pillars, and collects a consented interest list. It does not provide confirmed dates, price, curriculum, delivery model, capacity, or participant experience.
-
-This is appropriate if the product is genuinely not ready. It becomes misleading when the homepage places it beside active training paths without a clear “future cohort” label.
+- No representative production Google events were present during the first approved 90-day sync; later development test occurrences must not be used as production proof.
+- Recurrence, overrides, provider cancellation propagation, concurrent reservations, waitlist promotion, and populated end-to-end email flows are not validated against production-like fixtures.
+- No reschedule endpoint or visitor reschedule UI is visible.
+- Reminder scheduling/queueing is not visible.
+- Async email failures are logged but not queued for retry.
+- The older internal `/api/bookings` and Calendly systems remain available and can create parallel records.
+- Production cutover, release verification, and removal/retirement of test data are not complete.
 
 ---
 
-# 11. BJJ/self-defense, safety, and trust audit
+# J. Member Portal
 
-## What is explained well
+## Present
 
-- Beginner-friendly tone and no-intimidation language.
-- No sparring in the first session.
-- Clothing and gear expectations.
-- Small-group coaching and personal attention.
-- Named coach and stated BJJ/Gracie Barra lineage.
-- Women-only language on the strongest dedicated program page.
-- Actual facility photographs and calm/premium visual treatment.
+- Login and self-registration.
+- Dashboard.
+- Intake/forms with save, submit, and retake paths.
+- Class schedule and native member class booking in the workspace.
+- My Classes with reservation history and cancellation.
+- Membership view and legacy booking paths.
+- Admin member management.
+- Coach portal.
 
-## What a first-time participant still needs to ask
+## Missing or weak
 
-- What is the exact street address and where do I park/enter?
-- Which specific sessions are women-only?
-- Are strength, open mat, recovery, and community events women-only or mixed?
-- What is the age requirement for each class?
-- What happens if I have a prior injury, medication, pregnancy, or mobility limitation?
-- Is there an injury/medical disclaimer and what is the emergency process?
-- What is the cancellation/refund policy?
-- Is a waiver required before the first visit?
-- What is the coach-to-student ratio in practice?
-- What is the actual cost after the free first visit?
-- Is the 8-week program the main offer or is the 12-week journey the main offer?
+- No password reset flow.
+- No visible email verification flow.
+- No MFA.
+- No clear account recovery route.
+- No demonstrated payment history, subscription management, refund flow, or failed-billing handling.
+- New public first visits do not require an account, which is correct; however several public CTAs still send visitors to the portal.
+- Portal account creation does not appear to enforce the women-only/female-youth eligibility rule.
 
-## Trust gaps
+## Role enforcement
 
-- Only “Oxnard, CA” is clearly exposed; no complete public address/map is visible.
-- Testimonials are initials-only and lack independently verifiable names/context.
-- No public Terms page, refund/cancellation policy, medical/injury disclaimer, or pre-booking waiver is linked.
-- The privacy page is future-dated “August 24, 2026,” which can undermine confidence.
-- Coach/configuration identity drifts between Raymi Gonzalez and Sofia Martinez.
-- Business hours and timezone sources conflict.
-- “Open to everyone” and “women-only” language is unresolved.
-
-No credentials were invented in this report; the above reflects only what the repository claims and what remains unverified.
+Admin-only class administration and member management routes are role guarded. The member class reservation path uses the authenticated session user. Legacy coach routes use role checks but are too broad for sensitive object-level access; see K.
 
 ---
 
-# 12. Design, mobile, accessibility, and performance audit
+# K. Admin + Security
 
-## Design
+## Good baseline controls
 
-**Assessment: Cohesive but overextended.**
+- `x-powered-by` is disabled in current source, though the published response still exposed `x-powered-by: Express`, another release-drift signal.
+- Current source applies HSTS in production, `nosniff`, strict-origin referrer policy, permissions policy, `X-Frame-Options`, and a production CSP.
+- Production session cookies are intended to be secure, HTTP-only, SameSite=Lax, and backed by PostgreSQL when configured.
+- Passwords are handled through storage/bcrypt rather than returned in `/api/portal/me`.
+- Public, auth, booking, and staff mutation rate limits exist.
+- Request body limits exist.
+- Stripe signature verification and Calendly timestamped HMAC verification exist.
+- Probe paths are stopped before the SPA and return safe 404s.
 
-The dark navy/black system with cyan, purple, and coral accents, rounded cards, actual imagery, and consistent typography feels intentional and more premium than a default gym template. The visual language supports confidence and energy.
+## Findings
 
-Risks:
+### P0 — broad coach object access
 
-- too many uppercase display headings and neon accents;
-- long pages and repeated card patterns;
-- motion, grain, gradient, and autoplay video can create an AI/template impression when combined;
-- dense information hierarchy makes the central offer harder to find;
-- gray secondary text may be low contrast in places;
-- legacy and modern portal/admin surfaces are not one coherent product.
+Routes such as member profile access, session notes, belt updates, attendance updates, and coach-facing member retrieval rely on role checks without consistently proving that the coach is authorized for the requested member. A compromised or over-privileged coach session could access or mutate another member’s data. This is an IDOR/object-scope issue.
+
+### P0 — webhook side effects can be lost after early claim
+
+Stripe and Calendly claim an event before all side effects complete. If the database write or downstream action fails after the claim, a provider retry can be treated as a duplicate and the valid event may never be applied. Existing signature verification is good; claim/side-effect ordering and retry state are not production-safe.
+
+### P0 — legacy financial and booking paths need one authority
+
+Legacy `/api/bookings`, payment-intent creation, Calendly booking, and the new class reservations coexist. The legacy APIs accept request fields such as trainer/session/time values and perform read-then-write availability checks. These paths need explicit retirement, isolation, or invariant hardening before production traffic is directed to them.
+
+### P1 — CSRF protection is implicit, not explicit
+
+State-changing cookie-session routes do not show a CSRF token/origin validation layer. SameSite=Lax provides partial browser protection, but it is not a complete application-level CSRF strategy for all deployment and client contexts.
+
+### P1 — authentication lifecycle is incomplete
+
+No password reset, email verification, MFA, lockout/step-up process, or suspicious-login handling was found. Rate limiting helps but does not replace account recovery and abuse controls.
+
+### P1 — validation and audit depth varies
+
+New class routes use strict Zod schemas. Older member updates, belt/attendance writes, notes, legacy booking, and some admin actions have weaker field validation and no consistently visible audit trail.
+
+### P1 — production response still exposes Express
+
+The safe current source disables `x-powered-by`, but the live response includes `x-powered-by: Express`. This is low-severity by itself and high-signal for deployment drift.
+
+---
+
+# L. Forms + Lead Capture
+
+## Forms found
+
+| Form | Persistence/behavior | Assessment |
+|---|---|---|
+| Contact | Validates with Zod, stores contact submission, creates staff notification, attempts staff email. | Functional in source; no visitor email confirmation or explicit consent checkbox. |
+| Trial lead | Stores trial lead, creates staff notification, attempts staff email. | Functional source path; public UI destinations are inconsistent. |
+| Adaptive Capacity interest | Uses trial-lead storage with an adaptive program value. | Separate concept is correctly distinguished, but shares lead infrastructure. |
+| First-visit class reservation | Stores reservation, returns anonymous management token, attempts lifecycle email. | Promising; production endpoint is not deployed and minor/guardian path is incomplete. |
+| Portal signup/login | Custom account creation and login. | Works at API/source level; no recovery/verification. |
+| Portal intake/forms | Save/submit/retake. | Authenticated workflow exists; privacy and retention controls need operational verification. |
+| Legacy booking/payment | Authenticated booking and payment intent. | Duplicate path with integrity and lifecycle concerns. |
+
+## Form-level gaps
+
+- No visible honeypot, CAPTCHA, bot scoring, or other dedicated spam control; rate limiting is the principal control.
+- No explicit consent checkbox on the contact form.
+- Contact and trial-lead routes default consent/source values server-side, which should be reconciled with the desired privacy basis.
+- No clear confirmation email to the visitor for contact or lead submissions.
+- Error handling is generic and useful, but server-side notification failures can be swallowed after the lead is stored.
+- Minor booking needs guardian identity and consent rules if girls/female youth are a public offering.
+
+---
+
+# M. Marketing Analytics
+
+## Present
+
+- Consent banner with allow/decline choices.
+- First-party `/api/analytics/events`.
+- UTM capture for source, medium, campaign, term, and content.
+- Session ID and landing path.
+- Meta Pixel initialization after consent.
+- Event storage and an admin campaign report.
+- Attribution is not fabricated when unavailable.
+
+## Missing or unknown
+
+- No GA4 or Google Tag Manager implementation found.
+- No Meta Conversions API found.
+- No demonstrated server-side deduplication between browser and server events.
+- No reliable campaign → lead → trial → attended trial → member conversion chain.
+- No visible trial completion or membership conversion event.
+- Current campaign report is aggregate and consent-dependent; the proposed campaign comparison task remains separate and should not be duplicated here.
+- No provider-dashboard verification of Meta Pixel event receipt was performed.
+
+The consent copy is transparent and the decline path preserves site use. The banner itself is visually prominent and can cover form/schedule content on smaller screens; mobile verification is still needed.
+
+---
+
+# N. SEO / Local SEO
+
+## Present
+
+- Route-specific titles and descriptions through server-side production metadata replacement and client-side Helmet.
+- Canonical URLs.
+- Open Graph title, description, URL, site name, and image.
+- Twitter card metadata.
+- `robots.txt` disallows portal/admin and points to sitemap.
+- Dynamic sitemap includes public marketing routes.
+- H1 and route-specific noscript content exist.
+- Oxnard and phone/email are present in public copy.
+
+## Gaps
+
+- `client/src/index.html` and `SEO` use different default OG image extensions/paths (`og-image.svg` in the static document versus `/og-image.jpg` in the component); asset existence and social preview should be verified.
+- No LocalBusiness/HealthAndBeautyBusiness structured data was found in the inspected source; the static document has general JSON-LD but not a clearly complete local business graph.
+- Address is only “Oxnard, CA”; there is no street address or map signal in the visible contact page.
+- Hours say “Mon–Sat: 8am–5pm,” while class events and schedule semantics are separate.
+- Search copy includes generic “adults,” “kids,” and “open to all,” weakening intended women-only search positioning.
+- The server noscript copy has stale age values and legacy CTA destinations.
+- Sitemap and production routes were verified as 200, but page content is from the old published build.
+- No Lighthouse/Core Web Vitals measurement was available in this audit.
+
+---
+
+# O. Mobile / Performance
 
 ## Mobile
 
-A direct screenshot at 375/390/412 px was not available through the current preview tool, so device-specific defects are classified as source-based risks rather than visually verified defects.
+Positive source evidence:
 
-Positive source signals:
+- Mobile nav has an accessible menu button with `aria-expanded`, `aria-controls`, and close behavior.
+- Grids collapse at responsive breakpoints.
+- Core form controls use full-width layouts where appropriate.
+- Body and HTML explicitly prevent horizontal overflow.
+- Reduced-motion media rules exist.
 
-- mobile navigation exists;
-- responsive grid breakpoints exist;
-- horizontal schedule controls are intentionally supported;
-- portal uses mobile-first cards;
-- reduced-motion CSS is present;
-- root CSS hides horizontal overflow.
+Risks requiring device QA:
 
-Mobile risks to verify before traffic:
-
-- the hero is viewport-height and includes background video;
-- large uppercase headings can consume most of the first screen;
-- the analytics consent modal covers a large portion of the viewport;
-- multi-step booking cards and form fields need a real 375 px pass;
-- schedule tabs and portal tables need touch/overflow testing;
-- fixed/sticky navigation, modals, and long form submission states need device testing;
-- `overflow-x: hidden` can conceal layout defects instead of fixing them.
-
-## Accessibility
-
-**Readiness: PARTIAL.**
-
-Positive:
-
-- semantic form controls and visible labels appear in most flows;
-- many buttons use actual button/link components;
-- base focus-ring styles and reduced-motion support exist;
-- homepage FAQ includes `aria-expanded`/`aria-controls` treatment.
-
-Gaps:
-
-- pricing, self-defense, and kids FAQ accordions do not consistently match the homepage ARIA treatment;
-- portal menu toggle lacks a clear accessible label/state;
-- some icon-only controls need explicit accessible names;
-- gray secondary text may not meet contrast requirements;
-- some labels are not clearly associated with inputs through `htmlFor`;
-- login preview produced a browser warning for missing `autocomplete="current-password"`;
-- modal focus trapping/return focus and screen-reader announcement were not verified.
+- Long homepage sections and large hero imagery/video can push the primary CTA below the first viewport.
+- The analytics consent banner is fixed across the bottom and can cover schedule cards, forms, or booking controls.
+- The desktop navigation has many items; mobile menu ordering should be checked against the one desired acquisition action.
+- The schedule card and booking form need real 320px/375px/390px tests.
+- Pricing/program cards and long display headings may wrap awkwardly.
 
 ## Performance
 
-Verified production build output:
+The workspace build completed but reported:
 
-- JavaScript bundle: approximately **852 KB minified** / **243 KB gzip**;
-- CSS bundle: approximately **93 KB** / **16 KB gzip**;
-- several image assets are **1.3–1.7 MB** each;
-- Vite emitted a chunk-size warning for chunks over 500 KB;
-- 2,433 modules were transformed.
+- JavaScript bundle: approximately 837 kB minified before gzip, 239 kB gzip.
+- Multiple image assets are 1.3–1.7 MB.
+- Vite warned that chunks exceed 500 kB.
+- Browserslist/caniuse data is approximately 23 months old.
+- Homepage includes autoplay video and several large marketing images.
 
-Most important performance issues:
-
-1. no route-level code splitting is visible;
-2. hero autoplay video is loaded on the homepage;
-3. several large PNG assets are used;
-4. the long homepage likely loads more media/content than a first visit requires;
-5. campaign reporting and booking reads load unbounded data in memory as the system grows.
-
-The old Browserslist database warning is maintenance noise, not the primary launch blocker.
+High-impact performance work should prioritize image sizing/compression, video strategy, route-level code splitting, and measurement before cosmetic optimization.
 
 ---
 
-# 13. SEO/social and privacy/legal audit
+# P. Accessibility
 
-## SEO/social
+## Positive evidence
 
-### Present
+- Form fields generally have visible labels and React Hook Form validation messages.
+- Mobile menu exposes label, expanded state, and controls.
+- Images in inspected marketing components have alt text.
+- Semantic headings are used throughout page components.
+- Existing shadcn/Radix components provide keyboard and focus behavior in many controls.
+- Reduced-motion CSS is present.
 
-- title, description, keywords, robots, canonical, Open Graph, Twitter card, geographic metadata;
-- JSON-LD `SportsActivityLocation`;
-- `robots.txt` and `sitemap.xml`, both verified 200 locally;
-- Oxnard and BJJ/self-defense keywords;
-- social profile links.
+## Risks/gaps
 
-### Problems
-
-- Metadata and JSON-LD frame the business as serving “women, kids, and beginners,” not a clear women-only core.
-- `client/src/components/seo.tsx` defaults to `/og-image.jpg`, while the visible public asset is `og-image.svg`; dynamic-route previews may request a missing image.
-- JSON-LD includes only city/state, not a complete address.
-- No richer FAQ/service schema is visible.
-- Naming drifts between “Ground Up BJJ,” “Ground Up Jiu-Jitsu & Fitness,” and “Ground Up Women’s BJJ.”
-- Hours and timezone conflict with `site.config.ts`.
-- The public message mixes women-only, general, kids, open-to-all, and future-product keywords.
-
-## Privacy/legal surfaces
-
-### Present
-
-- Privacy Policy page covering forms, analytics, Meta Instant Forms, providers, minors, and California contact (`client/src/pages/privacy.tsx`).
-- Analytics consent UI; user can decline and still use the site.
-- Intake/waiver, media release, gym rules, and minor consent forms exist in seeded form definitions.
-
-### Missing or weak
-
-- Terms of service.
-- Public refund/cancellation policy.
-- Medical/injury disclaimer.
-- Clearly linked liability waiver before booking.
-- Photo/media consent explanation before the relevant action.
-- Explicit training/contact email consent language.
-- SMS consent/disclosure (if SMS is added later).
-- Retention/deletion/export process.
-- Data-minimization and role/access policy.
-- Privacy page date is future-dated and should be reviewed.
-
-This section identifies operational surfaces for professional review; it is not legal advice.
+- Contrast of muted gray text, gradient text, dark cards, and small badges needs automated and manual verification.
+- The analytics banner uses `role="dialog"` but has no obvious focus trap, focus return, or programmatic title association.
+- Async loading/error/empty states need screen-reader announcements and focus management.
+- Heading hierarchy is visually driven and should be checked page by page.
+- Some icon-only or image-only links rely on context; the footer Instagram link points to generic `https://instagram.com`, not a verified Ground Up profile.
+- Password inputs lack `autocomplete` attributes; the current browser logs reported a password autocomplete warning.
+- Keyboard-only testing of the schedule filters, booking cards, dialogs, and portal tabs remains outstanding.
 
 ---
 
-# 14. Security audit
+# Q. Content / Visual Design
 
-## CRITICAL
+## Strengths
 
-### Client-controlled booking financial/state fields
+- Dark navy foundation, cyan/purple/warm accents, Oswald display typography, and grain/stripe textures create a recognizable system.
+- The visual tone is modern, capable, and not a generic pink women’s-fitness template.
+- Real women’s training and facility imagery support authenticity.
+- Clear cards, badges, and section rhythm make a long experience scannable.
+- Coach and facility content exist rather than relying only on abstract claims.
 
-`POST /api/bookings` uses a broad insert shape and persists client-provided `amountCents`, `currency`, `status`, customer information, and start/end time. A logged-in caller could attempt to submit a paid booking, alter a price/status, or create a booking outside approved schedule rules.
+## Weaknesses
 
-**Evidence:** `server/routes.ts:293-317`; `shared/schema.ts` booking insert schema.  
-**Impact:** financial loss, unauthorized bookings, inaccurate records, and trust damage.  
-**Required outcome:** server-owned session type → price/currency/duration/status mapping, immutable payment state transitions, validated time windows, and a single safe creation path.
-
-## HIGH
-
-### Coach object-level authorization
-
-Coach routes accept arbitrary member IDs for sensitive notes, belt rank, and attendance operations without visibly checking assignment.
-
-**Evidence:** `server/routes.ts:959-1031`; documented assigned-member model in `replit.md`.  
-**Impact:** cross-member privacy exposure and unauthorized data modification.
-
-### Booking race/overlap/capacity integrity
-
-Availability checks consider only paid records and do not atomically reserve slots. There is no database exclusion/capacity constraint.
-
-**Evidence:** `server/storage.ts:390-401`; `server/routes.ts:301-311`, `851-856`.  
-**Impact:** double-booking, capacity overrun, abandoned pending records.
-
-### Webhook event loss after early claim
-
-Stripe and Calendly event IDs are claimed before all business side effects complete. A later database/provider failure can cause a legitimate retry to be treated as already processed.
-
-**Evidence:** `server/routes.ts:383-395`, `631-648`; `server/storage.ts:642-649`.  
-**Impact:** missing bookings/payment state and silent operational failure.
-
-### Legacy plaintext/default admin credential handling
-
-`admin_users` stores a plaintext password, the legacy route compares it directly, and the legacy client initializes a default email/password.
-
-**Evidence:** `shared/schema.ts:76-87`; `server/routes.ts:1100-1111`; `client/src/pages/admin.tsx:22-36`, `95-98`.  
-**Impact:** credential disclosure and unsafe historical access pattern. The old endpoint is currently behind an admin role check, so an anonymous bypass was not verified.
-
-### Session fixation and incomplete account protections
-
-Login/signup set session fields without regenerating the session ID. Reset, email verification, MFA, lockout, and revocation are absent.
-
-**Evidence:** `server/routes.ts:658-700`.  
-**Impact:** account takeover resilience is weaker than a production member portal should be.
-
-## MEDIUM
-
-- CSRF is not explicit; cookie SameSite=Lax is only a partial mitigation.
-- In-memory rate limits are not shared across autoscale instances.
-- Dynamic form answers and admin/member data have weak server-side validation.
-- Analytics accepts arbitrary JSON properties without server-side PII scrubbing or retention controls.
-- Sensitive health, injury, medication, DOB, emergency, minor, signature, admin-note, and session-note data is stored without visible field-level encryption, access audit, retention, export, or deletion workflow.
-- Booking and campaign-report queries are unbounded; report aggregation occurs in memory.
-- CSP has `unsafe-inline` and broad third-party allowances; baseline headers are otherwise a positive.
-- Raw error objects are logged in several handlers; log redaction/retention is unknown.
-
-## Dependency observation
-
-`npm audit --omit=dev --audit-level=high` reported **16 vulnerabilities: 2 low, 3 moderate, and 11 high** in the current dependency tree. Notable findings included Drizzle ORM, Express dependency chain, `ws`, `postcss`, `nanoid`, `minimatch`, `picomatch`, and others. This was an audit-only check; no package upgrades were performed because a forced Drizzle upgrade was reported as breaking and the audit specification forbids remediation in this pass.
+- The homepage is long and ambitious; Adaptive Capacity can compete with the first-visit training offer.
+- Display typography is intentionally loud but can become dense for long headings and metadata.
+- Heavy dark backgrounds and low-contrast secondary copy can make important details easy to miss.
+- Visual polish currently exceeds operational clarity: it looks more settled than the booking, audience, and production-release truth actually is.
 
 ---
 
-# 15. Production/deployment and testing audit
+# R. Trust / Beginner Experience
 
-## Runtime checks performed
+## Present
 
-| Check | Result |
+- Named coach Raymi Gonzalez and credentials.
+- Real facility/team imagery.
+- “No experience needed.”
+- No-intimidation and small-group messaging.
+- Safety-oriented BJJ FAQ.
+- First-class expectations about clothing and gear.
+- Phone, email, Oxnard location, and training hours.
+- Privacy policy and contact route.
+
+## Missing or weak
+
+- No street address/map or clear arrival/parking instructions.
+- No visible reviews, testimonials, outcomes, or community proof.
+- No clear answer to “Will I train with men?” despite the intended women-only policy.
+- No clear mother/daughter participation rules.
+- No explicit “what happens from arrival to leaving” first-day sequence on the main conversion path.
+- No terms, cancellation policy, waiver/safety policy, photo/video consent explanation, or emergency procedure visible.
+- “Free trial,” “free intro,” and “first session free” are not unified.
+
+The beginner reassurance score is high because the copy is warm and practical. Trust remains midrange because a physical training customer needs operational certainty, proof, and eligibility clarity before booking.
+
+---
+
+# S. Technical Debt / Legacy Systems
+
+## Legacy or duplicate surfaces
+
+- Static legacy schedule data and the new live Google Calendar schedule.
+- Legacy `/api/bookings`, trainer availability, private/personal-training booking, and Stripe payment-intent flow.
+- Calendly webhook and transition booking path.
+- `/portal/booking` and `/portal/schedule` both route into class/member experiences.
+- Legacy `/admin` page/API paths alongside `/portal/admin`.
+- Old site configuration with contradictory timezone, coach, group-class, and pricing flags.
+- `PAGE_CONTENT` server noscript strings that do not fully match client pages.
+- Installed but not fully verified Stripe, Meta, Google Calendar, Calendly, and Resend paths.
+
+## Recommendation
+
+Do not delete these during the audit. First document ownership and traffic, then deprecate only after the new system is production-validated and historical data is preserved.
+
+---
+
+# T. Test Results
+
+## Workspace commands
+
+| Command | Result |
 |---|---|
-| `GET /` | 200; homepage rendered in preview. |
-| `GET /robots.txt` | 200. |
-| `GET /sitemap.xml` | 200. |
-| `GET /api/portal/me` | 401 when anonymous, expected. |
-| `GET /api/portal/admin/stats` | 401 when anonymous, expected. |
-| `GET /api/trainers` | 200. |
-| `GET /admin` | 404; legacy client route is not served in the running app. |
-| `GET /portal/schedule` | 200 without auth; source shows no component-level auth check. |
-| Browser console | Expected anonymous 401 plus missing password autocomplete warning; no fatal frontend error observed. |
+| `npm test` | **Passed:** 7 tests, 0 failed. |
+| `npm run check` | **Passed:** TypeScript check. |
+| `npm run build` | **Passed:** Vite client and esbuild server build. |
 
-No write endpoint was exercised with production-like data. No external appointment, transaction, or email was created/sent.
+Passing tests cover signed Stripe payloads, Calendly HMAC/replay/tampering behavior, role route closure, payment ownership, rate limits, scanner probes, and security headers.
 
-## Build and tests
+## Warnings
 
-- `npm test`: **7 passed, 0 failed**.
-- `npm run check`: passed.
-- `npm run build`: passed.
-- Existing tests cover signature helpers, role middleware, ownership helper, local rate limits, scanner paths, and baseline headers.
-- There are no meaningful route/integration, database, browser/E2E, payment, booking, webhook retry, authorization-matrix, migration, coverage-threshold, or dependency-audit tests in the project scripts.
+- Vite reports stale Browserslist/caniuse data.
+- Vite reports chunks larger than 500 kB.
+- The running workspace schedule screenshot showed an expected anonymous `/api/portal/me` 401 and no fatal frontend error.
 
-Passing seven security helper tests is valuable, but it does not demonstrate that the real booking, lead, payment, or admin flows are safe.
+## Safe route smoke tests
 
-## Deployment observations
+Against production on September 1, 2026:
 
-- Replit deployment is configured as autoscale with build/start scripts and port 5000.
-- Deployment logs repeatedly show health checks to `/` returning connection refused/500 during startup, followed later by the server listening on port 5000. This may be an expected warm-up race, but it is fragile and there is no dedicated readiness endpoint.
-- No health/readiness/liveness endpoint, graceful shutdown/pool close, structured request IDs, metrics, alerting, backup/restore runbook, DR plan, incident runbook, or webhook reconciliation job was found.
-- Startup seed operations are asynchronous and log failures without failing readiness.
-- Actual production DB URL selection, session store behavior, proxy/HTTPS topology, provider credentials, domain wiring, backups, and monitoring remain unknown.
+| Request | Result |
+|---|---|
+| `/` | 200 |
+| `/schedule` | 200 |
+| `/book` | 200 |
+| `/contact` | 200 |
+| `/privacy` | 200 |
+| `/portal/login` | 200 |
+| `/api/trainers` | 200 |
+| `/api/classes` | **404** |
+| `/api/portal/me` | 401, expected anonymous behavior |
+| `/admin.php` | 404 |
+| `/1.php` | 404 |
+| `/this_is_a_new_hello_world.php` | 404 |
 
----
+## Visual runtime checks
 
-# 16. Business operations audit
-
-## Can Ground Up operate using the system today?
-
-### Yes, with substantial manual work
-
-- receive and review leads through database-backed admin inboxes;
-- receive attempted staff email alerts;
-- contact prospects manually;
-- review members and forms;
-- add notes, attendance, belt rank, and memberships;
-- inspect/cancel some bookings;
-- show a static schedule;
-- manually reconcile whether a lead became a real appointment.
-
-### Not reliably or not yet
-
-- guarantee a slot is available;
-- prevent duplicate/racing bookings;
-- reconcile payment to the intended booking securely;
-- manage refunds or failed recurring payment;
-- maintain the live class schedule/capacity without source/database work;
-- run a 12-week cohort;
-- track member milestones or progression;
-- message members from the portal;
-- manage content and policy pages through admin;
-- answer campaign performance over time;
-- prove that provider email/reminder/webhook operations work in production.
-
-## Manual work still required
-
-1. Read staff inbox and follow up with every lead.
-2. Confirm an actual time after `/book` submission.
-3. Reconcile Calendly, internal booking, and payment records.
-4. Maintain schedule and capacity outside the public UI.
-5. Handle cancellations, reschedules, refunds, and reminders.
-6. Resolve privacy/access requests manually.
-7. Update offer copy in source code.
-8. Track cohort/progress outside the application.
+- Production desktop screenshots were captured for `/`, `/schedule`, `/book`, `/contact`, and `/portal/login`.
+- Workspace `/schedule` was captured separately and showed the new live class card UI plus development test occurrences.
+- Production and workspace visual behavior are materially different, confirming deployment drift.
 
 ---
 
-# 17. Conversion funnel verdict
+# U. P0 Issues
 
-## Current funnel
+These are blockers before accepting meaningful production traffic or publishing the new booking system:
 
-```text
-Traffic
-  → Homepage or program page
-  → Choose among several programs and CTAs
-  → /book lead request OR /portal/login
-  → Staff follow-up OR authenticated Calendly booking
-  → Manual/provider booking confirmation
-  → Member account, forms, schedule, and cancellation
-  → No implemented cohort/progress journey
-```
-
-## Leaks
-
-- **Primary leak:** positioning ambiguity. A visitor cannot confidently determine whether Ground Up is a women-only program, a general gym, a kids academy, a self-defense course, a fitness studio, or a future resilience program.
-- **Secondary leak:** CTA fragmentation. Similar “book” language routes to different experiences, including a login wall.
-- **Trust leak:** incomplete address, policy, injury, refund, and operational information for a physical-contact women-focused program.
-- **UX leak:** the lead form is not a booking, but API language says “Booking confirmed!”
-- **Technical leak:** booking/payment/capacity integrity and webhook retry behavior are not safe for production.
-
-## Single biggest reason traffic may fail to convert
-
-**The website does not present one unmistakable, trustworthy first step for one clearly defined audience.** The visual polish cannot compensate for the unresolved women-only/mixed-audience and 8-week/12-week product ambiguity.
+1. **Fix coach/member object-level authorization.** Prove coach-to-member scope for every read and write, including profile, forms, notes, belt, attendance, and bookings.
+2. **Make Stripe and Calendly webhook processing retry-safe.** Verify signatures, persist processing state, perform idempotent side effects, and only mark complete after success.
+3. **Choose one production booking authority.** Prevent legacy booking/payment/Calendly paths from conflicting with Google Calendar reservations, or explicitly keep them private-session-only with tested boundaries.
+4. **Verify deployment parity before cutover.** Publish only a reviewed build, confirm `/api/classes` exists, confirm no test occurrences leak, and smoke test the public schedule/first visit/member/admin paths.
+5. **Harden financial/status invariants in legacy paths.** Server-side price authority, ownership checks, atomic overlap/capacity enforcement, and payment-state transitions must be proven or the paths must be disabled.
 
 ---
 
-# 18. What should not be built yet
+# V. P1 Issues
 
-Until the core offer, first-visit flow, and operational integrity work, the following would distract from launch:
-
-- mobile app;
-- complex gamification or belt/progress rewards;
-- AI coaching;
-- elaborate LMS/curriculum platform;
-- sophisticated Adaptive Capacity assessments;
-- advanced community/social features;
-- complicated membership tiers;
-- full cohort graduation/certification system;
-- broad content management platform;
-- additional payment products before the current booking/payment source of truth is secured.
-
-Adaptive Capacity should remain a clearly labeled interest list until the cohort is actually defined.
+1. Make women-only the explicit public rule, including girls/female youth and mother-daughter scope.
+2. Remove login gating from cold-traffic first-visit CTAs; reserve the portal for existing members.
+3. Complete representative Google Calendar validation: recurrence, overrides, cancellation, timezone, concurrency, capacity, waitlist promotion, and lifecycle email.
+4. Add a guardian/minor booking and consent design if girls are bookable.
+5. Add password reset, email verification, account recovery, and explicit CSRF/origin protection.
+6. Add visitor confirmation/follow-up and reliable email retry/observability.
+7. Reconcile timezone, coach, age, feature-flag, pricing, and route metadata drift.
+8. Add a truthful operational trust layer: address/map, arrival, parking, first-day steps, eligibility, policies, and reviews/testimonials where available.
+9. Publish the reviewed workspace build only after the cutover gate passes.
 
 ---
 
-# 19. Prioritized remediation backlog
+# W. P2 Issues
 
-Effort is relative engineering effort. “Safe independently” means the work can be made without first changing the core business decision; “No” means it depends on a decision or coordinated migration.
-
-## P0 — Must fix before sending traffic
-
-### P0.1 Decide and enforce the audience/product rules
-
-- **Problem:** Women-only, kids, “anyone,” open-to-all, 8-week, and 12-week language conflict.
-- **Impact:** trust loss, wrong leads, unclear eligibility, and poor conversion.
-- **Recommended outcome:** publish one canonical audience/offer map; label any separate kids/open event clearly; remove contradictory language across site, schedule, forms, SEO, portal, and emails.
-- **Effort:** M.
-- **Dependencies:** business owner decision on women-only scope and flagship offer.
-- **Safe independently:** No.
-
-### P0.2 Replace the public funnel with one truthful first-visit action
-
-- **Problem:** `/book` creates a lead, while the API says “Booking confirmed”; other CTAs send cold visitors to login.
-- **Impact:** false expectations and drop-off.
-- **Recommended outcome:** choose “request a first visit” or real instant booking; use one destination and truthful success state; reserve login for existing members.
-- **Effort:** M.
-- **Dependencies:** canonical offer and booking source of truth.
-- **Safe independently:** No.
-
-### P0.3 Lock down booking and payment invariants
-
-- **Problem:** client controls booking price/status/time fields; payment intent and booking are not fully bound.
-- **Impact:** financial and schedule tampering.
-- **Recommended outcome:** accept only a server-owned DTO; derive price/currency/duration/status from approved session types; enforce allowed time windows, ownership, and immutable payment transitions.
-- **Effort:** M.
-- **Dependencies:** chosen booking/payment architecture.
-- **Safe independently:** Yes, after API contract review.
-
-### P0.4 Fix coach/member object authorization
-
-- **Problem:** coach can use arbitrary member IDs for notes, attendance, and belt updates.
-- **Impact:** sensitive member privacy and integrity failure.
-- **Recommended outcome:** enforce assigned-coach scope server-side for every read/write; test admin, assigned coach, unassigned coach, member, and anonymous matrices.
-- **Effort:** S.
-- **Dependencies:** final staff permission model.
-- **Safe independently:** Yes.
-
-### P0.5 Make webhooks retry-safe
-
-- **Problem:** event IDs are claimed before side effects finish.
-- **Impact:** valid Stripe/Calendly events can be lost permanently.
-- **Recommended outcome:** durable pending/processed/failed state, transactional side effects where possible, safe retries, reconciliation/manual replay, and alerting.
-- **Effort:** M/L.
-- **Dependencies:** provider event contracts and payment/booking source of truth.
-- **Safe independently:** Yes, with provider test fixtures.
-
-### P0.6 Remove legacy credential exposure
-
-- **Problem:** plaintext legacy admin password field and default credentials shipped in client code.
-- **Impact:** credential disclosure and unsafe auth design.
-- **Recommended outcome:** disable/remove legacy route and UI through a controlled migration, rotate any affected credentials, and ensure only the modern role-protected portal remains.
-- **Effort:** S/M.
-- **Dependencies:** confirm modern admin coverage and credential rotation plan.
-- **Safe independently:** No, because access continuity must be verified.
-
-### P0.7 Make booking capacity atomic
-
-- **Problem:** paid-only overlap checks and check-then-insert races do not guarantee capacity.
-- **Impact:** double bookings and unsafe customer experience.
-- **Recommended outcome:** one authoritative schedule, transactional reservation state, overlap/capacity enforcement, expiration for pending holds, and database constraints where appropriate.
-- **Effort:** L.
-- **Dependencies:** Calendly vs internal scheduler decision.
-- **Safe independently:** No.
-
-## P1 — Must fix before serious launch
-
-### P1.1 Publish trust and operational pages
-
-- **Problem:** no complete address, Terms, refund/cancellation policy, medical/injury guidance, or clearly linked waiver.
-- **Impact:** visitors cannot make an informed decision and staff must answer preventable questions.
-- **Recommended outcome:** publish business-approved operational copy and link it at contact, booking, footer, and portal entry points.
-- **Effort:** S/M.
-- **Dependencies:** business/legal review.
-- **Safe independently:** No.
-
-### P1.2 Add visitor confirmation and reliable staff alerting
-
-- **Problem:** staff emails are best-effort; visitors do not receive a visible confirmation email.
-- **Impact:** missed leads and uncertainty after submission.
-- **Recommended outcome:** durable notification status, retry/alert path, accurate confirmation email, and clear response-time expectation.
-- **Effort:** M.
-- **Dependencies:** verified Resend production configuration and approved copy.
-- **Safe independently:** Yes.
-
-### P1.3 Add explicit account protections
-
-- **Problem:** no session regeneration, reset, verification, lockout, MFA, or revocation.
-- **Impact:** weaker account security and poor member recovery experience.
-- **Recommended outcome:** regenerate on login/signup, implement reset and verification, add abuse controls, and document session lifecycle.
-- **Effort:** M/L.
-- **Dependencies:** email delivery and auth policy.
-- **Safe independently:** Yes.
-
-### P1.4 Choose and unify schedule source of truth
-
-- **Problem:** static schedule, Calendly, internal bookings, trainer JSON availability, and admin legacy endpoints coexist.
-- **Impact:** stale availability, operational confusion, and inconsistent customer promises.
-- **Recommended outcome:** choose one schedule/booking authority and make all public, portal, admin, payment, and webhook paths reconcile to it.
-- **Effort:** L.
-- **Dependencies:** business booking decision.
-- **Safe independently:** No.
-
-### P1.5 Add end-to-end coverage for critical flows
-
-- **Problem:** seven helper tests do not cover actual routes or browser journeys.
-- **Impact:** regressions in auth, booking, leads, webhooks, and admin permissions can ship unnoticed.
-- **Recommended outcome:** integration and browser tests for anonymous/member/coach/admin matrices, lead form, booking/cancellation, payment fixture, webhook retry, and form validation.
-- **Effort:** L.
-- **Dependencies:** stable contracts and safe test fixtures.
-- **Safe independently:** Yes.
-
-### P1.6 Review and remediate dependency vulnerabilities
-
-- **Problem:** audit reports 16 vulnerabilities, including 11 high.
-- **Impact:** known dependency risk, including possible DoS/security issues.
-- **Recommended outcome:** triage direct/transitive reachability, upgrade in small tested groups, and do not force breaking ORM changes without compatibility testing.
-- **Effort:** M/L.
-- **Dependencies:** lockfile/change-control and regression tests.
-- **Safe independently:** Yes.
-
-## P2 — Important improvement
-
-- Add server-side validation and size limits for all dynamic form fields, admin notes, membership data, attendance, dates, and trainer availability.
-- Add explicit CSRF/Origin protection for cookie-authenticated mutations.
-- Replace process-local rate limiting with a shared production-safe mechanism or document single-instance constraints.
-- Add analytics retention, PII scrubbing, and date-range/time-series campaign reporting.
-- Replace unbounded booking/report reads with database filtering, pagination, and aggregates.
-- Align `site.config.ts`, seed content, page metadata, business hours, phone, coach, timezone, and prices.
-- Fix OG image path and add verified local service/FAQ schema.
-- Complete labels, focus behavior, modal semantics, accordions, contrast, and autocomplete attributes.
-- Optimize images, defer/lazy-load non-critical media, and split frontend bundles by route.
-- Add admin schedule/capacity/content tools once the business model is stable.
-
-## P3 — Later enhancement
-
-- In-app progress and cohort milestones after the 12-week curriculum is real.
-- Member messaging/support.
-- Payment history, refunds, recurring membership management.
-- Automated reminders and cancellation/reschedule self-service.
-- Content management and richer reporting.
-- Reconsider external `1club.ai` only after the core member experience is stable.
+1. Establish a real Spanish/bilingual architecture before scaling Spanish ads.
+2. Complete funnel analytics from campaign through lead, scheduled trial, attendance, and membership.
+3. Verify LocalBusiness schema, OG assets, canonicals, and Google search presentation.
+4. Add explicit consent and privacy context to public forms.
+5. Add automated accessibility checks and real keyboard/mobile QA.
+6. Add user-facing reschedule and reminder workflows.
+7. Measure Core Web Vitals and optimize the largest images/video and client bundle.
+8. Add admin audit/export/retention controls for sensitive member records.
 
 ---
 
-# 20. Keep / Fix / Remove / Build matrix
+# X. P3 Improvements
 
-## KEEP
-
-- Dark premium visual foundation and recognizable cyan/purple/coral system.
-- Actual facility and training imagery.
-- Named coach and transparent beginner guidance.
-- Women’s self-defense page’s clear women-only language.
-- Small-group and no-first-session-sparring reassurance.
-- Public lead persistence and database-backed staff inbox.
-- Adaptive Capacity interest-list separation and explicit consent.
-- Member forms with drafts, submissions, and required-form visibility.
-- Admin member search, forms, notes, attendance, and lead inbox baseline.
-- Bcrypt password hashing, SafeUser redaction, generic production errors, security headers.
-- Stripe raw-body signature verification and Calendly HMAC/timing-safe validation.
-- Webhook uniqueness/idempotency foundation.
-- Passing TypeScript, build, and seven security-helper tests.
-
-## FIX
-
-- Canonical product/audience message.
-- CTA destinations and “request vs confirmed” status.
-- Public booking/capacity/payment source of truth.
-- Coach object-level authorization.
-- Webhook retry/reconciliation lifecycle.
-- Legacy auth/admin credential handling.
-- Session lifecycle and account recovery.
-- Static schedule/admin editing mismatch.
-- Missing trust/legal surfaces.
-- Email confirmation and alert reliability.
-- Dynamic form/admin validation.
-- Analytics privacy and reporting time range.
-- Configuration drift for name, coach, timezone, prices, hours, and metadata.
-- Bundle/media performance and accessibility gaps.
-
-## REMOVE OR RETIRE
-
-- Legacy `/admin` UI and legacy credential route after access continuity is verified.
-- Shipped default admin credential values.
-- “Anyone,” “open to everyone,” and “open to all” language if the final business rule is women-only.
-- Unresolved 8-week claims if the actual flagship is the 12-week journey, or vice versa.
-- Dead/non-wired “Edit Schedule” actions.
-- Unnecessary duplicate booking paths after source-of-truth decision.
-- External progress dependency if it cannot support the intended member experience.
-
-## BUILD
-
-- One business-approved first-visit funnel.
-- Real schedule/capacity reservation model.
-- Safe payment and webhook reconciliation.
-- Explicit auth recovery and permission matrix.
-- Visitor/staff email lifecycle.
-- Trust, policy, and safety surfaces.
-- Cohort/curriculum/progress only after the 12-week product is finalized.
-- Production health, logging, alerting, backup, and recovery operations.
+1. Simplify the visual hierarchy after the business rule is final.
+2. Split the client bundle by route.
+3. Replace generic social links with verified profiles.
+4. Improve empty/loading/error states with progressive disclosure and screen-reader announcements.
+5. Add richer community proof, coach content, and class photos after consent and content ownership are confirmed.
+6. Retire duplicate routes and stale configuration after production migration is complete.
 
 ---
 
-# 21. Final executive summary
+# Y. Recommended New Information Architecture
 
-## What Ground Up is today
+**Proposal only; not implemented in this audit.**
 
-A React/Vite frontend and Express/Drizzle/PostgreSQL backend for a boutique BJJ/fitness concept. It includes public marketing pages, a static schedule, a three-step lead funnel, custom member authentication, dynamic intake/waiver forms, an authenticated Calendly booking embed, internal booking/payment APIs, a modern admin/coach portal, staff notifications, Resend email attempts, analytics, and several security helpers.
+The current navigation should eventually be reorganized around one audience and one first action:
 
-## What Ground Up appears to the customer to be
+1. **Home**
+2. **Women’s BJJ**
+3. **Self-Defense**
+4. **Strength & Movement**
+5. **Girls / Mother + Daughter**
+6. **Start Here / First Class**
+7. **Schedule**
+8. **About / Coach**
+9. **FAQ**
+10. **Contact**
+11. **Member Login** as a secondary utility action
 
-A polished but broad boutique BJJ and fitness studio for women, kids, beginners, and possibly anyone, with women’s self-defense, BJJ, strength, personal training, and a future Adaptive Capacity concept. It does not yet appear to be one focused women-only Ground Up transformation journey.
+Adaptive Capacity should remain a clearly separate path, not a competing primary training program, unless the business explicitly decides it belongs in the same public navigation.
 
-## What is working
+The proposed structure is derived from the audit: make the women-only rule and first visit discoverable before secondary philosophy, administration, or private-session details.
 
-- Public site starts and renders.
-- Static SEO files respond.
-- Anonymous protected API checks return 401.
-- Public trainer read works.
-- Lead/contact persistence and admin notifications exist in code.
-- Member forms, dashboard, booking/cancellation, and admin surfaces are substantially built.
-- Build, TypeScript check, and 7/7 existing tests pass.
-- Baseline hashing, cookie, headers, signature, and generic error protections are present.
+---
 
-## What is broken
+# Z. Recommended Messaging Architecture
 
-- `/admin` is a dead runtime route despite legacy source.
-- Public booking language does not match actual lead behavior.
-- Generic internal booking accepts client-controlled financial/status fields.
-- Capacity/overlap behavior is not safe for production.
-- Coach access is broader than the assigned-member model.
-- Webhook claim-before-side-effect can lose valid events.
-- Legacy admin credential handling is unsafe.
-- Some configuration sources disagree on coach, timezone, offer, and pricing.
-- Production startup health checks are noisy/fragile.
+**Proposal only; not implemented in this audit.**
 
-## What is missing
+Recommended message order for future public pages:
 
-- One canonical women-only/product definition.
-- Implemented 12-week cohort/curriculum/progress model.
-- Complete payment/subscription/refund lifecycle.
-- Reliable visitor and booking confirmation emails.
-- Password reset/email verification/MFA/session revocation.
-- Real schedule/capacity administration.
-- Terms, refund, medical/injury, and clearly linked waiver surfaces.
-- Privacy retention/export/access controls.
-- E2E/integration coverage and production observability.
+1. **Women-only, in the first viewport.**
+2. **Discover what your body can do.**
+3. **Beginner-friendly, no athletic background required.**
+4. **BJJ, practical self-defense, strength, and movement.**
+5. **Supportive small-group coaching, not a fight-gym atmosphere.**
+6. **Girls/female youth and mother + daughter, with exact eligibility stated.**
+7. **Connection and community with other women.**
+8. **What the first visit is actually like.**
+9. **One consistent first-visit CTA.**
+10. **Supporting proof: coach, real facility, reviews, safety, policies, location.**
 
-## Biggest business risk
+The campaign philosophy—moving from appearance toward capability—fits the existing resilience language well. Future copy should reduce generic “fitness,” “open to all,” and appearance-oriented framing and increase useful strength, learning, agency, confidence, movement, and connection.
 
-Sending traffic to a site that cannot clearly tell a woman in Oxnard which program she is joining or whether the offer is actually for her.
+---
 
-## Biggest UX risk
+# Proposed implementation phases
 
-Fragmented CTAs that alternate between a lead form, a login wall, an external scheduler, and an interest list while using similar “book/join/start” language.
+**Proposal only; no implementation was performed.**
 
-## Biggest technical risk
+| Phase | Scope | Complexity |
+|---|---|---|
+| 1 | P0 authorization, webhook retry safety, financial/booking invariants, CSRF strategy, and deployment parity gate. | Large |
+| 2 | Women-only and girls/female-youth policy decisions; unify eligibility, age, guardian, and audience rules across data, UI, metadata, and email. | Medium |
+| 3 | Consolidate public acquisition around one first-visit flow; production-validate Google Calendar, capacity, waitlists, cancellation, and follow-up. | Large |
+| 4 | Build the Spanish/bilingual content and form architecture; preserve campaign continuity through booking and confirmation. | Large |
+| 5 | Complete attribution, local SEO, schema, accessibility, performance, and mobile verification. | Medium |
+| 6 | Deprecate duplicate legacy schedule, booking, admin, and configuration surfaces after usage/data review. | Medium |
 
-Booking/payment integrity combined with weak webhook retry semantics can create incorrect bookings, financial state, or missing appointments.
+No time estimates are provided because provider configuration, content ownership, and production test-account access are not known.
 
-## Biggest trust risk
+---
 
-Women-only claims, “open to everyone” language, incomplete location/policy information, and coach/configuration drift make the customer verify basic facts manually before feeling safe enough to attend.
+# Final operating checklist before any production cutover
 
-## Fastest path to launch
+- [ ] Women-only policy and female-youth/mother-daughter rules are authoritative.
+- [ ] Coach object authorization is tested with positive and negative cases.
+- [ ] Webhook retries cannot lose valid provider events.
+- [ ] One booking system is authoritative for each service.
+- [ ] Google Calendar has representative approved events in the correct Pacific timezone.
+- [ ] Recurrence, overrides, cancellations, capacity, concurrency, waitlists, and emails pass.
+- [ ] No development/test occurrences appear in production.
+- [ ] Production `/api/classes` and all public/member/admin routes match the reviewed build.
+- [ ] First-visit visitors do not need a member account unless intentionally required.
+- [ ] Password reset, verification, CSRF/origin, and retention decisions are documented.
+- [ ] Spanish campaign traffic has a deliberate language experience.
+- [ ] Mobile, accessibility, performance, SEO, and real inbox checks pass.
 
-1. Decide the audience and flagship offer.
-2. Rewrite the public journey around one truthful first-visit action.
-3. Publish address, expectations, safety, waiver, cancellation/refund, medical, and privacy surfaces.
-4. Secure booking/payment/capacity/webhook invariants.
-5. Fix coach authorization and retire legacy credential handling.
-6. Verify Resend/Stripe/Calendly in safe test environments.
-7. Add critical-flow integration/E2E tests and production health/alerting.
-
-## Recommended next development phase
-
-**Core launch readiness:** positioning consolidation, first-visit funnel, booking/payment integrity, staff operations, and trust/legal surfaces. Do not begin the mobile app, AI coaching, advanced community, or elaborate cohort platform before this phase is complete.
-
-## Final state
-
-**READY TO REMEDIATE — with business/positioning decisions required first.**
+GROUND UP AUDIT COMPLETE — SECURITY FIXES REQUIRED FIRST

@@ -1,3 +1,4 @@
 - [Platform alignment guardrails](platform-alignment.md) — keep Training and Adaptive Capacity distinct while sharing Ground Up’s human-resilience positioning.
 - [Database URL alignment](database-url-alignment.md) — schema sync and runtime can select different database environment variables.
 - [Calendar cancellation testing](calendar-booking-readiness.md) — import a recurring instance before cancelling it to prove reservation cancellation and lifecycle notifications.
+- [Deployment parity audits](deployment-parity-audits.md) — local booking architecture can differ from the published release; verify production endpoints and data separately.
