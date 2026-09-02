@@ -8,6 +8,7 @@ import { verifyCalendlySignature, verifyStripeSignature } from "./webhook-securi
 import { FORM_COPY, PORTAL_COPY, localizeFormOption, localizeFormText } from "../client/src/lib/locale";
 import { classDateLabel, classTimeLabel } from "../client/src/lib/class-booking";
 import { portalNavigationPaths } from "../client/src/lib/portal-navigation";
+import { localizeApiError, resolveLocale } from "../client/src/lib/locale";
 
 function responseRecorder() {
   const result: { statusCode: number; body?: unknown } = { statusCode: 200 };
@@ -55,6 +56,15 @@ test("legacy role routes remain closed to anonymous and unauthorized sessions", 
   assert.deepEqual(portalNavigationPaths("member"), ["/portal/dashboard", "/portal/schedule", "/portal/my-classes"]);
   assert.deepEqual(portalNavigationPaths("coach"), ["/portal/dashboard", "/portal/schedule", "/portal/my-classes", "/portal/coach"]);
   assert.deepEqual(portalNavigationPaths("admin"), ["/portal/dashboard", "/portal/schedule", "/portal/my-classes", "/portal/coach", "/portal/class-admin", "/portal/admin"]);
+});
+
+test("one locale resolver gives explicit routes precedence and portal preferences persistence", () => {
+  assert.equal(resolveLocale("/es/programas", "en", "en"), "es");
+  assert.equal(resolveLocale("/personal-training", "es", "es"), "en");
+  assert.equal(resolveLocale("/portal/dashboard", "es", "en"), "es");
+  assert.equal(resolveLocale("/portal/dashboard", null, "es"), "es");
+  assert.equal(resolveLocale("/portal/dashboard", null, null, "es"), "es");
+  assert.equal(localizeApiError("Invalid email or password", "es", "Error"), "El correo o la contraseña no son válidos.");
 });
 
 test("payment creation cannot use another member's booking", () => {

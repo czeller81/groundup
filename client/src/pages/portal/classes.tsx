@@ -6,7 +6,8 @@ import { ClassCard } from "@/components/class-card";
 import type { LiveClass } from "@/lib/class-booking";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { useLocale } from "@/lib/locale";
+import { localizeApiError, useLocale } from "@/lib/locale";
+import { localizedPortalPath } from "@/lib/portal-navigation";
 import { usePortalAuth } from "@/lib/portal-auth";
 import { Button } from "@/components/ui/button";
 
@@ -15,6 +16,7 @@ export default function PortalClasses() {
   const [, setLocation] = useLocation();
   const { isAuthenticated, isLoading: authLoading } = usePortalAuth();
   const { locale, copy } = useLocale();
+  const portalPath = (path: string) => localizedPortalPath(path, locale);
   const { data = [], isLoading, isError, refetch } = useQuery<LiveClass[]>({
     queryKey: ["/api/portal/classes"],
     enabled: isAuthenticated,
@@ -25,16 +27,16 @@ export default function PortalClasses() {
       queryClient.invalidateQueries({ queryKey: ["/api/portal/classes"] });
       queryClient.invalidateQueries({ queryKey: ["/api/portal/my-classes"] });
       toast({
-        title: reservation.status === "waitlisted" ? (locale === "es" ? "Agregada a la lista de espera" : "Added to waitlist") : copy.classBooked,
+        title: reservation.status === "waitlisted" ? copy.waitlisted : copy.classBooked,
         description: reservation.status === "waitlisted"
-          ? (locale === "es" ? "Te enviaremos un correo si se abre un lugar." : "We'll email you if a spot opens.")
-          : (locale === "es" ? "Tu lugar está confirmado." : "Your spot is confirmed."),
+          ? copy.waitlistEmail
+          : copy.spotConfirmed,
       });
     },
-    onError: (error: Error) => toast({ title: "Could not book class", description: error.message, variant: "destructive" }),
+    onError: (error: Error) => toast({ title: copy.couldNotBook, description: localizeApiError(error.message, locale, copy.couldNotBook), variant: "destructive" }),
   });
   useEffect(() => {
-    if (!authLoading && !isAuthenticated) setLocation("/portal/login");
+    if (!authLoading && !isAuthenticated) setLocation(portalPath("/portal/login"));
   }, [authLoading, isAuthenticated, setLocation]);
 
   if (authLoading || (isAuthenticated && isLoading)) {
@@ -45,10 +47,10 @@ export default function PortalClasses() {
   return (
     <main className="mx-auto min-h-[calc(100vh-4rem)] max-w-4xl px-4 py-8 text-white sm:py-10">
       <div className="max-w-2xl">
-        <p className="text-xs font-bold uppercase tracking-[0.3em] text-[#5EEBFF]">{locale === "es" ? "Disponibilidad en vivo · Hora del Pacífico" : "Live availability · Pacific time"}</p>
+        <p className="text-xs font-bold uppercase tracking-[0.3em] text-[#5EEBFF]">{copy.liveAvailability}</p>
         <h1 className="mt-3 text-3xl font-black uppercase sm:text-4xl">{copy.findNextClass}</h1>
         <p className="mt-3 text-gray-400">{copy.findNextClassDescription}</p>
-        <p className="mt-2 text-xs text-gray-500">{locale === "es" ? "Ground Up administra tus reservas y la lista de espera." : "Ground Up manages your reservation and waitlist status."}</p>
+        <p className="mt-2 text-xs text-gray-500">{copy.bookingManaged}</p>
       </div>
       {isError ? (
         <div className="mt-8 rounded-2xl border border-red-500/20 bg-red-500/5 p-6" role="alert">
@@ -57,7 +59,7 @@ export default function PortalClasses() {
             <div>
               <p className="font-semibold text-red-200">{copy.loadError}</p>
               <Button variant="outline" size="sm" onClick={() => refetch()} className="mt-4 border-red-400/30 text-red-200 hover:bg-red-400/10">
-                <RefreshCw className="mr-2 h-3.5 w-3.5" />{locale === "es" ? "Intentar de nuevo" : "Try again"}
+                <RefreshCw className="mr-2 h-3.5 w-3.5" />{copy.tryAgain}
               </Button>
             </div>
           </div>
@@ -80,7 +82,7 @@ export default function PortalClasses() {
           <p className="text-gray-300">{copy.noClasses}</p>
           <p className="mx-auto mt-2 max-w-md text-sm text-gray-500">{copy.noClassesDescription}</p>
           <Button asChild variant="outline" className="mt-5 border-white/10 text-gray-300 hover:bg-white/5">
-            <Link href={locale === "es" ? "/es/contacto" : "/contact"}>{locale === "es" ? "Contáctanos" : "Contact us"}</Link>
+            <Link href={locale === "es" ? "/es/contacto" : "/contact"}>{copy.contactUs}</Link>
           </Button>
         </div>
       )}

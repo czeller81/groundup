@@ -48,9 +48,9 @@ export default function Footer() {
               {publicCopy.quickLinks}
             </h4>
             <nav className="space-y-2">
-              {links.map((link) => (
+              {links.map((link, index) => (
                 <Link
-                  key={link.href}
+                  key={`${link.href}-${link.label}-${index}`}
                   href={link.href}
                   className="block text-gray-400 hover:text-[#5EEBFF] text-sm transition-colors"
                 >

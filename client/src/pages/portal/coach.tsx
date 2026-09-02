@@ -14,14 +14,15 @@ import {
   Users, ArrowLeft, ChevronRight, Loader2, StickyNote, Award, Hash, 
   Mail, Phone, Calendar
 } from "lucide-react";
-import { format } from "date-fns";
 import { useLocale } from "@/lib/locale";
+import { localizedPortalPath } from "@/lib/portal-navigation";
 
 export default function PortalCoach() {
   const [, setLocation] = useLocation();
   const { user, isLoading: authLoading, isAuthenticated, isCoach, isStaff } = usePortalAuth();
   const { toast } = useToast();
   const { locale, copy } = useLocale();
+  const portalPath = (path: string) => localizedPortalPath(path, locale);
   const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
   const [newNote, setNewNote] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -79,7 +80,7 @@ export default function PortalCoach() {
 
   useEffect(() => {
     if (!authLoading && (!isAuthenticated || !isStaff)) {
-      setLocation("/portal/dashboard");
+      setLocation(portalPath("/portal/dashboard"));
     }
   }, [authLoading, isAuthenticated, isStaff, setLocation]);
 
@@ -110,7 +111,7 @@ export default function PortalCoach() {
       <div className="bg-[#121826]/50 border-b border-white/5 py-4 px-4 sm:px-6">
         <div className="max-w-7xl mx-auto">
           <h1 className="text-xl font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>
-            COACH <span className="gradient-text-cyan">CENTER</span>
+             {copy.coachCenter}
           </h1>
           <p className="text-sm text-gray-400">{copy.coachSubtitle}</p>
         </div>
@@ -193,7 +194,7 @@ export default function PortalCoach() {
                     </h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-sm mb-4">
                       <div className="flex items-center gap-2 min-w-0"><Mail className="h-4 w-4 text-[#5EEBFF] flex-shrink-0" /><span className="text-gray-300 truncate">{selectedMember.email}</span></div>
-                      <div className="flex items-center gap-2"><Phone className="h-4 w-4 text-[#5EEBFF] flex-shrink-0" /><span className="text-gray-300">{selectedMember.phone || "N/A"}</span></div>
+                       <div className="flex items-center gap-2"><Phone className="h-4 w-4 text-[#5EEBFF] flex-shrink-0" /><span className="text-gray-300">{selectedMember.phone || "—"}</span></div>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                       <div>
@@ -207,7 +208,7 @@ export default function PortalCoach() {
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="none">{copy.noBelt}</SelectItem>
-                            {["White Belt", "Blue Belt", "Purple Belt", "Brown Belt", "Black Belt"].map((belt) => <SelectItem key={belt} value={belt}>{locale === "es" ? ({ "White Belt": "Cinturón blanco", "Blue Belt": "Cinturón azul", "Purple Belt": "Cinturón morado", "Brown Belt": "Cinturón marrón", "Black Belt": "Cinturón negro" } as Record<string, string>)[belt] : belt}</SelectItem>)}
+                            {(["White Belt", "Blue Belt", "Purple Belt", "Brown Belt", "Black Belt"] as const).map((belt) => <SelectItem key={belt} value={belt}>{({ "White Belt": copy.beltWhite, "Blue Belt": copy.beltBlue, "Purple Belt": copy.beltPurple, "Brown Belt": copy.beltBrown, "Black Belt": copy.beltBlack })[belt]}</SelectItem>)}
                           </SelectContent>
                         </Select>
                       </div>
@@ -261,7 +262,7 @@ export default function PortalCoach() {
                         sessionNotes.map((note: any) => (
                           <div key={note.id} className="p-3 rounded-lg bg-[#0B0F14] border border-white/5">
                             <p className="text-xs text-gray-400 mb-1">
-                              {format(new Date(note.sessionDate), "MMM d, yyyy")} - by {note.coach?.firstName} {note.coach?.lastName}
+                               {new Date(note.sessionDate).toLocaleDateString(locale === "es" ? "es-US" : "en-US", { month: "short", day: "numeric", year: "numeric" })} · {copy.with} {note.coach?.firstName} {note.coach?.lastName}
                             </p>
                             <p className="text-sm text-gray-200 whitespace-pre-wrap">{note.notes}</p>
                           </div>

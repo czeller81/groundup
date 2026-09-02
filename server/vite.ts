@@ -65,7 +65,8 @@ export async function setupVite(app: Express, server: Server) {
          "/contact", "/privacy", "/book", "/womens-self-defense", "/kids", "/girls", "/adaptive-capacity",
          "/es", "/es/programas", "/es/horario", "/es/reservar", "/es/contacto", "/es/privacidad", "/es/portal/login", "/es/portal/reset-password",
       ]);
-      const isPortalPath = requestPath === "/portal" || requestPath.startsWith("/portal/");
+      const isPortalPath = requestPath === "/portal" || requestPath.startsWith("/portal/") ||
+        requestPath === "/es/portal" || requestPath.startsWith("/es/portal/");
       if (!knownPublicPaths.has(requestPath) && !isPortalPath) {
         return res.status(404).type("text").send("Not found");
       }
@@ -100,7 +101,8 @@ export function serveStatic(app: Express) {
        "/contact", "/privacy", "/book", "/womens-self-defense", "/kids", "/girls", "/adaptive-capacity",
        "/es", "/es/programas", "/es/horario", "/es/reservar", "/es/contacto", "/es/privacidad", "/es/portal/login", "/es/portal/reset-password",
     ]);
-    const isPortalPath = requestPath === "/portal" || requestPath.startsWith("/portal/");
+    const isPortalPath = requestPath === "/portal" || requestPath.startsWith("/portal/") ||
+      requestPath === "/es/portal" || requestPath.startsWith("/es/portal/");
     if (!knownPublicPaths.has(requestPath) && !isPortalPath) {
       return res.status(404).type("text").send("Not found");
     }

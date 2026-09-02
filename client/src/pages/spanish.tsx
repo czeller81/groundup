@@ -12,22 +12,11 @@ import type { ClassScheduleResponse } from "@/lib/class-booking";
 import Navbar from "@/components/layout/navbar";
 import Footer from "@/components/layout/footer";
 
-function LanguageLinks({ current = "es" }: { current?: "en" | "es" }) {
-  return (
-    <nav aria-label="Selector de idioma" className="flex items-center justify-center gap-3 text-xs font-bold uppercase tracking-wider">
-      {current === "en" ? <span className="text-white">English</span> : <Link href="/" className="text-[#5EEBFF] hover:underline">English</Link>}
-      <span className="text-gray-600" aria-hidden="true">|</span>
-      {current === "es" ? <span className="text-white">Español</span> : <Link href="/es" className="text-[#5EEBFF] hover:underline">Español</Link>}
-    </nav>
-  );
-}
-
 function SpanishShell({ children, title, description, canonical }: { children: React.ReactNode; title: string; description: string; canonical: string }) {
   return (
     <div className="min-h-screen bg-[#0B0F14] text-white">
       <SEO title={title} description={description} canonical={canonical} />
       <Navbar />
-      <div className="border-b border-white/5 bg-[#0B0F14] px-4 py-3 pt-24"><LanguageLinks /></div>
       {children}
       <Footer />
     </div>
@@ -208,7 +197,7 @@ export function SpanishBooking() {
                       </div>
                     ))}
                   </div>
-                  {reserve.error && <p className="mt-4 text-sm text-red-300" role="alert">{(reserve.error as Error).message}</p>}
+                  {reserve.error && <p className="mt-4 text-sm text-red-300" role="alert">No se pudo reservar. Intenta de nuevo o contáctanos.</p>}
                   <Button type="submit" disabled={reserve.isPending} className="mt-6 w-full bg-[#FFB199] font-bold text-[#0B0F14] hover:bg-[#FFB199]/90">{reserve.isPending ? "Reservando…" : selected.bookingState === "waitlist" ? "Unirme a la lista de espera" : "Confirmar mi primera visita"}</Button>
                 </form>
               )}

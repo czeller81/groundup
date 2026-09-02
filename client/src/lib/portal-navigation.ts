@@ -7,3 +7,7 @@ export function portalNavigationPaths(role?: string | null) {
     ...(role === "admin" ? ["/portal/class-admin", "/portal/admin"] : []),
   ];
 }
+
+export function localizedPortalPath(path: string, locale: "en" | "es") {
+  return locale === "es" ? `/es${path}` : path;
+}

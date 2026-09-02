@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { usePortalAuth } from "@/lib/portal-auth";
 import { useLocale } from "@/lib/locale";
+import { localizedPortalPath } from "@/lib/portal-navigation";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { 
@@ -19,13 +20,13 @@ import {
   TrendingUp, UserPlus, Activity, StickyNote, ChevronLeft, Shield,
   Award, Hash, AlertTriangle, Filter, BarChart3
 } from "lucide-react";
-import { format } from "date-fns";
 
 export default function PortalAdmin() {
   const [, setLocation] = useLocation();
   const { user, isLoading: authLoading, isAuthenticated, isAdmin, isStaff } = usePortalAuth();
   const { toast } = useToast();
   const { locale, copy } = useLocale();
+  const portalPath = (path: string) => localizedPortalPath(path, locale);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [incompleteFormsOnly, setIncompleteFormsOnly] = useState(false);
@@ -107,6 +108,10 @@ export default function PortalAdmin() {
   const members = membersData?.users || [];
   const totalMembers = membersData?.total || 0;
   const totalPages = Math.ceil(totalMembers / PAGE_SIZE);
+  const dateLabel = (value: string | Date, withTime = false) => new Date(value).toLocaleString(locale === "es" ? "es-US" : "en-US", withTime
+    ? { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" }
+    : { month: "short", day: "numeric", year: "numeric" });
+  const timeLabel = (value: string | Date) => new Date(value).toLocaleTimeString(locale === "es" ? "es-US" : "en-US", { hour: "numeric", minute: "2-digit" });
 
   const { data: memberProfile, isLoading: profileLoading } = useQuery<any>({
     queryKey: ["/api/portal/admin/members", selectedMemberId],
@@ -183,7 +188,7 @@ export default function PortalAdmin() {
 
   useEffect(() => {
     if (!authLoading && (!isAuthenticated || !isStaff)) {
-      setLocation("/portal/dashboard");
+      setLocation(portalPath("/portal/dashboard"));
     }
   }, [authLoading, isAuthenticated, isAdmin, setLocation]);
 
@@ -233,7 +238,7 @@ export default function PortalAdmin() {
                 <div>
                   <p className="text-sm text-white leading-snug">{field.label || fieldKey}</p>
                   <p className={`text-xs mt-0.5 font-medium ${agreed ? "text-green-400" : "text-red-400"}`}>
-                    {agreed ? "Agreed" : "Not agreed"}
+                    {agreed ? copy.agreed : copy.notAgreed}
                   </p>
                 </div>
               </div>
@@ -243,7 +248,7 @@ export default function PortalAdmin() {
             <div key={fieldKey} className="border-b border-white/5 pb-2">
               <p className="text-xs text-gray-400 uppercase tracking-wide">{field.label || fieldKey}</p>
               <p className="text-sm text-white mt-1">
-                {isBoolean ? (answer ? "Yes" : "No") : String(answer)}
+                {isBoolean ? (answer ? copy.yes : copy.no) : String(answer)}
               </p>
             </div>
           );
@@ -255,22 +260,22 @@ export default function PortalAdmin() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "submitted":
-        return <Badge className="bg-green-500/20 text-green-400 border-green-500/30"><CheckCircle className="h-3 w-3 mr-1" /> Submitted</Badge>;
+        return <Badge className="bg-green-500/20 text-green-400 border-green-500/30"><CheckCircle className="h-3 w-3 mr-1" /> {copy.submitted}</Badge>;
       case "draft":
-        return <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30"><Clock className="h-3 w-3 mr-1" /> Draft</Badge>;
+        return <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30"><Clock className="h-3 w-3 mr-1" /> {copy.draft}</Badge>;
       default:
-        return <Badge className="bg-gray-500/20 text-gray-400 border-gray-500/30"><AlertCircle className="h-3 w-3 mr-1" /> Not Started</Badge>;
+        return <Badge className="bg-gray-500/20 text-gray-400 border-gray-500/30"><AlertCircle className="h-3 w-3 mr-1" /> {copy.notStartedLabel}</Badge>;
     }
   };
 
   const getRoleBadge = (role: string) => {
     switch (role) {
       case "admin":
-        return <Badge className="bg-red-500/20 text-red-400 border-red-500/30">Admin</Badge>;
+        return <Badge className="bg-red-500/20 text-red-400 border-red-500/30">{copy.adminRole}</Badge>;
       case "coach":
-        return <Badge className="bg-[#5EEBFF]/20 text-[#5EEBFF] border-[#5EEBFF]/30">Coach</Badge>;
+        return <Badge className="bg-[#5EEBFF]/20 text-[#5EEBFF] border-[#5EEBFF]/30">{copy.coach}</Badge>;
       default:
-        return <Badge className="bg-[#B06CFF]/20 text-[#B06CFF] border-[#B06CFF]/30">Member</Badge>;
+        return <Badge className="bg-[#B06CFF]/20 text-[#B06CFF] border-[#B06CFF]/30">{copy.member}</Badge>;
     }
   };
 
@@ -297,7 +302,7 @@ export default function PortalAdmin() {
             <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-400 mt-1">
               <a className="hover:text-[#5EEBFF]" href={`mailto:${item.email}`}>{item.email}</a>
               {item.phone && item.phone !== "not-provided" && <span>{item.phone}</span>}
-              <span>{format(new Date(item.createdAt), "MMM d, yyyy 'at' h:mm a")}</span>
+              <span>{dateLabel(item.createdAt, true)}</span>
             </div>
           </div>
           <Select value={item.status} onValueChange={(status) => statusMutation.mutate({ kind, id: item.id, status })}>
@@ -311,10 +316,10 @@ export default function PortalAdmin() {
           <div><p className="text-sm font-medium text-[#FFB199]">{item.subject}</p><p className="text-sm text-gray-300 whitespace-pre-wrap mt-1">{item.message}</p></div>
         ) : (
           <div className="flex flex-wrap gap-x-5 gap-y-1 text-sm text-gray-300">
-            <span>Program: <strong className="text-white">{item.program}</strong></span>
-            {item.classTitle && <span>Class: {item.classTitle}</span>}
-            {item.experience && <span>Experience: {item.experience}</span>}
-            {item.source && <span>Source: {item.source}</span>}
+            <span>{copy.program}: <strong className="text-white">{item.program}</strong></span>
+            {item.classTitle && <span>{copy.classLabel}: {item.classTitle}</span>}
+            {item.experience && <span>{copy.experience}: {item.experience}</span>}
+            {item.source && <span>{copy.source}: {item.source}</span>}
           </div>
         )}
       </div>
@@ -443,18 +448,18 @@ export default function PortalAdmin() {
                 <p className="text-sm font-semibold text-orange-300">
                   {stats.membersNeedingForms} member{stats.membersNeedingForms !== 1 ? "s" : ""} {stats.membersNeedingForms !== 1 ? "have" : "has"} incomplete required forms
                 </p>
-                <p className="text-xs text-orange-400/70">{locale === "es" ? "Haz clic para filtrar la lista de miembros" : "Click to filter member list"}</p>
+                  <p className="text-xs text-orange-400/70">{copy.filterMembers}</p>
               </div>
             </div>
-            <span className="text-xs text-orange-400 underline underline-offset-2">{locale === "es" ? "Ver todo" : "View all"}</span>
+            <span className="text-xs text-orange-400 underline underline-offset-2">{copy.viewAll}</span>
           </div>
         )}
 
         <Card className="bg-[#121826] border-[#FFB199]/20 mb-6" data-testid="staff-notifications">
           <CardHeader className="pb-3">
-            <CardTitle className="text-white flex items-center gap-2 text-base">
-              <AlertCircle className="h-5 w-5 text-[#FFB199]" /> Staff alerts
-              {!!notifications.filter((item: any) => !item.readAt).length && <Badge className="bg-[#FFB199] text-[#0B0F14]">{notifications.filter((item: any) => !item.readAt).length} new</Badge>}
+              <CardTitle className="text-white flex items-center gap-2 text-base">
+               <AlertCircle className="h-5 w-5 text-[#FFB199]" /> {copy.staffAlerts}
+               {!!notifications.filter((item: any) => !item.readAt).length && <Badge className="bg-[#FFB199] text-[#0B0F14]">{notifications.filter((item: any) => !item.readAt).length} {copy.newLabel}</Badge>}
             </CardTitle>
             <p className="text-xs text-gray-400">{copy.staffAlertsDescription}</p>
           </CardHeader>
@@ -466,7 +471,7 @@ export default function PortalAdmin() {
                 <div className="min-w-0">
                   <p className="text-sm font-medium text-white">{notification.title}</p>
                   <p className="text-xs text-gray-400 mt-1">{notification.message}</p>
-                  <p className="text-[11px] text-gray-500 mt-1">{format(new Date(notification.createdAt), "MMM d, yyyy 'at' h:mm a")}</p>
+                   <p className="text-[11px] text-gray-500 mt-1">{dateLabel(notification.createdAt, true)}</p>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
                   {!notification.readAt && <button className="min-h-11 px-2 text-[11px] text-gray-400 hover:text-white" onClick={() => notificationReadMutation.mutate(notification.id)}>{copy.markRead}</button>}
@@ -479,12 +484,12 @@ export default function PortalAdmin() {
 
         <Card className="bg-[#121826] border-white/5 mb-6">
           <CardHeader className="pb-3">
-            <CardTitle className="text-white flex items-center gap-2 text-base">
-              <Mail className="h-5 w-5 text-[#5EEBFF]" /> Lead & Message Inbox
+              <CardTitle className="text-white flex items-center gap-2 text-base">
+               <Mail className="h-5 w-5 text-[#5EEBFF]" /> {copy.leadMessageInbox}
             </CardTitle>
             <p className="text-xs text-gray-400">{copy.inboxDescription}</p>
             <div className="flex gap-1 pt-2 overflow-x-auto">
-              {([["training", `Training leads (${trainingLeads.length})`], ["adaptive", `Adaptive Capacity (${adaptiveLeads.length})`], ["messages", `Contact messages (${contactMessages.length})`]] as const).map(([value, label]) => (
+               {([[ "training", `${copy.trainingLeads} (${trainingLeads.length})`], ["adaptive", `${copy.adaptiveLeads} (${adaptiveLeads.length})`], ["messages", `${copy.contactMessages} (${contactMessages.length})`]] as const).map(([value, label]) => (
                 <button key={value} onClick={() => setInboxTab(value as typeof inboxTab)} className={`px-3 py-1.5 text-xs rounded-lg whitespace-nowrap ${inboxTab === value ? "bg-[#5EEBFF]/15 text-[#5EEBFF] border border-[#5EEBFF]/30" : "text-gray-400 hover:text-white"}`}>{label}</button>
               ))}
             </div>
@@ -502,16 +507,16 @@ export default function PortalAdmin() {
 
         <Card className="bg-[#121826] border-white/5 mb-6" data-testid="campaign-report">
           <CardHeader className="pb-3">
-            <CardTitle className="text-white flex items-center gap-2 text-base">
-              <BarChart3 className="h-5 w-5 text-[#FFB199]" /> Campaign & Funnel Report
+              <CardTitle className="text-white flex items-center gap-2 text-base">
+               <BarChart3 className="h-5 w-5 text-[#FFB199]" /> {copy.campaignReport}
             </CardTitle>
             <p className="text-xs text-gray-400">
-              Consent-aware analytics are shown alongside total leads. Totals may differ because analytics require visitor consent.
+               {copy.campaignReportDescription}
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 pt-3">
               <Select value={reportFunnel} onValueChange={(value: "training" | "adaptive_capacity") => setReportFunnel(value)}>
                 <SelectTrigger className="bg-[#0B0F14] border-white/10 text-white"><SelectValue /></SelectTrigger>
-                <SelectContent><SelectItem value="training">Training</SelectItem><SelectItem value="adaptive_capacity">Adaptive Capacity</SelectItem></SelectContent>
+                <SelectContent><SelectItem value="training">{copy.training}</SelectItem><SelectItem value="adaptive_capacity">{copy.adaptiveLeads}</SelectItem></SelectContent>
               </Select>
               {([["source", "UTM source"], ["medium", "UTM medium"], ["campaign", "UTM campaign"], ["landingPath", "Landing path"]] as const).map(([key, label]) => (
                 <Input
@@ -538,10 +543,10 @@ export default function PortalAdmin() {
                     ["Consented sessions", campaignReport?.totals?.consentedSessions],
                   ].map(([label, value]) => <div key={label as string} className="rounded-lg border border-white/5 bg-[#0B0F14] p-3"><p className="text-lg font-bold text-white">{value ?? 0}</p><p className="text-[11px] text-gray-500 leading-tight">{label as string}</p></div>)}
                 </div>
-                {!campaignReport?.breakdown?.length ? <p className="text-gray-400 text-sm text-center py-8">{locale === "es" ? "Aún no hay datos de campañas o análisis con consentimiento para estos filtros." : "No campaign or consented analytics data matches these filters yet."}</p> : (
+                {!campaignReport?.breakdown?.length ? <p className="text-gray-400 text-sm text-center py-8">{copy.campaignNoData}</p> : (
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
-                      <thead><tr className="text-left text-xs text-gray-500 border-b border-white/10"><th className="p-2">{locale === "es" ? "Fuente / campaña" : "Source / campaign"}</th><th className="p-2">{locale === "es" ? "Ruta de llegada" : "Landing path"}</th><th className="p-2">{locale === "es" ? "Vistas" : "Views"}</th><th className="p-2">{locale === "es" ? "Inicios" : "Starts"}</th><th className="p-2">{locale === "es" ? "Enviados" : "Submitted"}</th><th className="p-2">{locale === "es" ? "Exitosos" : "Successful"}</th><th className="p-2">{locale === "es" ? "Contactos totales" : "Total leads"}</th></tr></thead>
+                      <thead><tr className="text-left text-xs text-gray-500 border-b border-white/10"><th className="p-2">{copy.sourceCampaign}</th><th className="p-2">{copy.landingPath}</th><th className="p-2">{copy.views}</th><th className="p-2">{copy.starts}</th><th className="p-2">{copy.submitted}</th><th className="p-2">{copy.successfulLeads}</th><th className="p-2">{copy.totalLeads}</th></tr></thead>
                       <tbody>{campaignReport.breakdown.map((row: any) => <tr key={`${row.source}-${row.medium}-${row.campaign}-${row.landingPath}`} className="border-b border-white/5 text-gray-300"><td className="p-2"><span className="text-white">{row.source}</span><span className="block text-xs text-gray-500">{row.medium} · {row.campaign}</span></td><td className="p-2 text-xs">{row.landingPath}</td><td className="p-2">{row.pageViews}</td><td className="p-2">{row.formStarts}</td><td className="p-2">{row.submissions}</td><td className="p-2 text-[#5EEBFF]">{row.successfulLeads}</td><td className="p-2 text-[#FFB199]">{row.totalLeads}</td></tr>)}</tbody>
                     </table>
                   </div>
@@ -707,7 +712,7 @@ export default function PortalAdmin() {
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-xs text-gray-400">Forms Completion</p>
+                        <p className="text-xs text-gray-400">{copy.formsCompletionLabel}</p>
                         <p className="text-lg font-bold text-[#5EEBFF]">{formsCompletion}%</p>
                       </div>
                     </div>
@@ -722,7 +727,7 @@ export default function PortalAdmin() {
                       </div>
                       <div className="flex items-center gap-2">
                         <Calendar className="h-4 w-4 text-[#5EEBFF]" />
-                        <span className="text-gray-300">Joined {format(new Date(memberProfile.user.createdAt), "MMM d, yyyy")}</span>
+                        <span className="text-gray-300">{copy.joined} {new Date(memberProfile.user.createdAt).toLocaleDateString(locale === "es" ? "es-US" : "en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Hash className="h-4 w-4 text-[#5EEBFF]" />
@@ -766,10 +771,10 @@ export default function PortalAdmin() {
                 {/* Tabbed Content */}
                 <Tabs defaultValue="forms" className="space-y-4">
                   <TabsList className="bg-[#121826] border border-white/5 w-full justify-start">
-                    <TabsTrigger value="forms" className="data-[state=active]:bg-[#B06CFF]/20 data-[state=active]:text-white text-gray-400">{locale === "es" ? "Formularios" : "Forms"}</TabsTrigger>
-                    <TabsTrigger value="bookings" className="data-[state=active]:bg-[#B06CFF]/20 data-[state=active]:text-white text-gray-400">{locale === "es" ? "Reservas" : "Bookings"}</TabsTrigger>
+                    <TabsTrigger value="forms" className="data-[state=active]:bg-[#B06CFF]/20 data-[state=active]:text-white text-gray-400">{copy.forms}</TabsTrigger>
+                    <TabsTrigger value="bookings" className="data-[state=active]:bg-[#B06CFF]/20 data-[state=active]:text-white text-gray-400">{copy.bookings}</TabsTrigger>
                     <TabsTrigger value="notes" className="data-[state=active]:bg-[#B06CFF]/20 data-[state=active]:text-white text-gray-400">{copy.sessionNotes}</TabsTrigger>
-                    <TabsTrigger value="admin" className="data-[state=active]:bg-[#B06CFF]/20 data-[state=active]:text-white text-gray-400">{locale === "es" ? "Administración" : "Admin"}</TabsTrigger>
+                    <TabsTrigger value="admin" className="data-[state=active]:bg-[#B06CFF]/20 data-[state=active]:text-white text-gray-400">{copy.admin}</TabsTrigger>
                   </TabsList>
 
                   <TabsContent value="forms">
@@ -782,7 +787,7 @@ export default function PortalAdmin() {
                       </CardHeader>
                       <CardContent>
                         {!memberProfile.formResponses?.length ? (
-                          <p className="text-gray-400 text-sm text-center py-4">{locale === "es" ? "Aún no hay respuestas de formularios" : "No form responses yet"}</p>
+                          <p className="text-gray-400 text-sm text-center py-4">{copy.noFormResponses}</p>
                         ) : (
                           <div className="space-y-2">
                             {memberProfile.formResponses.map((response: any) => {
@@ -817,8 +822,8 @@ export default function PortalAdmin() {
                                     </div>
                                     <p className="text-xs text-gray-400 mt-0.5">
                                       {response.submittedAt
-                                        ? `Submitted ${format(new Date(response.submittedAt), "MMM d, yyyy")}`
-                                        : `Updated ${format(new Date(response.updatedAt), "MMM d, yyyy")}`}
+                                        ? `${copy.submitted} ${dateLabel(response.submittedAt)}`
+                                        : `${copy.updated} ${dateLabel(response.updatedAt)}`}
                                     </p>
                                     {hasParqFlags && (
                                       <p className="text-xs text-red-400/80 mt-0.5">
@@ -859,17 +864,17 @@ export default function PortalAdmin() {
                       </CardHeader>
                       <CardContent>
                         {!memberProfile.bookings?.length ? (
-                          <p className="text-gray-400 text-sm text-center py-4">{locale === "es" ? "Aún no hay reservas" : "No bookings yet"}</p>
+                          <p className="text-gray-400 text-sm text-center py-4">{copy.noBookings}</p>
                         ) : (
                           <div className="space-y-2">
                             {memberProfile.bookings.map((booking: any) => (
                               <div key={booking.id} className="p-3 rounded-lg bg-[#0B0F14] border border-white/5 flex items-center justify-between">
                                 <div>
                                   <p className="text-sm font-medium text-white">
-                                    {format(new Date(booking.start), "EEEE, MMM d, yyyy")}
+                                    {dateLabel(booking.start)}
                                   </p>
                                   <p className="text-xs text-gray-400">
-                                    {format(new Date(booking.start), "h:mm a")} - {format(new Date(booking.end), "h:mm a")} with {booking.trainer?.name}
+                                    {timeLabel(booking.start)} - {timeLabel(booking.end)} {copy.with} {booking.trainer?.name}
                                   </p>
                                 </div>
                                 <div className="flex items-center gap-2">
@@ -925,7 +930,7 @@ export default function PortalAdmin() {
                               <div key={note.id} className="p-3 rounded-lg bg-[#0B0F14] border border-white/5">
                                 <div className="flex justify-between items-start mb-2">
                                   <p className="text-xs text-gray-400">
-                                    {format(new Date(note.sessionDate), "MMM d, yyyy")} - by {note.coach?.firstName} {note.coach?.lastName}
+                                    {dateLabel(note.sessionDate)} · {copy.with} {note.coach?.firstName} {note.coach?.lastName}
                                   </p>
                                 </div>
                                 <p className="text-sm text-gray-200 whitespace-pre-wrap">{note.notes}</p>
@@ -950,7 +955,7 @@ export default function PortalAdmin() {
                         <CardContent className="space-y-4">
                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             <div>
-                              <label className="text-xs text-gray-400 mb-1 block">{locale === "es" ? "Rol" : "Role"}</label>
+                              <label className="text-xs text-gray-400 mb-1 block">{copy.role}</label>
                               <Select
                                 value={memberProfile.user.role}
                                 onValueChange={(role) => selectedMemberId && roleMutation.mutate({ userId: selectedMemberId, role })}
@@ -976,11 +981,11 @@ export default function PortalAdmin() {
                                 </SelectTrigger>
                                 <SelectContent>
                                   <SelectItem value="none">{copy.noBelt}</SelectItem>
-                                  <SelectItem value="White Belt">White Belt</SelectItem>
-                                  <SelectItem value="Blue Belt">Blue Belt</SelectItem>
-                                  <SelectItem value="Purple Belt">Purple Belt</SelectItem>
-                                  <SelectItem value="Brown Belt">Brown Belt</SelectItem>
-                                  <SelectItem value="Black Belt">Black Belt</SelectItem>
+                                  <SelectItem value="White Belt">{copy.beltWhite}</SelectItem>
+                                  <SelectItem value="Blue Belt">{copy.beltBlue}</SelectItem>
+                                  <SelectItem value="Purple Belt">{copy.beltPurple}</SelectItem>
+                                  <SelectItem value="Brown Belt">{copy.beltBrown}</SelectItem>
+                                  <SelectItem value="Black Belt">{copy.beltBlack}</SelectItem>
                                 </SelectContent>
                               </Select>
                             </div>
@@ -1013,7 +1018,7 @@ export default function PortalAdmin() {
                         </CardHeader>
                         <CardContent className="space-y-3">
                           <Textarea
-                            placeholder={locale === "es" ? "Agregar notas internas sobre esta miembro…" : "Add internal notes about this member..."}
+                            placeholder={copy.addInternalNotes}
                             value={adminNotes}
                             onChange={(e) => setAdminNotes(e.target.value)}
                             className="bg-[#0B0F14] border-white/10 text-white placeholder:text-gray-500 min-h-[100px]"
@@ -1046,7 +1051,7 @@ export default function PortalAdmin() {
             </DialogTitle>
             {formDetailOpen.response?.submittedAt && (
               <p className="text-xs text-gray-400">
-                Submitted {format(new Date(formDetailOpen.response.submittedAt), "MMMM d, yyyy 'at' h:mm a")}
+                {copy.submitted} {new Date(formDetailOpen.response.submittedAt).toLocaleString(locale === "es" ? "es-US" : "en-US", { month: "long", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" })}
               </p>
             )}
           </DialogHeader>

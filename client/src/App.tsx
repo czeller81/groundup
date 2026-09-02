@@ -120,26 +120,50 @@ function Router() {
       <Route path="/portal/login" component={PortalLogin} />
       <Route path="/es/portal/reset-password" component={PortalResetPassword} />
       <Route path="/portal/reset-password" component={PortalResetPassword} />
+      <Route path="/es/portal/dashboard">
+        <PortalLayout><PortalDashboard /></PortalLayout>
+      </Route>
       <Route path="/portal/dashboard">
         <PortalLayout><PortalDashboard /></PortalLayout>
+      </Route>
+      <Route path="/es/portal/forms/:slug">
+        <PortalLayout><PortalForm /></PortalLayout>
       </Route>
       <Route path="/portal/forms/:slug">
         <PortalLayout><PortalForm /></PortalLayout>
       </Route>
+      <Route path="/es/portal/booking">
+        <Redirect to="/es/portal/schedule" />
+      </Route>
       <Route path="/portal/booking">
         <Redirect to="/portal/schedule" />
+      </Route>
+      <Route path="/es/portal/my-classes">
+        <PortalLayout><MyClasses /></PortalLayout>
       </Route>
       <Route path="/portal/my-classes">
         <PortalLayout><MyClasses /></PortalLayout>
       </Route>
+      <Route path="/es/portal/admin">
+        <PortalLayout><PortalAdminMembers /></PortalLayout>
+      </Route>
       <Route path="/portal/admin">
         <PortalLayout><PortalAdminMembers /></PortalLayout>
+      </Route>
+      <Route path="/es/portal/class-admin">
+        <PortalLayout><ClassAdmin /></PortalLayout>
       </Route>
       <Route path="/portal/class-admin">
         <PortalLayout><ClassAdmin /></PortalLayout>
       </Route>
+      <Route path="/es/portal/coach">
+        <PortalLayout><PortalCoach /></PortalLayout>
+      </Route>
       <Route path="/portal/coach">
         <PortalLayout><PortalCoach /></PortalLayout>
+      </Route>
+      <Route path="/es/portal/schedule">
+        <PortalLayout><PortalClasses /></PortalLayout>
       </Route>
       <Route path="/portal/schedule">
         <PortalLayout><PortalClasses /></PortalLayout>

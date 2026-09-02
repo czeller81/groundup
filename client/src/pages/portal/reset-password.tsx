@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { setLocale, useLocale } from "@/lib/locale";
+import { localizeApiError, useLocale } from "@/lib/locale";
 import { Loader2 } from "lucide-react";
 
 export default function PortalResetPassword() {
@@ -20,13 +20,6 @@ export default function PortalResetPassword() {
   const [isLoading, setIsLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [completed, setCompleted] = useState(false);
-
-  useEffect(() => {
-    if (isSpanishRoute) {
-      setLocale("es");
-      document.documentElement.lang = "es";
-    }
-  }, [isSpanishRoute]);
 
   const requestReset = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -49,7 +42,7 @@ export default function PortalResetPassword() {
       setCompleted(true);
       toast({ title: copy.passwordUpdated });
     } catch (error: any) {
-      toast({ title: copy.invalidReset, description: error.message, variant: "destructive" });
+      toast({ title: copy.invalidReset, description: localizeApiError(error.message, locale, copy.invalidReset), variant: "destructive" });
     } finally {
       setIsLoading(false);
     }

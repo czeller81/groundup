@@ -23,7 +23,11 @@ export default function PortalNavbar() {
     "/portal/class-admin": copy.classAdmin,
     "/portal/admin": copy.admin,
   };
-  const navItems = portalNavigationPaths(user?.role).map((path) => ({ path, label: labels[path] }));
+  const navItems = portalNavigationPaths(user?.role).map((path) => ({
+    path,
+    href: locale === "es" ? `/es${path}` : path,
+    label: labels[path],
+  }));
 
   const closeMobileMenu = () => setMobileMenuOpen(false);
 
@@ -52,11 +56,12 @@ export default function PortalNavbar() {
     const nextLocale = locale === "en" ? "es" : "en";
     setLocale(nextLocale);
     if (user) void apiRequest("PATCH", "/api/portal/me/locale", { locale: nextLocale });
+    setLocation(nextLocale === "es" ? `/es${location}` : location.replace(/^\/es/, ""));
   };
 
   return (
     <nav
-      aria-label="Member portal"
+      aria-label={copy.portalLabel}
       className="sticky top-0 z-50 border-b border-white/5 bg-[#121826]/95 shadow-lg backdrop-blur-md"
     >
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -86,11 +91,11 @@ export default function PortalNavbar() {
 
           <div className="hidden min-w-0 items-center gap-1 md:flex">
             {navItems.map((item) => {
-              const active = location === item.path || (item.path === "/portal/schedule" && location === "/portal/booking");
+                  const active = location === item.href || (item.path === "/portal/schedule" && (location === item.href.replace(/\/schedule$/, "/booking") || location === "/portal/booking"));
               return (
                 <Link
-                  key={item.path}
-                  href={item.path}
+                  key={item.href}
+                  href={item.href}
                   className={`relative whitespace-nowrap px-3 py-2 text-xs font-semibold uppercase tracking-wide transition-colors ${
                     active ? "text-[#5EEBFF]" : "text-gray-300 hover:text-white"
                   }`}
@@ -136,7 +141,7 @@ export default function PortalNavbar() {
             variant="ghost"
             size="sm"
             onClick={() => setMobileMenuOpen((open) => !open)}
-            aria-label={mobileMenuOpen ? "Close portal navigation" : "Open portal navigation"}
+            aria-label={mobileMenuOpen ? copy.closeNavigation : copy.openNavigation}
             aria-expanded={mobileMenuOpen}
             aria-controls="portal-mobile-navigation"
             className="text-white hover:bg-white/10 md:hidden"
@@ -163,11 +168,11 @@ export default function PortalNavbar() {
                   </div>
                 </div>
                 {navItems.map((item) => {
-                  const active = location === item.path || (item.path === "/portal/schedule" && location === "/portal/booking");
+                  const active = location === item.href || (item.path === "/portal/schedule" && (location === item.href.replace(/\/schedule$/, "/booking") || location === "/portal/booking"));
                   return (
                     <Link
-                      key={item.path}
-                      href={item.path}
+                      key={item.href}
+                      href={item.href}
                       onClick={closeMobileMenu}
                       className={`block rounded-lg px-4 py-3 text-sm font-semibold uppercase tracking-wide transition-colors ${
                         active ? "bg-white/5 text-[#5EEBFF]" : "text-gray-300 hover:bg-white/5 hover:text-white"

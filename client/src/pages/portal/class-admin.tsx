@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { classDateLabel, classTimeLabel } from "@/lib/class-booking";
 import { useToast } from "@/hooks/use-toast";
-import { useLocale } from "@/lib/locale";
+import { localizeApiError, useLocale } from "@/lib/locale";
 
 export default function ClassAdmin() {
   const { toast } = useToast();
@@ -28,16 +28,16 @@ export default function ClassAdmin() {
       queryClient.invalidateQueries({ queryKey: ["/api/portal/admin/class-booking/status"] });
        toast({ title: copy.calendarSelected, description: copy.runSyncToImport });
     },
-    onError: (error: Error) => toast({ title: "Calendar could not be selected", description: error.message, variant: "destructive" }),
+     onError: (error: Error) => toast({ title: copy.calendarCouldNotBeSelected, description: localizeApiError(error.message, locale, copy.calendarCouldNotBeSelected), variant: "destructive" }),
   });
   const sync = useMutation({
     mutationFn: async () => (await apiRequest("POST", "/api/portal/admin/class-booking/sync", {})).json(),
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["/api/portal/admin/class-booking/status"] });
       queryClient.invalidateQueries({ queryKey: ["/api/portal/admin/class-booking/occurrences"] });
-       toast({ title: copy.scheduleSynchronized, description: `${result.synced} ${locale === "es" ? "asignadas" : "mapped"}, ${result.unmapped} ${locale === "es" ? "pendientes de revisión" : "awaiting review"}.` });
+       toast({ title: copy.scheduleSynchronized, description: `${result.synced} ${copy.mapped}, ${result.unmapped} ${copy.awaitingReview}.` });
     },
-     onError: (error: Error) => toast({ title: copy.synchronizationFailed, description: `${error.message} ${copy.lastKnownSchedulePreserved}`, variant: "destructive" }),
+     onError: (error: Error) => toast({ title: copy.synchronizationFailed, description: `${localizeApiError(error.message, locale, copy.synchronizationFailed)} ${copy.lastKnownSchedulePreserved}`, variant: "destructive" }),
   });
   const attendance = useMutation({
     mutationFn: async ({ id, value }: { id: string; value: string }) => (await apiRequest("PATCH", `/api/portal/admin/class-booking/reservations/${id}`, { attendance: value })).json(),
@@ -46,7 +46,7 @@ export default function ClassAdmin() {
   const connection = status.data?.connection;
   return (
     <main className="mx-auto min-h-screen max-w-6xl px-4 py-8 text-white">
-      <p className="text-xs font-bold uppercase tracking-[0.3em] text-[#5EEBFF]">Operations</p>
+       <p className="text-xs font-bold uppercase tracking-[0.3em] text-[#5EEBFF]">{copy.operations}</p>
        <h1 className="mt-2 text-3xl font-black uppercase">{copy.classBookingControl}</h1>
       <section className="mt-8 rounded-2xl border border-white/10 bg-[#121826] p-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
@@ -55,14 +55,13 @@ export default function ClassAdmin() {
              <p className="mt-1 text-sm text-gray-400">{connection?.calendarName || copy.noCalendarSelected}</p>
             <div className="mt-3 flex items-center gap-2">
               {connection?.status === "healthy" ? <CheckCircle className="h-4 w-4 text-emerald-400" /> : <AlertCircle className="h-4 w-4 text-amber-400" />}
-             <span className="text-sm text-gray-300">{connection?.status || (locale === "es" ? "sin configurar" : "not configured")}</span>
-              {connection?.lastSuccessfulAt && <span className="text-xs text-gray-500">Last success {new Date(connection.lastSuccessfulAt).toLocaleString()}</span>}
+              <span className="text-sm text-gray-300">{connection?.status || copy.notConfigured}</span>
+               {connection?.lastSuccessfulAt && <span className="text-xs text-gray-500">{copy.lastSuccess} {new Date(connection.lastSuccessfulAt).toLocaleString(locale === "es" ? "es-US" : "en-US")}</span>}
             </div>
             {connection?.lastError && <p className="mt-2 max-w-2xl text-sm text-red-300">{connection.lastError}</p>}
           </div>
           <Button onClick={() => sync.mutate()} disabled={!connection?.calendarId || sync.isPending} className="bg-[#5EEBFF] text-black hover:bg-[#5EEBFF]/90">
-            <RefreshCw className={`mr-2 h-4 w-4 ${sync.isPending ? "animate-spin" : ""}`} />Sync now
-             {copy.syncNow}
+             <RefreshCw className={`mr-2 h-4 w-4 ${sync.isPending ? "animate-spin" : ""}`} />{copy.syncNowLabel}
            </Button>
         </div>
         <div className="mt-6 grid gap-3 sm:grid-cols-[1fr_auto]">
@@ -90,7 +89,7 @@ export default function ClassAdmin() {
                     <Badge className={occurrence.syncState === "unmapped" ? "bg-amber-500/15 text-amber-300" : "bg-emerald-500/15 text-emerald-300"}>{occurrence.syncState}</Badge>
                     {occurrence.status !== "active" && <Badge variant="destructive">{occurrence.status}</Badge>}
                   </div>
-                  <p className="mt-1 text-sm text-gray-400">{classDateLabel(occurrence.start)} · {classTimeLabel(occurrence.start, occurrence.end)} · capacity {occurrence.capacity}</p>
+                   <p className="mt-1 text-sm text-gray-400">{classDateLabel(occurrence.start, locale)} · {classTimeLabel(occurrence.start, occurrence.end, locale)} · {copy.capacity} {occurrence.capacity}</p>
                   {occurrence.syncError && <p className="mt-2 text-xs text-amber-300">{occurrence.syncError}</p>}
                 </div>
                  <Button variant="outline" onClick={() => setRosterOccurrence(occurrence)} className="min-h-11 border-white/15 text-white"><Users className="mr-2 h-4 w-4" />{copy.roster}</Button>
@@ -108,7 +107,7 @@ export default function ClassAdmin() {
               {(roster.data?.[group] || []).map((reservation: any) => (
                 <div key={reservation.id} className="flex flex-col justify-between gap-3 border-t border-white/5 py-3 sm:flex-row sm:items-center">
                   <div><p className="text-sm font-medium">{reservation.visitorFirstName} {reservation.visitorLastName}</p><p className="text-xs text-gray-500">{reservation.visitorEmail}</p></div>
-                   {group === "confirmed" && <Select value={reservation.attendance || ""} onValueChange={(value) => attendance.mutate({ id: reservation.id, value })}><SelectTrigger className="min-h-11 w-36 border-white/10 bg-black/20"><SelectValue placeholder={copy.attendance} /></SelectTrigger><SelectContent>{["present", "absent", "late", "excused"].map((value) => <SelectItem key={value} value={value}>{locale === "es" ? ({ present: "presente", absent: "ausente", late: "tarde", excused: "justificada" } as Record<string, string>)[value] : value}</SelectItem>)}</SelectContent></Select>}
+                    {group === "confirmed" && <Select value={reservation.attendance || ""} onValueChange={(value) => attendance.mutate({ id: reservation.id, value })}><SelectTrigger className="min-h-11 w-36 border-white/10 bg-black/20"><SelectValue placeholder={copy.attendance} /></SelectTrigger><SelectContent>{(["present", "absent", "late", "excused"] as const).map((value) => <SelectItem key={value} value={value}>{copy[value]}</SelectItem>)}</SelectContent></Select>}
                 </div>
               ))}
             </div>

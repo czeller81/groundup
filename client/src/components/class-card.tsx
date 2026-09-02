@@ -18,12 +18,16 @@ export function ClassCard({
   busy?: boolean;
   locale?: "en" | "es";
 }) {
-  const currentLocale = useLocale().locale;
+  const { locale: currentLocale, copy: portalCopy } = useLocale();
   const activeLocale = locale || currentLocale;
   const waitlist = occurrence.bookingState === "waitlist";
-  const copy = activeLocale === "es"
-    ? { beginner: "Ideal para principiantes", full: "Clase llena", waiting: "en espera", spot: "lugar disponible", spots: "lugares disponibles", saving: "Guardando…" }
-    : { beginner: "Beginner friendly", full: "Class full", waiting: "waiting", spot: "spot left", spots: "spots left", saving: "Saving…" };
+  const copy = {
+    beginner: portalCopy.beginnerFriendly, full: portalCopy.classFull,
+    waiting: portalCopy.waitlistWaiting,
+    spot: portalCopy.spotLeft,
+    spots: portalCopy.spotsLeft,
+    saving: portalCopy.saving,
+  };
   return (
     <article className="rounded-2xl border border-white/10 bg-[#121826] p-5 shadow-lg shadow-black/10">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center">

@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { usePortalAuth } from "@/lib/portal-auth";
 import { Loader2 } from "lucide-react";
-import { setLocale, useLocale } from "@/lib/locale";
+import { localizeApiError, useLocale } from "@/lib/locale";
 
 export default function PortalLogin() {
   const [location, setLocation] = useLocation();
@@ -29,17 +29,10 @@ export default function PortalLogin() {
   });
 
   useEffect(() => {
-    if (isSpanishRoute) {
-      setLocale("es");
-      document.documentElement.lang = "es";
-    }
-  }, [isSpanishRoute]);
-
-  useEffect(() => {
     if (isAuthenticated) {
-      setLocation("/portal/dashboard");
+      setLocation(locale === "es" || isSpanishRoute ? "/es/portal/dashboard" : "/portal/dashboard");
     }
-  }, [isAuthenticated, setLocation]);
+  }, [isAuthenticated, isSpanishRoute, locale, setLocation]);
 
   if (isAuthenticated) {
     return null;
@@ -50,12 +43,12 @@ export default function PortalLogin() {
     setIsLoading(true);
     try {
       await login(loginData.email, loginData.password);
-      toast({ title: locale === "es" ? "¡Bienvenida de nuevo!" : "Welcome back!", description: locale === "es" ? "Has iniciado sesión correctamente." : "You have been logged in successfully." });
-      setLocation("/portal/dashboard");
+      toast({ title: copy.welcomeToast, description: copy.loggedInSuccessfully });
+       setLocation(locale === "es" || isSpanishRoute ? "/es/portal/dashboard" : "/portal/dashboard");
     } catch (error: any) {
       toast({
-        title: locale === "es" ? "No se pudo iniciar sesión" : "Login failed",
-        description: error.message || (locale === "es" ? "Correo o contraseña no válidos" : "Invalid email or password"),
+        title: copy.loginFailed,
+        description: localizeApiError(error.message, locale, copy.invalidEmailPassword),
         variant: "destructive",
       });
     } finally {
@@ -66,11 +59,11 @@ export default function PortalLogin() {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     if (signupData.password !== signupData.confirmPassword) {
-      toast({ title: locale === "es" ? "Error" : "Error", description: locale === "es" ? "Las contraseñas no coinciden" : "Passwords do not match", variant: "destructive" });
+      toast({ title: copy.error, description: copy.passwordsDoNotMatch, variant: "destructive" });
       return;
     }
     if (signupData.password.length < 8) {
-      toast({ title: "Error", description: locale === "es" ? "La contraseña debe tener al menos 8 caracteres" : "Password must be at least 8 characters", variant: "destructive" });
+      toast({ title: copy.error, description: copy.passwordMinLength, variant: "destructive" });
       return;
     }
     setIsLoading(true);
@@ -83,12 +76,12 @@ export default function PortalLogin() {
         phone: signupData.phone || undefined,
         locale,
       });
-      toast({ title: locale === "es" ? "¡Cuenta creada!" : "Account created!", description: locale === "es" ? "Bienvenida a Ground Up." : "Welcome to Ground Up." });
-      setLocation("/portal/dashboard");
+      toast({ title: copy.accountCreated, description: copy.welcomeToGroundUp });
+       setLocation(locale === "es" || isSpanishRoute ? "/es/portal/dashboard" : "/portal/dashboard");
     } catch (error: any) {
       toast({
-        title: locale === "es" ? "No se pudo crear la cuenta" : "Signup failed",
-        description: error.message || (locale === "es" ? "No se pudo crear la cuenta" : "Failed to create account"),
+        title: copy.signupFailed,
+        description: localizeApiError(error.message, locale, copy.failedToCreateAccount),
         variant: "destructive",
       });
     } finally {
@@ -113,7 +106,7 @@ export default function PortalLogin() {
         <CardContent>
           <Tabs defaultValue="login" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login" data-testid="tab-login">{locale === "es" ? "Iniciar sesión" : "Login"}</TabsTrigger>
+              <TabsTrigger value="login" data-testid="tab-login">{copy.loginTab}</TabsTrigger>
               <TabsTrigger value="signup" data-testid="tab-signup">{copy.signup}</TabsTrigger>
             </TabsList>
             
@@ -125,7 +118,7 @@ export default function PortalLogin() {
                     id="login-email"
                     type="email"
                     autoComplete="email"
-                    placeholder={locale === "es" ? "tu@correo.com" : "your@email.com"}
+                    placeholder={copy.emailPlaceholder}
                     value={loginData.email}
                     onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
                     required
@@ -138,7 +131,7 @@ export default function PortalLogin() {
                     id="login-password"
                     type="password"
                     autoComplete="current-password"
-                    placeholder={locale === "es" ? "Escribe tu contraseña" : "Enter your password"}
+                    placeholder={copy.passwordPlaceholder}
                     value={loginData.password}
                     onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
                     required
@@ -147,7 +140,7 @@ export default function PortalLogin() {
                 </div>
                 <Button type="submit" className="w-full" disabled={isLoading} data-testid="button-login">
                   {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                  {locale === "es" ? "Iniciar sesión" : "Login"}
+                  {copy.loginTab}
                 </Button>
                 <a
                   href={locale === "es" ? "/es/portal/reset-password" : "/portal/reset-password"}
@@ -162,10 +155,10 @@ export default function PortalLogin() {
               <form onSubmit={handleSignup} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="firstName">{locale === "es" ? "Nombre" : "First name"}</Label>
+                    <Label htmlFor="firstName">{copy.firstName}</Label>
                     <Input
                       id="firstName"
-                      placeholder={locale === "es" ? "Nombre" : "First name"}
+                      placeholder={copy.firstName}
                       value={signupData.firstName}
                       onChange={(e) => setSignupData({ ...signupData, firstName: e.target.value })}
                       required
@@ -173,10 +166,10 @@ export default function PortalLogin() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="lastName">{locale === "es" ? "Apellido" : "Last name"}</Label>
+                    <Label htmlFor="lastName">{copy.lastName}</Label>
                     <Input
                       id="lastName"
-                      placeholder={locale === "es" ? "Apellido" : "Last name"}
+                      placeholder={copy.lastName}
                       value={signupData.lastName}
                       onChange={(e) => setSignupData({ ...signupData, lastName: e.target.value })}
                       required
@@ -190,7 +183,7 @@ export default function PortalLogin() {
                     id="signup-email"
                     type="email"
                     autoComplete="email"
-                    placeholder={locale === "es" ? "tu@correo.com" : "your@email.com"}
+                    placeholder={copy.emailPlaceholder}
                     value={signupData.email}
                     onChange={(e) => setSignupData({ ...signupData, email: e.target.value })}
                     required
@@ -198,7 +191,7 @@ export default function PortalLogin() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="phone">{locale === "es" ? "Teléfono (opcional)" : "Phone (optional)"}</Label>
+                  <Label htmlFor="phone">{copy.phoneOptional}</Label>
                   <Input
                     id="phone"
                     type="tel"
@@ -215,7 +208,7 @@ export default function PortalLogin() {
                     id="signup-password"
                     type="password"
                     autoComplete="new-password"
-                    placeholder={locale === "es" ? "Al menos 8 caracteres" : "At least 8 characters"}
+                    placeholder={copy.atLeastEightCharacters}
                     value={signupData.password}
                     onChange={(e) => setSignupData({ ...signupData, password: e.target.value })}
                     required
@@ -223,12 +216,12 @@ export default function PortalLogin() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">{locale === "es" ? "Confirmar contraseña" : "Confirm password"}</Label>
+                  <Label htmlFor="confirmPassword">{copy.confirmPassword}</Label>
                   <Input
                     id="confirmPassword"
                     type="password"
                     autoComplete="new-password"
-                    placeholder={locale === "es" ? "Confirma tu contraseña" : "Confirm your password"}
+                    placeholder={copy.confirmYourPassword}
                     value={signupData.confirmPassword}
                     onChange={(e) => setSignupData({ ...signupData, confirmPassword: e.target.value })}
                     required
@@ -237,7 +230,7 @@ export default function PortalLogin() {
                 </div>
                 <Button type="submit" className="w-full" disabled={isLoading} data-testid="button-signup">
                   {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                  {locale === "es" ? "Crear cuenta" : "Create account"}
+                  {copy.createAccount}
                 </Button>
               </form>
             </TabsContent>

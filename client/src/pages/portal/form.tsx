@@ -12,7 +12,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
 import { usePortalAuth } from "@/lib/portal-auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { localizeFormOption, localizeFormText, useLocale } from "@/lib/locale";
+import { localizeApiError, localizeFormOption, localizeFormText, useLocale } from "@/lib/locale";
+import { localizedPortalPath } from "@/lib/portal-navigation";
 import { ArrowLeft, Save, Send, Loader2, CheckCircle, Lock, RotateCcw } from "lucide-react";
 
 export default function PortalForm() {
@@ -20,6 +21,7 @@ export default function PortalForm() {
   const [, setLocation] = useLocation();
   const { isAuthenticated, isLoading: authLoading } = usePortalAuth();
   const { locale, copy } = useLocale();
+  const portalPath = (path: string) => localizedPortalPath(path, locale);
   const { toast } = useToast();
   const [answers, setAnswers] = useState<Record<string, any>>({});
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
@@ -58,10 +60,10 @@ export default function PortalForm() {
     onSuccess: () => {
       toast({ title: copy.formSubmitted, description: copy.formSubmittedDescription });
       queryClient.invalidateQueries({ queryKey: ["/api/portal/forms"] });
-      setLocation("/portal/dashboard");
+      setLocation(portalPath("/portal/dashboard"));
     },
     onError: (error: any) => {
-      toast({ title: "Error", description: error.message || (locale === "es" ? "No se pudo enviar el formulario" : "Failed to submit form"), variant: "destructive" });
+      toast({ title: copy.error, description: localizeApiError(error.message, locale, copy.failedToSubmitForm), variant: "destructive" });
     },
   });
 
@@ -77,7 +79,7 @@ export default function PortalForm() {
       toast({ title: copy.formReset, description: copy.formResetDescription });
     },
     onError: (error: any) => {
-      toast({ title: "Error", description: error.message || (locale === "es" ? "No se pudo reiniciar el formulario" : "Failed to reset form"), variant: "destructive" });
+      toast({ title: copy.error, description: localizeApiError(error.message, locale, copy.failedToResetForm), variant: "destructive" });
     },
   });
 
@@ -94,7 +96,7 @@ export default function PortalForm() {
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
-      setLocation("/portal/login");
+      setLocation(portalPath("/portal/login"));
     }
   }, [authLoading, isAuthenticated, setLocation]);
 
@@ -117,7 +119,7 @@ export default function PortalForm() {
           <CardContent className="p-6 text-center">
              <p className="text-muted-foreground">{copy.formNotFound}</p>
             <Button className="mt-4" asChild>
-              <Link href="/portal/dashboard">{copy.backToDashboard}</Link>
+              <Link href={portalPath("/portal/dashboard")}>{copy.backToDashboard}</Link>
             </Button>
           </CardContent>
         </Card>
@@ -211,7 +213,7 @@ export default function PortalForm() {
         return (
           <Select value={value} onValueChange={(v) => handleChange(fieldKey, v)} disabled={isSubmitted}>
             <SelectTrigger data-testid={`select-${fieldKey}`}>
-                 <SelectValue placeholder={locale === "es" ? "Selecciona una opción" : "Select an option"} />
+                 <SelectValue placeholder={copy.selectAnOption} />
             </SelectTrigger>
             <SelectContent>
               {field.options?.map((option: string) => (
@@ -250,7 +252,7 @@ export default function PortalForm() {
               className="mt-0.5"
             />
             <Label htmlFor={fieldKey} className="text-sm leading-relaxed cursor-pointer font-normal">
-              {field.label}
+               {localizeFormText(locale, slug, "field", field.label, fieldKey)}
             </Label>
           </div>
         );
@@ -267,7 +269,7 @@ export default function PortalForm() {
                   onCheckedChange={(checked) => handleMultiSelectChange(fieldKey, option, !!checked)}
                   disabled={isSubmitted}
                 />
-                <Label htmlFor={`${fieldKey}-${option}`}>{option}</Label>
+                 <Label htmlFor={`${fieldKey}-${option}`}>{localizeFormOption(locale, slug, option)}</Label>
               </div>
             ))}
           </div>
@@ -358,7 +360,7 @@ export default function PortalForm() {
                       </span>
                     )}
                     {lastSaved && !saveMutation.isPending && (
-                       <span>{copy.draftSavedAt} {lastSaved.toLocaleTimeString(locale === "es" ? "es-US" : "en-US")}</span>
+                       <span>{copy.draftSavedAt} {lastSaved.toLocaleTimeString(locale)}</span>
                     )}
                   </div>
                    <div className="flex flex-col gap-2 sm:flex-row">

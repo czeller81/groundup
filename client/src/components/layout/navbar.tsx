@@ -12,7 +12,7 @@ export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const { isAuthenticated, user, logout } = usePortalAuth();
-  const { locale, publicCopy } = useLocale();
+  const { locale, copy, publicCopy } = useLocale();
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -52,6 +52,10 @@ export default function Navbar() {
         { path: "/coaches", label: publicCopy.coaches },
         { path: "/pricing", label: publicCopy.programs },
       ];
+  const accountPath = isAuthenticated
+    ? (locale === "es" ? "/es/portal/dashboard" : "/portal/dashboard")
+    : (locale === "es" ? "/es/portal/login" : "/portal/login");
+  const firstVisitPath = locale === "es" ? "/es/reservar" : "/book";
 
   const closeMenu = () => setMobileMenuOpen(false);
   const handleLogout = async () => {
@@ -70,16 +74,16 @@ export default function Navbar() {
     >
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between gap-4 md:h-20">
-          <Link href="/" className="flex flex-shrink-0 items-center space-x-3 group" data-testid="navbar-logo">
+          <Link href={locale === "es" ? "/es" : "/"} className="flex flex-shrink-0 items-center space-x-3 group" data-testid="navbar-logo">
             <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border border-white/20 bg-white/5 transition-transform group-hover:scale-105">
               <img src={logoImage} alt="Ground Up" className="h-9 w-9 object-contain" style={{ filter: "brightness(0) invert(1)" }} />
             </div>
           </Link>
 
           <div className="hidden min-w-0 items-center gap-1 md:flex">
-            {navItems.map((item) => (
+            {navItems.map((item, index) => (
               <Link
-                key={item.path}
+                key={`${item.path}-${item.label}-${index}`}
                 href={item.path}
                 className={`relative whitespace-nowrap px-3 py-2 text-xs font-semibold uppercase tracking-wide transition-colors ${
                   location === item.path ? "text-[#5EEBFF]" : "text-gray-300 hover:text-white"
@@ -94,7 +98,7 @@ export default function Navbar() {
             ))}
             <div className="ml-2 flex items-center gap-2 border-l border-white/10 pl-3">
               <Link
-                href={isAuthenticated ? "/portal/dashboard" : "/portal/login"}
+                href={accountPath}
                 className="inline-flex items-center gap-1.5 whitespace-nowrap px-2 py-2 text-xs font-semibold uppercase tracking-wide text-gray-300 transition-colors hover:text-white"
                 data-testid="nav-link-account"
               >
@@ -110,7 +114,7 @@ export default function Navbar() {
                   {locale === "es" ? publicCopy.english : publicCopy.spanish}
                 </Link>
               )}
-              <Link href="/book">
+              <Link href={firstVisitPath}>
                 <Button size="sm" className="bg-[#FFB199] font-semibold uppercase tracking-wider text-[#0B0F14] hover:bg-[#FFB199]/90">
                   {publicCopy.freeFirstVisit}
                 </Button>
@@ -142,9 +146,9 @@ export default function Navbar() {
               className="overflow-hidden rounded-b-xl border-t border-white/5 bg-[#121826] md:hidden"
             >
               <div className="space-y-1 px-2 pb-4 pt-3">
-                {navItems.map((item) => (
+                {navItems.map((item, index) => (
                   <Link
-                    key={item.path}
+                    key={`${item.path}-${item.label}-${index}`}
                     href={item.path}
                     onClick={closeMenu}
                     className={`block rounded-lg px-4 py-3 text-sm font-semibold uppercase tracking-wide transition-colors ${
@@ -155,7 +159,7 @@ export default function Navbar() {
                   </Link>
                 ))}
                 <Link
-                  href={isAuthenticated ? "/portal/dashboard" : "/portal/login"}
+                  href={accountPath}
                   onClick={closeMenu}
                   className="flex items-center gap-2 rounded-lg px-4 py-3 text-sm font-semibold uppercase tracking-wide text-gray-300 hover:bg-white/5 hover:text-white"
                 >
@@ -171,7 +175,7 @@ export default function Navbar() {
                     {locale === "es" ? publicCopy.english : publicCopy.spanish}
                   </Link>
                 )}
-                <Link href="/book" onClick={closeMenu} className="mt-2 block rounded-lg bg-[#FFB199] px-4 py-3 text-center text-sm font-bold uppercase tracking-wide text-[#0B0F14]">
+                <Link href={firstVisitPath} onClick={closeMenu} className="mt-2 block rounded-lg bg-[#FFB199] px-4 py-3 text-center text-sm font-bold uppercase tracking-wide text-[#0B0F14]">
                   {publicCopy.freeFirstVisit}
                 </Link>
               </div>
