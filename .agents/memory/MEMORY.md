@@ -3,3 +3,4 @@
 - [Calendar cancellation testing](calendar-booking-readiness.md) — import a recurring instance before cancelling it to prove reservation cancellation and lifecycle notifications.
 - [Deployment parity audits](deployment-parity-audits.md) — local booking architecture can differ from the published release; verify production endpoints and data separately.
 - [SPA route fallback allowlist](spa-route-fallback.md) — new public routes must be added to both server fallback allowlists for direct navigation to work.
+- [Demo credential hygiene](demo-credential-hygiene.md) — demo admin access must be synchronized from a secure secret, not trusted frontend defaults.

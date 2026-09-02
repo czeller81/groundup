@@ -56,6 +56,7 @@ export interface IStorage {
   createUser(email: string, password: string, firstName: string, lastName: string, phone?: string): Promise<SafeUser>;
   createUserFromWebhook(email: string, firstName: string, lastName: string): Promise<SafeUser>;
   validateUserPassword(email: string, password: string): Promise<SafeUser | null>;
+  ensureAdminPassword(email: string, password: string): Promise<boolean>;
   updateUser(id: string, updates: Partial<Pick<User, 'firstName' | 'lastName' | 'phone' | 'role' | 'beltRank' | 'attendanceCount' | 'assignedCoachId' | 'adminNotes'>>): Promise<SafeUser | undefined>;
   
   getForms(): Promise<Form[]>;
@@ -215,6 +216,18 @@ export class DatabaseStorage implements IStorage {
     if (!isValid) return null;
     const { passwordHash: _, ...safeUser } = user;
     return safeUser;
+  }
+
+  async ensureAdminPassword(email: string, password: string): Promise<boolean> {
+    const user = await this.getUserByEmail(email);
+    if (!user || user.role !== "admin") return false;
+    if (await bcrypt.compare(password, user.passwordHash)) return true;
+
+    const passwordHash = await bcrypt.hash(password, 10);
+    await db.update(users)
+      .set({ passwordHash })
+      .where(eq(users.id, user.id));
+    return true;
   }
 
   async updateUser(id: string, updates: Partial<Pick<User, 'firstName' | 'lastName' | 'phone' | 'role' | 'beltRank' | 'attendanceCount' | 'assignedCoachId' | 'adminNotes'>>): Promise<SafeUser | undefined> {

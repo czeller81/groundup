@@ -6,6 +6,7 @@ import { setupVite, serveStatic, log } from "./vite";
 import { createOriginProtection, createScannerProbeGuard } from "./route-security";
 import { applySecurityHeaders } from "./security-headers";
 import { createRequire } from "module";
+import { storage } from "./storage";
 
 const MemStore = MemoryStore(session);
 const require = createRequire(import.meta.url);
@@ -83,6 +84,22 @@ app.use((req, res, next) => {
 
 (async () => {
   const server = await registerRoutes(app);
+
+  if (process.env.DEMO_ADMIN_PASSWORD) {
+    try {
+      const synchronized = await storage.ensureAdminPassword(
+        "admin@groundupbjj.com",
+        process.env.DEMO_ADMIN_PASSWORD
+      );
+      if (synchronized) {
+        log("Demo admin password synchronized from secure configuration.");
+      } else {
+        console.warn("Demo admin password sync skipped: admin account was not found.");
+      }
+    } catch (error) {
+      console.error("Demo admin password sync failed:", error);
+    }
+  }
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
