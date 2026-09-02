@@ -274,6 +274,24 @@ test("cutover evidence: Calendar boundary through booking lifecycle and recovery
     assert.equal(reconciledA?.title, "Women's Jiu-Jitsu Morning [QA Fixture A]");
     assert.equal(cancelledB?.status, "cancelled");
     assert.equal(cancelledB?.bookingEnabled, false);
+    const providerCancelledRoster = await storage.getOccurrenceReservations(classB.id);
+    assert.equal(providerCancelledRoster.confirmed.length, 0);
+    assert.equal(providerCancelledRoster.waitlisted.length, 0);
+    const providerCancelledReservations = await db.select().from(classReservations).where(eq(classReservations.occurrenceId, classB.id));
+    assert.ok(providerCancelledReservations.length > 0);
+    assert.ok(providerCancelledReservations.every((reservation) => reservation.status === "cancelled"));
+    await assert.rejects(
+      () => storage.reserveClassOccurrence({
+        occurrenceId: classB.id,
+        userId: memberC.id,
+        firstName: memberC.firstName,
+        lastName: memberC.lastName,
+        email: memberC.email,
+        phone: memberC.phone || "",
+        locale: "es",
+      }),
+      (error: unknown) => error instanceof ClassBookingError && error.code === "OCCURRENCE_UNAVAILABLE",
+    );
     const publicAfterProviderCancel = await api(`/api/classes?from=${encodeURIComponent(from.toISOString())}&to=${encodeURIComponent(to.toISOString())}`);
     assert.equal(publicAfterProviderCancel.body.occurrences.some((item: any) => item.id === classB.id), false);
 

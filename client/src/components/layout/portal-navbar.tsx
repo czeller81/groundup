@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { usePortalAuth } from "@/lib/portal-auth";
 import { useLocale } from "@/lib/locale";
 import { apiRequest } from "@/lib/queryClient";
+import { portalNavigationPaths } from "@/lib/portal-navigation";
 import logoImage from "@assets/Ground_up_Logo_1772941267349.png";
 
 export default function PortalNavbar() {
@@ -14,18 +15,15 @@ export default function PortalNavbar() {
   const { user, logout, isAdmin, isCoach } = usePortalAuth();
   const { locale, copy, setLocale } = useLocale();
 
-  const navItems = [
-    { path: "/portal/dashboard", label: copy.dashboard },
-    { path: "/portal/schedule", label: copy.schedule },
-    { path: "/portal/my-classes", label: copy.myClasses },
-    ...(isCoach || isAdmin ? [{ path: "/portal/coach", label: copy.coachCenter }] : []),
-    ...(isAdmin
-      ? [
-          { path: "/portal/class-admin", label: copy.classAdmin },
-          { path: "/portal/admin", label: copy.admin },
-        ]
-      : []),
-  ];
+  const labels: Record<string, string> = {
+    "/portal/dashboard": copy.dashboard,
+    "/portal/schedule": copy.schedule,
+    "/portal/my-classes": copy.myClasses,
+    "/portal/coach": copy.coachCenter,
+    "/portal/class-admin": copy.classAdmin,
+    "/portal/admin": copy.admin,
+  };
+  const navItems = portalNavigationPaths(user?.role).map((path) => ({ path, label: labels[path] }));
 
   const closeMobileMenu = () => setMobileMenuOpen(false);
 

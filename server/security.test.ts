@@ -7,6 +7,7 @@ import { applySecurityHeaders } from "./security-headers";
 import { verifyCalendlySignature, verifyStripeSignature } from "./webhook-security";
 import { FORM_COPY, PORTAL_COPY, localizeFormOption, localizeFormText } from "../client/src/lib/locale";
 import { classDateLabel, classTimeLabel } from "../client/src/lib/class-booking";
+import { portalNavigationPaths } from "../client/src/lib/portal-navigation";
 
 function responseRecorder() {
   const result: { statusCode: number; body?: unknown } = { statusCode: 200 };
@@ -51,6 +52,9 @@ test("legacy role routes remain closed to anonymous and unauthorized sessions", 
   let called = false;
   requireRole("admin")({ session: { userId: "admin", userRole: "admin" } } as any, res, () => { called = true; });
   assert.equal(called, true);
+  assert.deepEqual(portalNavigationPaths("member"), ["/portal/dashboard", "/portal/schedule", "/portal/my-classes"]);
+  assert.deepEqual(portalNavigationPaths("coach"), ["/portal/dashboard", "/portal/schedule", "/portal/my-classes", "/portal/coach"]);
+  assert.deepEqual(portalNavigationPaths("admin"), ["/portal/dashboard", "/portal/schedule", "/portal/my-classes", "/portal/coach", "/portal/class-admin", "/portal/admin"]);
 });
 
 test("payment creation cannot use another member's booking", () => {
