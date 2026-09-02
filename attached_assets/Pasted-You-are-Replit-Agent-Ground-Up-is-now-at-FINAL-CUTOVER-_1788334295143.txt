@@ -1,0 +1,778 @@
+You are Replit Agent.
+
+Ground Up is now at FINAL CUTOVER VALIDATION.
+
+Do NOT perform another redesign.
+
+Do NOT make broad architecture changes.
+
+Do NOT add new programs, pricing, marketing sections, payment systems, or unrelated features.
+
+The application has passed:
+
+- npm run check
+- npm test
+- npm run build
+- git diff --check
+
+The remaining blockers are evidence gaps:
+
+1. Full Calendar → booking → cancellation → capacity/waitlist proof
+2. Actual interactive QA at 320 / 375 / 390 / 430px
+3. Authenticated English/Spanish role-flow verification
+4. Account recovery remains missing
+
+The goal of this task is to CLOSE THESE BLOCKERS.
+
+---
+
+# 1. DO NOT ACCEPT “STATIC REVIEW” AS PROOF
+
+For this pass:
+
+Reading source code is not sufficient.
+
+Existing implementation is not sufficient.
+
+Passing unit tests alone are not sufficient.
+
+We need executable evidence.
+
+Where direct provider/browser access is unavailable, build safe deterministic test harnesses around the actual application services and database.
+
+Do not fabricate provider success.
+
+---
+
+# 2. BUILD AN ISOLATED CLASS-LIFECYCLE TEST HARNESS
+
+Create a safe, development-only test harness that exercises the actual class lifecycle without touching real members or production Google Calendar events.
+
+The harness must use:
+
+- the real application database layer
+- the real reservation logic
+- the real capacity logic
+- the real cancellation logic
+- the real waitlist logic
+- the same occurrence representation used by Calendar sync
+
+Do not create a second fake booking engine.
+
+---
+
+# 3. CREATE REPRESENTATIVE FIXTURES
+
+Create isolated fixtures for:
+
+## Class A
+One-time women’s class
+
+Capacity:
+2
+
+## Class B
+Recurring women’s class
+
+Capacity:
+1
+
+## Class C
+Full class with waitlist
+
+Capacity:
+1
+
+## Members
+Create isolated test identities:
+
+- English Member A
+- English Member B
+- Spanish Member C
+
+Use clearly synthetic development data.
+
+Never use real customer email/phone data.
+
+---
+
+# 4. GOOGLE CALENDAR BOUNDARY
+
+If a real development/test Google Calendar is safely available:
+
+create controlled events there and run the real sync.
+
+If provider access is NOT available:
+
+use the lowest-level existing Calendar ingestion boundary.
+
+Feed the application realistic provider-shaped event fixtures through the same transformation/sync code used for Google Calendar.
+
+Do NOT bypass:
+
+- recurrence handling
+- cancellation logic
+- timezone conversion
+- event IDs
+- occurrence IDs
+
+Clearly report whether the test was:
+
+REAL PROVIDER FIXTURE
+
+or
+
+PROVIDER-BOUNDARY FIXTURE
+
+Do not call a boundary fixture a real Google Calendar test.
+
+---
+
+# 5. PROVE SYNC
+
+Prove:
+
+Calendar-shaped source event
+→ synchronization
+→ internal occurrence
+
+Check:
+
+- source event ID
+- occurrence ID
+- class name
+- date
+- Pacific time
+- capacity
+- visibility
+- cancellation state
+
+Then modify one fixture and prove reconciliation updates the correct occurrence rather than creating a duplicate.
+
+---
+
+# 6. PROVE PUBLIC SCHEDULE VISIBILITY
+
+Using the real schedule query/service path, prove a valid occurrence appears in:
+
+- public English schedule
+- public Spanish schedule
+
+Verify:
+
+- class
+- date
+- time
+- availability
+- locale formatting
+
+Do not merely inspect the database.
+
+Exercise the actual endpoint/service used by UI.
+
+---
+
+# 7. PROVE AUTHENTICATED MEMBER SCHEDULE
+
+Authenticate the isolated test member through the closest realistic application boundary available.
+
+Prove:
+
+member
+→ authenticated schedule
+→ sees valid class
+→ sees reserve action
+
+If full browser automation remains unavailable, exercise the authenticated HTTP/API flow with a legitimate test session.
+
+Do not call unauthenticated API checks sufficient.
+
+---
+
+# 8. PROVE BOOKING
+
+English Member A:
+
+Book Class A.
+
+Verify:
+
+- reservation created
+- ownership correct
+- status correct
+- capacity decremented
+- My Classes returns reservation
+- dashboard Next Class source returns reservation
+
+Capture the exact before/after seat values.
+
+---
+
+# 9. PROVE DUPLICATE PREVENTION
+
+Attempt to book the exact class again as Member A.
+
+Expected:
+
+BLOCKED
+
+Prove no duplicate active reservation exists.
+
+---
+
+# 10. PROVE OVERLAP RULE
+
+Create an overlapping class fixture if the application enforces overlapping-class rules.
+
+Attempt overlapping reservation.
+
+Verify actual expected behavior.
+
+Do not invent an overlap policy if none exists.
+
+Document current business rule.
+
+---
+
+# 11. PROVE FINAL-SEAT CONCURRENCY
+
+This is mandatory.
+
+Create a class with:
+
+capacity = 1
+
+Launch two booking attempts concurrently from two different test members.
+
+Use actual concurrency:
+
+Promise.all / parallel HTTP requests / equivalent.
+
+Expected:
+
+- one CONFIRMED
+- one WAITLISTED or rejected according to actual design
+- never two confirmed reservations
+
+After completion prove:
+
+confirmed count <= capacity
+
+Report transaction behavior.
+
+---
+
+# 12. PROVE WAITLIST
+
+For Class C:
+
+Member A occupies final seat.
+
+Member B attempts reservation.
+
+Verify:
+
+- Member A CONFIRMED
+- Member B WAITLISTED
+- correct waitlist position
+
+Then Member A cancels.
+
+Verify:
+
+- capacity reconciles
+- Member B is promoted
+- reservation state changes correctly
+- waitlist position removed
+- reservation history/event record retained
+
+---
+
+# 13. PROVE CANCELLATION
+
+For a normal booked class:
+
+Member cancels.
+
+Verify:
+
+- reservation status
+- My Classes
+- dashboard Next Class
+- available seat count
+- audit/history record
+
+No orphaned active reservation may remain.
+
+---
+
+# 14. PROVE PROVIDER CANCELLATION
+
+Using the provider-boundary fixture or real test Calendar:
+
+mark an occurrence cancelled upstream.
+
+Run reconciliation.
+
+Verify:
+
+- occurrence no longer bookable
+- existing state reconciles correctly
+- public schedule does not present it as available
+
+Report exact behavior for already-booked members.
+
+Do not invent a policy.
+
+---
+
+# 15. PROVE EMAIL LOCALE SELECTION
+
+Do not send real emails unless using a controlled inbox.
+
+Exercise the email-rendering/delivery-intent path.
+
+Verify:
+
+English reservation
+→ English template
+
+Spanish reservation
+→ Spanish template
+
+Spanish cancellation
+→ Spanish template
+
+Spanish waitlist promotion
+→ Spanish template
+
+Confirm stored reservation locale drives future lifecycle messages.
+
+---
+
+# 16. COMPLETE ACCOUNT RECOVERY
+
+The previous report found:
+
+- no password reset
+- no account verification
+
+At minimum implement:
+
+# PASSWORD RESET
+
+Requirements:
+
+- forgot-password entry
+- secure random token
+- hashed token persistence if practical
+- expiry
+- one-time use
+- generic response to avoid account enumeration
+- password update
+- invalid token handling
+- expired token handling
+- logout/invalidate old sessions where appropriate
+
+Add:
+
+English + Spanish UI/email copy.
+
+Do not create insecure query-string passwords or permanent reset links.
+
+---
+
+# 17. EMAIL VERIFICATION
+
+Evaluate the current signup architecture.
+
+If email verification can be added safely without destabilizing existing members:
+
+implement it.
+
+Requirements:
+
+- existing accounts remain usable
+- new verification token
+- expiration
+- one-time use
+- English/Spanish email
+- verified state
+
+If implementing verification would materially change current production access semantics:
+
+DO NOT force it into this cutover.
+
+Document it as a post-cutover security enhancement.
+
+Password reset is higher priority.
+
+---
+
+# 18. MOBILE QA — FIND A REAL EXECUTION PATH
+
+The previous pass stopped because Playwright browser automation was unavailable.
+
+Do not simply report that again.
+
+Investigate available alternatives in the workspace, such as:
+
+- Chromium installed locally
+- Playwright executable without the disabled integrated mode
+- Puppeteer
+- browser CLI
+- Replit preview/browser tools
+- existing screenshot workflow
+- another safe browser-capable test mechanism
+
+Use an existing safe capability if available.
+
+Do not install a giant unrelated framework unless necessary.
+
+---
+
+# 19. REQUIRED VIEWPORTS
+
+Exercise:
+
+320px
+375px
+390px
+430px
+
+At minimum capture evidence at every width.
+
+---
+
+# 20. MEMBER MOBILE FLOW
+
+English and Spanish:
+
+- homepage/header
+- login
+- dashboard
+- Schedule
+- class detail/action
+- My Classes
+- Forms
+- account menu
+- logout
+
+Check:
+
+- no horizontal page overflow
+- no clipped navigation
+- no hidden buttons
+- no overlapping content
+- tap targets usable
+- forms fit
+- schedule readable
+- account menu reachable
+- language control reachable
+
+---
+
+# 21. COACH MOBILE FLOW
+
+Exercise:
+
+- coach navigation
+- assigned members
+- attendance
+- notes
+- schedule
+
+At 390px minimum.
+
+Verify no action becomes inaccessible.
+
+---
+
+# 22. ADMIN MOBILE FLOW
+
+Exercise:
+
+- admin navigation
+- dashboard
+- members
+- class management
+- forms
+
+At 430px minimum.
+
+Dense tables may use contained horizontal scrolling.
+
+The PAGE itself must not horizontally overflow.
+
+---
+
+# 23. SPANISH MOBILE QA
+
+Do not simply inspect translated strings.
+
+Visually exercise a complete Spanish flow:
+
+/es
+→ Spanish login
+→ dashboard
+→ Schedule
+→ booking
+→ My Classes
+→ Forms
+→ logout
+→ /es
+
+Verify no unexpected English appears in normal member-facing surfaces.
+
+List all remaining English strings.
+
+---
+
+# 24. IF NO BROWSER ENGINE IS POSSIBLE
+
+Only if all reasonable browser execution paths are unavailable:
+
+create a deterministic responsive fallback QA package.
+
+Use:
+
+- static rendered screenshots if available
+- DOM/layout assertions where possible
+- CSS breakpoint inspection
+- automated overflow detection if a headless DOM/runtime is available
+
+Then produce a MANUAL QA SCRIPT for a human to complete before publishing.
+
+In that case:
+
+the final verdict MUST remain:
+
+NOT READY — MANUAL MOBILE QA REQUIRED
+
+Do not downgrade this blocker merely because code looks responsive.
+
+---
+
+# 25. MANUAL MOBILE QA SCRIPT
+
+Regardless of browser automation result, produce a concise manual device checklist.
+
+For each viewport/device:
+
+- route
+- expected state
+- exact interaction
+- pass criteria
+
+Keep it short enough to perform in approximately 10–15 minutes.
+
+---
+
+# 26. ROLE VISIBILITY
+
+Prove:
+
+MEMBER cannot see:
+- Coach workspace
+- Admin workspace
+- Class management
+
+COACH cannot access:
+- unauthorized admin operations
+
+ADMIN can access:
+- authorized admin operations
+
+Test both navigation visibility and server authorization.
+
+UI hiding alone is not sufficient.
+
+---
+
+# 27. SPANISH STAFF PARITY
+
+Run a final string audit on normal coach/admin workflows.
+
+Remaining English is acceptable only for:
+
+- developer diagnostics
+- raw provider errors
+- database/internal identifiers
+
+Normal buttons, headings, statuses, empty states, and confirmations should be localized.
+
+Report intentional exceptions.
+
+---
+
+# 28. REGRESSION TESTS
+
+Add automated tests covering the verified lifecycle.
+
+At minimum:
+
+- capacity
+- duplicate prevention
+- concurrency
+- waitlist
+- cancellation
+- waitlist promotion
+- locale retention
+- password reset
+- role access
+
+Do not rely solely on snapshot tests.
+
+---
+
+# 29. FINAL COMMANDS
+
+Run:
+
+npm run check
+npm test
+npm run build
+git diff --check
+
+All must pass.
+
+Report exact test count.
+
+---
+
+# 30. DATABASE SAFETY
+
+All fixtures must be clearly isolated.
+
+After validation:
+
+- remove ephemeral fixtures
+or
+- keep them only in dedicated test storage
+
+Do not leave fake classes/members in production-facing datasets.
+
+---
+
+# 31. NO PRODUCTION WRITE YET
+
+Do not publish automatically during this task.
+
+Complete evidence first.
+
+At the end tell us whether publishing is safe.
+
+---
+
+# 32. FINAL EVIDENCE TABLE
+
+Produce:
+
+| Requirement | Evidence | Result |
+|---|---|---|
+| Calendar ingestion | ... | PASS/FAIL |
+| Public schedule | ... | PASS/FAIL |
+| Auth member schedule | ... | PASS/FAIL |
+| Booking | ... | PASS/FAIL |
+| Capacity | ... | PASS/FAIL |
+| Concurrency | ... | PASS/FAIL |
+| Waitlist | ... | PASS/FAIL |
+| Cancellation | ... | PASS/FAIL |
+| Waitlist promotion | ... | PASS/FAIL |
+| English locale | ... | PASS/FAIL |
+| Spanish locale | ... | PASS/FAIL |
+| Password reset | ... | PASS/FAIL |
+| Member mobile | ... | PASS/FAIL |
+| Coach mobile | ... | PASS/FAIL |
+| Admin mobile | ... | PASS/FAIL |
+| Role security | ... | PASS/FAIL |
+
+No “implemented” result counts as PASS without executed evidence.
+
+---
+
+# 33. FINAL REPORT
+
+Return:
+
+# GROUND UP CUTOVER EVIDENCE REPORT
+
+## A. Calendar Boundary Used
+Real provider vs provider-shaped isolated fixture.
+
+## B. Booking Chain
+Exact executed result.
+
+## C. Concurrency
+Exact executed result.
+
+## D. Waitlist
+Exact executed result.
+
+## E. Cancellation
+Exact executed result.
+
+## F. Capacity Restoration
+
+## G. Email Locale
+
+## H. Password Reset
+
+## I. Email Verification Decision
+
+## J. English Member Flow
+
+## K. Spanish Member Flow
+
+## L. Coach Flow
+
+## M. Admin Flow
+
+## N. Mobile Evidence
+
+## O. Remaining English Exceptions
+
+## P. Tests
+Exact results.
+
+## Q. Fixture Cleanup
+
+## R. Remaining Risks
+
+## S. Production Recommendation
+
+---
+
+# 34. FINAL VERDICT
+
+Use exactly one:
+
+GROUND UP READY FOR PRODUCTION CUTOVER
+
+GROUND UP READY FOR PRODUCTION CUTOVER — MANUAL DEVICE CHECK REQUIRED
+
+GROUND UP NOT READY — BOOKING CHAIN
+
+GROUND UP NOT READY — MOBILE QA
+
+GROUND UP NOT READY — ACCOUNT RECOVERY
+
+GROUND UP NOT READY — MULTIPLE BLOCKERS
+
+---
+
+# FINAL RULE
+
+This pass is about proof.
+
+Do not tell us what the code should do.
+
+Show what the application DID when exercised.
+
+The goal is to turn:
+
+“implemented”
+
+into:
+
+“verified.”

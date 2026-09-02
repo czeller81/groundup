@@ -63,7 +63,7 @@ export async function setupVite(app: Express, server: Server) {
       const knownPublicPaths = new Set([
         "/", "/schedule", "/pricing", "/coaches", "/personal-training",
          "/contact", "/privacy", "/book", "/womens-self-defense", "/kids", "/girls", "/adaptive-capacity",
-         "/es", "/es/programas", "/es/horario", "/es/reservar", "/es/contacto", "/es/privacidad", "/es/portal/login",
+         "/es", "/es/programas", "/es/horario", "/es/reservar", "/es/contacto", "/es/privacidad", "/es/portal/login", "/es/portal/reset-password",
       ]);
       const isPortalPath = requestPath === "/portal" || requestPath.startsWith("/portal/");
       if (!knownPublicPaths.has(requestPath) && !isPortalPath) {
@@ -98,7 +98,7 @@ export function serveStatic(app: Express) {
     const knownPublicPaths = new Set([
       "/", "/schedule", "/pricing", "/coaches", "/personal-training",
        "/contact", "/privacy", "/book", "/womens-self-defense", "/kids", "/girls", "/adaptive-capacity",
-       "/es", "/es/programas", "/es/horario", "/es/reservar", "/es/contacto", "/es/privacidad", "/es/portal/login",
+       "/es", "/es/programas", "/es/horario", "/es/reservar", "/es/contacto", "/es/privacidad", "/es/portal/login", "/es/portal/reset-password",
     ]);
     const isPortalPath = requestPath === "/portal" || requestPath.startsWith("/portal/");
     if (!knownPublicPaths.has(requestPath) && !isPortalPath) {

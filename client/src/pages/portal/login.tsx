@@ -149,6 +149,12 @@ export default function PortalLogin() {
                   {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                   {locale === "es" ? "Iniciar sesión" : "Login"}
                 </Button>
+                <a
+                  href={locale === "es" ? "/es/portal/reset-password" : "/portal/reset-password"}
+                  className="block text-center text-sm text-gray-400 underline underline-offset-4 hover:text-white"
+                >
+                  {copy.forgotPassword}
+                </a>
               </form>
             </TabsContent>
             

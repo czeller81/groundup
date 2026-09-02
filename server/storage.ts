@@ -3,6 +3,7 @@ import {
   bookings, 
   adminUsers,
   users,
+  passwordResetTokens,
   forms,
   formResponses,
   memberships,
@@ -38,7 +39,7 @@ import {
   type ClassReservation
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, gte, lte, desc, asc, sql, count, sum, or, ilike, inArray, isNotNull, not } from "drizzle-orm";
+ import { eq, and, gte, gt, lte, desc, asc, sql, count, sum, or, ilike, inArray, isNotNull, isNull, not } from "drizzle-orm";
 
 export class ClassBookingError extends Error {
   constructor(public code: string, message: string, public status = 400) {
@@ -56,6 +57,8 @@ export interface IStorage {
   createUser(email: string, password: string, firstName: string, lastName: string, phone?: string, locale?: "en" | "es"): Promise<SafeUser>;
   createUserFromWebhook(email: string, firstName: string, lastName: string): Promise<SafeUser>;
   validateUserPassword(email: string, password: string): Promise<SafeUser | null>;
+  createPasswordResetToken(userId: string, tokenHash: string, expiresAt: Date): Promise<void>;
+  consumePasswordResetToken(tokenHash: string, newPassword: string): Promise<boolean>;
   ensureAdminPassword(email: string, password: string): Promise<boolean>;
   updateUser(id: string, updates: Partial<Pick<User, 'firstName' | 'lastName' | 'phone' | 'locale' | 'role' | 'beltRank' | 'attendanceCount' | 'assignedCoachId' | 'adminNotes'>>): Promise<SafeUser | undefined>;
   
@@ -218,6 +221,27 @@ export class DatabaseStorage implements IStorage {
     if (!isValid) return null;
     const { passwordHash: _, ...safeUser } = user;
     return safeUser;
+  }
+
+  async createPasswordResetToken(userId: string, tokenHash: string, expiresAt: Date): Promise<void> {
+    await db.delete(passwordResetTokens).where(eq(passwordResetTokens.userId, userId));
+    await db.insert(passwordResetTokens).values({ userId, tokenHash, expiresAt });
+  }
+
+  async consumePasswordResetToken(tokenHash: string, newPassword: string): Promise<boolean> {
+    return db.transaction(async (tx) => {
+      const [token] = await tx.select().from(passwordResetTokens).where(and(
+        eq(passwordResetTokens.tokenHash, tokenHash),
+        isNull(passwordResetTokens.usedAt),
+        gt(passwordResetTokens.expiresAt, new Date()),
+      )).limit(1);
+      if (!token) return false;
+
+      const passwordHash = await bcrypt.hash(newPassword, 10);
+      await tx.update(users).set({ passwordHash }).where(eq(users.id, token.userId));
+      await tx.update(passwordResetTokens).set({ usedAt: new Date() }).where(eq(passwordResetTokens.id, token.id));
+      return true;
+    });
   }
 
   async ensureAdminPassword(email: string, password: string): Promise<boolean> {

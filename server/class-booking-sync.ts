@@ -110,7 +110,10 @@ export async function configureGoogleCalendar(calendarId: string) {
   });
 }
 
-export async function syncGoogleClassSchedule(now = new Date()) {
+export async function syncGoogleClassSchedule(
+  now = new Date(),
+  providerFixture?: { events: import("./google-calendar").GoogleCalendarEvent[]; nextSyncToken?: string },
+) {
   const connection = await storage.getCalendarConnection();
   if (!connection?.calendarId) {
     throw new CalendarConfigurationError("Choose an approved Google Calendar before synchronizing classes.");
@@ -125,7 +128,7 @@ export async function syncGoogleClassSchedule(now = new Date()) {
 
   try {
     const classTypes = await ensureDefaultClassTypes();
-    const { events, nextSyncToken } = await listGoogleEvents(connection.calendarId, from, to);
+    const { events, nextSyncToken } = providerFixture || await listGoogleEvents(connection.calendarId, from, to);
     const seenEventIds: string[] = [];
     let synced = 0;
     let cancelled = 0;

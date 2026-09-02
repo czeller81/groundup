@@ -13,6 +13,7 @@ import Pricing from "@/pages/pricing";
 import Contact from "@/pages/contact";
 import Admin from "@/pages/admin";
 import PortalLogin from "@/pages/portal/login";
+import PortalResetPassword from "@/pages/portal/reset-password";
 import PortalDashboard from "@/pages/portal/dashboard";
 import PortalForm from "@/pages/portal/form";
 import PortalClasses from "@/pages/portal/classes";
@@ -116,6 +117,8 @@ function Router() {
       <Route path="/ln/login"><Redirect to="/portal/login" /></Route>
       <Route path="/es/portal/login" component={PortalLogin} />
       <Route path="/portal/login" component={PortalLogin} />
+      <Route path="/es/portal/reset-password" component={PortalResetPassword} />
+      <Route path="/portal/reset-password" component={PortalResetPassword} />
       <Route path="/portal/dashboard">
         <PortalLayout><PortalDashboard /></PortalLayout>
       </Route>

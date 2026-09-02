@@ -8,9 +8,10 @@ import Stripe from "stripe";
 import { addHours, addMinutes, format, parseISO } from "date-fns";
 import fs from "fs";
 import path from "path";
+import crypto from "node:crypto";
 import { parseRawJsonBody, verifyCalendlySignature, verifyStripeSignature } from "./webhook-security";
 import { bookingBelongsToUser, coachCanManageMember, createPublicRateLimit, requireAuth, requireRole } from "./route-security";
-import { sendStaffNotificationEmail } from "./email";
+import { sendPasswordResetEmail, sendStaffNotificationEmail } from "./email";
 import { registerClassBookingRoutes } from "./class-booking-routes";
 
 const PAGE_META: Record<string, { title: string; description: string; canonical: string }> = {
@@ -804,6 +805,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Login error:", error);
       res.status(500).json({ message: "Login failed" });
+    }
+  });
+
+  app.post("/api/portal/password-reset/request", authRateLimit(), async (req, res) => {
+    const genericResponse = {
+      message: "If an account matches that email, a password reset link will be sent.",
+    };
+    try {
+      const email = z.string().trim().email().max(254).parse(req.body?.email).toLowerCase();
+      const locale = req.body?.locale === "es" ? "es" : "en";
+      const user = await storage.getUserByEmail(email);
+      if (!user) return res.status(202).json(genericResponse);
+
+      const token = crypto.randomBytes(32).toString("base64url");
+      const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+      await storage.createPasswordResetToken(user.id, tokenHash, new Date(Date.now() + 60 * 60 * 1000));
+      const origin = `${req.protocol}://${req.get("host")}`;
+      const resetPath = locale === "es" ? "/es/portal/reset-password" : "/portal/reset-password";
+      try {
+        await sendPasswordResetEmail({
+          to: user.email,
+          locale,
+          resetUrl: `${origin}${resetPath}?token=${encodeURIComponent(token)}`,
+        });
+      } catch (error) {
+        console.error("Password reset email failed:", error);
+      }
+      return res.status(202).json(genericResponse);
+    } catch {
+      return res.status(202).json(genericResponse);
+    }
+  });
+
+  app.post("/api/portal/password-reset/complete", authRateLimit(), async (req, res) => {
+    try {
+      const { token, password } = z.object({
+        token: z.string().min(32).max(200),
+        password: z.string().min(8).max(200),
+      }).strict().parse(req.body);
+      const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+      const consumed = await storage.consumePasswordResetToken(tokenHash, password);
+      if (!consumed) return res.status(400).json({ message: "This password reset link is invalid or expired." });
+      req.session.destroy(() => undefined);
+      return res.json({ message: "Password updated. You can now log in." });
+    } catch (error) {
+      if (error instanceof z.ZodError) return res.status(400).json({ message: "Choose a password with at least 8 characters." });
+      return res.status(400).json({ message: "This password reset link is invalid or expired." });
     }
   });
 
