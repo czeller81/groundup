@@ -1,0 +1,1312 @@
+You are Replit Agent.
+
+We have now reviewed a complete screen recording of the current Ground Up public site and authenticated portal after the recent remediation.
+
+This is a MAJOR EXPERIENCE REFINEMENT phase.
+
+The core backend/forms/security work is substantially better.
+
+Do NOT throw away working forms, booking logic, authentication, database structures, Google Calendar integration, or security work.
+
+The objective now is to make:
+
+PUBLIC WEBSITE
+→ LOGIN
+→ MEMBER PORTAL
+→ CLASS DISCOVERY
+→ BOOKING
+→ FORMS
+→ COACH EXPERIENCE
+→ ADMIN
+
+feel like ONE elegant, coherent Ground Up product.
+
+Ground Up must no longer feel like:
+
+“marketing website + separate SaaS portal.”
+
+It should feel like:
+
+# ONE GROUND UP EXPERIENCE.
+
+---
+
+# 1. BUSINESS IDENTITY
+
+Ground Up is:
+
+# A WOMEN-ONLY TRAINING CENTER IN OXNARD.
+
+The brand is built around:
+
+- strength
+- capability
+- confidence
+- learning
+- movement
+- Brazilian Jiu-Jitsu
+- practical self-defense
+- new skills
+- supportive training
+- women training with women
+- girls/female youth where applicable
+- mother + daughter
+- beginner-friendly experience
+
+Core philosophy:
+
+# DISCOVER WHAT YOUR BODY CAN DO.
+
+Ground Up is not:
+
+- a generic martial arts academy
+- a fight gym
+- a male/female mixed academy
+- a generic fitness SaaS product
+- a bodybuilding gym
+- a pink stereotypical women’s gym
+
+The experience should feel:
+
+- elegant
+- modern
+- strong
+- feminine without being stereotypical
+- warm
+- calm
+- premium
+- local
+- personal
+- distinctive
+
+---
+
+# 2. START WITH A COMPLETE UX INVENTORY
+
+Before changing the UI, inventory every current surface.
+
+PUBLIC:
+- Home
+- Women's Training
+- Self-Defense
+- Girls / Mother + Daughter
+- Adaptive Capacity
+- Schedule
+- Coaches
+- Programs
+- Contact
+- English/Spanish
+- First Visit
+- Member Login
+
+AUTHENTICATED:
+- Dashboard
+- Classes
+- Book a Class
+- My Classes
+- Forms
+- Membership
+- Coach Center
+- Class Admin
+- Admin
+- account/profile
+- logout
+
+Determine:
+
+- which routes duplicate each other
+- which navigation labels overlap
+- which surfaces are member-only
+- which are coach-only
+- which are admin-only
+- which should not appear for normal members
+- which empty states are caused by actual missing data vs poor UX
+
+Do not begin visual cleanup until the route/navigation model is understood.
+
+---
+
+# 3. ONE PRODUCT — NO “BACK TO MAIN SITE”
+
+Remove the conceptual separation between:
+
+“Main Site”
+
+and
+
+“Portal.”
+
+Do NOT show:
+
+# BACK TO MAIN SITE
+
+as a persistent portal navigation action.
+
+Once authenticated, Ground Up should simply recognize that the person is logged in.
+
+Preferred behavior:
+
+Public navigation when logged out:
+- Member Login
+
+Public navigation when logged in:
+- account/profile indicator
+- My Ground Up or Dashboard if needed
+- Log Out
+
+Inside authenticated experience:
+- Ground Up logo/home can return to the public homepage naturally
+- no special “Back to Main Site” concept
+- account menu contains Log Out
+
+The public website and authenticated area are one product.
+
+---
+
+# 4. ROLE-AWARE NAVIGATION
+
+Current portal navigation exposes too much internal architecture.
+
+Build role-aware navigation.
+
+## NORMAL MEMBER
+
+A member should primarily see:
+
+- Home / Ground Up logo
+- Dashboard
+- Schedule
+- My Classes
+- My Forms
+- Membership / Account
+- Español / English
+- Log Out
+
+Potentially:
+
+“Book a Class” should not need to be a separate top-level navigation item if Schedule already allows booking.
+
+Prefer:
+
+# SCHEDULE
+→ VIEW CLASS
+→ BOOK
+
+rather than:
+
+Classes
+Book a Class
+My Classes
+Schedule
+
+all competing with each other.
+
+---
+
+# 5. COACH NAVIGATION
+
+Only coaches should see coach tools.
+
+Possible structure:
+
+- Dashboard
+- Schedule
+- My Members
+- Attendance
+- Notes / Coaching
+- Account
+
+Do not show admin-only infrastructure to coaches unless authorized.
+
+Coach Center should feel like a coaching workspace, not a database console.
+
+---
+
+# 6. ADMIN NAVIGATION
+
+Only admins should see:
+
+- Admin
+- Class Management
+- Members
+- Leads
+- Forms
+- Calendar Sync
+- Attendance
+- Settings
+- Analytics
+
+Do not expose these surfaces in normal member navigation.
+
+---
+
+# 7. SIMPLIFY CLASS INFORMATION ARCHITECTURE
+
+The current experience appears to contain concepts such as:
+
+- Classes
+- Book a Class
+- My Classes
+- synchronized occurrences
+- upcoming sessions
+
+This is too fragmented.
+
+Consolidate around TWO concepts for a member:
+
+# SCHEDULE
+“What can I attend?”
+
+and:
+
+# MY CLASSES
+“What have I booked?”
+
+That is enough.
+
+Schedule should support:
+
+- upcoming class list
+- date
+- time
+- class name
+- coach
+- availability
+- women/girls eligibility where relevant
+- reserve button
+- waitlist if full
+- filters only if useful
+
+My Classes should support:
+
+- upcoming
+- past
+- waitlisted
+- cancelled
+- cancel/reschedule actions where allowed
+
+Do not require a member to understand “occurrences.”
+
+That is an internal implementation concept.
+
+---
+
+# 8. FIX THE MISSING SCHEDULE EXPERIENCE
+
+In the recording, the member experience shows empty states such as:
+
+“No bookable classes are currently listed.”
+
+Yet admin screens visibly contain synchronized class occurrences.
+
+Investigate this fully.
+
+Determine whether the cause is:
+
+- filtering
+- authentication
+- incorrect date window
+- eligibility
+- test-occurrence filtering
+- publication state
+- Google Calendar sync
+- route mismatch
+- timezone
+- query bug
+- class visibility flag
+- role-specific endpoint issue
+
+Do not just redesign the empty state.
+
+Fix the actual data-path issue.
+
+A valid upcoming class available to a member MUST appear consistently in:
+
+- public Schedule
+- authenticated Schedule
+- relevant dashboard Upcoming Classes
+- booking interface
+
+Use one shared source of truth.
+
+---
+
+# 9. MEMBER DASHBOARD REDESIGN
+
+The current dashboard behaves too much like generic SaaS.
+
+Redesign around the woman’s actual Ground Up journey.
+
+The dashboard should answer immediately:
+
+# WHAT'S NEXT FOR ME?
+
+Priority hierarchy:
+
+## Welcome
+“Hola, [Name]” / “Welcome back, [Name]”
+
+## Next Class
+Large card:
+- class
+- date
+- time
+- coach
+- manage reservation
+
+If no class booked:
+
+# FIND YOUR NEXT CLASS
+
+with a clear Schedule CTA.
+
+## My Progress / Journey
+Only surface real data.
+
+Possible:
+- classes attended
+- current program
+- forms completed
+- upcoming goals
+
+Do not invent fitness metrics.
+
+## Required Forms
+Show only incomplete/required items.
+
+## Community / Ground Up
+Optional small section for meaningful announcements.
+
+Do not overload the dashboard with administrative cards.
+
+---
+
+# 10. REMOVE REPETITION
+
+Audit the entire public website and portal for repeated:
+
+- taglines
+- women-only statements
+- capability statements
+- beginner claims
+- program cards
+- CTAs
+- explanation sections
+- duplicate schedule cards
+- repeated FAQ content
+
+Being clear does NOT mean repeating the same statement eight times.
+
+Use hierarchy.
+
+Each section should have a job.
+
+If two sections communicate the same thing, consolidate them.
+
+The website should become SHORTER and STRONGER where possible.
+
+---
+
+# 11. PUBLIC NAVIGATION SIMPLIFICATION
+
+The current desktop navigation contains many competing options.
+
+Review whether all of these need top-level placement:
+
+- Home
+- Women's Training
+- Self-Defense
+- Girls / Mother + Daughter
+- Adaptive Capacity
+- Schedule
+- Coaches
+- Programs
+- Contact
+- Member Login
+- Español
+- Book Your Free First Visit
+
+This is too dense.
+
+Create an elegant hierarchy.
+
+Recommended direction:
+
+HOME
+
+TRAINING
+- Women's BJJ
+- Self-Defense
+- Strength & Movement
+
+GIRLS
+- Girls Training
+- Mother + Daughter
+
+SCHEDULE
+
+ABOUT
+- Coach
+- Ground Up philosophy
+- Contact
+
+ESPAÑOL
+
+BOOK YOUR FREE FIRST VISIT
+
+Account/Login as secondary utility.
+
+Adaptive Capacity should not dominate primary navigation unless it is currently a primary acquisition product.
+
+Consider putting it under:
+Programs
+or
+More
+
+if that better supports clarity.
+
+Do not remove it without understanding its role.
+
+---
+
+# 12. LOGGED-IN PUBLIC HEADER
+
+When authenticated:
+
+Replace:
+
+MEMBER LOGIN
+
+with an account control such as:
+
+[First Name] ▼
+
+Menu:
+
+- My Ground Up
+- My Classes
+- My Forms
+- Account
+- Log Out
+
+Do not make the user log in again.
+
+Do not show:
+
+Back to Main Site.
+
+---
+
+# 13. COMPLETE ENGLISH / SPANISH PARITY
+
+This is a major requirement.
+
+The WHOLE experience must be available in:
+
+# ENGLISH
+and
+# ESPAÑOL.
+
+Not merely marketing pages.
+
+Audit every user-visible string.
+
+Localization coverage must include:
+
+PUBLIC:
+- homepage
+- navigation
+- programs
+- girls
+- mother + daughter
+- self-defense
+- schedule
+- coaches
+- contact
+- first visit
+- FAQ
+- privacy
+
+AUTH:
+- login
+- signup
+- forgot password
+- reset password
+- email verification
+- errors
+
+MEMBER:
+- dashboard
+- schedule
+- class booking
+- my classes
+- forms
+- membership
+- account
+- cancellations
+- confirmations
+- empty states
+- errors
+
+COACH:
+- coach navigation
+- members
+- notes
+- attendance
+
+ADMIN:
+Admin may remain primarily English if necessary operationally, but all MEMBER-FACING output generated by admin must support both languages.
+
+EMAIL:
+- reservation confirmation
+- cancellation
+- waitlist
+- form completion where applicable
+- password reset
+- account confirmation
+
+---
+
+# 14. LANGUAGE PERSISTENCE
+
+If a woman enters through:
+
+`/es`
+
+and logs in:
+
+she should stay in Spanish.
+
+Do not reset to English after authentication.
+
+Language selection should persist safely across:
+
+- navigation
+- login
+- dashboard
+- booking
+- forms
+- confirmations
+- account
+- logout
+- return visit
+
+Use a clear locale architecture.
+
+Do not duplicate application logic.
+
+---
+
+# 15. LANGUAGE CONTROL
+
+Use one elegant control:
+
+EN | ES
+
+or:
+
+English | Español
+
+Do not scatter different language selectors around the product.
+
+Desktop and mobile should behave consistently.
+
+---
+
+# 16. PORTAL VISUAL LANGUAGE
+
+The authenticated experience currently looks more like a generic software dashboard than Ground Up.
+
+Bring it into the same design family as the public website.
+
+Preserve usability.
+
+Use:
+
+- Ground Up typography where appropriate
+- dark sophisticated base
+- restrained accent colors
+- strong photography only where meaningful
+- cleaner cards
+- more whitespace
+- larger clear hierarchy
+- fewer boxed widgets
+- less dashboard clutter
+
+Do not turn the portal into a marketing page.
+
+It should remain functional.
+
+But it should unmistakably feel like Ground Up.
+
+---
+
+# 17. DO NOT OVER-CARD THE UI
+
+The current product uses many card-shaped containers.
+
+Reduce unnecessary cards.
+
+Use cards only where grouping improves understanding.
+
+Prefer:
+
+- whitespace
+- headings
+- dividers
+- strong grouping
+- clear primary actions
+
+over:
+
+box inside box inside box.
+
+The experience should feel elegant.
+
+---
+
+# 18. EMPTY STATES
+
+Replace generic SaaS empty states.
+
+BAD:
+“Nothing here yet.”
+
+GOOD:
+
+“No classes booked yet.”
+
+Then:
+
+“Find a class that works for you.”
+
+[VIEW SCHEDULE]
+
+BAD:
+“No bookable classes are currently listed.”
+
+If there truly are no classes:
+
+“No upcoming classes are available right now. Check back soon or contact us and we'll help you find your next class.”
+
+But first verify the absence is real.
+
+Use empty states to help, not merely report emptiness.
+
+---
+
+# 19. FORMS — PRESERVE WHAT WORKS
+
+The forms inside the portal look good and the user specifically wants their functionality preserved.
+
+Do not rewrite the forms unnecessarily.
+
+Audit them only for:
+
+- visual consistency
+- Spanish localization
+- mobile usability
+- completion state
+- required/incomplete clarity
+
+Preserve:
+
+- existing storage
+- workflow
+- submission logic
+- completed state
+- retake logic where intentional
+
+---
+
+# 20. MEMBERSHIP PAGE
+
+Review whether the current Membership area provides meaningful value.
+
+It should show only real information such as:
+
+- membership/program
+- status
+- relevant billing/renewal information if implemented
+- contact/help
+
+Do not show empty financial widgets merely because a dashboard template has them.
+
+If billing is not fully integrated, be transparent.
+
+---
+
+# 21. FIRST-VISIT → MEMBER CONTINUITY
+
+The user journey should feel intentional:
+
+SPANISH OR ENGLISH AD
+→ PUBLIC SITE
+→ FREE FIRST VISIT
+→ BOOK CLASS
+→ CONFIRMATION
+→ ATTEND
+→ MEMBER ACCOUNT
+→ DASHBOARD
+→ SCHEDULE
+→ NEXT CLASS
+
+Do not make people restart.
+
+Preserve:
+
+- language
+- attribution
+- known profile information
+- reservations where safe
+- program context
+
+---
+
+# 22. WOMEN-ONLY THROUGHOUT THE EXPERIENCE
+
+Do not stop communicating the business identity after login.
+
+The portal does not need marketing slogans everywhere.
+
+But class names, programs and imagery should remain consistent with:
+
+- women only
+- girls/female youth
+- mother + daughter
+
+Do not expose generic mixed-gender labels.
+
+---
+
+# 23. GIRLS / MOTHER + DAUGHTER
+
+Ensure navigation and portal eligibility are logical.
+
+A guardian managing a girl's participation should not be treated exactly like an adult member.
+
+Where implemented:
+
+guardian account
+→ daughter profile
+→ girl's eligible schedule
+→ booking
+→ required forms
+
+Do not invent age policy.
+
+Use approved business configuration.
+
+---
+
+# 24. SCHEDULE DESIGN
+
+Create one beautiful reusable Schedule component/system.
+
+Public Schedule:
+- discovery
+- first visit
+
+Member Schedule:
+- same class information
+- personalized booking state
+
+Coach Schedule:
+- assigned/operational details
+
+Admin Schedule:
+- management controls
+
+Same core data.
+
+Different permissions.
+
+Do not build four unrelated schedule systems.
+
+---
+
+# 25. MOBILE EXPERIENCE
+
+Ground Up acquisition is heavily mobile.
+
+Test the full path on:
+
+- 320px
+- 375px
+- 390px
+- 430px
+
+Especially:
+
+- nav
+- language selector
+- login
+- dashboard
+- schedule
+- booking
+- forms
+- My Classes
+- account menu
+
+No horizontal overflow.
+
+Touch targets appropriate.
+
+No enormous desktop dashboard crammed into mobile.
+
+---
+
+# 26. ACCESSIBILITY
+
+Preserve/improve:
+
+- keyboard navigation
+- focus indicators
+- semantic navigation
+- labels
+- contrast
+- reduced motion
+- screen reader announcements
+- form errors
+
+Language switching should also correctly set document `lang`.
+
+English:
+`lang="en"`
+
+Spanish:
+`lang="es"`
+
+---
+
+# 27. PERFORMANCE
+
+Do not regress performance while making this visually richer.
+
+Reuse:
+
+- shared layouts
+- shared schedule components
+- locale dictionaries
+- lazy-loaded role modules
+
+Do not load admin/coach bundles for a normal member if avoidable.
+
+---
+
+# 28. DO NOT DESTROY WORKING BACKEND SYSTEMS
+
+Preserve unless evidence shows a defect:
+
+- authentication
+- PostgreSQL sessions
+- forms
+- class reservation storage
+- Google Calendar source
+- waitlist
+- attendance
+- Resend
+- security changes
+- webhook retry handling
+- authorization
+
+This is primarily:
+
+UX consolidation + localization + schedule correction + navigation cleanup.
+
+Not a ground-up backend rewrite.
+
+---
+
+# 29. TEST THE SCHEDULE DATA PATH END TO END
+
+This is mandatory.
+
+Create safe representative fixtures if needed.
+
+Verify:
+
+Google Calendar occurrence
+→ sync
+→ database occurrence
+→ public Schedule
+→ member Schedule
+→ dashboard
+→ reservation
+→ My Classes
+→ cancellation
+→ availability restoration
+
+If this chain fails anywhere, fix it.
+
+Report proof.
+
+---
+
+# 30. ROLE TESTING
+
+Create tests for:
+
+NORMAL MEMBER:
+cannot see:
+- Admin
+- Class Admin
+- Coach Center
+
+COACH:
+can see approved coach tools
+cannot see unauthorized admin functions
+
+ADMIN:
+can access admin functions
+
+Anonymous:
+cannot access portal.
+
+---
+
+# 31. LOCALIZATION TESTING
+
+Add tests proving:
+
+`/es`
+→ Spanish
+
+`/es/reservar`
+→ Spanish
+
+Spanish login
+→ Spanish dashboard
+
+Spanish dashboard
+→ Spanish schedule
+
+Spanish booking
+→ Spanish confirmation
+
+Logout
+→ sensible Spanish destination
+
+English routes remain English.
+
+---
+
+# 32. COPY REVIEW
+
+Audit every visible user-facing string.
+
+Remove:
+
+- internal technical terminology
+- “occurrence”
+- “synchronized occurrences”
+- generic database wording
+- developer/test language
+- redundant statements
+
+Members should see human language.
+
+Admins can see technical detail where useful.
+
+---
+
+# 33. DASHBOARD ADMIN/COACH UX
+
+The admin screenshots show functional but highly technical views.
+
+Keep powerful tools, but organize them.
+
+Admin navigation could use groups:
+
+PEOPLE
+- Members
+- Coaches
+- Leads
+
+CLASSES
+- Schedule
+- Calendar Sync
+- Reservations
+- Attendance
+
+CONTENT / OPERATIONS
+- Forms
+- Programs
+
+SYSTEM
+- Settings
+- Audit/Diagnostics
+
+Do not dump everything into the global header.
+
+---
+
+# 34. TOP NAVIGATION SHOULD CHANGE BY CONTEXT
+
+Public global header:
+marketing/discovery.
+
+Member header:
+member journey.
+
+Coach header:
+coaching.
+
+Admin header:
+operations.
+
+All share:
+- Ground Up identity
+- language where appropriate
+- account controls
+- logout
+
+Do not attempt to make one giant navigation contain every application route.
+
+---
+
+# 35. ACCOUNT / LOGOUT
+
+Make login state elegant.
+
+Logged out:
+MEMBER LOGIN
+
+Logged in:
+[Name or avatar] ▼
+
+Account menu:
+- Dashboard
+- Account
+- Language
+- Log Out
+
+After logout:
+return to the appropriate public language homepage.
+
+English:
+`/`
+
+Spanish:
+`/es`
+
+---
+
+# 36. UNIQUE EXPERIENCE
+
+Do not simply imitate Mindbody, Zen Planner, or a generic gym portal.
+
+Ground Up should feel purpose-built.
+
+Potential conceptual language:
+
+Dashboard:
+# YOUR GROUND UP
+
+Schedule:
+# FIND YOUR NEXT CLASS
+
+My Classes:
+# YOUR TRAINING
+
+Forms:
+# YOUR FORMS
+
+Do not force these labels if another version reads more naturally.
+
+Keep tone sophisticated rather than cute.
+
+---
+
+# 37. VISUAL QA AGAINST THE RECORDING
+
+After implementation, recreate the exact flows shown in the uploaded screen recording and compare them.
+
+Specifically verify:
+
+1. public homepage
+2. Spanish homepage
+3. login
+4. member dashboard
+5. forms
+6. class discovery
+7. My Classes
+8. coach center
+9. synchronized class/admin view
+10. admin dashboard
+11. logout
+
+The new version should visibly resolve the weaknesses demonstrated in the recording.
+
+---
+
+# 38. BUILD GATE
+
+Run:
+
+npm run check
+npm test
+npm run build
+
+All must pass.
+
+Do not hide warnings.
+
+---
+
+# 39. FINAL SCREENSHOT / VIDEO QA
+
+Capture screenshots of:
+
+## English
+- public homepage
+- member dashboard
+- schedule
+- My Classes
+- forms
+
+## Spanish
+- homepage
+- login
+- dashboard
+- schedule
+- booking
+- forms
+
+## Role views
+- coach
+- admin
+
+Also test mobile.
+
+If possible, generate a short walkthrough recording for comparison.
+
+---
+
+# 40. FINAL REPORT
+
+Return:
+
+# GROUND UP UNIFIED EXPERIENCE REMEDIATION REPORT
+
+## A. Executive Verdict
+
+## B. Navigation Before → After
+
+## C. Public Site Changes
+
+## D. Member Portal Changes
+
+## E. Schedule Root Cause
+Explain why schedules were missing.
+
+## F. Schedule Fix
+Prove the complete data path.
+
+## G. English / Spanish Coverage
+List every localized surface.
+
+## H. Authentication Experience
+Login/account/logout behavior.
+
+## I. Member Dashboard
+
+## J. My Classes
+
+## K. Forms
+What was preserved/changed.
+
+## L. Coach Experience
+
+## M. Admin Experience
+
+## N. Girls / Guardian Experience
+
+## O. Repetition Removed
+List consolidated sections/routes.
+
+## P. Mobile QA
+
+## Q. Accessibility
+
+## R. Performance
+
+## S. Tests
+Exact results.
+
+## T. Remaining Limitations
+
+## U. Screenshots / Walkthrough
+
+---
+
+# 41. FINAL SCORECARD
+
+Score before and after:
+
+- Public clarity
+- Women-only identity
+- Visual elegance
+- Navigation clarity
+- Member usability
+- Schedule discoverability
+- Booking usability
+- English/Spanish parity
+- Forms
+- Coach usability
+- Admin usability
+- Mobile
+- Accessibility
+- Overall cohesion
+
+---
+
+# 42. FINAL VERDICT
+
+End with exactly one:
+
+`GROUND UP UNIFIED EXPERIENCE COMPLETE — READY FOR PRODUCTION`
+
+`GROUND UP UNIFIED EXPERIENCE COMPLETE — READY WITH LIMITATIONS`
+
+`GROUND UP UNIFIED EXPERIENCE BLOCKED — SCHEDULE`
+
+`GROUND UP UNIFIED EXPERIENCE BLOCKED — LOCALIZATION`
+
+`GROUND UP UNIFIED EXPERIENCE BLOCKED — ARCHITECTURE`
+
+---
+
+# FINAL PRINCIPLE
+
+A woman should never feel like she leaves Ground Up when she logs in.
+
+The experience should be:
+
+# ONE BRAND.
+# ONE ACCOUNT.
+# ONE SCHEDULE.
+# ONE MEMBER JOURNEY.
+# TWO LANGUAGES.
+
+English and Spanish are peers.
+
+The portal is not a separate product.
+
+It is simply the authenticated part of Ground Up.
+
+Make the complete experience elegant, intuitive, women-centered, and unmistakably Ground Up.
+
+Preserve the strong forms and backend logic.
+
+Remove repetition.
+
+Fix schedule visibility.
+
+Simplify navigation.
+
+Make roles intelligent.
+
+Make language persistent.
+
+Make the entire journey feel intentionally designed.

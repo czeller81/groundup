@@ -1,144 +1,197 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
-import { Menu, X, LogOut, Home, ArrowLeft } from "lucide-react";
+import { Languages, LogOut, Menu, UserRound, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePortalAuth } from "@/lib/portal-auth";
+import { useLocale } from "@/lib/locale";
 import logoImage from "@assets/Ground_up_Logo_1772941267349.png";
 
 export default function PortalNavbar() {
   const [location, setLocation] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { user, logout, isAdmin, isCoach, isStaff } = usePortalAuth();
+  const { user, logout, isAdmin, isCoach } = usePortalAuth();
+  const { locale, copy, setLocale } = useLocale();
+
+  const navItems = [
+    { path: "/portal/dashboard", label: copy.dashboard },
+    { path: "/portal/schedule", label: copy.schedule },
+    { path: "/portal/my-classes", label: copy.myClasses },
+    ...(isCoach || isAdmin ? [{ path: "/portal/coach", label: copy.coachCenter }] : []),
+    ...(isAdmin
+      ? [
+          { path: "/portal/class-admin", label: copy.classAdmin },
+          { path: "/portal/admin", label: copy.admin },
+        ]
+      : []),
+  ];
+
+  const closeMobileMenu = () => setMobileMenuOpen(false);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") closeMobileMenu();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  useEffect(() => {
+    document.body.style.overflow = mobileMenuOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileMenuOpen]);
 
   const handleLogout = async () => {
     await logout();
-    setLocation("/portal/login");
+    closeMobileMenu();
+    setLocation(locale === "es" ? "/es" : "/");
   };
 
-  const navItems = [
-    { path: "/portal/dashboard", label: "Dashboard" },
-    { path: "/portal/schedule", label: "Classes" },
-    { path: "/portal/booking", label: "Book a Class" },
-    { path: "/portal/my-classes", label: "My Classes" },
-    ...(isCoach || isAdmin ? [{ path: "/portal/coach", label: "Coach Center" }] : []),
-    ...(isAdmin ? [{ path: "/portal/class-admin", label: "Class Admin" }, { path: "/portal/admin", label: "Admin" }] : []),
-  ];
+  const switchLocale = () => setLocale(locale === "en" ? "es" : "en");
 
   return (
-    <nav className="sticky top-0 z-50 bg-[#121826]/95 backdrop-blur-md border-b border-white/5 shadow-lg">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          <div className="flex items-center gap-4">
-            <Link href="/" className="flex items-center space-x-3 group" title="Back to main site">
-              <div className="h-9 w-9 rounded-full border border-white/20 bg-white/5 flex items-center justify-center overflow-hidden flex-shrink-0 transition-transform group-hover:scale-110">
-                <img src={logoImage} alt="Ground Up BJJ Logo" className="h-7 w-7 object-contain" style={{ filter: "brightness(0) invert(1)" }} />
-              </div>
-              <div className="hidden sm:block">
-                <span className="text-lg font-bold text-white tracking-wider" style={{ fontFamily: 'var(--font-display)' }}>
-                  GROUND UP
-                </span>
-                <span className="ml-2 text-xs font-medium text-[#B06CFF] uppercase tracking-widest" style={{ fontFamily: 'var(--font-display)' }}>
-                  Portal
-                </span>
-              </div>
-            </Link>
-          </div>
+    <nav
+      aria-label="Member portal"
+      className="sticky top-0 z-50 border-b border-white/5 bg-[#121826]/95 shadow-lg backdrop-blur-md"
+    >
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="flex h-16 items-center justify-between gap-4">
+          <Link
+            href={locale === "es" ? "/es" : "/"}
+            className="flex min-w-0 items-center gap-3 group"
+            aria-label="Ground Up"
+          >
+            <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/20 bg-white/5 transition-transform group-hover:scale-105">
+              <img
+                src={logoImage}
+                alt="Ground Up"
+                className="h-7 w-7 object-contain"
+                style={{ filter: "brightness(0) invert(1)" }}
+              />
+            </div>
+            <div className="hidden min-w-0 sm:block">
+              <span className="block truncate text-base font-bold tracking-wider text-white" style={{ fontFamily: "var(--font-display)" }}>
+                GROUND UP
+              </span>
+              <span className="text-[10px] font-medium uppercase tracking-[0.22em] text-[#B06CFF]" style={{ fontFamily: "var(--font-display)" }}>
+                {copy.account}
+              </span>
+            </div>
+          </Link>
 
-          <div className="hidden md:flex items-center space-x-1">
-            {navItems.map((item) => (
-              <Link
-                key={item.path}
-                href={item.path}
-                className={`relative px-4 py-2 text-sm font-medium tracking-wide uppercase transition-colors ${
-                  location === item.path
-                    ? "text-[#5EEBFF]"
-                    : "text-gray-300 hover:text-white"
-                }`}
+          <div className="hidden min-w-0 items-center gap-1 md:flex">
+            {navItems.map((item) => {
+              const active = location === item.path || (item.path === "/portal/schedule" && location === "/portal/booking");
+              return (
+                <Link
+                  key={item.path}
+                  href={item.path}
+                  className={`relative whitespace-nowrap px-3 py-2 text-xs font-semibold uppercase tracking-wide transition-colors ${
+                    active ? "text-[#5EEBFF]" : "text-gray-300 hover:text-white"
+                  }`}
+                >
+                  {item.label}
+                  {active && (
+                    <motion.div
+                      layoutId="portal-nav-indicator"
+                      className="absolute bottom-0 left-3 right-3 h-0.5 bg-[#5EEBFF]"
+                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    />
+                  )}
+                </Link>
+              );
+            })}
+            <div className="ml-2 flex items-center gap-2 border-l border-white/10 pl-3">
+              <button
+                type="button"
+                onClick={switchLocale}
+                className="inline-flex items-center gap-1.5 px-2 py-2 text-xs font-semibold text-gray-400 transition-colors hover:text-white"
+                aria-label={`${copy.language}: ${locale === "en" ? copy.spanish : copy.english}`}
               >
-                {item.label}
-                {location === item.path && (
-                  <motion.div
-                    layoutId="portal-nav-indicator"
-                    className="absolute bottom-0 left-4 right-4 h-0.5 bg-[#5EEBFF]"
-                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                  />
-                )}
-              </Link>
-            ))}
-
-            <Link href="/">
+                <Languages className="h-3.5 w-3.5" />
+                {locale === "en" ? "ES" : "EN"}
+              </button>
+              <span className="hidden items-center gap-1.5 text-xs text-gray-500 lg:flex" title={user?.email || undefined}>
+                <UserRound className="h-3.5 w-3.5 text-[#B06CFF]" />
+                {user?.firstName || copy.account}
+              </span>
               <Button
+                variant="outline"
                 size="sm"
-                variant="ghost"
-                className="ml-2 text-gray-400 hover:text-white hover:bg-white/5"
+                onClick={handleLogout}
+                className="border-white/10 text-gray-300 hover:bg-white/5 hover:text-white"
               >
-                <ArrowLeft className="h-4 w-4 mr-1" />
-                Main Site
+                <LogOut className="mr-1.5 h-3.5 w-3.5" />
+                {copy.logout}
               </Button>
-            </Link>
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleLogout}
-              className="ml-2 border-white/10 text-gray-300 hover:text-white hover:bg-white/5"
-            >
-              <LogOut className="h-4 w-4 mr-1" />
-              Logout
-            </Button>
+            </div>
           </div>
 
-          <div className="md:hidden">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="text-white hover:bg-white/10"
-            >
-              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </Button>
-          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setMobileMenuOpen((open) => !open)}
+            aria-label={mobileMenuOpen ? "Close portal navigation" : "Open portal navigation"}
+            aria-expanded={mobileMenuOpen}
+            aria-controls="portal-mobile-navigation"
+            className="text-white hover:bg-white/10 md:hidden"
+          >
+            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </Button>
         </div>
 
         <AnimatePresence>
           {mobileMenuOpen && (
             <motion.div
+              id="portal-mobile-navigation"
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
-              className="md:hidden overflow-hidden bg-[#0B0F14] border-t border-white/5 rounded-b-xl"
+              className="overflow-hidden border-t border-white/5 bg-[#0B0F14] md:hidden"
             >
-              <div className="px-2 pt-2 pb-3 space-y-1">
-                {navItems.map((item) => (
-                  <Link
-                    key={item.path}
-                    href={item.path}
-                    className={`block px-4 py-3 text-sm font-medium tracking-wide uppercase transition-colors rounded-lg ${
-                      location === item.path
-                        ? "text-[#5EEBFF] bg-white/5"
-                        : "text-gray-300 hover:text-white hover:bg-white/5"
-                    }`}
-                    onClick={() => setMobileMenuOpen(false)}
+              <div className="space-y-1 px-2 pb-4 pt-3">
+                <div className="mb-3 flex items-center gap-2 rounded-xl border border-white/5 bg-white/[0.03] px-4 py-3">
+                  <UserRound className="h-4 w-4 text-[#B06CFF]" />
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-white">{user?.firstName} {user?.lastName}</p>
+                    <p className="truncate text-xs text-gray-500">{user?.role === "admin" ? copy.administrator : user?.role === "coach" ? copy.coach : copy.member}</p>
+                  </div>
+                </div>
+                {navItems.map((item) => {
+                  const active = location === item.path || (item.path === "/portal/schedule" && location === "/portal/booking");
+                  return (
+                    <Link
+                      key={item.path}
+                      href={item.path}
+                      onClick={closeMobileMenu}
+                      className={`block rounded-lg px-4 py-3 text-sm font-semibold uppercase tracking-wide transition-colors ${
+                        active ? "bg-white/5 text-[#5EEBFF]" : "text-gray-300 hover:bg-white/5 hover:text-white"
+                      }`}
+                    >
+                      {item.label}
+                    </Link>
+                  );
+                })}
+                <div className="mt-3 grid grid-cols-2 gap-2 border-t border-white/5 pt-3">
+                  <button
+                    type="button"
+                    onClick={switchLocale}
+                    className="flex items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-semibold text-gray-300 hover:bg-white/5 hover:text-white"
                   >
-                    {item.label}
-                  </Link>
-                ))}
-                <Link
-                  href="/"
-                  className="flex items-center gap-2 px-4 py-3 text-sm font-medium tracking-wide uppercase text-gray-400 hover:text-white hover:bg-white/5 rounded-lg"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                  Back to Main Site
-                </Link>
-                <button
-                  onClick={() => { setMobileMenuOpen(false); handleLogout(); }}
-                  className="w-full text-left flex items-center gap-2 px-4 py-3 text-sm font-medium tracking-wide uppercase text-red-400 hover:text-red-300 hover:bg-white/5 rounded-lg"
-                >
-                  <LogOut className="h-4 w-4" />
-                  Logout
-                </button>
+                    <Languages className="h-4 w-4" />
+                    {locale === "en" ? copy.spanish : copy.english}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="flex items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-semibold text-red-300 hover:bg-red-400/10"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    {copy.logout}
+                  </button>
+                </div>
               </div>
             </motion.div>
           )}

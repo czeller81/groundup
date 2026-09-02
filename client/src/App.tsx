@@ -114,6 +114,7 @@ function Router() {
       </Route>
       
       <Route path="/ln/login"><Redirect to="/portal/login" /></Route>
+      <Route path="/es/portal/login" component={PortalLogin} />
       <Route path="/portal/login" component={PortalLogin} />
       <Route path="/portal/dashboard">
         <PortalLayout><PortalDashboard /></PortalLayout>
@@ -122,7 +123,7 @@ function Router() {
         <PortalLayout><PortalForm /></PortalLayout>
       </Route>
       <Route path="/portal/booking">
-        <PortalLayout><PortalClasses /></PortalLayout>
+        <Redirect to="/portal/schedule" />
       </Route>
       <Route path="/portal/my-classes">
         <PortalLayout><MyClasses /></PortalLayout>

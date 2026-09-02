@@ -1,3 +1,5 @@
+import type { Locale } from "./locale";
+
 export type LiveClass = {
   id: string;
   title: string;
@@ -32,8 +34,8 @@ export type ClassScheduleResponse = {
   occurrences: LiveClass[];
 };
 
-export function classDateLabel(value: string) {
-  return new Intl.DateTimeFormat("en-US", {
+export function classDateLabel(value: string, locale: Locale = "en") {
+  return new Intl.DateTimeFormat(locale === "es" ? "es-US" : "en-US", {
     timeZone: "America/Los_Angeles",
     weekday: "short",
     month: "short",
@@ -41,8 +43,8 @@ export function classDateLabel(value: string) {
   }).format(new Date(value));
 }
 
-export function classTimeLabel(start: string, end: string) {
-  const formatter = new Intl.DateTimeFormat("en-US", {
+export function classTimeLabel(start: string, end: string, locale: Locale = "en") {
+  const formatter = new Intl.DateTimeFormat(locale === "es" ? "es-US" : "en-US", {
     timeZone: "America/Los_Angeles",
     hour: "numeric",
     minute: "2-digit",

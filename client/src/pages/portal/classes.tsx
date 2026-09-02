@@ -1,32 +1,87 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Loader2 } from "lucide-react";
+import { useEffect } from "react";
+import { Link, useLocation } from "wouter";
+import { AlertCircle, Loader2, RefreshCw } from "lucide-react";
 import { ClassCard } from "@/components/class-card";
 import type { LiveClass } from "@/lib/class-booking";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useLocale } from "@/lib/locale";
+import { usePortalAuth } from "@/lib/portal-auth";
+import { Button } from "@/components/ui/button";
 
 export default function PortalClasses() {
   const { toast } = useToast();
-  const { data = [], isLoading } = useQuery<LiveClass[]>({ queryKey: ["/api/portal/classes"] });
+  const [, setLocation] = useLocation();
+  const { isAuthenticated, isLoading: authLoading } = usePortalAuth();
+  const { locale, copy } = useLocale();
+  const { data = [], isLoading, isError, refetch } = useQuery<LiveClass[]>({
+    queryKey: ["/api/portal/classes"],
+    enabled: isAuthenticated,
+  });
   const reserve = useMutation({
     mutationFn: async (occurrenceId: string) => (await apiRequest("POST", "/api/portal/class-reservations", { occurrenceId })).json(),
     onSuccess: (reservation) => {
       queryClient.invalidateQueries({ queryKey: ["/api/portal/classes"] });
       queryClient.invalidateQueries({ queryKey: ["/api/portal/my-classes"] });
-      toast({ title: reservation.status === "waitlisted" ? "Added to waitlist" : "Class booked", description: reservation.status === "waitlisted" ? "We'll email you if a spot opens." : "Your spot is confirmed." });
+      toast({
+        title: reservation.status === "waitlisted" ? (locale === "es" ? "Agregada a la lista de espera" : "Added to waitlist") : copy.classBooked,
+        description: reservation.status === "waitlisted"
+          ? (locale === "es" ? "Te enviaremos un correo si se abre un lugar." : "We'll email you if a spot opens.")
+          : (locale === "es" ? "Tu lugar está confirmado." : "Your spot is confirmed."),
+      });
     },
     onError: (error: Error) => toast({ title: "Could not book class", description: error.message, variant: "destructive" }),
   });
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) setLocation("/portal/login");
+  }, [authLoading, isAuthenticated, setLocation]);
+
+  if (authLoading || (isAuthenticated && isLoading)) {
+    return <main className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-[#0B0F14]"><Loader2 className="h-8 w-8 animate-spin text-[#5EEBFF]" /></main>;
+  }
+  if (!isAuthenticated) return null;
+
   return (
-    <main className="mx-auto min-h-screen max-w-4xl px-4 py-8 text-white">
-      <p className="text-xs font-bold uppercase tracking-[0.3em] text-[#5EEBFF]">Pacific time · Live availability</p>
-      <h1 className="mt-2 text-3xl font-black uppercase">Book a class</h1>
-      <p className="mt-2 text-gray-400">Ground Up—not Google attendees—owns your reservation and waitlist status.</p>
-      {isLoading ? <Loader2 className="mx-auto mt-16 h-8 w-8 animate-spin text-[#5EEBFF]" /> : (
+    <main className="mx-auto min-h-[calc(100vh-4rem)] max-w-4xl px-4 py-8 text-white sm:py-10">
+      <div className="max-w-2xl">
+        <p className="text-xs font-bold uppercase tracking-[0.3em] text-[#5EEBFF]">{locale === "es" ? "Disponibilidad en vivo · Hora del Pacífico" : "Live availability · Pacific time"}</p>
+        <h1 className="mt-3 text-3xl font-black uppercase sm:text-4xl">{copy.findNextClass}</h1>
+        <p className="mt-3 text-gray-400">{copy.findNextClassDescription}</p>
+        <p className="mt-2 text-xs text-gray-500">{locale === "es" ? "Ground Up administra tus reservas y la lista de espera." : "Ground Up manages your reservation and waitlist status."}</p>
+      </div>
+      {isError ? (
+        <div className="mt-8 rounded-2xl border border-red-500/20 bg-red-500/5 p-6" role="alert">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-red-300" />
+            <div>
+              <p className="font-semibold text-red-200">{copy.loadError}</p>
+              <Button variant="outline" size="sm" onClick={() => refetch()} className="mt-4 border-red-400/30 text-red-200 hover:bg-red-400/10">
+                <RefreshCw className="mr-2 h-3.5 w-3.5" />{locale === "es" ? "Intentar de nuevo" : "Try again"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : data.length ? (
         <div className="mt-8 space-y-4">
-          {data.length ? data.map((occurrence) => (
-            <ClassCard key={occurrence.id} occurrence={occurrence} actionLabel={occurrence.bookingState === "waitlist" ? "Join waitlist" : "Book class"} busy={reserve.isPending && reserve.variables === occurrence.id} onAction={() => reserve.mutate(occurrence.id)} />
-          )) : <div className="rounded-2xl border border-white/10 bg-[#121826] p-8 text-center text-gray-400">No bookable classes are currently listed.</div>}
+          {data.map((occurrence) => (
+            <ClassCard
+              key={occurrence.id}
+              occurrence={occurrence}
+              locale={locale}
+              actionLabel={occurrence.bookingState === "waitlist" ? copy.joinWaitlist : copy.bookClass}
+              busy={reserve.isPending && reserve.variables === occurrence.id}
+              onAction={() => reserve.mutate(occurrence.id)}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="mt-8 rounded-2xl border border-white/10 bg-[#121826] p-8 text-center">
+          <p className="text-gray-300">{copy.noClasses}</p>
+          <p className="mx-auto mt-2 max-w-md text-sm text-gray-500">{copy.noClassesDescription}</p>
+          <Button asChild variant="outline" className="mt-5 border-white/10 text-gray-300 hover:bg-white/5">
+            <Link href={locale === "es" ? "/es/contacto" : "/contact"}>{locale === "es" ? "Contáctanos" : "Contact us"}</Link>
+          </Button>
         </div>
       )}
     </main>

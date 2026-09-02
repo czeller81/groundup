@@ -6,8 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { usePortalAuth } from "@/lib/portal-auth";
+import { useLocale } from "@/lib/locale";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { classDateLabel, classTimeLabel } from "@/lib/class-booking";
 import {
   FileText, Calendar, CheckCircle, XCircle, Clock, AlertCircle, X, Loader2, Eye,
   Shield, Camera, Book, Users, CreditCard, Dumbbell, ArrowRight, ExternalLink,
@@ -41,6 +43,7 @@ function getMembershipInfo(type: string) {
 export default function PortalDashboard() {
   const [, setLocation] = useLocation();
   const { user, isLoading: authLoading, isAuthenticated } = usePortalAuth();
+  const { locale, copy } = useLocale();
   const { toast } = useToast();
   const [cancelDialog, setCancelDialog] = useState<{ open: boolean; booking: any | null }>({ open: false, booking: null });
   const [formViewDialog, setFormViewDialog] = useState<{ open: boolean; slug: string | null }>({ open: false, slug: null });
@@ -52,6 +55,11 @@ export default function PortalDashboard() {
 
   const { data: bookings = [] } = useQuery<any[]>({
     queryKey: ["/api/portal/bookings"],
+    enabled: isAuthenticated,
+  });
+
+  const { data: classReservations = [], isLoading: classReservationsLoading } = useQuery<any[]>({
+    queryKey: ["/api/portal/my-classes"],
     enabled: isAuthenticated,
   });
 
@@ -98,6 +106,9 @@ export default function PortalDashboard() {
 
   const upcomingBookings = bookings.filter((b: any) => isFuture(new Date(b.start)) && b.status !== "canceled");
   const pastBookings = bookings.filter((b: any) => isPast(new Date(b.start)) || b.status === "canceled");
+  const nextClassReservation = classReservations
+    .filter((item: any) => ["confirmed", "waitlisted"].includes(item.status) && isFuture(new Date(item.occurrence?.start)))
+    .sort((a: any, b: any) => new Date(a.occurrence.start).getTime() - new Date(b.occurrence.start).getTime())[0];
 
   const requiredForms = forms.filter((f: any) => f.isRequired);
   const completedRequired = requiredForms.filter((f: any) => f.responseStatus === "submitted").length;
@@ -166,10 +177,10 @@ export default function PortalDashboard() {
 
         {/* Quick Action Tiles — mobile-first 2-col row */}
         <div className="grid grid-cols-2 gap-3 mb-4">
-          <Link href="/portal/booking">
+          <Link href="/portal/schedule">
             <div className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl bg-[#B06CFF]/15 border border-[#B06CFF]/30 hover:bg-[#B06CFF]/20 transition-colors cursor-pointer h-full min-h-[80px]">
               <Calendar className="h-6 w-6 text-[#B06CFF]" />
-              <span className="text-white text-sm font-semibold text-center leading-tight">Book Session</span>
+              <span className="text-white text-sm font-semibold text-center leading-tight">{copy.viewSchedule}</span>
             </div>
           </Link>
           <Link href="/portal/forms/personal-training-intake">
@@ -179,6 +190,45 @@ export default function PortalDashboard() {
             </div>
           </Link>
         </div>
+
+        <Card className="mb-4 border-[#5EEBFF]/20 bg-gradient-to-r from-[#5EEBFF]/10 to-[#B06CFF]/10">
+          <CardHeader className="pb-2 pt-4 px-4">
+            <CardTitle className="flex items-center gap-2 text-base text-white">
+              <Calendar className="h-4 w-4 text-[#5EEBFF]" />
+              {copy.nextClass}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="px-4 pb-4">
+            {classReservationsLoading ? (
+              <div className="flex items-center gap-2 py-2 text-sm text-gray-400"><Loader2 className="h-4 w-4 animate-spin text-[#5EEBFF]" />{copy.loading}…</div>
+            ) : nextClassReservation ? (
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-lg font-semibold text-white">{nextClassReservation.occurrence.title}</p>
+                  <p className="mt-1 text-sm text-gray-300">
+                    {classDateLabel(nextClassReservation.occurrence.start, locale)} · {classTimeLabel(nextClassReservation.occurrence.start, nextClassReservation.occurrence.end, locale)}
+                  </p>
+                  <p className={`mt-2 text-xs font-semibold uppercase tracking-wider ${nextClassReservation.status === "waitlisted" ? "text-amber-300" : "text-emerald-300"}`}>
+                    {nextClassReservation.status === "waitlisted" ? copy.waitlisted : locale === "es" ? "Confirmada" : "Confirmed"}
+                  </p>
+                </div>
+                <Button asChild variant="outline" className="w-full border-white/15 text-gray-200 hover:bg-white/5 sm:w-auto">
+                  <Link href="/portal/my-classes">{locale === "es" ? "Ver mis clases" : "View my classes"}</Link>
+                </Button>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-sm text-gray-300">{copy.noUpcomingClasses}</p>
+                  <p className="mt-1 text-xs text-gray-500">{copy.noUpcomingClassesDescription}</p>
+                </div>
+                <Button asChild size="sm" className="w-full bg-[#B06CFF] text-white hover:bg-[#B06CFF]/90 sm:w-auto">
+                  <Link href="/portal/schedule">{copy.viewSchedule}</Link>
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Main content grid: 1-col mobile, 2-col md, 3-col lg */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -238,10 +288,10 @@ export default function PortalDashboard() {
             <CardHeader className="pb-3 pt-4 px-4">
               <CardTitle className="flex items-center gap-2 text-white text-base">
                 <Calendar className="h-4 w-4 text-[#FFB199]" />
-                Upcoming Sessions
+                Private sessions
               </CardTitle>
               <CardDescription className="text-xs">
-                {upcomingBookings.length} upcoming session{upcomingBookings.length !== 1 ? "s" : ""}
+                {upcomingBookings.length} upcoming private session{upcomingBookings.length !== 1 ? "s" : ""}
               </CardDescription>
             </CardHeader>
             <CardContent className="px-4 pb-4">
@@ -249,7 +299,7 @@ export default function PortalDashboard() {
                 <div className="text-center py-3">
                   <p className="text-gray-400 text-sm mb-3">No upcoming sessions</p>
                   <Button asChild size="sm" className="bg-[#FFB199] text-[#0B0F14] font-bold hover:bg-[#FFB199]/90 w-full">
-                    <Link href="/portal/booking">Book a Session</Link>
+                    <Link href="/portal/schedule">{copy.viewSchedule}</Link>
                   </Button>
                 </div>
               ) : (
@@ -271,7 +321,7 @@ export default function PortalDashboard() {
                     </div>
                   ))}
                   <Button variant="outline" size="sm" className="w-full mt-1 border-white/10 hover:bg-white/5 text-gray-300 text-xs" asChild>
-                    <Link href="/portal/booking">Book Another Session</Link>
+                    <Link href="/portal/schedule">{copy.viewSchedule}</Link>
                   </Button>
                 </div>
               )}
@@ -381,10 +431,10 @@ export default function PortalDashboard() {
                 <ExternalLink className="h-3.5 w-3.5" />
               </a>
               <Button className="w-full bg-[#B06CFF] text-white hover:bg-[#B06CFF]/90 justify-between" asChild>
-                <Link href="/portal/booking">
+                <Link href="/portal/schedule">
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4" />
-                    Book New Session
+                    {copy.viewSchedule}
                   </div>
                   <ChevronRight className="h-4 w-4" />
                 </Link>

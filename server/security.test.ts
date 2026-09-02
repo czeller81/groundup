@@ -5,6 +5,8 @@ import Stripe from "stripe";
 import { bookingBelongsToUser, canRetryWebhook, coachCanManageMember, createOriginProtection, createPublicRateLimit, createScannerProbeGuard, isPublicOccurrenceText, isScannerProbePath, requireAuth, requireRole } from "./route-security";
 import { applySecurityHeaders } from "./security-headers";
 import { verifyCalendlySignature, verifyStripeSignature } from "./webhook-security";
+import { PORTAL_COPY } from "../client/src/lib/locale";
+import { classDateLabel, classTimeLabel } from "../client/src/lib/class-booking";
 
 function responseRecorder() {
   const result: { statusCode: number; body?: unknown } = { statusCode: 200 };
@@ -135,4 +137,26 @@ test("baseline security headers are applied without exposing implementation deta
   assert.equal(headers["Referrer-Policy"], "strict-origin-when-cross-origin");
   assert.equal(headers["X-Frame-Options"], "SAMEORIGIN");
   assert.equal(headers["Cache-Control"], "no-store");
+});
+
+test("portal copy stays available in English and Spanish", () => {
+  for (const locale of ["en", "es"] as const) {
+    assert.ok(PORTAL_COPY[locale].dashboard);
+    assert.ok(PORTAL_COPY[locale].schedule);
+    assert.ok(PORTAL_COPY[locale].myClasses);
+    assert.ok(PORTAL_COPY[locale].viewSchedule);
+    assert.ok(PORTAL_COPY[locale].loadError);
+  }
+  assert.notEqual(PORTAL_COPY.en.dashboard, PORTAL_COPY.es.dashboard);
+  assert.notEqual(PORTAL_COPY.en.viewSchedule, PORTAL_COPY.es.viewSchedule);
+});
+
+test("class labels honor the selected portal locale", () => {
+  const start = "2026-09-05T17:00:00.000Z";
+  const end = "2026-09-05T18:30:00.000Z";
+  assert.match(classDateLabel(start, "en"), /Sat/);
+  assert.match(classDateLabel(start, "es"), /sáb/i);
+  assert.match(classTimeLabel(start, end, "en"), /:/);
+  assert.match(classTimeLabel(start, end, "es"), /:/);
+  assert.notEqual(classDateLabel(start, "en"), classDateLabel(start, "es"));
 });

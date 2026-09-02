@@ -9,6 +9,7 @@ import SEO from "@/components/seo";
 import { apiRequest } from "@/lib/queryClient";
 import { track } from "@/lib/analytics";
 import type { ClassScheduleResponse } from "@/lib/class-booking";
+import { setLocale } from "@/lib/locale";
 
 function LanguageLinks({ current = "es" }: { current?: "en" | "es" }) {
   return (
@@ -22,6 +23,7 @@ function LanguageLinks({ current = "es" }: { current?: "en" | "es" }) {
 
 function SpanishShell({ children, title, description, canonical }: { children: React.ReactNode; title: string; description: string; canonical: string }) {
   useEffect(() => {
+    setLocale("es");
     document.documentElement.lang = "es";
     return () => { document.documentElement.lang = "en"; };
   }, []);
