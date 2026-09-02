@@ -1,8 +1,32 @@
 import { Link } from "wouter";
 import { MapPin, Phone, Mail, Instagram } from "lucide-react";
 import logoImage from "@assets/Ground_up_Logo_1772941267349.png";
+import { useLocale } from "@/lib/locale";
 
 export default function Footer() {
+  const { locale, publicCopy } = useLocale();
+  const prefix = locale === "es" ? "/es" : "";
+  const links = locale === "es"
+    ? [
+        { href: `${prefix}/programas`, label: publicCopy.personalTraining },
+        { href: `${prefix}/programas`, label: publicCopy.coaches },
+        { href: `${prefix}/programas`, label: publicCopy.programs },
+        { href: `${prefix}/programas`, label: publicCopy.adaptiveCapacity },
+        { href: `${prefix}/horario`, label: publicCopy.schedule },
+        { href: `${prefix}/contacto`, label: publicCopy.contact },
+        { href: `${prefix}/privacidad`, label: publicCopy.privacyPolicy },
+        { href: "/es/portal/login", label: publicCopy.memberPortal },
+      ]
+    : [
+        { href: "/personal-training", label: publicCopy.personalTraining },
+        { href: "/coaches", label: publicCopy.coaches },
+        { href: "/pricing", label: publicCopy.programs },
+        { href: "/adaptive-capacity", label: publicCopy.adaptiveCapacity },
+        { href: "/schedule", label: publicCopy.schedule },
+        { href: "/contact", label: publicCopy.contact },
+        { href: "/privacy", label: publicCopy.privacyPolicy },
+        { href: "/portal/login", label: publicCopy.memberPortal },
+      ];
   return (
     <footer className="bg-[#0B0F14] border-t border-white/5">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -15,26 +39,16 @@ export default function Footer() {
               </span>
             </div>
             <p className="text-gray-400 text-sm leading-relaxed">
-              Human resilience and capability, built from the ground up.
-              Physical training and practical learning for what comes next.
+              {publicCopy.footerDescription}
             </p>
           </div>
 
           <div>
             <h4 className="text-white font-semibold text-sm tracking-wider mb-4" style={{ fontFamily: 'var(--font-display)' }}>
-              QUICK LINKS
+              {publicCopy.quickLinks}
             </h4>
             <nav className="space-y-2">
-              {[
-                { href: "/personal-training", label: "Personal Training" },
-                { href: "/coaches", label: "Coaches" },
-                { href: "/pricing", label: "Programs" },
-                { href: "/adaptive-capacity", label: "Adaptive Capacity" },
-                { href: "/schedule", label: "Schedule" },
-                { href: "/contact", label: "Contact" },
-                 { href: "/privacy", label: "Privacy Policy" },
-                { href: "/portal/login", label: "Member Portal" },
-              ].map((link) => (
+              {links.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
@@ -48,7 +62,7 @@ export default function Footer() {
 
           <div>
             <h4 className="text-white font-semibold text-sm tracking-wider mb-4" style={{ fontFamily: 'var(--font-display)' }}>
-              GET IN TOUCH
+              {publicCopy.getInTouch}
             </h4>
             <div className="space-y-3">
               <a href="tel:786-757-1175" className="flex items-center space-x-3 text-gray-400 hover:text-[#5EEBFF] text-sm transition-colors">
@@ -69,7 +83,7 @@ export default function Footer() {
 
         <div className="mt-10 pt-8 border-t border-white/5 flex flex-col sm:flex-row justify-between items-center gap-4">
           <p className="text-gray-500 text-xs">
-            &copy; {new Date().getFullYear()} Ground Up Women's BJJ. All rights reserved.
+             &copy; {new Date().getFullYear()} Ground Up Women's BJJ. {publicCopy.allRightsReserved}
           </p>
           <div className="flex items-center space-x-4">
             <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-[#5EEBFF] transition-colors">

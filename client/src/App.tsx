@@ -33,6 +33,7 @@ import AnalyticsConsent from "@/components/analytics-consent";
 import Privacy from "@/pages/privacy";
 import MetaPixel from "@/components/meta-pixel";
 import { SpanishHome, SpanishPrograms, SpanishSchedule, SpanishBooking, SpanishContact, SpanishPrivacy } from "@/pages/spanish";
+import { LocaleProvider } from "@/lib/locale";
 
 function MainLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -154,16 +155,18 @@ function Router() {
 function App() {
   return (
     <HelmetProvider>
-      <AnalyticsConsent />
-      <MetaPixel />
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <PortalAuthProvider>
-            <Toaster />
-            <Router />
-          </PortalAuthProvider>
-        </TooltipProvider>
-      </QueryClientProvider>
+      <LocaleProvider>
+        <AnalyticsConsent />
+        <MetaPixel />
+        <QueryClientProvider client={queryClient}>
+          <TooltipProvider>
+            <PortalAuthProvider>
+              <Toaster />
+              <Router />
+            </PortalAuthProvider>
+          </TooltipProvider>
+        </QueryClientProvider>
+      </LocaleProvider>
     </HelmetProvider>
   );
 }

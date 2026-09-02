@@ -1,0 +1,658 @@
+You are Replit Agent.
+
+We have reviewed the latest Ground Up screen recording and found a major localization defect.
+
+The English/Spanish implementation is NOT acceptable yet.
+
+The current experience mixes English and Spanish across routes and components.
+
+This must be corrected as an application-wide localization architecture issue.
+
+Do NOT continue translating isolated pages one at a time.
+
+Do NOT patch individual visible strings without fixing the root cause.
+
+The required behavior is:
+
+# ONE LANGUAGE STATE FOR THE ENTIRE GROUND UP EXPERIENCE.
+
+If the user selects:
+
+ESPAÑOL
+
+then every normal user-facing surface must render in Spanish until the user explicitly switches back to English.
+
+If the user selects:
+
+ENGLISH
+
+then every normal user-facing surface must render in English until changed.
+
+No mixed-language pages.
+
+No mixed-language navigation.
+
+No route-specific language drift.
+
+---
+
+# 1. CURRENT DEFECT
+
+The screen recording shows examples of locale inconsistency.
+
+Spanish appears in some places:
+
+- Spanish login
+- Spanish training/program content
+
+while other surfaces remain English:
+
+- global navigation
+- Personal Training
+- class/schedule headings
+- training/booking sections
+- page CTAs
+- other public routes
+
+This means localization is not being consistently inherited application-wide.
+
+Treat this as a P1 UX defect.
+
+---
+
+# 2. ROOT-CAUSE AUDIT FIRST
+
+Before changing copy, determine how locale currently works.
+
+Inspect:
+
+- locale storage
+- route detection
+- React context/provider
+- translation dictionaries
+- component props
+- server fallback handling
+- authenticated user locale
+- public route locale
+- redirects
+- route aliases
+- hard-coded strings
+
+Determine whether there are multiple conflicting locale sources such as:
+
+- URL prefix
+- localStorage
+- user profile locale
+- component-specific locale
+- route-specific dictionaries
+
+There must ultimately be ONE resolved locale state.
+
+---
+
+# 3. AUTHORITATIVE LOCALE RESOLUTION
+
+Create one application-wide locale resolver.
+
+Recommended precedence:
+
+1. Explicit current route locale
+2. Authenticated user saved locale
+3. Existing visitor locale preference
+4. Browser language only on first visit
+5. English fallback
+
+Once resolved, all components must consume the same locale.
+
+Do not allow each page to independently decide its language.
+
+---
+
+# 4. ONE GLOBAL I18N PROVIDER
+
+Use a single root-level localization provider/context across the application.
+
+All normal user-facing components must read language from this one source.
+
+The provider should cover:
+
+PUBLIC:
+- header
+- nav
+- footer
+- pages
+- cards
+- buttons
+- forms
+- schedule
+- booking
+- errors
+- empty states
+
+AUTH:
+- login
+- signup
+- forgot password
+- reset password
+
+PORTAL:
+- dashboard
+- schedule
+- My Classes
+- forms
+- membership
+- account
+
+COACH:
+- navigation
+- member surfaces
+- attendance
+- notes
+
+ADMIN:
+- normal operational UI
+
+Technical diagnostics may remain English.
+
+---
+
+# 5. REMOVE HARD-CODED USER-FACING STRINGS
+
+Search the entire repository for hard-coded visible text.
+
+Examples seen in the recording include English strings such as:
+
+- Personal Training
+- Choose Your Next Class
+- Start Your Training at Ground Up
+- Book Your Free First Visit
+- Explore Programs
+- navigation labels
+- page subtitles
+
+Every user-facing string should come from the locale dictionary/content layer.
+
+Do not leave English literal strings in JSX/TSX unless they are intentionally developer-only.
+
+---
+
+# 6. ROUTE BEHAVIOR
+
+English routes:
+
+/
+...
+/portal/...
+
+Spanish routes:
+
+/es
+/es/...
+/es/portal/...
+
+When a Spanish visitor follows internal links, they should remain in the Spanish route namespace wherever a localized equivalent exists.
+
+Example:
+
+/es
+→ /es/programas
+→ /es/horario
+→ /es/reservar
+→ /es/portal/login
+→ Spanish portal
+
+Do not send them back into English routes unnecessarily.
+
+---
+
+# 7. PUBLIC HEADER MUST SWITCH COMPLETELY
+
+The global header must be 100% localized.
+
+English example:
+
+- Home
+- Training
+- Self-Defense
+- Girls / Mother + Daughter
+- Schedule
+- Coaches
+- Programs
+- Contact
+- Member Login
+- Español
+- Book Your Free First Visit
+
+Spanish example should use natural Spanish equivalents such as:
+
+- Inicio
+- Entrenamiento
+- Defensa Personal
+- Niñas / Madre + Hija
+- Horario
+- Entrenadoras / Coaches as appropriate to approved terminology
+- Programas
+- Contacto
+- Acceso de Miembros
+- English
+- Reserva tu Primera Clase Gratis
+
+Do not leave a combination such as:
+
+Spanish page body + English nav.
+
+---
+
+# 8. PUBLIC PAGE PARITY
+
+Audit every public page and prove complete translation parity.
+
+At minimum:
+
+- Home
+- Women's Training
+- Self-Defense
+- Strength / Personal Training
+- Girls / Mother + Daughter
+- Adaptive Capacity
+- Schedule
+- Coaches
+- Programs
+- Contact
+- First Visit / Booking
+- Privacy
+
+For each page verify:
+
+- header
+- hero
+- body
+- buttons
+- cards
+- FAQ
+- footer
+- empty states
+- loading/errors
+- metadata
+
+---
+
+# 9. PERSONAL TRAINING PAGE
+
+The recording specifically shows the Personal Training page remaining English.
+
+Fix this completely.
+
+Do not only translate the heading.
+
+Translate/localize:
+
+- title
+- subtitle
+- CTA
+- benefits
+- sections
+- descriptions
+- labels
+- footer/navigation
+
+Spanish must feel native and natural.
+
+---
+
+# 10. SCHEDULE / CLASS EXPERIENCE
+
+The recording shows class/schedule content remaining English in parts.
+
+Localize:
+
+- Choose Your Next Class
+- class labels
+- availability
+- schedule states
+- waitlist
+- reserve
+- no classes available
+- loading
+- errors
+- dates/time formatting
+
+Spanish visitor must see the entire schedule experience in Spanish.
+
+---
+
+# 11. TRAINING / BOOKING EXPERIENCE
+
+Translate all current English messaging such as:
+
+- Start Your Training at Ground Up
+- Book Your Free First Visit
+- Explore Programs
+- Training Built Around You
+
+and all associated explanatory text.
+
+No mixed language in a single viewport.
+
+---
+
+# 12. PORTAL LANGUAGE
+
+If user is Spanish:
+
+- portal header Spanish
+- account menu Spanish
+- dashboard Spanish
+- schedule Spanish
+- My Classes Spanish
+- forms Spanish
+- membership Spanish
+- logout Spanish
+
+The public site → login → portal transition must retain locale.
+
+---
+
+# 13. LANGUAGE SWITCH CONTROL
+
+Use one clear switch:
+
+English | Español
+
+or:
+
+EN | ES
+
+Switching it should:
+
+- change current page immediately
+- preserve equivalent route
+- save preference
+- update authenticated profile locale if logged in
+- keep the user in the same product context
+
+Example:
+
+English Personal Training
+→ click Español
+→ Spanish Personal Training equivalent
+
+not:
+→ Spanish homepage
+
+unless no translated equivalent exists.
+
+---
+
+# 14. NO MIXED-LOCALE COMPONENTS
+
+Add a development/QA rule:
+
+A page must never intentionally render both English UI labels and Spanish UI labels simultaneously unless the content itself explicitly requires both languages.
+
+This excludes:
+
+- brand names
+- BJJ
+- Ground Up
+- proper names
+- technical identifiers
+
+Everything else should follow the selected locale.
+
+---
+
+# 15. CONTENT DICTIONARY COMPLETENESS CHECK
+
+Build a translation coverage check.
+
+The test should detect:
+
+- missing Spanish keys
+- missing English keys
+- fallback-to-English keys appearing on Spanish user-facing pages
+
+For production-facing translations:
+
+missing Spanish must fail QA.
+
+Do not silently fall back to English for normal UI.
+
+---
+
+# 16. DEVELOPMENT FALLBACK
+
+During development only, missing keys may visibly report:
+
+[MISSING TRANSLATION: key]
+
+rather than silently showing English.
+
+This makes missing coverage obvious.
+
+Do not expose these markers in production.
+
+---
+
+# 17. SERVER / RAW HTML LOCALIZATION
+
+Ensure server-side metadata/fallback HTML also respects locale.
+
+Spanish routes should emit:
+
+- Spanish page title
+- Spanish description
+- `lang="es"`
+
+English:
+- `lang="en"`
+
+Do not have a Spanish rendered React page with English raw metadata/fallback.
+
+---
+
+# 18. AUTHENTICATED LOCALE PERSISTENCE
+
+Test:
+
+Spanish:
+`/es`
+→ `/es/portal/login`
+→ login
+→ portal dashboard
+→ schedule
+→ class
+→ forms
+→ logout
+→ `/es`
+
+Every normal string must remain Spanish.
+
+Then test equivalent English flow.
+
+---
+
+# 19. TEST THE EXACT VIDEO FLOW
+
+Reproduce every route visited in the uploaded screen recording.
+
+For every frame/page:
+
+verify either:
+
+100% ENGLISH
+
+or
+
+100% SPANISH
+
+according to selected locale.
+
+No hybrid views.
+
+Specifically re-check:
+
+- homepage
+- Personal Training
+- training page
+- schedule
+- booking
+- login
+- portal
+- return to public pages
+
+---
+
+# 20. AUTOMATED STRING AUDIT
+
+Search source for visible English hard-coded strings.
+
+Create an allowlist only for:
+
+- proper nouns
+- technical diagnostics
+- internal admin/debug identifiers
+
+All other user-facing literals must move into i18n/content dictionaries.
+
+---
+
+# 21. VISUAL LANGUAGE QA
+
+After implementation capture screenshots of:
+
+## English
+- homepage
+- Personal Training
+- Schedule
+- booking
+- login
+- portal dashboard
+
+## Spanish
+- homepage
+- Personal Training
+- Schedule
+- booking
+- login
+- portal dashboard
+
+Compare side-by-side.
+
+Spanish screenshots must not contain normal English UI copy.
+
+---
+
+# 22. TESTS
+
+Add tests for:
+
+- Spanish header translation
+- Spanish footer translation
+- Spanish Personal Training page
+- Spanish Schedule
+- Spanish booking
+- Spanish portal
+- route language persistence
+- switching languages on equivalent routes
+- missing translation key detection
+
+Run:
+
+npm run check
+npm test
+npm run build
+git diff --check
+
+All must pass.
+
+---
+
+# 23. DO NOT CHANGE WORKING BUSINESS LOGIC
+
+Do not rewrite:
+
+- booking storage
+- Calendar sync
+- forms
+- security
+- auth
+- reservation logic
+- waitlist
+- password reset
+
+unless localization work exposes a concrete bug.
+
+This is a localization architecture correction.
+
+---
+
+# 24. FINAL REPORT
+
+Return:
+
+# GROUND UP LANGUAGE CONSISTENCY REMEDIATION REPORT
+
+## A. Root Cause
+Explain why mixed-language pages occurred.
+
+## B. Locale Architecture Before
+
+## C. Locale Architecture After
+
+## D. Hard-Coded Strings Removed
+
+## E. Public English Coverage
+
+## F. Public Spanish Coverage
+
+## G. Portal English Coverage
+
+## H. Portal Spanish Coverage
+
+## I. Schedule / Booking Coverage
+
+## J. Language Persistence
+
+## K. Server Metadata
+
+## L. Translation Coverage Test
+
+## M. Screenshots
+
+## N. Tests
+
+## O. Remaining Exceptions
+
+---
+
+# 25. FINAL LANGUAGE VERDICT
+
+End with exactly one:
+
+GROUND UP LANGUAGE PARITY COMPLETE — NO MIXED UI
+
+GROUND UP LANGUAGE PARITY COMPLETE — DOCUMENTED TECHNICAL EXCEPTIONS ONLY
+
+GROUND UP LANGUAGE PARITY INCOMPLETE — MIXED UI REMAINS
+
+---
+
+# FINAL REQUIREMENT
+
+This is the desired behavior:
+
+# ENGLISH SELECTED = ENGLISH EVERYWHERE.
+
+# ESPAÑOL SELECTED = ESPAÑOL EN TODA LA EXPERIENCIA.
+
+No hybrid pages.
+
+No English navigation on Spanish pages.
+
+No English sections inside Spanish routes.
+
+No route-by-route language guessing.
+
+One language state.
+One Ground Up experience.

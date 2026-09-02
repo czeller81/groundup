@@ -12,7 +12,7 @@ export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const { isAuthenticated, user, logout } = usePortalAuth();
-  const { copy } = useLocale();
+  const { locale, publicCopy } = useLocale();
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -33,21 +33,31 @@ export default function Navbar() {
     return () => { document.body.style.overflow = ""; };
   }, [mobileMenuOpen]);
 
-  const navItems = [
-    { path: "/", label: "Home" },
-    { path: "/personal-training", label: "Training" },
-    { path: "/womens-self-defense", label: "Self-Defense" },
-    { path: "/girls", label: "Girls + Mothers" },
-    { path: "/schedule", label: "Schedule" },
-    { path: "/coaches", label: "Coaches" },
-    { path: "/pricing", label: "Programs" },
-  ];
+  const navItems = locale === "es"
+    ? [
+        { path: "/es", label: publicCopy.home },
+        { path: "/es/programas", label: publicCopy.training },
+        { path: "/es/programas", label: publicCopy.selfDefense },
+        { path: "/es/programas", label: publicCopy.girlsMothers },
+        { path: "/es/horario", label: publicCopy.schedule },
+        { path: "/es/programas", label: publicCopy.coaches },
+        { path: "/es/programas", label: publicCopy.programs },
+      ]
+    : [
+        { path: "/", label: publicCopy.home },
+        { path: "/personal-training", label: publicCopy.training },
+        { path: "/womens-self-defense", label: publicCopy.selfDefense },
+        { path: "/girls", label: publicCopy.girlsMothers },
+        { path: "/schedule", label: publicCopy.schedule },
+        { path: "/coaches", label: publicCopy.coaches },
+        { path: "/pricing", label: publicCopy.programs },
+      ];
 
   const closeMenu = () => setMobileMenuOpen(false);
   const handleLogout = async () => {
     await logout();
     closeMenu();
-    setLocation("/");
+    setLocation(locale === "es" ? "/es" : "/");
   };
 
   return (
@@ -56,7 +66,7 @@ export default function Navbar() {
         scrolled ? "border-b border-white/5 bg-[#0B0F14]/95 shadow-lg backdrop-blur-md" : "bg-transparent"
       }`}
       data-testid="navbar"
-      aria-label="Main navigation"
+      aria-label={publicCopy.mainNavigation}
     >
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between gap-4 md:h-20">
@@ -89,20 +99,20 @@ export default function Navbar() {
                 data-testid="nav-link-account"
               >
                 <UserRound className="h-3.5 w-3.5 text-[#B06CFF]" />
-                {isAuthenticated ? user?.firstName || copy.account : copy.login}
+                {isAuthenticated ? user?.firstName || publicCopy.account : publicCopy.login}
               </Link>
               {isAuthenticated ? (
                 <Button variant="ghost" size="sm" onClick={handleLogout} className="px-2 text-gray-400 hover:bg-white/5 hover:text-white" aria-label={copy.logout}>
                   <LogOut className="h-3.5 w-3.5" />
                 </Button>
               ) : (
-                <Link href="/es" className="px-2 py-2 text-xs font-bold uppercase tracking-wide text-[#5EEBFF] hover:text-white" data-testid="nav-link-es">
-                  Español
+                <Link href={locale === "es" ? "/" : "/es"} className="px-2 py-2 text-xs font-bold uppercase tracking-wide text-[#5EEBFF] hover:text-white" data-testid="nav-link-es">
+                  {locale === "es" ? publicCopy.english : publicCopy.spanish}
                 </Link>
               )}
               <Link href="/book">
                 <Button size="sm" className="bg-[#FFB199] font-semibold uppercase tracking-wider text-[#0B0F14] hover:bg-[#FFB199]/90">
-                  Free First Visit
+                  {publicCopy.freeFirstVisit}
                 </Button>
               </Link>
             </div>
@@ -112,7 +122,7 @@ export default function Navbar() {
             variant="ghost"
             size="sm"
             onClick={() => setMobileMenuOpen((open) => !open)}
-            aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+             aria-label={mobileMenuOpen ? publicCopy.closeMenu : publicCopy.openMenu}
             aria-expanded={mobileMenuOpen}
             aria-controls="mobile-navigation"
             className="text-white hover:bg-white/10 md:hidden"
@@ -150,19 +160,19 @@ export default function Navbar() {
                   className="flex items-center gap-2 rounded-lg px-4 py-3 text-sm font-semibold uppercase tracking-wide text-gray-300 hover:bg-white/5 hover:text-white"
                 >
                   {isAuthenticated ? <UserRound className="h-4 w-4 text-[#B06CFF]" /> : <LogIn className="h-4 w-4 text-[#B06CFF]" />}
-                  {isAuthenticated ? `${copy.account} · ${user?.firstName || ""}` : copy.login}
+                  {isAuthenticated ? `${publicCopy.account} · ${user?.firstName || ""}` : publicCopy.login}
                 </Link>
-                {isAuthenticated ? (
+                  {isAuthenticated ? (
                   <button onClick={handleLogout} className="flex w-full items-center gap-2 rounded-lg px-4 py-3 text-left text-sm font-semibold uppercase tracking-wide text-red-300 hover:bg-red-400/10">
                     <LogOut className="h-4 w-4" />{copy.logout}
                   </button>
                 ) : (
-                  <Link href="/es" onClick={closeMenu} className="block rounded-lg px-4 py-3 text-sm font-semibold uppercase tracking-wide text-[#5EEBFF] hover:bg-white/5 hover:text-white">
-                    Español
+                  <Link href={locale === "es" ? "/" : "/es"} onClick={closeMenu} className="block rounded-lg px-4 py-3 text-sm font-semibold uppercase tracking-wide text-[#5EEBFF] hover:bg-white/5 hover:text-white">
+                    {locale === "es" ? publicCopy.english : publicCopy.spanish}
                   </Link>
                 )}
                 <Link href="/book" onClick={closeMenu} className="mt-2 block rounded-lg bg-[#FFB199] px-4 py-3 text-center text-sm font-bold uppercase tracking-wide text-[#0B0F14]">
-                  Free First Visit
+                  {publicCopy.freeFirstVisit}
                 </Link>
               </div>
             </motion.div>

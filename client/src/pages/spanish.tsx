@@ -9,7 +9,8 @@ import SEO from "@/components/seo";
 import { apiRequest } from "@/lib/queryClient";
 import { track } from "@/lib/analytics";
 import type { ClassScheduleResponse } from "@/lib/class-booking";
-import { setLocale } from "@/lib/locale";
+import Navbar from "@/components/layout/navbar";
+import Footer from "@/components/layout/footer";
 
 function LanguageLinks({ current = "es" }: { current?: "en" | "es" }) {
   return (
@@ -22,19 +23,14 @@ function LanguageLinks({ current = "es" }: { current?: "en" | "es" }) {
 }
 
 function SpanishShell({ children, title, description, canonical }: { children: React.ReactNode; title: string; description: string; canonical: string }) {
-  useEffect(() => {
-    setLocale("es");
-    document.documentElement.lang = "es";
-    return () => undefined;
-  }, []);
   return (
-    <main className="min-h-screen bg-[#0B0F14] text-white">
+    <div className="min-h-screen bg-[#0B0F14] text-white">
       <SEO title={title} description={description} canonical={canonical} />
-      <div className="border-b border-white/5 bg-[#0B0F14] px-4 py-3 pt-24">
-        <LanguageLinks />
-      </div>
+      <Navbar />
+      <div className="border-b border-white/5 bg-[#0B0F14] px-4 py-3 pt-24"><LanguageLinks /></div>
       {children}
-    </main>
+      <Footer />
+    </div>
   );
 }
 

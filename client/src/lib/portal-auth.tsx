@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "./queryClient";
-import { setLocale, type Locale } from "./locale";
+import { useLocale, type Locale } from "./locale";
 
 interface User {
   id: string;
@@ -43,6 +43,7 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 export function PortalAuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
+  const { setUserLocale } = useLocale();
 
   const { data, isLoading } = useQuery<{ user: User }>({
     queryKey: ["/api/portal/me"],
@@ -57,8 +58,8 @@ export function PortalAuthProvider({ children }: { children: ReactNode }) {
   const isStaff = isAdmin || isCoach;
 
   useEffect(() => {
-    if (user?.locale) setLocale(user.locale);
-  }, [user?.id, user?.locale]);
+    setUserLocale(user?.locale || null);
+  }, [setUserLocale, user?.id, user?.locale]);
 
   const loginMutation = useMutation({
     mutationFn: async ({ email, password }: { email: string; password: string }) => {

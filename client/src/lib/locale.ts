@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 
 export type Locale = "en" | "es";
 
@@ -346,6 +346,75 @@ export const PORTAL_COPY = {
   },
 } as const;
 
+export const PUBLIC_COPY = {
+  en: {
+    home: "Home",
+    training: "Training",
+    selfDefense: "Self-Defense",
+    girlsMothers: "Girls + Mothers",
+    schedule: "Schedule",
+    coaches: "Coaches",
+    programs: "Programs",
+    account: "Account",
+    login: "Member login",
+    freeFirstVisit: "Free first visit",
+    language: "Language",
+    english: "English",
+    spanish: "Español",
+    openMenu: "Open navigation menu",
+    closeMenu: "Close navigation menu",
+    mainNavigation: "Main navigation",
+    returnToGroundUp: "Return to Ground Up",
+    footerDescription: "Human resilience and capability, built from the ground up. Physical training and practical learning for what comes next.",
+    quickLinks: "Quick links",
+    getInTouch: "Get in touch",
+    personalTraining: "Personal Training",
+    adaptiveCapacity: "Adaptive Capacity",
+    contact: "Contact",
+    privacyPolicy: "Privacy Policy",
+    memberPortal: "Member Portal",
+    allRightsReserved: "All rights reserved.",
+    analyticsChoices: "Analytics choices",
+    analyticsTitle: "Help us understand what brings people here",
+    analyticsDescription: "Allow anonymous analytics and campaign attribution so we can improve the training and Adaptive Capacity journeys. You can decline and still use the site.",
+    allowAnalytics: "Allow analytics",
+    decline: "Decline",
+  },
+  es: {
+    home: "Inicio",
+    training: "Entrenamiento",
+    selfDefense: "Defensa personal",
+    girlsMothers: "Niñas + madres",
+    schedule: "Horario",
+    coaches: "Coaches",
+    programs: "Programas",
+    account: "Cuenta",
+    login: "Acceso de miembros",
+    freeFirstVisit: "Primera visita gratis",
+    language: "Idioma",
+    english: "English",
+    spanish: "Español",
+    openMenu: "Abrir menú de navegación",
+    closeMenu: "Cerrar menú de navegación",
+    mainNavigation: "Navegación principal",
+    returnToGroundUp: "Volver a Ground Up",
+    footerDescription: "Resiliencia y capacidad humana, construidas desde la base. Entrenamiento físico y aprendizaje práctico para lo que viene.",
+    quickLinks: "Enlaces rápidos",
+    getInTouch: "Contáctanos",
+    personalTraining: "Entrenamiento personal",
+    adaptiveCapacity: "Capacidad adaptativa",
+    contact: "Contacto",
+    privacyPolicy: "Política de privacidad",
+    memberPortal: "Portal de miembros",
+    allRightsReserved: "Todos los derechos reservados.",
+    analyticsChoices: "Opciones de análisis",
+    analyticsTitle: "Ayúdanos a entender qué te trae aquí",
+    analyticsDescription: "Permite análisis anónimos y atribución de campañas para que podamos mejorar las experiencias de entrenamiento y Capacidad Adaptativa. Puedes rechazarlo y seguir usando el sitio.",
+    allowAnalytics: "Permitir análisis",
+    decline: "Rechazar",
+  },
+} as const;
+
 type PortalCopy = typeof PORTAL_COPY.en;
 
 export const FORM_COPY: Record<string, Partial<Record<Locale, {
@@ -473,9 +542,27 @@ export function localizeFormOption(locale: Locale, slug: string | undefined, val
 
 export type { PortalCopy };
 
-function readLocale(): Locale {
+export type PublicCopy = typeof PUBLIC_COPY.en;
+
+function readStoredLocale(): Locale | null {
   if (typeof window === "undefined") return "en";
-  return localStorage.getItem(LOCALE_KEY) === "es" ? "es" : "en";
+  const stored = localStorage.getItem(LOCALE_KEY);
+  return stored === "es" || stored === "en" ? stored : null;
+}
+
+function readBrowserLocale(): Locale {
+  if (typeof navigator !== "undefined" && navigator.language.toLowerCase().startsWith("es")) return "es";
+  return "en";
+}
+
+function routeLocale(pathname: string): Locale | null {
+  if (/^\/es(?:\/|$)/.test(pathname)) return "es";
+  if (/^\/portal(?:\/|$)/.test(pathname)) return null;
+  return "en";
+}
+
+function readPathname() {
+  return typeof window === "undefined" ? "/" : window.location.pathname;
 }
 
 export function setLocale(locale: Locale) {
@@ -485,19 +572,73 @@ export function setLocale(locale: Locale) {
   window.dispatchEvent(new Event(LOCALE_EVENT));
 }
 
-export function useLocale() {
-  const [locale, updateLocale] = useState<Locale>(readLocale);
+type LocaleContextValue = {
+  locale: Locale;
+  copy: PortalCopy;
+  publicCopy: PublicCopy;
+  setLocale: (locale: Locale) => void;
+  setUserLocale: (locale: Locale | null) => void;
+};
+
+const LocaleContext = createContext<LocaleContextValue | null>(null);
+
+export function LocaleProvider({ children }: { children: ReactNode }) {
+  const [path, setPath] = useState(readPathname);
+  const [storedLocale, setStoredLocale] = useState<Locale | null>(readStoredLocale);
+  const [userLocale, setUserLocale] = useState<Locale | null>(null);
 
   useEffect(() => {
-    const handleChange = () => updateLocale(readLocale());
-    window.addEventListener(LOCALE_EVENT, handleChange);
-    return () => window.removeEventListener(LOCALE_EVENT, handleChange);
+    if (typeof window === "undefined") return;
+    const notify = () => {
+      setPath(readPathname());
+      setStoredLocale(readStoredLocale());
+    };
+    const originalPushState = window.history.pushState;
+    const originalReplaceState = window.history.replaceState;
+    const onLocaleChange = () => notify();
+    window.history.pushState = function (...args) {
+      originalPushState.apply(this, args);
+      notify();
+    };
+    window.history.replaceState = function (...args) {
+      originalReplaceState.apply(this, args);
+      notify();
+    };
+    window.addEventListener("popstate", notify);
+    window.addEventListener(LOCALE_EVENT, onLocaleChange);
+    return () => {
+      window.history.pushState = originalPushState;
+      window.history.replaceState = originalReplaceState;
+      window.removeEventListener("popstate", notify);
+      window.removeEventListener(LOCALE_EVENT, onLocaleChange);
+    };
   }, []);
 
-  const changeLocale = (nextLocale: Locale) => {
-    setLocale(nextLocale);
-    updateLocale(nextLocale);
-  };
+  const locale = useMemo(
+    () => routeLocale(path) ?? userLocale ?? storedLocale ?? readBrowserLocale(),
+    [path, storedLocale, userLocale],
+  );
 
-  return { locale, copy: PORTAL_COPY[locale], setLocale: changeLocale };
+  useEffect(() => {
+    document.documentElement.lang = locale;
+  }, [locale]);
+
+  const value = useMemo<LocaleContextValue>(() => ({
+    locale,
+    copy: PORTAL_COPY[locale],
+    publicCopy: PUBLIC_COPY[locale],
+    setLocale: (nextLocale) => {
+      setLocale(nextLocale);
+      setStoredLocale(nextLocale);
+    },
+    setUserLocale,
+  }), [locale]);
+
+  return <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>;
+}
+
+export function useLocale() {
+  const context = useContext(LocaleContext);
+  if (!context) throw new Error("useLocale must be used within LocaleProvider");
+  return context;
 }
