@@ -8,14 +8,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { usePortalAuth } from "@/lib/portal-auth";
 import { Loader2 } from "lucide-react";
-import { useLocale } from "@/lib/locale";
+import { setLocale, useLocale } from "@/lib/locale";
 
 export default function PortalLogin() {
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
   const { login, signup, isAuthenticated } = usePortalAuth();
   const { locale, copy } = useLocale();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const isSpanishRoute = location === "/es/portal/login";
 
   const [loginData, setLoginData] = useState({ email: "", password: "" });
   const [signupData, setSignupData] = useState({
@@ -26,6 +27,13 @@ export default function PortalLogin() {
     lastName: "",
     phone: "",
   });
+
+  useEffect(() => {
+    if (isSpanishRoute) {
+      setLocale("es");
+      document.documentElement.lang = "es";
+    }
+  }, [isSpanishRoute]);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -73,6 +81,7 @@ export default function PortalLogin() {
         firstName: signupData.firstName,
         lastName: signupData.lastName,
         phone: signupData.phone || undefined,
+        locale,
       });
       toast({ title: locale === "es" ? "¡Cuenta creada!" : "Account created!", description: locale === "es" ? "Bienvenida a Ground Up." : "Welcome to Ground Up." });
       setLocation("/portal/dashboard");

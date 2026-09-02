@@ -15,11 +15,13 @@ import {
   Mail, Phone, Calendar
 } from "lucide-react";
 import { format } from "date-fns";
+import { useLocale } from "@/lib/locale";
 
 export default function PortalCoach() {
   const [, setLocation] = useLocation();
   const { user, isLoading: authLoading, isAuthenticated, isCoach, isStaff } = usePortalAuth();
   const { toast } = useToast();
+  const { locale, copy } = useLocale();
   const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
   const [newNote, setNewNote] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -49,7 +51,7 @@ export default function PortalCoach() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/portal/session-notes", selectedMemberId] });
       setNewNote("");
-      toast({ title: "Session note added" });
+       toast({ title: copy.sessionNoteAdded });
     },
   });
 
@@ -60,7 +62,7 @@ export default function PortalCoach() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/portal/coach/members"] });
-      toast({ title: "Belt rank updated" });
+       toast({ title: copy.beltUpdated });
     },
   });
 
@@ -71,7 +73,7 @@ export default function PortalCoach() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/portal/coach/members"] });
-      toast({ title: "Attendance updated" });
+       toast({ title: copy.attendanceUpdated });
     },
   });
 
@@ -110,7 +112,7 @@ export default function PortalCoach() {
           <h1 className="text-xl font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>
             COACH <span className="gradient-text-cyan">CENTER</span>
           </h1>
-          <p className="text-sm text-gray-400">Manage your assigned members & session notes</p>
+          <p className="text-sm text-gray-400">{copy.coachSubtitle}</p>
         </div>
       </div>
 
@@ -121,11 +123,11 @@ export default function PortalCoach() {
               <CardHeader className="pb-3">
                 <CardTitle className="text-white flex items-center gap-2 text-base">
                   <Users className="h-5 w-5 text-[#5EEBFF]" />
-                  My Members ({filteredMembers.length})
+                  {copy.myMembers} ({filteredMembers.length})
                 </CardTitle>
                 <div className="relative mt-2">
                   <Input
-                    placeholder="Search members..."
+                    placeholder={copy.searchMembers}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="bg-[#0B0F14] border-white/10 text-white placeholder:text-gray-500"
@@ -138,7 +140,7 @@ export default function PortalCoach() {
                     <Loader2 className="h-6 w-6 animate-spin text-[#5EEBFF]" />
                   </div>
                 ) : filteredMembers.length === 0 ? (
-                  <p className="text-gray-400 text-sm text-center py-8">No members assigned</p>
+                  <p className="text-gray-400 text-sm text-center py-8">{copy.noMembersAssigned}</p>
                 ) : (
                   <div className="space-y-1">
                     {filteredMembers.map((member: any) => (
@@ -159,7 +161,7 @@ export default function PortalCoach() {
                             {member.beltRank && (
                               <span className="text-xs text-amber-400">{member.beltRank}</span>
                             )}
-                            <span className="text-xs text-gray-400">{member.attendanceCount} sessions</span>
+                            <span className="text-xs text-gray-400">{member.attendanceCount} {copy.sessions}</span>
                           </div>
                         </div>
                         <ChevronRight className={`h-4 w-4 flex-shrink-0 ${
@@ -178,7 +180,7 @@ export default function PortalCoach() {
               <Card className="bg-[#121826] border-white/5">
                 <CardContent className="flex flex-col items-center justify-center py-20">
                   <Users className="h-12 w-12 text-gray-600 mb-4" />
-                  <p className="text-gray-400 text-lg">Select a member</p>
+                  <p className="text-gray-400 text-lg">{copy.selectMember}</p>
                 </CardContent>
               </Card>
             ) : (
@@ -195,26 +197,22 @@ export default function PortalCoach() {
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                       <div>
-                        <label className="text-xs text-gray-400 mb-1 block">Belt Rank</label>
+                        <label className="text-xs text-gray-400 mb-1 block">{copy.beltRank}</label>
                         <Select
                           value={selectedMember.beltRank || "none"}
                           onValueChange={(beltRank) => beltMutation.mutate({ userId: selectedMemberId!, beltRank: beltRank === "none" ? "" : beltRank })}
                         >
                           <SelectTrigger className="bg-[#0B0F14] border-white/10 text-white">
-                            <SelectValue placeholder="Select belt" />
+                            <SelectValue placeholder={copy.selectBelt} />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="none">No Belt</SelectItem>
-                            <SelectItem value="White Belt">White Belt</SelectItem>
-                            <SelectItem value="Blue Belt">Blue Belt</SelectItem>
-                            <SelectItem value="Purple Belt">Purple Belt</SelectItem>
-                            <SelectItem value="Brown Belt">Brown Belt</SelectItem>
-                            <SelectItem value="Black Belt">Black Belt</SelectItem>
+                            <SelectItem value="none">{copy.noBelt}</SelectItem>
+                            {["White Belt", "Blue Belt", "Purple Belt", "Brown Belt", "Black Belt"].map((belt) => <SelectItem key={belt} value={belt}>{locale === "es" ? ({ "White Belt": "Cinturón blanco", "Blue Belt": "Cinturón azul", "Purple Belt": "Cinturón morado", "Brown Belt": "Cinturón marrón", "Black Belt": "Cinturón negro" } as Record<string, string>)[belt] : belt}</SelectItem>)}
                           </SelectContent>
                         </Select>
                       </div>
                       <div>
-                        <label className="text-xs text-gray-400 mb-1 block">Attendance Count</label>
+                        <label className="text-xs text-gray-400 mb-1 block">{copy.attendanceCount}</label>
                         <Input
                           type="number"
                           value={selectedMember.attendanceCount}
@@ -232,12 +230,12 @@ export default function PortalCoach() {
                   <CardHeader className="pb-3">
                     <CardTitle className="text-white text-base flex items-center gap-2">
                       <StickyNote className="h-5 w-5 text-[#5EEBFF]" />
-                      Session Notes
+                      {copy.sessionNotes}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <Textarea
-                      placeholder="Add session notes..."
+                      placeholder={copy.addSessionNotes}
                       value={newNote}
                       onChange={(e) => setNewNote(e.target.value)}
                       className="bg-[#0B0F14] border-white/10 text-white placeholder:text-gray-500 min-h-[80px]"
@@ -249,7 +247,7 @@ export default function PortalCoach() {
                       size="sm"
                     >
                       {sessionNoteMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                      Add Note
+                      {copy.addNote}
                     </Button>
 
                     <div className="space-y-3 mt-4">
@@ -258,7 +256,7 @@ export default function PortalCoach() {
                           <Loader2 className="h-5 w-5 animate-spin text-[#5EEBFF]" />
                         </div>
                       ) : sessionNotes.length === 0 ? (
-                        <p className="text-gray-400 text-sm text-center py-4">No session notes yet</p>
+                        <p className="text-gray-400 text-sm text-center py-4">{copy.noSessionNotes}</p>
                       ) : (
                         sessionNotes.map((note: any) => (
                           <div key={note.id} className="p-3 rounded-lg bg-[#0B0F14] border border-white/5">

@@ -19,6 +19,7 @@ const reservationSchema = z.object({
   email: z.string().trim().email().max(254),
   phone: z.string().trim().min(7).max(30),
   experience: z.string().trim().max(500).optional(),
+  locale: z.enum(["en", "es"]).optional(),
 }).strict();
 
 const cancelSchema = z.object({
@@ -91,7 +92,7 @@ function respondError(res: Response, error: unknown, fallback: string) {
 }
 
 async function notifyReservation(
-  reservation: { visitorEmail: string | null; visitorFirstName: string | null; status: string; waitlistPosition: number | null },
+  reservation: { visitorEmail: string | null; visitorFirstName: string | null; status: string; waitlistPosition: number | null; locale?: string | null },
   occurrence: { title: string; start: Date },
   status?: "confirmed" | "waitlisted" | "cancelled" | "promoted",
 ) {
@@ -104,6 +105,7 @@ async function notifyReservation(
       startsAt: occurrence.start,
       status: status || (reservation.status === "waitlisted" ? "waitlisted" : "confirmed"),
       waitlistPosition: reservation.waitlistPosition,
+      locale: reservation.locale === "es" ? "es" : "en",
     });
   } catch (error) {
     console.error(JSON.stringify({
@@ -204,6 +206,7 @@ export function registerClassBookingRoutes(app: Express) {
         lastName: user.lastName,
         email: user.email,
         phone: user.phone || "Not provided",
+        locale: user.locale === "es" ? "es" : "en",
       });
       void notifyReservation(result.reservation, result.occurrence);
       res.status(201).json(safeReservation(result.reservation));

@@ -53,11 +53,11 @@ import { canRetryWebhook, isPublicOccurrenceText } from "./route-security";
 export interface IStorage {
   getUserById(id: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
-  createUser(email: string, password: string, firstName: string, lastName: string, phone?: string): Promise<SafeUser>;
+  createUser(email: string, password: string, firstName: string, lastName: string, phone?: string, locale?: "en" | "es"): Promise<SafeUser>;
   createUserFromWebhook(email: string, firstName: string, lastName: string): Promise<SafeUser>;
   validateUserPassword(email: string, password: string): Promise<SafeUser | null>;
   ensureAdminPassword(email: string, password: string): Promise<boolean>;
-  updateUser(id: string, updates: Partial<Pick<User, 'firstName' | 'lastName' | 'phone' | 'role' | 'beltRank' | 'attendanceCount' | 'assignedCoachId' | 'adminNotes'>>): Promise<SafeUser | undefined>;
+  updateUser(id: string, updates: Partial<Pick<User, 'firstName' | 'lastName' | 'phone' | 'locale' | 'role' | 'beltRank' | 'attendanceCount' | 'assignedCoachId' | 'adminNotes'>>): Promise<SafeUser | undefined>;
   
   getForms(): Promise<Form[]>;
   getForm(id: string): Promise<Form | undefined>;
@@ -132,6 +132,7 @@ export interface IStorage {
     lastName: string;
     email: string;
     phone: string;
+    locale?: "en" | "es";
     experience?: string;
     manageTokenHash?: string;
   }): Promise<{ reservation: ClassReservation; occurrence: ClassOccurrence; promoted?: ClassReservation }>;
@@ -182,7 +183,7 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  async createUser(email: string, password: string, firstName: string, lastName: string, phone?: string): Promise<SafeUser> {
+  async createUser(email: string, password: string, firstName: string, lastName: string, phone?: string, locale: "en" | "es" = "en"): Promise<SafeUser> {
     const passwordHash = await bcrypt.hash(password, 10);
     const [newUser] = await db.insert(users).values({
       email: email.toLowerCase(),
@@ -190,6 +191,7 @@ export class DatabaseStorage implements IStorage {
       firstName,
       lastName,
       phone: phone || null,
+      locale,
       role: "member"
     }).returning();
     const { passwordHash: _, ...safeUser } = newUser;
@@ -230,7 +232,7 @@ export class DatabaseStorage implements IStorage {
     return true;
   }
 
-  async updateUser(id: string, updates: Partial<Pick<User, 'firstName' | 'lastName' | 'phone' | 'role' | 'beltRank' | 'attendanceCount' | 'assignedCoachId' | 'adminNotes'>>): Promise<SafeUser | undefined> {
+  async updateUser(id: string, updates: Partial<Pick<User, 'firstName' | 'lastName' | 'phone' | 'locale' | 'role' | 'beltRank' | 'attendanceCount' | 'assignedCoachId' | 'adminNotes'>>): Promise<SafeUser | undefined> {
     const [updated] = await db.update(users).set(updates).where(eq(users.id, id)).returning();
     if (!updated) return undefined;
     const { passwordHash: _, ...safeUser } = updated;
@@ -918,6 +920,7 @@ export class DatabaseStorage implements IStorage {
     lastName: string;
     email: string;
     phone: string;
+    locale?: "en" | "es";
     experience?: string;
     manageTokenHash?: string;
   }): Promise<{ reservation: ClassReservation; occurrence: ClassOccurrence; promoted?: ClassReservation }> {
@@ -988,6 +991,7 @@ export class DatabaseStorage implements IStorage {
         visitorLastName: input.lastName,
         visitorEmail: input.email.toLowerCase(),
         visitorPhone: input.phone,
+        locale: input.locale || "en",
         experience: input.experience,
         status,
         waitlistPosition,

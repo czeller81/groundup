@@ -5,7 +5,7 @@ import Stripe from "stripe";
 import { bookingBelongsToUser, canRetryWebhook, coachCanManageMember, createOriginProtection, createPublicRateLimit, createScannerProbeGuard, isPublicOccurrenceText, isScannerProbePath, requireAuth, requireRole } from "./route-security";
 import { applySecurityHeaders } from "./security-headers";
 import { verifyCalendlySignature, verifyStripeSignature } from "./webhook-security";
-import { PORTAL_COPY } from "../client/src/lib/locale";
+import { FORM_COPY, PORTAL_COPY, localizeFormOption, localizeFormText } from "../client/src/lib/locale";
 import { classDateLabel, classTimeLabel } from "../client/src/lib/class-booking";
 
 function responseRecorder() {
@@ -159,4 +159,12 @@ test("class labels honor the selected portal locale", () => {
   assert.match(classTimeLabel(start, end, "en"), /:/);
   assert.match(classTimeLabel(start, end, "es"), /:/);
   assert.notEqual(classDateLabel(start, "en"), classDateLabel(start, "es"));
+});
+
+test("member-facing seeded forms provide Spanish labels without changing stored keys or values", () => {
+  assert.equal(localizeFormText("es", "health-parq", "title", "Health & PAR-Q Assessment"), "Evaluación de salud y PAR-Q");
+  assert.equal(localizeFormText("es", "health-parq", "field", "Has a doctor ever said you have a heart condition?", "heartCondition"), "¿Algún médico te ha dicho que tienes una enfermedad cardíaca?");
+  assert.equal(localizeFormOption("es", "goals-preferences", "Self-Defense"), "Defensa personal");
+  assert.equal(localizeFormText("en", "health-parq", "field", "Has a doctor ever said you have a heart condition?", "heartCondition"), "Has a doctor ever said you have a heart condition?");
+  assert.ok(FORM_COPY["minor-consent"]?.es?.fields.childAge);
 });

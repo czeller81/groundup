@@ -227,7 +227,7 @@ export async function syncGoogleClassSchedule(now = new Date()) {
 }
 
 async function sendCancellationEmail(
-  reservation: { visitorEmail: string | null; visitorFirstName: string | null; waitlistPosition: number | null },
+  reservation: { visitorEmail: string | null; visitorFirstName: string | null; waitlistPosition: number | null; locale?: string | null },
   occurrence: { title: string; start: Date },
 ) {
   if (!reservation.visitorEmail) return;
@@ -239,6 +239,7 @@ async function sendCancellationEmail(
       startsAt: occurrence.start,
       status: "cancelled",
       waitlistPosition: reservation.waitlistPosition,
+      locale: reservation.locale === "es" ? "es" : "en",
     });
   } catch (error) {
     console.error(JSON.stringify({

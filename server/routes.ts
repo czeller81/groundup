@@ -758,6 +758,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/portal/signup", authRateLimit(), async (req, res) => {
     try {
       const { email, password, firstName, lastName, phone } = req.body;
+      const locale = req.body.locale === "es" ? "es" : "en";
       
       if (!email || !password || !firstName || !lastName) {
         return res.status(400).json({ message: "Email, password, first name, and last name are required" });
@@ -771,7 +772,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Email already registered" });
       }
 
-      const user = await storage.createUser(email.trim().toLowerCase(), password, firstName.trim(), lastName.trim(), phone);
+      const user = await storage.createUser(email.trim().toLowerCase(), password, firstName.trim(), lastName.trim(), phone, locale);
       await new Promise<void>((resolve, reject) => req.session.regenerate((error) => error ? reject(error) : resolve()));
       req.session.userId = user.id;
       req.session.userRole = user.role;
@@ -833,6 +834,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ user: safeUser });
     } catch (error) {
       res.status(500).json({ message: "Failed to get user" });
+    }
+  });
+
+  app.patch("/api/portal/me/locale", requireAuth, async (req, res) => {
+    try {
+      const locale = z.enum(["en", "es"]).parse(req.body?.locale);
+      const user = await storage.updateUser(req.session.userId!, { locale });
+      if (!user) return res.status(404).json({ message: "User not found" });
+      res.json({ user });
+    } catch (error) {
+      if (error instanceof z.ZodError) return res.status(400).json({ message: "Invalid locale" });
+      res.status(500).json({ message: "Failed to save language preference" });
     }
   });
 

@@ -34,8 +34,10 @@ export async function sendClassLifecycleEmail(input: {
   startsAt: Date;
   status: "confirmed" | "waitlisted" | "cancelled" | "promoted";
   waitlistPosition?: number | null;
+  locale?: "en" | "es";
 }) {
-  const starts = new Intl.DateTimeFormat("en-US", {
+  const locale = input.locale === "es" ? "es-US" : "en-US";
+  const starts = new Intl.DateTimeFormat(locale, {
     timeZone: "America/Los_Angeles",
     weekday: "long",
     month: "long",
@@ -44,24 +46,19 @@ export async function sendClassLifecycleEmail(input: {
     minute: "2-digit",
     timeZoneName: "short",
   }).format(input.startsAt);
-  const copy = {
-    confirmed: {
-      subject: `You're booked for ${input.classTitle}`,
-      body: `Your spot is confirmed for ${starts}.`,
-    },
-    waitlisted: {
-      subject: `You're on the waitlist for ${input.classTitle}`,
-      body: `The class is currently full. You are waitlist position ${input.waitlistPosition || "pending"} for ${starts}. We will email you if a spot opens.`,
-    },
-    cancelled: {
-      subject: `Reservation cancelled for ${input.classTitle}`,
-      body: `Your reservation for ${starts} has been cancelled.`,
-    },
-    promoted: {
-      subject: `A spot opened in ${input.classTitle}`,
-      body: `You have been moved from the waitlist into the class on ${starts}. Your spot is now confirmed.`,
-    },
-  }[input.status];
+  const copy = (input.locale === "es"
+    ? {
+        confirmed: { subject: `Tu reserva está confirmada: ${input.classTitle}`, body: `Tu lugar está confirmado para el ${starts}.` },
+        waitlisted: { subject: `Estás en la lista de espera: ${input.classTitle}`, body: `La clase está llena. Tu posición en la lista es ${input.waitlistPosition || "pendiente"} para el ${starts}. Te enviaremos un correo si se abre un lugar.` },
+        cancelled: { subject: `Reserva cancelada: ${input.classTitle}`, body: `Tu reserva para el ${starts} ha sido cancelada.` },
+        promoted: { subject: `Se abrió un lugar en ${input.classTitle}`, body: `Pasaste de la lista de espera a la clase del ${starts}. Tu lugar está confirmado.` },
+      }
+    : {
+        confirmed: { subject: `You're booked for ${input.classTitle}`, body: `Your spot is confirmed for ${starts}.` },
+        waitlisted: { subject: `You're on the waitlist for ${input.classTitle}`, body: `The class is currently full. You are waitlist position ${input.waitlistPosition || "pending"} for ${starts}. We will email you if a spot opens.` },
+        cancelled: { subject: `Reservation cancelled for ${input.classTitle}`, body: `Your reservation for ${starts} has been cancelled.` },
+        promoted: { subject: `A spot opened in ${input.classTitle}`, body: `You have been moved from the waitlist into the class on ${starts}. Your spot is now confirmed.` },
+      })[input.status];
   const response = await resend().proxy("resend", "/emails", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -69,7 +66,9 @@ export async function sendClassLifecycleEmail(input: {
       from: "Ground Up <info@groundupbjj.com>",
       to: [input.to],
       subject: copy.subject,
-      text: `Hi ${input.firstName},\n\n${copy.body}\n\nGround Up Jiu-Jitsu & Fitness`,
+      text: input.locale === "es"
+        ? `Hola ${input.firstName},\n\n${copy.body}\n\nGround Up Jiu-Jitsu & Fitness`
+        : `Hi ${input.firstName},\n\n${copy.body}\n\nGround Up Jiu-Jitsu & Fitness`,
     }),
   });
   if (!response.ok) {

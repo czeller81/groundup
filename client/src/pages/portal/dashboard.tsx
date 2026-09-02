@@ -36,8 +36,19 @@ const MEMBERSHIP_LABELS: Record<string, { name: string; price: string; classes: 
   "monthly_unlimited": { name: "Monthly Unlimited", price: "$60/mo", classes: "Unlimited" },
 };
 
-function getMembershipInfo(type: string) {
-  return MEMBERSHIP_LABELS[type] || { name: type.replace(/_/g, " "), price: "Contact gym", classes: "Varies" };
+function getMembershipInfo(type: string, locale: "en" | "es") {
+  const info = MEMBERSHIP_LABELS[type] || { name: type.replace(/_/g, " "), price: "Contact gym", classes: "Varies" };
+  if (locale === "en") return info;
+  const names: Record<string, string> = {
+    womens_bjj: "Fundamentos de BJJ para mujeres",
+    kids_bjj: "Jiu-jitsu para niñas",
+    strength_conditioning_unlimited: "Fuerza y acondicionamiento ilimitado",
+    self_defense_program: "Programa de defensa personal para mujeres",
+    per_session: "Pago por sesión",
+    monthly_unlimited: "Mensual ilimitado",
+  };
+  const classes: Record<string, string> = { "2 per week": "2 por semana", Unlimited: "Ilimitadas", Flexible: "Flexible", Varies: "Varía" };
+  return { ...info, name: names[type] || info.name, classes: classes[info.classes] || info.classes, price: info.price === "Contact gym" ? "Consulta al gimnasio" : info.price };
 }
 
 export default function PortalDashboard() {
@@ -80,7 +91,7 @@ export default function PortalDashboard() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/portal/bookings"] });
-      toast({ title: "Booking Cancelled", description: "Your session has been cancelled." });
+       toast({ title: locale === "es" ? "Reserva cancelada" : "Booking Cancelled", description: locale === "es" ? "Tu sesión ha sido cancelada." : "Your session has been cancelled." });
       setCancelDialog({ open: false, booking: null });
     },
     onError: (error: any) => {
@@ -139,16 +150,16 @@ export default function PortalDashboard() {
         {/* Welcome + Status Row */}
         <div className="flex items-center justify-between mb-4">
           <div>
-            <p className="text-xs text-gray-500 uppercase tracking-widest font-medium">Member Portal</p>
+             <p className="text-xs text-gray-500 uppercase tracking-widest font-medium">{locale === "es" ? "Portal de miembros" : "Member Portal"}</p>
             <h2 className="text-lg font-bold text-white mt-0.5" style={{ fontFamily: 'var(--font-display)' }}>
-              Welcome back, <span className="text-[#5EEBFF]">{user?.firstName}</span>
+               {locale === "es" ? "Bienvenida de nuevo" : "Welcome back"}, <span className="text-[#5EEBFF]">{user?.firstName}</span>
             </h2>
           </div>
           <div className="flex items-center gap-2">
             {allFormsComplete ? (
               <div className="flex items-center gap-1.5 px-3 py-1.5 bg-green-500/10 border border-green-500/20 rounded-full">
                 <CheckCircle className="h-3.5 w-3.5 text-green-400" />
-                <span className="text-green-400 text-xs font-medium">All forms done</span>
+                 <span className="text-green-400 text-xs font-medium">{locale === "es" ? "Formularios completos" : "All forms done"}</span>
               </div>
             ) : (
               <div className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500/10 border border-amber-500/20 rounded-full">
@@ -164,12 +175,12 @@ export default function PortalDashboard() {
           <div className="mb-4 p-3 rounded-xl border border-amber-500/30 bg-amber-500/10 flex items-start gap-3">
             <AlertCircle className="h-4 w-4 text-amber-400 flex-shrink-0 mt-0.5" />
             <div className="min-w-0 flex-1">
-              <p className="text-amber-300 text-sm font-medium">Action required</p>
-              <p className="text-amber-400/80 text-xs mt-0.5">Complete your required forms to access all gym services.</p>
+               <p className="text-amber-300 text-sm font-medium">{copy.actionRequired}</p>
+               <p className="text-amber-400/80 text-xs mt-0.5">{copy.completeRequiredForms}</p>
             </div>
-            <Button size="sm" className="flex-shrink-0 bg-amber-500 text-white hover:bg-amber-600 h-7 px-3 text-xs" asChild>
+            <Button size="sm" className="min-h-11 flex-shrink-0 bg-amber-500 px-3 text-xs text-white hover:bg-amber-600" asChild>
               <Link href={`/portal/forms/${requiredForms.find((f: any) => f.responseStatus !== "submitted")?.slug || ""}`}>
-                Start
+                 {copy.start}
               </Link>
             </Button>
           </div>
@@ -186,7 +197,7 @@ export default function PortalDashboard() {
           <Link href="/portal/forms/personal-training-intake">
             <div className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl bg-[#5EEBFF]/10 border border-[#5EEBFF]/20 hover:bg-[#5EEBFF]/15 transition-colors cursor-pointer h-full min-h-[80px]">
               <FileText className="h-6 w-6 text-[#5EEBFF]" />
-              <span className="text-white text-sm font-semibold text-center leading-tight">My Forms</span>
+               <span className="text-white text-sm font-semibold text-center leading-tight">{locale === "es" ? "Mis formularios" : "My Forms"}</span>
             </div>
           </Link>
         </div>
@@ -238,34 +249,34 @@ export default function PortalDashboard() {
             <CardHeader className="pb-3 pt-4 px-4">
               <CardTitle className="flex items-center gap-2 text-white text-base">
                 <CreditCard className="h-4 w-4 text-[#B06CFF]" />
-                Membership
+                 {locale === "es" ? "Membresía" : "Membership"}
               </CardTitle>
             </CardHeader>
             <CardContent className="px-4 pb-4">
               {membership ? (
                 <div className="space-y-3">
                   <div className="p-3 bg-[#B06CFF]/10 border border-[#B06CFF]/20 rounded-lg">
-                    <p className="text-xs text-[#B06CFF] font-semibold uppercase tracking-wider mb-1">Active Plan</p>
-                    <p className="text-white font-semibold text-sm">{getMembershipInfo(membership.type).name}</p>
+                     <p className="text-xs text-[#B06CFF] font-semibold uppercase tracking-wider mb-1">{copy.activePlan}</p>
+                     <p className="text-white font-semibold text-sm">{getMembershipInfo(membership.type, locale).name}</p>
                   </div>
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-gray-400">Price</span>
-                      <span className="text-white font-medium">{getMembershipInfo(membership.type).price}</span>
+                       <span className="text-gray-400">{copy.price}</span>
+                       <span className="text-white font-medium">{getMembershipInfo(membership.type, locale).price}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-400">Classes / week</span>
-                      <span className="text-white font-medium">{getMembershipInfo(membership.type).classes}</span>
+                       <span className="text-gray-400">{copy.classesPerWeek}</span>
+                       <span className="text-white font-medium">{getMembershipInfo(membership.type, locale).classes}</span>
                     </div>
                     {membership.endDate && (
                       <div className="flex justify-between">
-                        <span className="text-gray-400">Renews</span>
+                         <span className="text-gray-400">{copy.renews}</span>
                         <span className="text-white font-medium">{format(new Date(membership.endDate), "MMM d, yyyy")}</span>
                       </div>
                     )}
                     <div className="flex justify-between">
-                      <span className="text-gray-400">Status</span>
-                      <Badge className="bg-green-600/20 text-green-400 border border-green-500/30 text-xs">Active</Badge>
+                       <span className="text-gray-400">{locale === "es" ? "Estado" : "Status"}</span>
+                       <Badge className="bg-green-600/20 text-green-400 border border-green-500/30 text-xs">{copy.active}</Badge>
                     </div>
                   </div>
                 </div>
@@ -274,9 +285,9 @@ export default function PortalDashboard() {
                   <div className="w-10 h-10 rounded-full bg-[#B06CFF]/10 flex items-center justify-center mx-auto mb-3">
                     <CreditCard className="h-5 w-5 text-[#B06CFF]" />
                   </div>
-                  <p className="text-gray-400 text-sm mb-3">No active membership</p>
+                   <p className="text-gray-400 text-sm mb-3">{copy.noActiveMembership}</p>
                   <Button asChild size="sm" className="bg-[#B06CFF] text-white hover:bg-[#B06CFF]/90 w-full">
-                    <Link href="/pricing">View Programs</Link>
+                     <Link href={locale === "es" ? "/es/programas" : "/pricing"}>{copy.viewPrograms}</Link>
                   </Button>
                 </div>
               )}
@@ -288,16 +299,16 @@ export default function PortalDashboard() {
             <CardHeader className="pb-3 pt-4 px-4">
               <CardTitle className="flex items-center gap-2 text-white text-base">
                 <Calendar className="h-4 w-4 text-[#FFB199]" />
-                Private sessions
+                 {copy.privateSessions}
               </CardTitle>
               <CardDescription className="text-xs">
-                {upcomingBookings.length} upcoming private session{upcomingBookings.length !== 1 ? "s" : ""}
+                 {upcomingBookings.length} {copy.upcomingPrivateSessions}
               </CardDescription>
             </CardHeader>
             <CardContent className="px-4 pb-4">
               {upcomingBookings.length === 0 ? (
                 <div className="text-center py-3">
-                  <p className="text-gray-400 text-sm mb-3">No upcoming sessions</p>
+                   <p className="text-gray-400 text-sm mb-3">{copy.noUpcomingSessions}</p>
                   <Button asChild size="sm" className="bg-[#FFB199] text-[#0B0F14] font-bold hover:bg-[#FFB199]/90 w-full">
                     <Link href="/portal/schedule">{copy.viewSchedule}</Link>
                   </Button>
@@ -313,7 +324,7 @@ export default function PortalDashboard() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="text-red-400 hover:text-red-300 hover:bg-red-400/10 h-7 w-7 p-0 flex-shrink-0"
+                        className="h-11 w-11 flex-shrink-0 p-0 text-red-400 hover:bg-red-400/10 hover:text-red-300"
                         onClick={() => setCancelDialog({ open: true, booking })}
                       >
                         <X className="h-4 w-4" />
@@ -333,12 +344,12 @@ export default function PortalDashboard() {
             <CardHeader className="pb-3 pt-4 px-4">
               <CardTitle className="flex items-center gap-2 text-white text-base">
                 <FileText className="h-4 w-4 text-[#5EEBFF]" />
-                Required Forms
+                 {copy.requiredForms}
               </CardTitle>
               <CardDescription className="text-xs">
                 {allFormsComplete
-                  ? "All required forms are complete."
-                  : `${completedRequired} of ${requiredForms.length} required forms submitted`}
+                   ? copy.allRequiredFormsComplete
+                   : `${completedRequired} ${copy.of} ${requiredForms.length} ${copy.requiredFormsSubmitted}`}
               </CardDescription>
             </CardHeader>
             <CardContent className="px-4 pb-4">
@@ -356,8 +367,8 @@ export default function PortalDashboard() {
                           <IconComp className="h-3.5 w-3.5 text-[#5EEBFF]" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="font-medium text-sm text-white leading-snug">{form.title}</p>
-                          <p className="text-xs text-gray-500 mt-0.5">{form.isRequired ? "Required" : "Optional"}</p>
+                           <p className="font-medium text-sm text-white leading-snug">{form.title}</p>
+                           <p className="text-xs text-gray-500 mt-0.5">{form.isRequired ? copy.required : (locale === "es" ? "Opcional" : "Optional")}</p>
                         </div>
                         <div className={`w-2 h-2 rounded-full flex-shrink-0 mt-1.5 ${statusColor}`} />
                       </div>
@@ -368,15 +379,15 @@ export default function PortalDashboard() {
                           <Button
                             size="sm"
                             variant="ghost"
-                            className="text-[#5EEBFF] hover:text-[#5EEBFF]/80 hover:bg-[#5EEBFF]/10 h-7 px-3 text-xs"
+                            className="min-h-11 px-3 text-xs text-[#5EEBFF] hover:bg-[#5EEBFF]/10 hover:text-[#5EEBFF]/80"
                             onClick={() => setFormViewDialog({ open: true, slug: form.slug })}
                           >
-                            <Eye className="h-3 w-3 mr-1" />View
+                             <Eye className="h-3 w-3 mr-1" />{locale === "es" ? "Ver" : "View"}
                           </Button>
                         ) : (
-                          <Button size="sm" className="h-7 px-4 text-xs bg-[#5EEBFF]/10 text-[#5EEBFF] border border-[#5EEBFF]/20 hover:bg-[#5EEBFF]/20" asChild>
+                          <Button size="sm" className="min-h-11 px-4 text-xs bg-[#5EEBFF]/10 text-[#5EEBFF] border border-[#5EEBFF]/20 hover:bg-[#5EEBFF]/20" asChild>
                             <Link href={`/portal/forms/${form.slug}`}>
-                              {form.responseStatus === "draft" ? "Continue" : "Start →"}
+                               {form.responseStatus === "draft" ? (locale === "es" ? "Continuar" : "Continue") : `${copy.start} →`}
                             </Link>
                           </Button>
                         )}
@@ -499,16 +510,16 @@ export default function PortalDashboard() {
       <Dialog open={cancelDialog.open} onOpenChange={(open) => setCancelDialog({ open, booking: open ? cancelDialog.booking : null })}>
         <DialogContent className="bg-[#121826] border-white/10 text-white mx-4 rounded-xl">
           <DialogHeader>
-            <DialogTitle className="text-white">Cancel Booking</DialogTitle>
+             <DialogTitle className="text-white">{locale === "es" ? "Cancelar reserva" : "Cancel Booking"}</DialogTitle>
             <DialogDescription className="text-gray-400">
               {cancelDialog.booking && (
                 <>
-                  Are you sure you want to cancel your session on{" "}
+                   {locale === "es" ? "¿Seguro que quieres cancelar tu sesión del " : "Are you sure you want to cancel your session on "}{/* keep date and fee details adjacent */}
                   <strong className="text-white">{format(new Date(cancelDialog.booking.start), "EEEE, MMMM d")}</strong> at{" "}
                   <strong className="text-white">{format(new Date(cancelDialog.booking.start), "h:mm a")}</strong>?
                   {isSameDay(new Date(), new Date(cancelDialog.booking.start)) && (
                     <div className="mt-3 p-3 bg-amber-900/20 border border-amber-700/40 rounded-lg text-amber-300 text-sm">
-                      <strong>Same-day cancellation fee:</strong> A $10 fee will be charged.
+                       <strong>{locale === "es" ? "Cargo por cancelación el mismo día:" : "Same-day cancellation fee:"}</strong> {locale === "es" ? "Se cobrará una tarifa de $10." : "A $10 fee will be charged."}
                     </div>
                   )}
                 </>
@@ -517,7 +528,7 @@ export default function PortalDashboard() {
           </DialogHeader>
           <DialogFooter className="gap-2 flex-col sm:flex-row">
             <Button variant="outline" className="border-white/10 text-gray-300 hover:bg-white/5" onClick={() => setCancelDialog({ open: false, booking: null })}>
-              Keep Booking
+               {locale === "es" ? "Conservar reserva" : "Keep Booking"}
             </Button>
             <Button
               variant="destructive"
@@ -526,8 +537,8 @@ export default function PortalDashboard() {
             >
               {cancelMutation.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
               {cancelDialog.booking && isSameDay(new Date(), new Date(cancelDialog.booking.start))
-                ? "Cancel ($10 Fee)"
-                : "Cancel Booking"}
+                 ? locale === "es" ? "Cancelar ($10)" : "Cancel ($10 Fee)"
+                 : locale === "es" ? "Cancelar reserva" : "Cancel Booking"}
             </Button>
           </DialogFooter>
         </DialogContent>

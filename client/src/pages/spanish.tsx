@@ -25,7 +25,7 @@ function SpanishShell({ children, title, description, canonical }: { children: R
   useEffect(() => {
     setLocale("es");
     document.documentElement.lang = "es";
-    return () => { document.documentElement.lang = "en"; };
+    return () => undefined;
   }, []);
   return (
     <main className="min-h-screen bg-[#0B0F14] text-white">
@@ -169,7 +169,7 @@ export function SpanishBooking() {
   const reserve = useMutation({
     mutationFn: async () => {
       if (!selected) throw new Error("No hay una clase disponible.");
-      const response = await apiRequest("POST", "/api/classes/reservations", { occurrenceId: selected.id, ...details });
+       const response = await apiRequest("POST", "/api/classes/reservations", { occurrenceId: selected.id, ...details, locale: "es" });
       return response.json();
     },
     onSuccess: (result) => { setConfirmation(result); localStorage.setItem(`groundup-class-${result.reservation.id}`, result.manageToken); track("reservation_succeeded", "training", { language: "es" }); },

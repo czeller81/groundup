@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePortalAuth } from "@/lib/portal-auth";
 import { useLocale } from "@/lib/locale";
+import { apiRequest } from "@/lib/queryClient";
 import logoImage from "@assets/Ground_up_Logo_1772941267349.png";
 
 export default function PortalNavbar() {
@@ -49,7 +50,11 @@ export default function PortalNavbar() {
     setLocation(locale === "es" ? "/es" : "/");
   };
 
-  const switchLocale = () => setLocale(locale === "en" ? "es" : "en");
+  const switchLocale = () => {
+    const nextLocale = locale === "en" ? "es" : "en";
+    setLocale(nextLocale);
+    if (user) void apiRequest("PATCH", "/api/portal/me/locale", { locale: nextLocale });
+  };
 
   return (
     <nav

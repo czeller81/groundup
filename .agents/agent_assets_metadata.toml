@@ -7,3 +7,32 @@ uri = "file://GROUND_UP_AUDIT_REPORT.md"
 type = "text"
 title = "Ground Up audit report"
 description = "Comprehensive product, UX, business, security, booking, operations, and production-readiness baseline audit dated August 31, 2026."
+logical_id = "3efa4854-2f3f-49b4-b8be-cef1a2e2149d"
+
+[[outputs]]
+id = "Ww0sBvKhdeNPrnktqzeLq"
+uri = "file://screenshots/portal-english-login-final.jpg"
+type = "image"
+title = "Ground Up English portal login"
+description = "Final development preview evidence for the English portal login route."
+logical_id = "c858c792-f162-4e5e-811f-e4d16bcbea1b"
+content_hash = "sha256:4ba8fbb1b0a8635803632a2a6d5982db953c3e143b73d5c3c3bcc2024953c3d6"
+size = 37458
+mtime_ms = 1788333719519
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6d013781-f54c-4a44-800a-ed7e6881b3b5/c858c792-f162-4e5e-811f-e4d16bcbea1b/81efd115-b776-40da-92fb-2eeb7bc28300"
+storage_version_token = "1788333826951897"
+content_type = "image/jpeg"
+
+[[outputs]]
+id = "jPmi3ZLYodzwVFub0Jc-A"
+uri = "file://screenshots/portal-spanish-login-final.jpg"
+type = "image"
+title = "Ground Up Spanish portal login"
+description = "Final development preview evidence for the dedicated Spanish portal login route."
+logical_id = "bf02183e-1fd4-4c41-86d8-6d513e20a63e"
+content_hash = "sha256:6cd1860d95056c2105e9575f4dea4c69c0256825428e98fa833423be074b966a"
+size = 40422
+mtime_ms = 1788333763607
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:6d013781-f54c-4a44-800a-ed7e6881b3b5/bf02183e-1fd4-4c41-86d8-6d513e20a63e/883f93b2-617b-4e3b-a815-15685fe813e7"
+storage_version_token = "1788333827695638"
+content_type = "image/jpeg"

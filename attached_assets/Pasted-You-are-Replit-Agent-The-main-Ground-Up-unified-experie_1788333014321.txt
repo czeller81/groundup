@@ -1,0 +1,624 @@
+You are Replit Agent.
+
+The main Ground Up unified-experience pass is complete.
+
+Do NOT redesign the public site again.
+Do NOT change working booking ownership, auth, sessions, forms storage, or security controls unless a verified defect requires it.
+
+This task is the FINAL CUTOVER READINESS PASS.
+
+There are exactly three remaining workstreams:
+
+1. Complete authenticated Calendar → booking → cancellation proof
+2. Complete English/Spanish parity across member/staff-facing product surfaces
+3. Complete smallest-phone QA across all roles
+
+Do not add unrelated features.
+
+---
+
+# 1. WORKSTREAM A — PROVE THE COMPLETE CLASS JOURNEY
+
+We need verified end-to-end proof of the real class lifecycle.
+
+Test this exact chain:
+
+Google Calendar
+→ sync
+→ occurrence created
+→ public Schedule
+→ authenticated member Schedule
+→ reservation
+→ My Classes
+→ cancellation
+→ capacity restored
+→ audit/history preserved
+
+Use safe production-like fixtures.
+
+Do not use real customer appointments.
+
+---
+
+# 2. REPRESENTATIVE CALENDAR FIXTURES
+
+Create or use isolated test fixtures for:
+
+- one-time class
+- recurring weekly class
+- occurrence override
+- provider-side cancellation
+- capacity-limited class
+- full class with waitlist
+
+All times must use:
+
+America/Los_Angeles
+
+Test DST-safe behavior where applicable.
+
+---
+
+# 3. SYNC VALIDATION
+
+Verify:
+
+- Google event is discovered
+- correct class record/occurrence created
+- recurrence produces correct instances
+- modified occurrence updates correctly
+- provider cancellation hides/cancels correctly
+- no duplicate occurrences
+- no test-marked occurrence leaks into public production output
+
+Report IDs and test evidence without exposing sensitive provider credentials.
+
+---
+
+# 4. PUBLIC SCHEDULE VALIDATION
+
+For a valid public occurrence verify:
+
+- visible on public Schedule
+- correct date
+- correct time
+- correct class name
+- correct coach
+- correct capacity
+- correct women/girls eligibility
+- correct language label
+- correct availability state
+
+If it does not appear, fix the data path.
+
+Do not fake schedule cards.
+
+---
+
+# 5. AUTHENTICATED MEMBER SCHEDULE
+
+Log in as a safe test member.
+
+Verify:
+
+- same occurrence is visible
+- role eligibility is enforced
+- availability matches public state
+- member sees reserve action
+- booking can be completed
+
+Capture evidence.
+
+---
+
+# 6. BOOKING
+
+Verify:
+
+- reservation persists
+- capacity decrements
+- duplicate booking blocked
+- overlapping booking rule behaves correctly
+- confirmation state displays correctly
+- booking appears under My Classes
+- dashboard Next Class updates
+
+Spanish member:
+repeat and confirm Spanish state remains intact.
+
+---
+
+# 7. CANCELLATION
+
+Cancel the reservation.
+
+Verify:
+
+- reservation status updates
+- My Classes updates
+- dashboard updates
+- capacity returns
+- waitlist promotion occurs if applicable
+- audit event/history is retained
+- cancellation email/notification intent is generated
+- no duplicate side effect
+
+---
+
+# 8. WAITLIST
+
+Create:
+
+capacity full
+→ second member waitlisted
+→ first member cancels
+→ next eligible member promoted
+
+Verify:
+
+- ordering
+- reservation state
+- capacity
+- email/notification
+- member-facing status
+- Spanish localization where relevant
+
+---
+
+# 9. CONCURRENCY
+
+Run a controlled simultaneous reservation test against the final seat.
+
+Prove only one reservation wins.
+
+No read-then-write race may oversell capacity.
+
+Report exact result.
+
+---
+
+# 10. BOOKING CHAIN VERDICT
+
+Do not claim booking readiness unless the entire chain passes.
+
+Final status for Workstream A must be one:
+
+BOOKING CHAIN VERIFIED
+
+BOOKING CHAIN VERIFIED WITH LIMITATIONS
+
+BOOKING CHAIN BLOCKED
+
+---
+
+# 11. WORKSTREAM B — COMPLETE ENGLISH/SPANISH PARITY
+
+The entire customer/member-facing product must support both:
+
+English
+Español
+
+Do not limit localization to marketing pages.
+
+Audit every visible string.
+
+---
+
+# 12. MEMBER LOCALIZATION
+
+Complete bilingual coverage for:
+
+- login
+- signup
+- forgot password
+- reset password
+- verification
+- dashboard
+- Schedule
+- My Classes
+- Forms
+- Membership
+- Account
+- booking
+- cancellation
+- waitlist
+- confirmations
+- empty states
+- loading states
+- error states
+- logout
+
+Language selection must persist.
+
+---
+
+# 13. FORMS LOCALIZATION
+
+Do NOT rewrite the existing form logic.
+
+Preserve storage and submission behavior.
+
+Localize:
+
+- form titles
+- field labels
+- helper text
+- validation messages
+- submit buttons
+- completion states
+- retake labels
+- required/incomplete indicators
+
+Do not translate stored user-entered responses.
+
+---
+
+# 14. COACH WORKSPACE LOCALIZATION
+
+Complete bilingual coverage for coach-visible surfaces:
+
+- coach dashboard
+- member list
+- attendance
+- notes
+- class schedule
+- status labels
+- empty states
+- errors
+- actions
+- account menu
+
+If some internal technical fields should remain canonical English in storage, keep storage canonical but localize the UI.
+
+---
+
+# 15. ADMIN WORKSPACE LOCALIZATION
+
+Complete practical bilingual coverage for staff-facing UI.
+
+At minimum localize:
+
+- navigation
+- headings
+- action buttons
+- member statuses
+- class statuses
+- attendance
+- lead statuses
+- form labels
+- calendar sync states
+- success/error messages
+- confirmations
+
+Highly technical diagnostics may remain English if necessary, but normal operational staff workflows should support Spanish.
+
+Document any intentional English-only diagnostic surfaces.
+
+---
+
+# 16. EMAIL + NOTIFICATION LOCALIZATION
+
+Audit all member-facing email/notification templates.
+
+Support English and Spanish for:
+
+- account verification
+- password reset
+- first-visit booking
+- class reservation
+- cancellation
+- waitlist
+- waitlist promotion
+- form acknowledgement where applicable
+
+Language should follow the user/profile/booking locale.
+
+Do not create duplicate email business logic.
+
+Use shared templates/dictionaries where practical.
+
+---
+
+# 17. LOCALE PERSISTENCE TEST
+
+Prove this sequence:
+
+/es
+→ login in Spanish
+→ dashboard Spanish
+→ Schedule Spanish
+→ book Spanish
+→ confirmation Spanish
+→ My Classes Spanish
+→ logout
+→ return to /es
+
+Then prove the equivalent English path remains English.
+
+---
+
+# 18. DOCUMENT LANGUAGE
+
+Verify:
+
+English routes:
+<html lang="en">
+
+Spanish routes:
+<html lang="es">
+
+Ensure screen readers and browser translation tools receive correct language metadata.
+
+---
+
+# 19. WORKSTREAM B VERDICT
+
+Return one:
+
+BILINGUAL PARITY COMPLETE
+
+BILINGUAL PARITY COMPLETE WITH DOCUMENTED EXCEPTIONS
+
+BILINGUAL PARITY BLOCKED
+
+---
+
+# 20. WORKSTREAM C — SMALL-PHONE ROLE QA
+
+Test at:
+
+320px
+375px
+390px
+430px
+
+Do not test only desktop emulation.
+
+Use realistic responsive viewport behavior.
+
+---
+
+# 21. MEMBER PHONE FLOW
+
+For English and Spanish test:
+
+- public header
+- login
+- dashboard
+- Schedule
+- booking
+- My Classes
+- Forms
+- account menu
+- logout
+
+Verify:
+
+- no horizontal overflow
+- no hidden CTA
+- no clipped text
+- usable tap targets
+- language selector usable
+- nav closes correctly
+- dialogs fit
+- forms usable
+- schedule cards readable
+
+---
+
+# 22. COACH PHONE FLOW
+
+Test:
+
+- coach nav
+- member list
+- attendance
+- notes
+- schedule
+- account menu
+
+Check:
+
+- tables do not become unusable
+- actions remain reachable
+- long names wrap
+- no desktop-only controls
+
+---
+
+# 23. ADMIN PHONE FLOW
+
+Test practical admin use:
+
+- admin nav
+- members
+- classes
+- leads
+- calendar sync
+- forms
+
+If a dense administrative table is intentionally desktop-first, provide a usable mobile fallback or clearly constrained responsive version.
+
+Do not allow page-level horizontal overflow.
+
+Local horizontal table scrolling is acceptable where necessary.
+
+---
+
+# 24. MOBILE ACCESSIBILITY
+
+At all target sizes verify:
+
+- focus remains visible
+- menu announces open/closed state
+- Escape closes overlays where appropriate
+- tap targets ~44px
+- form inputs at least 16px text on mobile
+- no accidental zoom-triggering
+- validation text visible
+- contrast sufficient
+
+---
+
+# 25. MOBILE VERDICT
+
+Return:
+
+SMALL-PHONE QA PASS
+
+SMALL-PHONE QA PASS WITH LIMITATIONS
+
+SMALL-PHONE QA FAIL
+
+---
+
+# 26. DO NOT EXPAND SCOPE
+
+Do not:
+
+- redesign public branding
+- create new programs
+- change pricing
+- change women-only business rules
+- add new payment architecture
+- replace Google Calendar
+- replace auth
+- replace forms
+- rebuild the database
+
+This is a final verification/remediation pass.
+
+---
+
+# 27. TEST SUITE
+
+Add regression tests for:
+
+- full booking chain where automatable
+- capacity restoration
+- waitlist promotion
+- locale persistence
+- Spanish member flow
+- role nav visibility
+- key translated surfaces
+
+Run:
+
+npm run check
+npm test
+npm run build
+
+All must pass before final verdict.
+
+---
+
+# 28. FINAL VISUAL EVIDENCE
+
+Capture screenshots for:
+
+English member:
+- dashboard
+- Schedule
+- My Classes
+
+Spanish member:
+- dashboard
+- Schedule
+- My Classes
+
+Coach:
+- one key workflow
+
+Admin:
+- one key workflow
+
+Mobile:
+- 320px member
+- 375px Spanish member
+- 390px coach
+- 430px admin
+
+---
+
+# 29. FINAL REPORT
+
+Return:
+
+GROUND UP FINAL CUTOVER READINESS REPORT
+
+## A. Booking Chain
+Evidence and result.
+
+## B. Calendar Sync
+Evidence.
+
+## C. Reservation / Capacity
+Evidence.
+
+## D. Cancellation
+Evidence.
+
+## E. Waitlist
+Evidence.
+
+## F. English / Spanish Member Parity
+
+## G. Coach Localization
+
+## H. Admin Localization
+
+## I. Email / Notification Localization
+
+## J. Locale Persistence
+
+## K. Small-Phone QA
+By viewport and role.
+
+## L. Accessibility
+
+## M. Tests
+Exact commands and results.
+
+## N. Remaining Limitations
+
+## O. Production Cutover Decision
+
+---
+
+# 30. FINAL CUTOVER VERDICT
+
+End with exactly one:
+
+GROUND UP READY FOR PRODUCTION CUTOVER
+
+GROUND UP READY FOR PRODUCTION CUTOVER WITH DOCUMENTED LIMITATIONS
+
+GROUND UP NOT READY — BOOKING CHAIN
+
+GROUND UP NOT READY — BILINGUAL PARITY
+
+GROUND UP NOT READY — MOBILE QA
+
+GROUND UP NOT READY — MULTIPLE BLOCKERS
+
+---
+
+# FINAL PRINCIPLE
+
+Do not add more features.
+
+Prove the product works.
+
+The final Ground Up experience must be:
+
+ONE BRAND
+ONE ACCOUNT
+ONE SCHEDULE
+ONE CLASS JOURNEY
+TWO LANGUAGES
+
+English and Spanish must both work from entry through authenticated use.
+
+A real class must move cleanly from Calendar through booking and cancellation.
+
+And the product must remain usable on the smallest phones before production cutover.

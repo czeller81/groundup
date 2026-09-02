@@ -12,12 +12,14 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
 import { usePortalAuth } from "@/lib/portal-auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { localizeFormOption, localizeFormText, useLocale } from "@/lib/locale";
 import { ArrowLeft, Save, Send, Loader2, CheckCircle, Lock, RotateCcw } from "lucide-react";
 
 export default function PortalForm() {
   const { slug } = useParams<{ slug: string }>();
   const [, setLocation] = useLocation();
   const { isAuthenticated, isLoading: authLoading } = usePortalAuth();
+  const { locale, copy } = useLocale();
   const { toast } = useToast();
   const [answers, setAnswers] = useState<Record<string, any>>({});
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
@@ -54,12 +56,12 @@ export default function PortalForm() {
       return res.json();
     },
     onSuccess: () => {
-      toast({ title: "Form Submitted!", description: "Your form has been submitted successfully." });
+      toast({ title: copy.formSubmitted, description: copy.formSubmittedDescription });
       queryClient.invalidateQueries({ queryKey: ["/api/portal/forms"] });
       setLocation("/portal/dashboard");
     },
     onError: (error: any) => {
-      toast({ title: "Error", description: error.message || "Failed to submit form", variant: "destructive" });
+      toast({ title: "Error", description: error.message || (locale === "es" ? "No se pudo enviar el formulario" : "Failed to submit form"), variant: "destructive" });
     },
   });
 
@@ -72,10 +74,10 @@ export default function PortalForm() {
       setAnswers({});
       queryClient.invalidateQueries({ queryKey: ["/api/portal/forms", slug] });
       queryClient.invalidateQueries({ queryKey: ["/api/portal/forms"] });
-      toast({ title: "Form Reset", description: "You can now update your answers." });
+      toast({ title: copy.formReset, description: copy.formResetDescription });
     },
     onError: (error: any) => {
-      toast({ title: "Error", description: error.message || "Failed to reset form", variant: "destructive" });
+      toast({ title: "Error", description: error.message || (locale === "es" ? "No se pudo reiniciar el formulario" : "Failed to reset form"), variant: "destructive" });
     },
   });
 
@@ -113,9 +115,9 @@ export default function PortalForm() {
       <div className="min-h-screen flex items-center justify-center">
         <Card>
           <CardContent className="p-6 text-center">
-            <p className="text-muted-foreground">Form not found</p>
+             <p className="text-muted-foreground">{copy.formNotFound}</p>
             <Button className="mt-4" asChild>
-              <Link href="/portal/dashboard">Back to Dashboard</Link>
+              <Link href="/portal/dashboard">{copy.backToDashboard}</Link>
             </Button>
           </CardContent>
         </Card>
@@ -209,12 +211,12 @@ export default function PortalForm() {
         return (
           <Select value={value} onValueChange={(v) => handleChange(fieldKey, v)} disabled={isSubmitted}>
             <SelectTrigger data-testid={`select-${fieldKey}`}>
-              <SelectValue placeholder="Select an option" />
+                 <SelectValue placeholder={locale === "es" ? "Selecciona una opción" : "Select an option"} />
             </SelectTrigger>
             <SelectContent>
               {field.options?.map((option: string) => (
                 <SelectItem key={option} value={option}>
-                  {option}
+                   {localizeFormOption(locale, slug, option)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -227,11 +229,11 @@ export default function PortalForm() {
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="true" id={`${fieldKey}-yes`} />
-                <Label htmlFor={`${fieldKey}-yes`}>Yes</Label>
+                 <Label htmlFor={`${fieldKey}-yes`}>{copy.yes}</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="false" id={`${fieldKey}-no`} />
-                <Label htmlFor={`${fieldKey}-no`}>No</Label>
+                 <Label htmlFor={`${fieldKey}-no`}>{copy.no}</Label>
               </div>
             </div>
           </RadioGroup>
@@ -282,8 +284,8 @@ export default function PortalForm() {
     <div>
       <div className="bg-[#121826]/50 border-b border-white/5 py-4 px-4 sm:px-6">
         <div className="max-w-3xl mx-auto">
-          <h1 className="text-xl font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>{form.title}</h1>
-          {form.description && <p className="text-sm text-gray-400">{form.description}</p>}
+            <h1 className="text-xl font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>{localizeFormText(locale, slug, "title", form.title)}</h1>
+            {form.description && <p className="text-sm text-gray-400">{localizeFormText(locale, slug, "description", form.description)}</p>}
         </div>
       </div>
 
@@ -291,11 +293,11 @@ export default function PortalForm() {
         {isSubmitted && (
           form?.retakeable ? (
             <Card className="mb-6 bg-[#121826] border-[#5EEBFF]/30">
-              <CardContent className="p-4 flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
+              <CardContent className="flex flex-col items-start justify-between gap-3 p-4 sm:flex-row sm:items-center">
+                <div className="flex items-start gap-3">
                   <CheckCircle className="h-5 w-5 text-green-400 flex-shrink-0" />
                   <p className="text-gray-300 text-sm">
-                    This form has been submitted. You can update your answers at any time.
+                    {copy.formUpdateNotice}
                   </p>
                 </div>
                 <Button
@@ -308,7 +310,7 @@ export default function PortalForm() {
                   {retakeMutation.isPending
                     ? <Loader2 className="h-4 w-4 animate-spin mr-2" />
                     : <RotateCcw className="h-4 w-4 mr-2" />}
-                  Retake Form
+                  {copy.retakeForm}
                 </Button>
               </CardContent>
             </Card>
@@ -317,7 +319,7 @@ export default function PortalForm() {
               <CardContent className="p-4 flex items-center gap-3">
                 <Lock className="h-5 w-5 text-amber-400 flex-shrink-0" />
                 <p className="text-gray-300 text-sm">
-                  This form has been submitted and is locked for legal reasons.
+                  {copy.formLocked}
                 </p>
               </CardContent>
             </Card>
@@ -334,12 +336,12 @@ export default function PortalForm() {
                   <div key={fieldKey} className="space-y-2">
                     {!isCheckbox && (
                       <Label htmlFor={fieldKey}>
-                        {field.label}
+                        {localizeFormText(locale, slug, "field", field.label, fieldKey)}
                         {field.required && <span className="text-red-500 ml-1">*</span>}
                       </Label>
                     )}
                     {isCheckbox && field.required && (
-                      <span className="text-xs text-red-400">* Required</span>
+                      <span className="text-xs text-red-400">* {copy.required}</span>
                     )}
                     {renderField(field)}
                   </div>
@@ -347,19 +349,19 @@ export default function PortalForm() {
               })}
 
               {!isSubmitted && (
-                <div className="flex items-center justify-between pt-4 border-t">
+                <div className="flex flex-col items-stretch gap-4 border-t pt-4 sm:flex-row sm:items-center sm:justify-between">
                   <div className="text-sm text-muted-foreground">
                     {saveMutation.isPending && (
                       <span className="flex items-center">
                         <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                        Saving...
+                         {copy.saving}
                       </span>
                     )}
                     {lastSaved && !saveMutation.isPending && (
-                      <span>Draft saved at {lastSaved.toLocaleTimeString()}</span>
+                       <span>{copy.draftSavedAt} {lastSaved.toLocaleTimeString(locale === "es" ? "es-US" : "en-US")}</span>
                     )}
                   </div>
-                  <div className="flex gap-2">
+                   <div className="flex flex-col gap-2 sm:flex-row">
                     <Button
                       type="button"
                       variant="outline"
@@ -368,7 +370,7 @@ export default function PortalForm() {
                       data-testid="button-save-draft"
                     >
                       <Save className="h-4 w-4 mr-2" />
-                      Save Draft
+                       {copy.saveDraft}
                     </Button>
                     <Button
                       type="submit"
@@ -380,7 +382,7 @@ export default function PortalForm() {
                       ) : (
                         <Send className="h-4 w-4 mr-2" />
                       )}
-                      Submit Form
+                       {submitMutation.isPending ? copy.submitting : copy.submitForm}
                     </Button>
                   </div>
                 </div>
