@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { usePortalAuth } from "@/lib/portal-auth";
-import { useLocale } from "@/lib/locale";
+import { localizeFormText, useLocale } from "@/lib/locale";
 import { localizedPortalPath } from "@/lib/portal-navigation";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -279,12 +279,28 @@ export default function PortalAdmin() {
     }
   };
 
+  const notificationTitle = (title: string) => locale === "es" && title === "New Adaptive Capacity signup"
+    ? copy.newAdaptiveSignup
+    : title;
+  const notificationMessage = (message: string) => {
+    if (locale !== "es") return message;
+    const match = message.match(/^(.+) joined the Adaptive Capacity interest list list\.$/);
+    return match ? copy.adaptiveSignupMessage(match[1]) : message;
+  };
+
   const getInboxStatusBadge = (status: string) => (
     <Badge className={
       status === "new" ? "bg-orange-500/20 text-orange-300 border-orange-500/30" :
       status === "archived" ? "bg-gray-500/20 text-gray-400 border-gray-500/30" :
       "bg-green-500/20 text-green-400 border-green-500/30"
-    }>{status.replace("-", " ")}</Badge>
+    }>{({
+      new: copy.statusNew,
+      archived: copy.statusArchived,
+      acknowledged: copy.statusAcknowledged,
+      resolved: copy.statusResolved,
+      contacted: copy.statusContacted,
+      qualified: copy.statusQualified,
+    } as Record<string, string>)[status] || status.replace("-", " ")}</Badge>
   );
 
   const renderInboxRow = (item: any, kind: "lead" | "message") => {
@@ -306,10 +322,17 @@ export default function PortalAdmin() {
             </div>
           </div>
           <Select value={item.status} onValueChange={(status) => statusMutation.mutate({ kind, id: item.id, status })}>
-            <SelectTrigger className="w-full sm:w-36 h-8 bg-[#121826] border-white/10 text-white text-xs">
+            <SelectTrigger className="min-h-11 w-full bg-[#121826] border-white/10 text-white text-xs sm:w-36">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>{statuses.map((status) => <SelectItem key={status} value={status}>{status.replace("-", " ")}</SelectItem>)}</SelectContent>
+            <SelectContent>{statuses.map((status) => <SelectItem key={status} value={status}>{({
+              new: copy.statusNew,
+              archived: copy.statusArchived,
+              acknowledged: copy.statusAcknowledged,
+              resolved: copy.statusResolved,
+              contacted: copy.statusContacted,
+              qualified: copy.statusQualified,
+            } as Record<string, string>)[status] || status.replace("-", " ")}</SelectItem>)}</SelectContent>
           </Select>
         </div>
         {isMessage ? (
@@ -358,7 +381,7 @@ export default function PortalAdmin() {
       <div className="bg-[#121826]/50 border-b border-white/5 py-4 px-4 sm:px-6">
         <div className="max-w-7xl mx-auto">
           <h1 className="text-xl font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>
-            ADMIN <span className="gradient-text-purple">DASHBOARD</span>
+            {copy.adminDashboard}
           </h1>
           <p className="text-sm text-gray-400">{copy.adminSubtitle}</p>
         </div>
@@ -446,7 +469,7 @@ export default function PortalAdmin() {
               </div>
               <div>
                 <p className="text-sm font-semibold text-orange-300">
-                  {stats.membersNeedingForms} member{stats.membersNeedingForms !== 1 ? "s" : ""} {stats.membersNeedingForms !== 1 ? "have" : "has"} incomplete required forms
+                  {copy.incompleteFormsSummary(stats.membersNeedingForms)}
                 </p>
                   <p className="text-xs text-orange-400/70">{copy.filterMembers}</p>
               </div>
@@ -469,8 +492,8 @@ export default function PortalAdmin() {
             ) : notifications.slice(0, 8).map((notification: any) => (
               <div key={notification.id} className={`flex items-start justify-between gap-4 rounded-lg border p-3 ${notification.readAt ? "border-white/5 bg-[#0B0F14]/60" : "border-[#FFB199]/20 bg-[#FFB199]/5"}`}>
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-white">{notification.title}</p>
-                  <p className="text-xs text-gray-400 mt-1">{notification.message}</p>
+                   <p className="text-sm font-medium text-white">{notificationTitle(notification.title)}</p>
+                   <p className="text-xs text-gray-400 mt-1">{notificationMessage(notification.message)}</p>
                    <p className="text-[11px] text-gray-500 mt-1">{dateLabel(notification.createdAt, true)}</p>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
@@ -490,7 +513,7 @@ export default function PortalAdmin() {
             <p className="text-xs text-gray-400">{copy.inboxDescription}</p>
             <div className="flex gap-1 pt-2 overflow-x-auto">
                {([[ "training", `${copy.trainingLeads} (${trainingLeads.length})`], ["adaptive", `${copy.adaptiveLeads} (${adaptiveLeads.length})`], ["messages", `${copy.contactMessages} (${contactMessages.length})`]] as const).map(([value, label]) => (
-                <button key={value} onClick={() => setInboxTab(value as typeof inboxTab)} className={`px-3 py-1.5 text-xs rounded-lg whitespace-nowrap ${inboxTab === value ? "bg-[#5EEBFF]/15 text-[#5EEBFF] border border-[#5EEBFF]/30" : "text-gray-400 hover:text-white"}`}>{label}</button>
+                 <button key={value} onClick={() => setInboxTab(value as typeof inboxTab)} className={`min-h-11 px-3 text-xs rounded-lg whitespace-nowrap ${inboxTab === value ? "bg-[#5EEBFF]/15 text-[#5EEBFF] border border-[#5EEBFF]/30" : "text-gray-400 hover:text-white"}`}>{label}</button>
               ))}
             </div>
           </CardHeader>
@@ -534,13 +557,13 @@ export default function PortalAdmin() {
               <>
                 <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 mb-5">
                   {[
-                    ["Page views", campaignReport?.totals?.pageViews],
-                    ["Funnel steps", campaignReport?.totals?.funnelSteps],
-                    ["Form starts", campaignReport?.totals?.formStarts],
-                    ["Submissions", campaignReport?.totals?.submissions],
-                    ["Successful leads", campaignReport?.totals?.successfulLeads],
-                    ["Total leads", campaignReport?.totals?.totalLeads],
-                    ["Consented sessions", campaignReport?.totals?.consentedSessions],
+                    [copy.pageViews, campaignReport?.totals?.pageViews],
+                    [copy.funnelSteps, campaignReport?.totals?.funnelSteps],
+                    [copy.formStarts, campaignReport?.totals?.formStarts],
+                    [copy.submissions, campaignReport?.totals?.submissions],
+                    [copy.successfulLeads, campaignReport?.totals?.successfulLeads],
+                    [copy.totalLeads, campaignReport?.totals?.totalLeads],
+                    [copy.consentedSessions, campaignReport?.totals?.consentedSessions],
                   ].map(([label, value]) => <div key={label as string} className="rounded-lg border border-white/5 bg-[#0B0F14] p-3"><p className="text-lg font-bold text-white">{value ?? 0}</p><p className="text-[11px] text-gray-500 leading-tight">{label as string}</p></div>)}
                 </div>
                 {!campaignReport?.breakdown?.length ? <p className="text-gray-400 text-sm text-center py-8">{copy.campaignNoData}</p> : (
@@ -558,34 +581,34 @@ export default function PortalAdmin() {
 
         {/* Member Management */}
         <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
-          <div className="lg:col-span-1">
-            <Card className="bg-[#121826] border-white/5">
+          <div className="min-w-0 lg:col-span-1">
+            <Card className="min-w-0 bg-[#121826] border-white/5">
               <CardHeader className="pb-3">
                 <CardTitle className="text-white flex items-center gap-2 text-base">
                   <Users className="h-5 w-5 text-[#B06CFF]" />
-                  Members ({totalMembers})
+                  {copy.members} ({totalMembers})
                 </CardTitle>
-                <div className="flex gap-1 mt-2">
+                <div className="grid min-w-0 grid-cols-2 gap-1 mt-2">
                   <button
                     onClick={() => { setIncompleteFormsOnly(false); setCurrentPage(1); }}
-                    className={`flex-1 py-1.5 text-xs rounded-lg font-medium transition-colors ${
+                    className={`min-w-0 min-h-11 text-xs rounded-lg font-medium transition-colors ${
                       !incompleteFormsOnly
                         ? "bg-[#B06CFF]/20 text-[#B06CFF] border border-[#B06CFF]/30"
                         : "text-gray-400 hover:text-white hover:bg-white/5 border border-transparent"
                     }`}
                   >
-                    All
+                     {copy.all}
                   </button>
                   <button
                     onClick={() => { setIncompleteFormsOnly(true); setCurrentPage(1); }}
-                    className={`flex-1 py-1.5 text-xs rounded-lg font-medium transition-colors flex items-center justify-center gap-1 ${
+                    className={`min-w-0 min-h-11 text-xs rounded-lg font-medium transition-colors flex items-center justify-center gap-1 ${
                       incompleteFormsOnly
                         ? "bg-orange-500/20 text-orange-300 border border-orange-500/30"
                         : "text-gray-400 hover:text-white hover:bg-white/5 border border-transparent"
                     }`}
                   >
                     <AlertTriangle className="h-3 w-3" />
-                    Needs Forms
+                     {copy.needsForms}
                     {stats?.membersNeedingForms > 0 && (
                       <span className={`ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
                         incompleteFormsOnly ? "bg-orange-500/30 text-orange-200" : "bg-orange-500/20 text-orange-400"
@@ -656,19 +679,19 @@ export default function PortalAdmin() {
                     size="sm"
                     disabled={currentPage <= 1}
                     onClick={() => setCurrentPage(p => p - 1)}
-                    className="text-gray-400 hover:text-white"
+                    className="min-h-11 min-w-11 text-gray-400 hover:text-white"
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
                   <span className="text-xs text-gray-400">
-                    Page {currentPage} of {totalPages}
+                    {copy.pageOf(currentPage, totalPages)}
                   </span>
                   <Button
                     variant="ghost"
                     size="sm"
                     disabled={currentPage >= totalPages}
                     onClick={() => setCurrentPage(p => p + 1)}
-                    className="text-gray-400 hover:text-white"
+                    className="min-h-11 min-w-11 text-gray-400 hover:text-white"
                   >
                     <ChevronRight className="h-4 w-4" />
                   </Button>
@@ -677,7 +700,7 @@ export default function PortalAdmin() {
             </Card>
           </div>
 
-          <div className="lg:col-span-2">
+          <div className="min-w-0 lg:col-span-2">
             {!selectedMemberId ? (
               <Card className="bg-[#121826] border-white/5">
                 <CardContent className="flex flex-col items-center justify-center py-20">
@@ -731,7 +754,7 @@ export default function PortalAdmin() {
                       </div>
                       <div className="flex items-center gap-2">
                         <Hash className="h-4 w-4 text-[#5EEBFF]" />
-                        <span className="text-gray-300">{memberProfile.user.attendanceCount} sessions</span>
+                        <span className="text-gray-300">{copy.sessionCount(memberProfile.user.attendanceCount)}</span>
                       </div>
                     </div>
                   </CardContent>
@@ -749,7 +772,7 @@ export default function PortalAdmin() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-semibold text-red-300 mb-2">
-                            Health Conditions Flagged — Coach Awareness Required
+                            {copy.healthConditionsFlagged}
                           </p>
                           <div className="space-y-1.5">
                             {healthFlags.map((flag, i) => (
@@ -770,11 +793,11 @@ export default function PortalAdmin() {
 
                 {/* Tabbed Content */}
                 <Tabs defaultValue="forms" className="space-y-4">
-                  <TabsList className="bg-[#121826] border border-white/5 w-full justify-start">
-                    <TabsTrigger value="forms" className="data-[state=active]:bg-[#B06CFF]/20 data-[state=active]:text-white text-gray-400">{copy.forms}</TabsTrigger>
-                    <TabsTrigger value="bookings" className="data-[state=active]:bg-[#B06CFF]/20 data-[state=active]:text-white text-gray-400">{copy.bookings}</TabsTrigger>
-                    <TabsTrigger value="notes" className="data-[state=active]:bg-[#B06CFF]/20 data-[state=active]:text-white text-gray-400">{copy.sessionNotes}</TabsTrigger>
-                    <TabsTrigger value="admin" className="data-[state=active]:bg-[#B06CFF]/20 data-[state=active]:text-white text-gray-400">{copy.admin}</TabsTrigger>
+                  <TabsList className="h-auto min-h-10 w-full flex-wrap justify-start bg-[#121826] border border-white/5">
+                    <TabsTrigger value="forms" className="min-h-11 min-w-0 flex-1 px-2 text-xs whitespace-normal leading-tight data-[state=active]:bg-[#B06CFF]/20 data-[state=active]:text-white text-gray-400">{copy.forms}</TabsTrigger>
+                    <TabsTrigger value="bookings" className="min-h-11 min-w-0 flex-1 px-2 text-xs whitespace-normal leading-tight data-[state=active]:bg-[#B06CFF]/20 data-[state=active]:text-white text-gray-400">{copy.bookings}</TabsTrigger>
+                    <TabsTrigger value="notes" className="min-h-11 min-w-0 flex-1 px-2 text-xs whitespace-normal leading-tight data-[state=active]:bg-[#B06CFF]/20 data-[state=active]:text-white text-gray-400">{copy.sessionNotes}</TabsTrigger>
+                    <TabsTrigger value="admin" className="min-h-11 min-w-0 flex-1 px-2 text-xs whitespace-normal leading-tight data-[state=active]:bg-[#B06CFF]/20 data-[state=active]:text-white text-gray-400">{copy.admin}</TabsTrigger>
                   </TabsList>
 
                   <TabsContent value="forms">
@@ -782,7 +805,7 @@ export default function PortalAdmin() {
                       <CardHeader className="pb-3">
                         <CardTitle className="text-white text-base flex items-center gap-2">
                           <FileText className="h-5 w-5 text-[#B06CFF]" />
-                          Forms ({formsCompleted}/{totalRequiredForms} completed)
+                          {copy.formsProgress(formsCompleted, totalRequiredForms)}
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
@@ -806,7 +829,7 @@ export default function PortalAdmin() {
                                 <div key={response.id} className={`p-3 rounded-lg border flex items-center justify-between ${borderClass}`}>
                                   <div className="min-w-0 flex-1">
                                     <div className="flex items-center gap-2 flex-wrap">
-                                      <p className="text-sm font-medium text-white">{response.form.title}</p>
+                                      <p className="text-sm font-medium text-white">{localizeFormText(locale, response.form.slug, "title", response.form.title)}</p>
                                       {hasParqFlags && (
                                         <span className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-500/20 text-red-400 border border-red-500/30">
                                           <AlertTriangle className="h-2.5 w-2.5" />
@@ -827,12 +850,12 @@ export default function PortalAdmin() {
                                     </p>
                                     {hasParqFlags && (
                                       <p className="text-xs text-red-400/80 mt-0.5">
-                                        Member reported health conditions — view form for details
+                                        {copy.healthConditionDetails}
                                       </p>
                                     )}
                                     {!hasParqFlags && unchecked && (
                                       <p className="text-xs text-orange-400/80 mt-0.5">
-                                        One or more agreement checkboxes were left unchecked — review required
+                                        {copy.agreementReviewRequired}
                                       </p>
                                     )}
                                   </div>
@@ -841,7 +864,7 @@ export default function PortalAdmin() {
                                     {response.status === "submitted" && (
                                       <Button variant="ghost" size="sm" className="text-[#5EEBFF] hover:text-[#5EEBFF]/80 hover:bg-[#5EEBFF]/10"
                                         onClick={() => setFormDetailOpen({ open: true, response })}>
-                                        View
+                                        {copy.view}
                                       </Button>
                                     )}
                                   </div>
@@ -859,7 +882,7 @@ export default function PortalAdmin() {
                       <CardHeader className="pb-3">
                         <CardTitle className="text-white text-base flex items-center gap-2">
                           <Calendar className="h-5 w-5 text-[#B06CFF]" />
-                          Bookings & Payments ({memberProfile.bookings?.length || 0})
+                           {copy.bookingsPayments} ({memberProfile.bookings?.length || 0})
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
@@ -900,7 +923,7 @@ export default function PortalAdmin() {
                       <CardHeader className="pb-3">
                         <CardTitle className="text-white text-base flex items-center gap-2">
                           <StickyNote className="h-5 w-5 text-[#B06CFF]" />
-                          Session Notes
+                          {copy.sessionNotes}
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-4">
@@ -919,7 +942,7 @@ export default function PortalAdmin() {
                           size="sm"
                         >
                           {sessionNoteMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                          Add Note
+                            {copy.addNote}
                         </Button>
 
                         <div className="space-y-3 mt-4">
@@ -949,7 +972,7 @@ export default function PortalAdmin() {
                         <CardHeader className="pb-3">
                           <CardTitle className="text-white text-base flex items-center gap-2">
                             <Shield className="h-5 w-5 text-[#B06CFF]" />
-                            Member Settings
+                            {copy.memberSettings}
                           </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
@@ -1013,7 +1036,7 @@ export default function PortalAdmin() {
                         <CardHeader className="pb-3">
                           <CardTitle className="text-white text-base flex items-center gap-2">
                             <StickyNote className="h-5 w-5 text-[#FFB199]" />
-                            Admin Internal Notes
+                            {copy.adminInternalNotes}
                           </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-3">
@@ -1030,7 +1053,7 @@ export default function PortalAdmin() {
                             size="sm"
                           >
                             {notesMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                            Save Notes
+                            {copy.saveNotes}
                           </Button>
                         </CardContent>
                       </Card>

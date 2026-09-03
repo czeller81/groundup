@@ -1,0 +1,2168 @@
+{
+  "generatedAt": "2026-09-03T02:36:11.040Z",
+  "targetWidths": [
+    320,
+    375,
+    390,
+    430
+  ],
+  "surfaces": [
+    {
+      "id": "member-dashboard",
+      "route": "/portal/dashboard",
+      "role": "member"
+    },
+    {
+      "id": "member-schedule",
+      "route": "/portal/schedule",
+      "role": "member"
+    },
+    {
+      "id": "member-classes",
+      "route": "/portal/my-classes",
+      "role": "member"
+    },
+    {
+      "id": "member-form",
+      "route": "/portal/forms/personal-training-intake",
+      "role": "member"
+    },
+    {
+      "id": "coach",
+      "route": "/portal/coach",
+      "role": "coach"
+    },
+    {
+      "id": "class-management",
+      "route": "/portal/class-admin",
+      "role": "admin"
+    },
+    {
+      "id": "admin",
+      "route": "/portal/admin",
+      "role": "admin"
+    }
+  ],
+  "results": [
+    {
+      "width": 320,
+      "locale": "en",
+      "surface": "member-dashboard",
+      "route": "/portal/dashboard",
+      "mobileMenu": {
+        "present": true,
+        "opened": true
+      },
+      "adminProfile": null,
+      "title": "Women-Only BJJ & Self-Defense in Oxnard | Ground Up",
+      "bodyText": "Help us understand what brings people here\n\nAllow anonymous analytics and campaign attribution so we can improve the training and Adaptive Capacity journeys. You can decline and still use the site.\n\nAllow analytics\nDecline\n\nMobile Member\n\nMember\n\nYOUR GROUND UP\nSCHEDULE\nYOUR TRAINING\nEspañol\nLog out\n\nMEMBER PORTAL\n\nWELCOME BACK, MOBILE\n0/6 forms\n\nAction required\n\nComplete your required forms to access all gym services.\n\nStart\nView schedule\nYour Forms\nNext class\n\nNo upcoming classes are booked yet.\n\nFind a class that works for you.\n\nView schedule\nMembership\n\nNo active membership\n\nView programs\nPrivate sessions\n0 upcoming private session(s)\n\nNo upcoming sessions\n\nView schedule\nRequired forms\n0 of 6 required forms submitted\n\nHealth & Physical Activity Readiness (PAR-Q)\n\nRequired\n\nRequired\nStart →\n\nGym Rules Agreement\n\nRequired\n\nRequired\nStart →\n\nTraining Goals & Preferences\n\nRequired\n\nRequired\nStart →\n\nMedia Release Authorization\n\nRequired\n\nRequired\nStart →\n\nMinor Participation Consent\n\nOptional\n\nRequired\nStart →\n\nPersonal Training Intake Form\n\nRequired\n\nRequired\nStart →\n\nMartial Arts Liability Waiver\n\nRequired\n\nRequired\nStart →\nCommunity Event\nFree class — open to everyone\n\nFree Community Self-Defense\n\nSaturday, Sep 5\n\nRepeats every 2 weeks\n\nOpen to everyone. No experience or registration required.\n\nLearn More\n\n© 2026 Ground Up Jiu-Jitsu & Fitness\n\nLiability Waiver\nGym Rules\nContact us",
+      "viewport": 320,
+      "documentWidth": 320,
+      "bodyWidth": 320,
+      "pageOverflow": false,
+      "outOfBounds": [],
+      "tooSmall": [],
+      "overflowSources": [],
+      "controlCount": 26,
+      "screenshot": "320-en-member-dashboard.jpg",
+      "profileScreenshot": null
+    },
+    {
+      "width": 320,
+      "locale": "en",
+      "surface": "member-schedule",
+      "route": "/portal/schedule",
+      "mobileMenu": {
+        "present": true,
+        "opened": true
+      },
+      "adminProfile": null,
+      "title": "Women-Only BJJ & Self-Defense in Oxnard | Ground Up",
+      "bodyText": "Help us understand what brings people here\n\nAllow anonymous analytics and campaign attribution so we can improve the training and Adaptive Capacity journeys. You can decline and still use the site.\n\nAllow analytics\nDecline\n\nMobile Member\n\nMember\n\nYOUR GROUND UP\nSCHEDULE\nYOUR TRAINING\nEspañol\nLog out\n\nLIVE AVAILABILITY · PACIFIC TIME\n\nFIND YOUR NEXT CLASS\n\nChoose a time that works for you and reserve your spot.\n\nGround Up manages your reservation and waitlist status.\n\nNo upcoming classes are available right now.\n\nCheck back soon or contact us and we'll help you find your next class.\n\nContact us",
+      "viewport": 320,
+      "documentWidth": 320,
+      "bodyWidth": 320,
+      "pageOverflow": false,
+      "outOfBounds": [],
+      "tooSmall": [],
+      "overflowSources": [],
+      "controlCount": 10,
+      "screenshot": "320-en-member-schedule.jpg",
+      "profileScreenshot": null
+    },
+    {
+      "width": 320,
+      "locale": "en",
+      "surface": "member-classes",
+      "route": "/portal/my-classes",
+      "mobileMenu": {
+        "present": true,
+        "opened": true
+      },
+      "adminProfile": null,
+      "title": "Women-Only BJJ & Self-Defense in Oxnard | Ground Up",
+      "bodyText": "Help us understand what brings people here\n\nAllow anonymous analytics and campaign attribution so we can improve the training and Adaptive Capacity journeys. You can decline and still use the site.\n\nAllow analytics\nDecline\n\nMobile Member\n\nMember\n\nYOUR GROUND UP\nSCHEDULE\nYOUR TRAINING\nEspañol\nLog out\n\nYOUR RESERVATIONS\n\nYOUR TRAINING\n\nSee the classes you booked and your training history.\n\nUPCOMING & WAITLISTED\n\nNothing here yet.\n\nHISTORY\n\nNothing here yet.\n\nNo upcoming classes are booked yet.\n\nFind a class that works for you.\n\nView schedule",
+      "viewport": 320,
+      "documentWidth": 320,
+      "bodyWidth": 320,
+      "pageOverflow": false,
+      "outOfBounds": [],
+      "tooSmall": [],
+      "overflowSources": [],
+      "controlCount": 10,
+      "screenshot": "320-en-member-classes.jpg",
+      "profileScreenshot": null
+    },
+    {
+      "width": 320,
+      "locale": "en",
+      "surface": "member-form",
+      "route": "/portal/forms/personal-training-intake",
+      "mobileMenu": {
+        "present": true,
+        "opened": true
+      },
+      "adminProfile": null,
+      "title": "Women-Only BJJ & Self-Defense in Oxnard | Ground Up",
+      "bodyText": "Help us understand what brings people here\n\nAllow anonymous analytics and campaign attribution so we can improve the training and Adaptive Capacity journeys. You can decline and still use the site.\n\nAllow analytics\nDecline\n\nMobile Member\n\nMember\n\nYOUR GROUND UP\nSCHEDULE\nYOUR TRAINING\nEspañol\nLog out\nPERSONAL TRAINING INTAKE FORM\n\nPlease complete this form before your first session\n\nFull Name*\nDate of Birth*\nAddress*\nEmergency Contact Name*\nEmergency Contact Phone*\nBJJ Experience Level*\nSelect an option\nComplete Beginner\nLess than 6 months\n6 months - 2 years\n2+ years\nCurrent Belt (if applicable)\nSelect an option\nWhite\nBlue\nPurple\nBrown\nBlack\nNo Belt\nOther Martial Arts Experience\nSave draft\nSubmit form",
+      "viewport": 320,
+      "documentWidth": 320,
+      "bodyWidth": 320,
+      "pageOverflow": false,
+      "outOfBounds": [],
+      "tooSmall": [],
+      "overflowSources": [],
+      "controlCount": 19,
+      "screenshot": "320-en-member-form.jpg",
+      "profileScreenshot": null
+    },
+    {
+      "width": 320,
+      "locale": "en",
+      "surface": "coach",
+      "route": "/portal/coach",
+      "mobileMenu": {
+        "present": true,
+        "opened": true
+      },
+      "adminProfile": null,
+      "title": "Women-Only BJJ & Self-Defense in Oxnard | Ground Up",
+      "bodyText": "Help us understand what brings people here\n\nAllow anonymous analytics and campaign attribution so we can improve the training and Adaptive Capacity journeys. You can decline and still use the site.\n\nAllow analytics\nDecline\n\nMobile Coach\n\nCoach\n\nYOUR GROUND UP\nSCHEDULE\nYOUR TRAINING\nCOACH CENTER\nEspañol\nLog out\nCOACH CENTER\n\nManage your assigned members & session notes\n\nMy members (0)\n\nNo members assigned\n\nSelect a member",
+      "viewport": 320,
+      "documentWidth": 320,
+      "bodyWidth": 320,
+      "pageOverflow": false,
+      "outOfBounds": [],
+      "tooSmall": [],
+      "overflowSources": [],
+      "controlCount": 11,
+      "screenshot": "320-en-coach.jpg",
+      "profileScreenshot": null
+    },
+    {
+      "width": 320,
+      "locale": "en",
+      "surface": "class-management",
+      "route": "/portal/class-admin",
+      "mobileMenu": {
+        "present": true,
+        "opened": true
+      },
+      "adminProfile": null,
+      "title": "Women-Only BJJ & Self-Defense in Oxnard | Ground Up",
+      "bodyText": "Help us understand what brings people here\n\nAllow anonymous analytics and campaign attribution so we can improve the training and Adaptive Capacity journeys. You can decline and still use the site.\n\nAllow analytics\nDecline\n\nAdmin User\n\nAdministrator\n\nYOUR GROUND UP\nSCHEDULE\nYOUR TRAINING\nCOACH CENTER\nCLASS MANAGEMENT\nADMIN\nEspañol\nLog out\n\nOPERATIONS\n\nCLASS BOOKING CONTROL\nGOOGLE CALENDAR SYNCHRONIZATION\n\ninfo@groundupbjj.com\n\nConnected\nLast success 9/2/2026, 7:36:20 AM\nSync now\nApproved schedule calendar\nChoose a connected calendar\nUse calendar\nSYNCHRONIZED OCCURRENCES\n7 in current window\n\nAdult Jiu-Jitsu - BOOKING READINESS TEST SERIES\n\nSynced\n\nThu, Sep 3 · 6:00 PM–7:00 PM · capacity 6\n\nRoster\n\nAdult Jiu-Jitsu - BOOKING READINESS TEST OVERLAP\n\nSynced\nCancelled\n\nThu, Sep 3 · 6:30 PM–7:30 PM · capacity 6\n\nRoster\n\nAdult Jiu-Jitsu - BOOKING READINESS TEST LOW CAPACITY\n\nManual\n\nTue, Sep 8 · 7:00 PM–8:00 PM · capacity 1\n\nRoster\n\nAdult Jiu-Jitsu - BOOKING READINESS TEST SERIES\n\nSynced\n\nThu, Sep 10 · 6:00 PM–7:00 PM · capacity 6\n\nRoster\n\nAdult Jiu-Jitsu - BOOKING READINESS TEST MODIFIED INSTANCE\n\nSynced\n\nThu, Sep 17 · 6:30 PM–7:30 PM · capacity 6\n\nRoster\n\nAdult Jiu-Jitsu - BOOKING READINESS TEST CANCELLATION WITH RESERVATION\n\nSynced\nCancelled\n\nThu, Sep 24 · 6:00 PM–7:00 PM · capacity 6\n\nRoster\n\nAdult Jiu-Jitsu - BOOKING READINESS TEST SERIES\n\nSynced\n\nThu, Oct 1 · 6:00 PM–7:00 PM · capacity 6\n\nRoster",
+      "viewport": 320,
+      "documentWidth": 320,
+      "bodyWidth": 320,
+      "pageOverflow": false,
+      "outOfBounds": [],
+      "tooSmall": [],
+      "overflowSources": [],
+      "controlCount": 22,
+      "screenshot": "320-en-class-management.jpg",
+      "profileScreenshot": null
+    },
+    {
+      "width": 320,
+      "locale": "en",
+      "surface": "admin",
+      "route": "/portal/admin",
+      "mobileMenu": {
+        "present": true,
+        "opened": true
+      },
+      "adminProfile": {
+        "present": true,
+        "tabCount": 4,
+        "tabsFit": true,
+        "pageOverflow": false,
+        "profileTitle": "Your Forms\nBookings\nSession notes\nAdmin"
+      },
+      "title": "Women-Only BJJ & Self-Defense in Oxnard | Ground Up",
+      "bodyText": "Help us understand what brings people here\n\nAllow anonymous analytics and campaign attribution so we can improve the training and Adaptive Capacity journeys. You can decline and still use the site.\n\nAllow analytics\nDecline\nADMIN DASHBOARD\n\nManage members, track performance & analytics\n\n16\n\nTotal users\n\n12\n\nNew (30d)\n\n0\n\nActive plans\n\n0\n\nUpcoming (7d)\n\n$0\n\nRevenue (month)\n\n15 members have incomplete required forms\n\nClick to filter member list\n\nView all\nStaff alerts\n1 new\n\nNew leads and contact messages appear here automatically.\n\nNew Adaptive Capacity signup\n\nUeavnl Eamuovfsj joined the Adaptive Capacity interest list list.\n\nAug 28, 2026, 11:01 PM\n\nMark read\nOpen inbox\nLead & message inbox\n\nReview every public submission, acknowledge it, and track what happens next.\n\nTraining leads (1)\nAdaptive Capacity (1)\nContact messages (0)\n\ncharles zeller\n\nNew\ncharleszeller@gmail.com\n8058274510\nMay 29, 2026, 5:17 PM\nNew\nProgram: open\nExperience: experienced\nCampaign & funnel report\n\nConsent-aware analytics are shown alongside total leads. Totals may differ because analytics require visitor consent.\n\nTraining\n\n119\n\nPage views\n\n2\n\nFunnel steps\n\n0\n\nForm starts\n\n0\n\nSubmissions\n\n0\n\nSuccessful leads\n\n1\n\nTotal leads\n\n8\n\nConsented sessions\n\nSource / campaign\tLanding path\tViews\tStarts\tSubmitted\tSuccessful leads\tTotal leads\n(none)\n(none) · (none)\n\t/\t115\t0\t0\t0\t0\nig\nsocial · (none)\n\t/\t1\t0\t0\t0\t0\n(none)\n(none) · (none)\n\t/es\t3\t0\t0\t0\t0\n(none)\n(none) · (none)\n\t(none)\t0\t0\t0\t0\t1\nMembers (16)\nAll\nNeeds forms\n15\n\nMobile Coach\n\nCoach\n\nmobile-qa-coach-rendered-responsive@example.invalid\n\nMobile Member\n\nMember\n\nmobile-qa-member-rendered-responsive@example.invalid\n\nMobile Coach\n\nCoach\n\nmobile-qa-coach-1788401875639-1766@example.invalid\n\nMobile Member\n\nMember\n\nmobile-qa-member-1788401875639-1766@example.invalid\n\nMobile Coach\n\nCoach\n\nmobile-qa-coach-1788401786730-1591@example.invalid\n\nMobile Member\n\nMember\n\nmobile-qa-member-1788401786730-1591@example.invalid\n\nMobile Coach\n\nCoach\n\nmobile-qa-coach-178840170",
+      "viewport": 320,
+      "documentWidth": 320,
+      "bodyWidth": 320,
+      "pageOverflow": false,
+      "outOfBounds": [],
+      "tooSmall": [],
+      "overflowSources": [
+        {
+          "tag": "table",
+          "className": "w-full text-sm",
+          "text": "Source / campaign\tLanding path\tView \tStart \tSubmitted\tSucce ful lead \tTotal lead",
+          "left": 37,
+          "right": 483.4,
+          "width": 446.4
+        },
+        {
+          "tag": "thead",
+          "className": "",
+          "text": "Source / campaign\tLanding path\tView \tStart \tSubmitted\tSucce ful lead \tTotal lead",
+          "left": 37,
+          "right": 483.4,
+          "width": 446.4
+        },
+        {
+          "tag": "tr",
+          "className": "text-left text-xs text-gray-500 border-b border-white/10",
+          "text": "Source / campaign\tLanding path\tView \tStart \tSubmitted\tSucce ful lead \tTotal lead",
+          "left": 37,
+          "right": 483.4,
+          "width": 446.4
+        },
+        {
+          "tag": "th",
+          "className": "p-2",
+          "text": "Total lead ",
+          "left": 435.6,
+          "right": 483.4,
+          "width": 47.8
+        },
+        {
+          "tag": "tbody",
+          "className": "",
+          "text": "(none)\n(none) · (none)\n\t/\t115\t0\t0\t0\t0\nig\n ocial · (none)\n\t/\t1\t0\t0\t0\t0\n(none)\n(no",
+          "left": 37,
+          "right": 483.4,
+          "width": 446.4
+        },
+        {
+          "tag": "tr",
+          "className": "border-b border-white/5 text-gray-300",
+          "text": "(none)\n(none) · (none)\n\t/\t115\t0\t0\t0\t0",
+          "left": 37,
+          "right": 483.4,
+          "width": 446.4
+        },
+        {
+          "tag": "td",
+          "className": "p-2 text-[#FFB199]",
+          "text": "0",
+          "left": 435.6,
+          "right": 483.4,
+          "width": 47.8
+        },
+        {
+          "tag": "tr",
+          "className": "border-b border-white/5 text-gray-300",
+          "text": "ig\n ocial · (none)\n\t/\t1\t0\t0\t0\t0",
+          "left": 37,
+          "right": 483.4,
+          "width": 446.4
+        },
+        {
+          "tag": "td",
+          "className": "p-2 text-[#FFB199]",
+          "text": "0",
+          "left": 435.6,
+          "right": 483.4,
+          "width": 47.8
+        },
+        {
+          "tag": "tr",
+          "className": "border-b border-white/5 text-gray-300",
+          "text": "(none)\n(none) · (none)\n\t/e \t3\t0\t0\t0\t0",
+          "left": 37,
+          "right": 483.4,
+          "width": 446.4
+        },
+        {
+          "tag": "td",
+          "className": "p-2 text-[#FFB199]",
+          "text": "0",
+          "left": 435.6,
+          "right": 483.4,
+          "width": 47.8
+        },
+        {
+          "tag": "tr",
+          "className": "border-b border-white/5 text-gray-300",
+          "text": "(none)\n(none) · (none)\n\t(none)\t0\t0\t0\t0\t1",
+          "left": 37,
+          "right": 483.4,
+          "width": 446.4
+        }
+      ],
+      "controlCount": 36,
+      "screenshot": "320-en-admin.jpg",
+      "profileScreenshot": "320-en-admin-profile.jpg"
+    },
+    {
+      "width": 320,
+      "locale": "es",
+      "surface": "member-dashboard",
+      "route": "/es/portal/dashboard",
+      "mobileMenu": {
+        "present": true,
+        "opened": true
+      },
+      "adminProfile": null,
+      "title": "Women-Only BJJ & Self-Defense in Oxnard | Ground Up",
+      "bodyText": "Ayúdanos a entender qué te trae aquí\n\nPermite análisis anónimos y atribución de campañas para que podamos mejorar las experiencias de entrenamiento y Capacidad Adaptativa. Puedes rechazarlo y seguir usando el sitio.\n\nPermitir análisis\nRechazar\n\nPORTAL DE MIEMBROS\n\nBIENVENIDA DE NUEVO, MOBILE\n0/6 formularios\n\nAcción requerida\n\nCompleta tus formularios obligatorios para acceder a todos los servicios.\n\nComenzar\nVer horario\nTus formularios\nPróxima clase\n\nTodavía no tienes clases reservadas.\n\nEncuentra una clase que funcione para ti.\n\nVer horario\nMembresía\n\nNo hay membresía activa\n\nVer programas\nSesiones privadas\n0 sesión(es) privada(s) próxima(s)\n\nNo hay sesiones próximas\n\nVer horario\nFormularios obligatorios\n0 de 6 formularios obligatorios enviados\n\nEvaluación de salud y PAR-Q\n\nObligatorio\n\nObligatorio\nComenzar →\n\nAcuerdo de reglas del gimnasio\n\nObligatorio\n\nObligatorio\nComenzar →\n\nObjetivos y preferencias\n\nObligatorio\n\nObligatorio\nComenzar →\n\nAutorización de uso de medios\n\nObligatorio\n\nObligatorio\nComenzar →\n\nConsentimiento para participación de menor\n\nOpcional\n\nObligatorio\nComenzar →\n\nFormulario de ingreso de entrenamiento personal\n\nObligatorio\n\nObligatorio\nComenzar →\n\nExención de responsabilidad de artes marciales\n\nObligatorio\n\nObligatorio\nComenzar →\nEvento comunitario\nClase gratuita — abierta para todos\n\nDefensa personal comunitaria gratuita\n\nsábado, 5 sept\n\nSe repite cada 2 semanas\n\nAbierto para todos. No se requiere experiencia ni registro.\n\nMás información\n\n© 2026 Ground Up Jiu-Jitsu & Fitness\n\nExención de responsabilidad\nReglas del gimnasio\nContáctanos",
+      "viewport": 320,
+      "documentWidth": 320,
+      "bodyWidth": 320,
+      "pageOverflow": false,
+      "outOfBounds": [],
+      "tooSmall": [],
+      "overflowSources": [],
+      "controlCount": 21,
+      "screenshot": "320-es-member-dashboard.jpg",
+      "profileScreenshot": null
+    },
+    {
+      "width": 320,
+      "locale": "es",
+      "surface": "member-schedule",
+      "route": "/es/portal/schedule",
+      "mobileMenu": {
+        "present": true,
+        "opened": true
+      },
+      "adminProfile": null,
+      "title": "Women-Only BJJ & Self-Defense in Oxnard | Ground Up",
+      "bodyText": "Ayúdanos a entender qué te trae aquí\n\nPermite análisis anónimos y atribución de campañas para que podamos mejorar las experiencias de entrenamiento y Capacidad Adaptativa. Puedes rechazarlo y seguir usando el sitio.\n\nPermitir análisis\nRechazar\n\nMobile Member\n\nMiembro\n\nTU GROUND UP\nHORARIO\nTU ENTRENAMIENTO\nEnglish\nCerrar sesión\n\nDISPONIBILIDAD EN VIVO · HORA DEL PACÍFICO\n\nENCUENTRA TU PRÓXIMA CLASE\n\nElige un horario que te funcione y reserva tu lugar.\n\nGround Up administra tus reservas y la lista de espera.\n\nNo hay clases próximas disponibles en este momento.\n\nVuelve pronto o contáctanos para ayudarte a encontrar tu próxima clase.\n\nContáctanos",
+      "viewport": 320,
+      "documentWidth": 320,
+      "bodyWidth": 320,
+      "pageOverflow": false,
+      "outOfBounds": [],
+      "tooSmall": [],
+      "overflowSources": [],
+      "controlCount": 10,
+      "screenshot": "320-es-member-schedule.jpg",
+      "profileScreenshot": null
+    },
+    {
+      "width": 320,
+      "locale": "es",
+      "surface": "member-classes",
+      "route": "/es/portal/my-classes",
+      "mobileMenu": {
+        "present": true,
+        "opened": true
+      },
+      "adminProfile": null,
+      "title": "Women-Only BJJ & Self-Defense in Oxnard | Ground Up",
+      "bodyText": "Ayúdanos a entender qué te trae aquí\n\nPermite análisis anónimos y atribución de campañas para que podamos mejorar las experiencias de entrenamiento y Capacidad Adaptativa. Puedes rechazarlo y seguir usando el sitio.\n\nPermitir análisis\nRechazar\n\nMobile Member\n\nMiembro\n\nTU GROUND UP\nHORARIO\nTU ENTRENAMIENTO\nEnglish\nCerrar sesión\n\nTUS RESERVAS\n\nTU ENTRENAMIENTO\n\nAquí ves las clases que reservaste y tu historial.\n\nPRÓXIMAS & LISTA DE ESPERA\n\nTodavía no hay nada aquí.\n\nHISTORIAL\n\nTodavía no hay nada aquí.\n\nTodavía no tienes clases reservadas.\n\nEncuentra una clase que funcione para ti.\n\nVer horario",
+      "viewport": 320,
+      "documentWidth": 320,
+      "bodyWidth": 320,
+      "pageOverflow": false,
+      "outOfBounds": [],
+      "tooSmall": [],
+      "overflowSources": [],
+      "controlCount": 10,
+      "screenshot": "320-es-member-classes.jpg",
+      "profileScreenshot": null
+    },
+    {
+      "width": 320,
+      "locale": "es",
+      "surface": "member-form",
+      "route": "/es/portal/forms/personal-training-intake",
+      "mobileMenu": {
+        "present": true,
+        "opened": true
+      },
+      "adminProfile": null,
+      "title": "Women-Only BJJ & Self-Defense in Oxnard | Ground Up",
+      "bodyText": "Ayúdanos a entender qué te trae aquí\n\nPermite análisis anónimos y atribución de campañas para que podamos mejorar las experiencias de entrenamiento y Capacidad Adaptativa. Puedes rechazarlo y seguir usando el sitio.\n\nPermitir análisis\nRechazar\nFORMULARIO DE INGRESO DE ENTRENAMIENTO PERSONAL\n\nInformación básica sobre tu experiencia y objetivos de entrenamiento\n\nNombre completo*\nFecha de nacimiento*\nDomicilio*\nNombre del contacto de emergencia*\nTeléfono del contacto de emergencia*\nNivel de experiencia en BJJ*\nSelecciona una opción\nPrincipiante absoluto\nMenos de 6 meses\nDe 6 meses a 2 años\nMás de 2 años\nCinturón actual (si corresponde)\nSelecciona una opción\nBlanco\nAzul\nMorado\nMarrón\nNegro\nSin cinturón\nExperiencia en otras artes marciales\nGuardar borrador\nEnviar formulario",
+      "viewport": 320,
+      "documentWidth": 320,
+      "bodyWidth": 320,
+      "pageOverflow": false,
+      "outOfBounds": [],
+      "tooSmall": [],
+      "overflowSources": [],
+      "controlCount": 14,
+      "screenshot": "320-es-member-form.jpg",
+      "profileScreenshot": null
+    },
+    {
+      "width": 320,
+      "locale": "es",
+      "surface": "coach",
+      "route": "/es/portal/coach",
+      "mobileMenu": {
+        "present": true,
+        "opened": true
+      },
+      "adminProfile": null,
+      "title": "Women-Only BJJ & Self-Defense in Oxnard | Ground Up",
+      "bodyText": "Ayúdanos a entender qué te trae aquí\n\nPermite análisis anónimos y atribución de campañas para que podamos mejorar las experiencias de entrenamiento y Capacidad Adaptativa. Puedes rechazarlo y seguir usando el sitio.\n\nPermitir análisis\nRechazar\n\nMobile Coach\n\nCoach\n\nTU GROUND UP\nHORARIO\nTU ENTRENAMIENTO\nCENTRO DE COACHES\nEnglish\nCerrar sesión\nCENTRO DE COACHES\n\nAdministra tus miembros asignados y notas de sesión\n\nMis miembros (0)\n\nNo hay miembros asignados\n\nSelecciona un miembro",
+      "viewport": 320,
+      "documentWidth": 320,
+      "bodyWidth": 320,
+      "pageOverflow": false,
+      "outOfBounds": [],
+      "tooSmall": [],
+      "overflowSources": [],
+      "controlCount": 11,
+      "screenshot": "320-es-coach.jpg",
+      "profileScreenshot": null
+    },
+    {
+      "width": 320,
+      "locale": "es",
+      "surface": "class-management",
+      "route": "/es/portal/class-admin",
+      "mobileMenu": {
+        "present": true,
+        "opened": true
+      },
+      "adminProfile": null,
+      "title": "Women-Only BJJ & Self-Defense in Oxnard | Ground Up",
+      "bodyText": "Ayúdanos a entender qué te trae aquí\n\nPermite análisis anónimos y atribución de campañas para que podamos mejorar las experiencias de entrenamiento y Capacidad Adaptativa. Puedes rechazarlo y seguir usando el sitio.\n\nPermitir análisis\nRechazar\n\nAdmin User\n\nAdministración\n\nTU GROUND UP\nHORARIO\nTU ENTRENAMIENTO\nCENTRO DE COACHES\nGESTIÓN DE CLASES\nADMINISTRACIÓN\nEnglish\nCerrar sesión\n\nOPERACIONES\n\nCONTROL DE RESERVAS DE CLASES\nSINCRONIZACIÓN CON GOOGLE CALENDAR\n\ninfo@groundupbjj.com\n\nConectado\nÚltima sincronización exitosa 2/9/2026, 7:36:20 a.m.\nSincronizar ahora\nCalendario aprobado del horario\nElige un calendario conectado\nUsar calendario\nCLASES SINCRONIZADAS\n7 en el periodo actual\n\nAdult Jiu-Jitsu - BOOKING READINESS TEST SERIES\n\nSincronizada\n\njue, 3 de sept · 6:00 p.m.–7:00 p.m. · capacidad 6\n\nLista\n\nAdult Jiu-Jitsu - BOOKING READINESS TEST OVERLAP\n\nSincronizada\nCancelada\n\njue, 3 de sept · 6:30 p.m.–7:30 p.m. · capacidad 6\n\nLista\n\nAdult Jiu-Jitsu - BOOKING READINESS TEST LOW CAPACITY\n\nManual\n\nmar, 8 de sept · 7:00 p.m.–8:00 p.m. · capacidad 1\n\nLista\n\nAdult Jiu-Jitsu - BOOKING READINESS TEST SERIES\n\nSincronizada\n\njue, 10 de sept · 6:00 p.m.–7:00 p.m. · capacidad 6\n\nLista\n\nAdult Jiu-Jitsu - BOOKING READINESS TEST MODIFIED INSTANCE\n\nSincronizada\n\njue, 17 de sept · 6:30 p.m.–7:30 p.m. · capacidad 6\n\nLista\n\nAdult Jiu-Jitsu - BOOKING READINESS TEST CANCELLATION WITH RESERVATION\n\nSincronizada\nCancelada\n\njue, 24 de sept · 6:00 p.m.–7:00 p.m. · capacidad 6\n\nLista\n\nAdult Jiu-Jitsu - BOOKING READINESS TEST SERIES\n\nSincronizada\n\njue, 1 de oct · 6:00 p.m.–7:00 p.m. · capacidad 6\n\nLista",
+      "viewport": 320,
+      "documentWidth": 320,
+      "bodyWidth": 320,
+      "pageOverflow": false,
+      "outOfBounds": [],
+      "tooSmall": [],
+      "overflowSources": [],
+      "controlCount": 22,
+      "screenshot": "320-es-class-management.jpg",
+      "profileScreenshot": null
+    },
+    {
+      "width": 320,
+      "locale": "es",
+      "surface": "admin",
+      "route": "/es/portal/admin",
+      "mobileMenu": {
+        "present": true,
+        "opened": true
+      },
+      "adminProfile": {
+        "present": true,
+        "tabCount": 4,
+        "tabsFit": true,
+        "pageOverflow": false,
+        "profileTitle": "Tus formularios\nReservas\nNotas de sesión\nAdministración"
+      },
+      "title": "Women-Only BJJ & Self-Defense in Oxnard | Ground Up",
+      "bodyText": "Ayúdanos a entender qué te trae aquí\n\nPermite análisis anónimos y atribución de campañas para que podamos mejorar las experiencias de entrenamiento y Capacidad Adaptativa. Puedes rechazarlo y seguir usando el sitio.\n\nPermitir análisis\nRechazar\n\nAdmin User\n\nAdministración\n\nTU GROUND UP\nHORARIO\nTU ENTRENAMIENTO\nCENTRO DE COACHES\nGESTIÓN DE CLASES\nADMINISTRACIÓN\nEnglish\nCerrar sesión\nPANEL DE ADMINISTRACIÓN\n\nAdministra miembros, rendimiento y análisis\n\n16\n\nUsuarios totales\n\n12\n\nNuevos (30 días)\n\n0\n\nPlanes activos\n\n0\n\nPróximas (7 días)\n\n$0\n\nIngresos (mes)\n\n15 miembros tienen formularios obligatorios incompletos\n\nHaz clic para filtrar la lista de miembros\n\nVer todo\nAlertas del equipo\n1 nuevas\n\nLos nuevos contactos y mensajes aparecen aquí automáticamente.\n\nNuevo registro de Capacidad Adaptativa\n\nUeavnl Eamuovfsj se unió a la lista de interés de Capacidad Adaptativa.\n\n28 ago 2026, 11:01 p.m.\n\nMarcar como leído\nAbrir bandeja\nBandeja de contactos y mensajes\n\nRevisa cada envío público y da seguimiento a lo que sucede después.\n\nContactos de entrenamiento (1)\nCapacidad adaptativa (1)\nMensajes de contacto (0)\n\ncharles zeller\n\nNuevo\ncharleszeller@gmail.com\n8058274510\n29 may 2026, 5:17 p.m.\nNuevo\nPrograma: open\nExperiencia: experienced\nInforme de campañas y embudo\n\nLos análisis con consentimiento aparecen junto a los contactos totales. Los totales pueden diferir porque requieren consentimiento.\n\nEntrenamiento\n\n119\n\nVistas de página\n\n2\n\nPasos del embudo\n\n0\n\nInicios de formularios\n\n0\n\nEnvíos\n\n0\n\nContactos exitosos\n\n1\n\nContactos totales\n\n8\n\nSesiones con consentimiento\n\nFuente / campaña\tRuta de llegada\tVistas\tInicios\tEnviado\tContactos exitosos\tContactos totales\n(none)\n(none) · (none)\n\t/\t115\t0\t0\t0\t0\nig\nsocial · (none)\n\t/\t1\t0\t0\t0\t0\n(none)\n(none) · (none)\n\t/es\t3\t0\t0\t0\t0\n(none)\n(none) · (none)\n\t(none)\t0\t0\t0\t0\t1\nMiembros (16)\nTodos\nFormularios pendientes\n15\n\nMobile Coach\n\nCoach\n\nmobile-qa-coach-rendered-responsive@example.invalid\n\nMobile Member\n\nMiembro\n\nmobile-qa-member-rendered-responsi",
+      "viewport": 320,
+      "documentWidth": 320,
+      "bodyWidth": 320,
+      "pageOverflow": false,
+      "outOfBounds": [],
+      "tooSmall": [],
+      "overflowSources": [
+        {
+          "tag": "button",
+          "className": "min-h-11 px-3 text-xs rounded-lg whitespace-nowrap text-gray-400 hover:text-white",
+          "text": "Men aje  de contacto (0)",
+          "left": 413.2,
+          "right": 581.9,
+          "width": 168.8
+        },
+        {
+          "tag": "table",
+          "className": "w-full text-sm",
+          "text": "Fuente / campaña\tRuta de llegada\tVi ta \tInicio \tEnviado\tContacto  exito o \tConta",
+          "left": 37,
+          "right": 489.5,
+          "width": 452.5
+        },
+        {
+          "tag": "thead",
+          "className": "",
+          "text": "Fuente / campaña\tRuta de llegada\tVi ta \tInicio \tEnviado\tContacto  exito o \tConta",
+          "left": 37,
+          "right": 489.5,
+          "width": 452.5
+        },
+        {
+          "tag": "tr",
+          "className": "text-left text-xs text-gray-500 border-b border-white/10",
+          "text": "Fuente / campaña\tRuta de llegada\tVi ta \tInicio \tEnviado\tContacto  exito o \tConta",
+          "left": 37,
+          "right": 489.5,
+          "width": 452.5
+        },
+        {
+          "tag": "th",
+          "className": "p-2",
+          "text": "Contacto  totale ",
+          "left": 412.9,
+          "right": 489.5,
+          "width": 76.5
+        },
+        {
+          "tag": "tbody",
+          "className": "",
+          "text": "(none)\n(none) · (none)\n\t/\t115\t0\t0\t0\t0\nig\n ocial · (none)\n\t/\t1\t0\t0\t0\t0\n(none)\n(no",
+          "left": 37,
+          "right": 489.5,
+          "width": 452.5
+        },
+        {
+          "tag": "tr",
+          "className": "border-b border-white/5 text-gray-300",
+          "text": "(none)\n(none) · (none)\n\t/\t115\t0\t0\t0\t0",
+          "left": 37,
+          "right": 489.5,
+          "width": 452.5
+        },
+        {
+          "tag": "td",
+          "className": "p-2 text-[#FFB199]",
+          "text": "0",
+          "left": 412.9,
+          "right": 489.5,
+          "width": 76.5
+        },
+        {
+          "tag": "tr",
+          "className": "border-b border-white/5 text-gray-300",
+          "text": "ig\n ocial · (none)\n\t/\t1\t0\t0\t0\t0",
+          "left": 37,
+          "right": 489.5,
+          "width": 452.5
+        },
+        {
+          "tag": "td",
+          "className": "p-2 text-[#FFB199]",
+          "text": "0",
+          "left": 412.9,
+          "right": 489.5,
+          "width": 76.5
+        },
+        {
+          "tag": "tr",
+          "className": "border-b border-white/5 text-gray-300",
+          "text": "(none)\n(none) · (none)\n\t/e \t3\t0\t0\t0\t0",
+          "left": 37,
+          "right": 489.5,
+          "width": 452.5
+        },
+        {
+          "tag": "td",
+          "className": "p-2 text-[#FFB199]",
+          "text": "0",
+          "left": 412.9,
+          "right": 489.5,
+          "width": 76.5
+        }
+      ],
+      "controlCount": 44,
+      "screenshot": "320-es-admin.jpg",
+      "profileScreenshot": "320-es-admin-profile.jpg"
+    },
+    {
+      "width": 375,
+      "locale": "en",
+      "surface": "member-dashboard",
+      "route": "/portal/dashboard",
+      "mobileMenu": {
+        "present": true,
+        "opened": true
+      },
+      "adminProfile": null,
+      "title": "Women-Only BJJ & Self-Defense in Oxnard | Ground Up",
+      "bodyText": "Help us understand what brings people here\n\nAllow anonymous analytics and campaign attribution so we can improve the training and Adaptive Capacity journeys. You can decline and still use the site.\n\nAllow analytics\nDecline\n\nMobile Member\n\nMember\n\nYOUR GROUND UP\nSCHEDULE\nYOUR TRAINING\nEspañol\nLog out\n\nMEMBER PORTAL\n\nWELCOME BACK, MOBILE\n0/6 forms\n\nAction required\n\nComplete your required forms to access all gym services.\n\nStart\nView schedule\nYour Forms\nNext class\n\nNo upcoming classes are booked yet.\n\nFind a class that works for you.\n\nView schedule\nMembership\n\nNo active membership\n\nView programs\nPrivate sessions\n0 upcoming private session(s)\n\nNo upcoming sessions\n\nView schedule\nRequired forms\n0 of 6 required forms submitted\n\nHealth & Physical Activity Readiness (PAR-Q)\n\nRequired\n\nRequired\nStart →\n\nGym Rules Agreement\n\nRequired\n\nRequired\nStart →\n\nTraining Goals & Preferences\n\nRequired\n\nRequired\nStart →\n\nMedia Release Authorization\n\nRequired\n\nRequired\nStart →\n\nMinor Participation Consent\n\nOptional\n\nRequired\nStart →\n\nPersonal Training Intake Form\n\nRequired\n\nRequired\nStart →\n\nMartial Arts Liability Waiver\n\nRequired\n\nRequired\nStart →\nCommunity Event\nFree class — open to everyone\n\nFree Community Self-Defense\n\nSaturday, Sep 5\n\nRepeats every 2 weeks\n\nOpen to everyone. No experience or registration required.\n\nLearn More\n\n© 2026 Ground Up Jiu-Jitsu & Fitness\n\nLiability Waiver\nGym Rules\nContact us",
+      "viewport": 375,
+      "documentWidth": 375,
+      "bodyWidth": 375,
+      "pageOverflow": false,
+      "outOfBounds": [],
+      "tooSmall": [],
+      "overflowSources": [],
+      "controlCount": 26,
+      "screenshot": "375-en-member-dashboard.jpg",
+      "profileScreenshot": null
+    },
+    {
+      "width": 375,
+      "locale": "en",
+      "surface": "member-schedule",
+      "route": "/portal/schedule",
+      "mobileMenu": {
+        "present": true,
+        "opened": true
+      },
+      "adminProfile": null,
+      "title": "Women-Only BJJ & Self-Defense in Oxnard | Ground Up",
+      "bodyText": "Help us understand what brings people here\n\nAllow anonymous analytics and campaign attribution so we can improve the training and Adaptive Capacity journeys. You can decline and still use the site.\n\nAllow analytics\nDecline\n\nMobile Member\n\nMember\n\nYOUR GROUND UP\nSCHEDULE\nYOUR TRAINING\nEspañol\nLog out\n\nLIVE AVAILABILITY · PACIFIC TIME\n\nFIND YOUR NEXT CLASS\n\nChoose a time that works for you and reserve your spot.\n\nGround Up manages your reservation and waitlist status.\n\nNo upcoming classes are available right now.\n\nCheck back soon or contact us and we'll help you find your next class.\n\nContact us",
+      "viewport": 375,
+      "documentWidth": 375,
+      "bodyWidth": 375,
+      "pageOverflow": false,
+      "outOfBounds": [],
+      "tooSmall": [],
+      "overflowSources": [],
+      "controlCount": 10,
+      "screenshot": "375-en-member-schedule.jpg",
+      "profileScreenshot": null
+    },
+    {
+      "width": 375,
+      "locale": "en",
+      "surface": "member-classes",
+      "route": "/portal/my-classes",
+      "mobileMenu": {
+        "present": true,
+        "opened": true
+      },
+      "adminProfile": null,
+      "title": "Women-Only BJJ & Self-Defense in Oxnard | Ground Up",
+      "bodyText": "Help us understand what brings people here\n\nAllow anonymous analytics and campaign attribution so we can improve the training and Adaptive Capacity journeys. You can decline and still use the site.\n\nAllow analytics\nDecline\n\nMobile Member\n\nMember\n\nYOUR GROUND UP\nSCHEDULE\nYOUR TRAINING\nEspañol\nLog out\n\nYOUR RESERVATIONS\n\nYOUR TRAINING\n\nSee the classes you booked and your training history.\n\nUPCOMING & WAITLISTED\n\nNothing here yet.\n\nHISTORY\n\nNothing here yet.\n\nNo upcoming classes are booked yet.\n\nFind a class that works for you.\n\nView schedule",
+      "viewport": 375,
+      "documentWidth": 375,
+      "bodyWidth": 375,
+      "pageOverflow": false,
+      "outOfBounds": [],
+      "tooSmall": [],
+      "overflowSources": [],
+      "controlCount": 10,
+      "screenshot": "375-en-member-classes.jpg",
+      "profileScreenshot": null
+    },
+    {
+      "width": 375,
+      "locale": "en",
+      "surface": "member-form",
+      "route": "/portal/forms/personal-training-intake",
+      "mobileMenu": {
+        "present": true,
+        "opened": true
+      },
+      "adminProfile": null,
+      "title": "Women-Only BJJ & Self-Defense in Oxnard | Ground Up",
+      "bodyText": "Help us understand what brings people here\n\nAllow anonymous analytics and campaign attribution so we can improve the training and Adaptive Capacity journeys. You can decline and still use the site.\n\nAllow analytics\nDecline\n\nMobile Member\n\nMember\n\nYOUR GROUND UP\nSCHEDULE\nYOUR TRAINING\nEspañol\nLog out\nPERSONAL TRAINING INTAKE FORM\n\nPlease complete this form before your first session\n\nFull Name*\nDate of Birth*\nAddress*\nEmergency Contact Name*\nEmergency Contact Phone*\nBJJ Experience Level*\nSelect an option\nComplete Beginner\nLess than 6 months\n6 months - 2 years\n2+ years\nCurrent Belt (if applicable)\nSelect an option\nWhite\nBlue\nPurple\nBrown\nBlack\nNo Belt\nOther Martial Arts Experience\nSave draft\nSubmit form",
+      "viewport": 375,
+      "documentWidth": 375,
+      "bodyWidth": 375,
+      "pageOverflow": false,
+      "outOfBounds": [],
+      "tooSmall": [],
+      "overflowSources": [],
+      "controlCount": 19,
+      "screenshot": "375-en-member-form.jpg",
+      "profileScreenshot": null
+    },
+    {
+      "width": 375,
+      "locale": "en",
+      "surface": "coach",
+      "route": "/portal/coach",
+      "mobileMenu": {
+        "present": true,
+        "opened": true
+      },
+      "adminProfile": null,
+      "title": "Women-Only BJJ & Self-Defense in Oxnard | Ground Up",
+      "bodyText": "Help us understand what brings people here\n\nAllow anonymous analytics and campaign attribution so we can improve the training and Adaptive Capacity journeys. You can decline and still use the site.\n\nAllow analytics\nDecline\n\nMobile Coach\n\nCoach\n\nYOUR GROUND UP\nSCHEDULE\nYOUR TRAINING\nCOACH CENTER\nEspañol\nLog out\nCOACH CENTER\n\nManage your assigned members & session notes\n\nMy members (0)\n\nNo members assigned\n\nSelect a member",
+      "viewport": 375,
+      "documentWidth": 375,
+      "bodyWidth": 375,
+      "pageOverflow": false,
+      "outOfBounds": [],
+      "tooSmall": [],
+      "overflowSources": [],
+      "controlCount": 11,
+      "screenshot": "375-en-coach.jpg",
+      "profileScreenshot": null
+    },
+    {
+      "width": 375,
+      "locale": "en",
+      "surface": "class-management",
+      "route": "/portal/class-admin",
+      "mobileMenu": {
+        "present": true,
+        "opened": true
+      },
+      "adminProfile": null,
+      "title": "Women-Only BJJ & Self-Defense in Oxnard | Ground Up",
+      "bodyText": "Help us understand what brings people here\n\nAllow anonymous analytics and campaign attribution so we can improve the training and Adaptive Capacity journeys. You can decline and still use the site.\n\nAllow analytics\nDecline\n\nOPERATIONS\n\nCLASS BOOKING CONTROL\nGOOGLE CALENDAR SYNCHRONIZATION\n\ninfo@groundupbjj.com\n\nConnected\nLast success 9/2/2026, 7:36:20 AM\nSync now\nApproved schedule calendar\nChoose a connected calendar\nUse calendar\nSYNCHRONIZED OCCURRENCES\n7 in current window\n\nAdult Jiu-Jitsu - BOOKING READINESS TEST SERIES\n\nSynced\n\nThu, Sep 3 · 6:00 PM–7:00 PM · capacity 6\n\nRoster\n\nAdult Jiu-Jitsu - BOOKING READINESS TEST OVERLAP\n\nSynced\nCancelled\n\nThu, Sep 3 · 6:30 PM–7:30 PM · capacity 6\n\nRoster\n\nAdult Jiu-Jitsu - BOOKING READINESS TEST LOW CAPACITY\n\nManual\n\nTue, Sep 8 · 7:00 PM–8:00 PM · capacity 1\n\nRoster\n\nAdult Jiu-Jitsu - BOOKING READINESS TEST SERIES\n\nSynced\n\nThu, Sep 10 · 6:00 PM–7:00 PM · capacity 6\n\nRoster\n\nAdult Jiu-Jitsu - BOOKING READINESS TEST MODIFIED INSTANCE\n\nSynced\n\nThu, Sep 17 · 6:30 PM–7:30 PM · capacity 6\n\nRoster\n\nAdult Jiu-Jitsu - BOOKING READINESS TEST CANCELLATION WITH RESERVATION\n\nSynced\nCancelled\n\nThu, Sep 24 · 6:00 PM–7:00 PM · capacity 6\n\nRoster\n\nAdult Jiu-Jitsu - BOOKING READINESS TEST SERIES\n\nSynced\n\nThu, Oct 1 · 6:00 PM–7:00 PM · capacity 6\n\nRoster",
+      "viewport": 375,
+      "documentWidth": 375,
+      "bodyWidth": 375,
+      "pageOverflow": false,
+      "outOfBounds": [],
+      "tooSmall": [],
+      "overflowSources": [],
+      "controlCount": 14,
+      "screenshot": "375-en-class-management.jpg",
+      "profileScreenshot": null
+    },
+    {
+      "width": 375,
+      "locale": "en",
+      "surface": "admin",
+      "route": "/portal/admin",
+      "mobileMenu": {
+        "present": true,
+        "opened": true
+      },
+      "adminProfile": {
+        "present": true,
+        "tabCount": 4,
+        "tabsFit": true,
+        "pageOverflow": false,
+        "profileTitle": "Your Forms\nBookings\nSession notes\nAdmin"
+      },
+      "title": "Women-Only BJJ & Self-Defense in Oxnard | Ground Up",
+      "bodyText": "Help us understand what brings people here\n\nAllow anonymous analytics and campaign attribution so we can improve the training and Adaptive Capacity journeys. You can decline and still use the site.\n\nAllow analytics\nDecline\n\nAdmin User\n\nAdministrator\n\nYOUR GROUND UP\nSCHEDULE\nYOUR TRAINING\nCOACH CENTER\nCLASS MANAGEMENT\nADMIN\nEspañol\nLog out\nADMIN DASHBOARD\n\nManage members, track performance & analytics\n\n16\n\nTotal users\n\n12\n\nNew (30d)\n\n0\n\nActive plans\n\n0\n\nUpcoming (7d)\n\n$0\n\nRevenue (month)\n\n15 members have incomplete required forms\n\nClick to filter member list\n\nView all\nStaff alerts\n1 new\n\nNew leads and contact messages appear here automatically.\n\nNew Adaptive Capacity signup\n\nUeavnl Eamuovfsj joined the Adaptive Capacity interest list list.\n\nAug 28, 2026, 11:01 PM\n\nMark read\nOpen inbox\nLead & message inbox\n\nReview every public submission, acknowledge it, and track what happens next.\n\nTraining leads (1)\nAdaptive Capacity (1)\nContact messages (0)\n\ncharles zeller\n\nNew\ncharleszeller@gmail.com\n8058274510\nMay 29, 2026, 5:17 PM\nNew\nProgram: open\nExperience: experienced\nCampaign & funnel report\n\nConsent-aware analytics are shown alongside total leads. Totals may differ because analytics require visitor consent.\n\nTraining\n\n119\n\nPage views\n\n2\n\nFunnel steps\n\n0\n\nForm starts\n\n0\n\nSubmissions\n\n0\n\nSuccessful leads\n\n1\n\nTotal leads\n\n8\n\nConsented sessions\n\nSource / campaign\tLanding path\tViews\tStarts\tSubmitted\tSuccessful leads\tTotal leads\n(none)\n(none) · (none)\n\t/\t115\t0\t0\t0\t0\nig\nsocial · (none)\n\t/\t1\t0\t0\t0\t0\n(none)\n(none) · (none)\n\t/es\t3\t0\t0\t0\t0\n(none)\n(none) · (none)\n\t(none)\t0\t0\t0\t0\t1\nMembers (16)\nAll\nNeeds forms\n15\n\nMobile Coach\n\nCoach\n\nmobile-qa-coach-rendered-responsive@example.invalid\n\nMobile Member\n\nMember\n\nmobile-qa-member-rendered-responsive@example.invalid\n\nMobile Coach\n\nCoach\n\nmobile-qa-coach-1788401875639-1766@example.invalid\n\nMobile Member\n\nMember\n\nmobile-qa-member-1788401875639-1766@example.invalid\n\nMobile Coach\n\nCoach\n\nmobile-qa-coach-1788401786730-1591@example.invalid\n\nMobi",
+      "viewport": 375,
+      "documentWidth": 375,
+      "bodyWidth": 375,
+      "pageOverflow": false,
+      "outOfBounds": [],
+      "tooSmall": [],
+      "overflowSources": [
+        {
+          "tag": "table",
+          "className": "w-full text-sm",
+          "text": "Source / campaign\tLanding path\tView \tStart \tSubmitted\tSucce ful lead \tTotal lead",
+          "left": 37,
+          "right": 483.4,
+          "width": 446.4
+        },
+        {
+          "tag": "thead",
+          "className": "",
+          "text": "Source / campaign\tLanding path\tView \tStart \tSubmitted\tSucce ful lead \tTotal lead",
+          "left": 37,
+          "right": 483.4,
+          "width": 446.4
+        },
+        {
+          "tag": "tr",
+          "className": "text-left text-xs text-gray-500 border-b border-white/10",
+          "text": "Source / campaign\tLanding path\tView \tStart \tSubmitted\tSucce ful lead \tTotal lead",
+          "left": 37,
+          "right": 483.4,
+          "width": 446.4
+        },
+        {
+          "tag": "th",
+          "className": "p-2",
+          "text": "Total lead ",
+          "left": 435.6,
+          "right": 483.4,
+          "width": 47.8
+        },
+        {
+          "tag": "tbody",
+          "className": "",
+          "text": "(none)\n(none) · (none)\n\t/\t115\t0\t0\t0\t0\nig\n ocial · (none)\n\t/\t1\t0\t0\t0\t0\n(none)\n(no",
+          "left": 37,
+          "right": 483.4,
+          "width": 446.4
+        },
+        {
+          "tag": "tr",
+          "className": "border-b border-white/5 text-gray-300",
+          "text": "(none)\n(none) · (none)\n\t/\t115\t0\t0\t0\t0",
+          "left": 37,
+          "right": 483.4,
+          "width": 446.4
+        },
+        {
+          "tag": "td",
+          "className": "p-2 text-[#FFB199]",
+          "text": "0",
+          "left": 435.6,
+          "right": 483.4,
+          "width": 47.8
+        },
+        {
+          "tag": "tr",
+          "className": "border-b border-white/5 text-gray-300",
+          "text": "ig\n ocial · (none)\n\t/\t1\t0\t0\t0\t0",
+          "left": 37,
+          "right": 483.4,
+          "width": 446.4
+        },
+        {
+          "tag": "td",
+          "className": "p-2 text-[#FFB199]",
+          "text": "0",
+          "left": 435.6,
+          "right": 483.4,
+          "width": 47.8
+        },
+        {
+          "tag": "tr",
+          "className": "border-b border-white/5 text-gray-300",
+          "text": "(none)\n(none) · (none)\n\t/e \t3\t0\t0\t0\t0",
+          "left": 37,
+          "right": 483.4,
+          "width": 446.4
+        },
+        {
+          "tag": "td",
+          "className": "p-2 text-[#FFB199]",
+          "text": "0",
+          "left": 435.6,
+          "right": 483.4,
+          "width": 47.8
+        },
+        {
+          "tag": "tr",
+          "className": "border-b border-white/5 text-gray-300",
+          "text": "(none)\n(none) · (none)\n\t(none)\t0\t0\t0\t0\t1",
+          "left": 37,
+          "right": 483.4,
+          "width": 446.4
+        }
+      ],
+      "controlCount": 44,
+      "screenshot": "375-en-admin.jpg",
+      "profileScreenshot": "375-en-admin-profile.jpg"
+    },
+    {
+      "width": 375,
+      "locale": "es",
+      "surface": "member-dashboard",
+      "route": "/es/portal/dashboard",
+      "mobileMenu": {
+        "present": true,
+        "opened": true
+      },
+      "adminProfile": null,
+      "title": "Women-Only BJJ & Self-Defense in Oxnard | Ground Up",
+      "bodyText": "Ayúdanos a entender qué te trae aquí\n\nPermite análisis anónimos y atribución de campañas para que podamos mejorar las experiencias de entrenamiento y Capacidad Adaptativa. Puedes rechazarlo y seguir usando el sitio.\n\nPermitir análisis\nRechazar\n\nMobile Member\n\nMiembro\n\nTU GROUND UP\nHORARIO\nTU ENTRENAMIENTO\nEnglish\nCerrar sesión\n\nPORTAL DE MIEMBROS\n\nBIENVENIDA DE NUEVO, MOBILE\n0/6 formularios\n\nAcción requerida\n\nCompleta tus formularios obligatorios para acceder a todos los servicios.\n\nComenzar\nVer horario\nTus formularios\nPróxima clase\n\nTodavía no tienes clases reservadas.\n\nEncuentra una clase que funcione para ti.\n\nVer horario\nMembresía\n\nNo hay membresía activa\n\nVer programas\nSesiones privadas\n0 sesión(es) privada(s) próxima(s)\n\nNo hay sesiones próximas\n\nVer horario\nFormularios obligatorios\n0 de 6 formularios obligatorios enviados\n\nEvaluación de salud y PAR-Q\n\nObligatorio\n\nObligatorio\nComenzar →\n\nAcuerdo de reglas del gimnasio\n\nObligatorio\n\nObligatorio\nComenzar →\n\nObjetivos y preferencias\n\nObligatorio\n\nObligatorio\nComenzar →\n\nAutorización de uso de medios\n\nObligatorio\n\nObligatorio\nComenzar →\n\nConsentimiento para participación de menor\n\nOpcional\n\nObligatorio\nComenzar →\n\nFormulario de ingreso de entrenamiento personal\n\nObligatorio\n\nObligatorio\nComenzar →\n\nExención de responsabilidad de artes marciales\n\nObligatorio\n\nObligatorio\nComenzar →\nEvento comunitario\nClase gratuita — abierta para todos\n\nDefensa personal comunitaria gratuita\n\nsábado, 5 sept\n\nSe repite cada 2 semanas\n\nAbierto para todos. No se requiere experiencia ni registro.\n\nMás información\n\n© 2026 Ground Up Jiu-Jitsu & Fitness\n\nExención de responsabilidad\nReglas del gimnasio\nContáctanos",
+      "viewport": 375,
+      "documentWidth": 375,
+      "bodyWidth": 375,
+      "pageOverflow": false,
+      "outOfBounds": [],
+      "tooSmall": [],
+      "overflowSources": [],
+      "controlCount": 26,
+      "screenshot": "375-es-member-dashboard.jpg",
+      "profileScreenshot": null
+    },
+    {
+      "width": 375,
+      "locale": "es",
+      "surface": "member-schedule",
+      "route": "/es/portal/schedule",
+      "mobileMenu": {
+        "present": true,
+        "opened": true
+      },
+      "adminProfile": null,
+      "title": "Women-Only BJJ & Self-Defense in Oxnard | Ground Up",
+      "bodyText": "Ayúdanos a entender qué te trae aquí\n\nPermite análisis anónimos y atribución de campañas para que podamos mejorar las experiencias de entrenamiento y Capacidad Adaptativa. Puedes rechazarlo y seguir usando el sitio.\n\nPermitir análisis\nRechazar\n\nMobile Member\n\nMiembro\n\nTU GROUND UP\nHORARIO\nTU ENTRENAMIENTO\nEnglish\nCerrar sesión\n\nDISPONIBILIDAD EN VIVO · HORA DEL PACÍFICO\n\nENCUENTRA TU PRÓXIMA CLASE\n\nElige un horario que te funcione y reserva tu lugar.\n\nGround Up administra tus reservas y la lista de espera.\n\nNo hay clases próximas disponibles en este momento.\n\nVuelve pronto o contáctanos para ayudarte a encontrar tu próxima clase.\n\nContáctanos",
+      "viewport": 375,
+      "documentWidth": 375,
+      "bodyWidth": 375,
+      "pageOverflow": false,
+      "outOfBounds": [],
+      "tooSmall": [],
+      "overflowSources": [],
+      "controlCount": 10,
+      "screenshot": "375-es-member-schedule.jpg",
+      "profileScreenshot": null
+    },
+    {
+      "width": 375,
+      "locale": "es",
+      "surface": "member-classes",
+      "route": "/es/portal/my-classes",
+      "mobileMenu": {
+        "present": true,
+        "opened": true
+      },
+      "adminProfile": null,
+      "title": "Women-Only BJJ & Self-Defense in Oxnard | Ground Up",
+      "bodyText": "Ayúdanos a entender qué te trae aquí\n\nPermite análisis anónimos y atribución de campañas para que podamos mejorar las experiencias de entrenamiento y Capacidad Adaptativa. Puedes rechazarlo y seguir usando el sitio.\n\nPermitir análisis\nRechazar\n\nMobile Member\n\nMiembro\n\nTU GROUND UP\nHORARIO\nTU ENTRENAMIENTO\nEnglish\nCerrar sesión\n\nTUS RESERVAS\n\nTU ENTRENAMIENTO\n\nAquí ves las clases que reservaste y tu historial.\n\nPRÓXIMAS & LISTA DE ESPERA\n\nTodavía no hay nada aquí.\n\nHISTORIAL\n\nTodavía no hay nada aquí.\n\nTodavía no tienes clases reservadas.\n\nEncuentra una clase que funcione para ti.\n\nVer horario",
+      "viewport": 375,
+      "documentWidth": 375,
+      "bodyWidth": 375,
+      "pageOverflow": false,
+      "outOfBounds": [],
+      "tooSmall": [],
+      "overflowSources": [],
+      "controlCount": 10,
+      "screenshot": "375-es-member-classes.jpg",
+      "profileScreenshot": null
+    },
+    {
+      "width": 375,
+      "locale": "es",
+      "surface": "member-form",
+      "route": "/es/portal/forms/personal-training-intake",
+      "mobileMenu": {
+        "present": true,
+        "opened": true
+      },
+      "adminProfile": null,
+      "title": "Women-Only BJJ & Self-Defense in Oxnard | Ground Up",
+      "bodyText": "Ayúdanos a entender qué te trae aquí\n\nPermite análisis anónimos y atribución de campañas para que podamos mejorar las experiencias de entrenamiento y Capacidad Adaptativa. Puedes rechazarlo y seguir usando el sitio.\n\nPermitir análisis\nRechazar\n\nMobile Member\n\nMiembro\n\nTU GROUND UP\nHORARIO\nTU ENTRENAMIENTO\nEnglish\nCerrar sesión\nFORMULARIO DE INGRESO DE ENTRENAMIENTO PERSONAL\n\nInformación básica sobre tu experiencia y objetivos de entrenamiento\n\nNombre completo*\nFecha de nacimiento*\nDomicilio*\nNombre del contacto de emergencia*\nTeléfono del contacto de emergencia*\nNivel de experiencia en BJJ*\nSelecciona una opción\nPrincipiante absoluto\nMenos de 6 meses\nDe 6 meses a 2 años\nMás de 2 años\nCinturón actual (si corresponde)\nSelecciona una opción\nBlanco\nAzul\nMorado\nMarrón\nNegro\nSin cinturón\nExperiencia en otras artes marciales\nGuardar borrador\nEnviar formulario",
+      "viewport": 375,
+      "documentWidth": 375,
+      "bodyWidth": 375,
+      "pageOverflow": false,
+      "outOfBounds": [],
+      "tooSmall": [],
+      "overflowSources": [],
+      "controlCount": 19,
+      "screenshot": "375-es-member-form.jpg",
+      "profileScreenshot": null
+    },
+    {
+      "width": 375,
+      "locale": "es",
+      "surface": "coach",
+      "route": "/es/portal/coach",
+      "mobileMenu": {
+        "present": true,
+        "opened": true
+      },
+      "adminProfile": null,
+      "title": "Women-Only BJJ & Self-Defense in Oxnard | Ground Up",
+      "bodyText": "Ayúdanos a entender qué te trae aquí\n\nPermite análisis anónimos y atribución de campañas para que podamos mejorar las experiencias de entrenamiento y Capacidad Adaptativa. Puedes rechazarlo y seguir usando el sitio.\n\nPermitir análisis\nRechazar\nCENTRO DE COACHES\n\nAdministra tus miembros asignados y notas de sesión\n\nMis miembros (0)\n\nNo hay miembros asignados\n\nSelecciona un miembro",
+      "viewport": 375,
+      "documentWidth": 375,
+      "bodyWidth": 375,
+      "pageOverflow": false,
+      "outOfBounds": [],
+      "tooSmall": [],
+      "overflowSources": [],
+      "controlCount": 5,
+      "screenshot": "375-es-coach.jpg",
+      "profileScreenshot": null
+    },
+    {
+      "width": 375,
+      "locale": "es",
+      "surface": "class-management",
+      "route": "/es/portal/class-admin",
+      "mobileMenu": {
+        "present": true,
+        "opened": true
+      },
+      "adminProfile": null,
+      "title": "Women-Only BJJ & Self-Defense in Oxnard | Ground Up",
+      "bodyText": "Ayúdanos a entender qué te trae aquí\n\nPermite análisis anónimos y atribución de campañas para que podamos mejorar las experiencias de entrenamiento y Capacidad Adaptativa. Puedes rechazarlo y seguir usando el sitio.\n\nPermitir análisis\nRechazar\n\nAdmin User\n\nAdministración\n\nTU GROUND UP\nHORARIO\nTU ENTRENAMIENTO\nCENTRO DE COACHES\nGESTIÓN DE CLASES\nADMINISTRACIÓN\nEnglish\nCerrar sesión\n\nOPERACIONES\n\nCONTROL DE RESERVAS DE CLASES\nSINCRONIZACIÓN CON GOOGLE CALENDAR\n\ninfo@groundupbjj.com\n\nConectado\nÚltima sincronización exitosa 2/9/2026, 7:36:20 a.m.\nSincronizar ahora\nCalendario aprobado del horario\nElige un calendario conectado\nUsar calendario\nCLASES SINCRONIZADAS\n7 en el periodo actual\n\nAdult Jiu-Jitsu - BOOKING READINESS TEST SERIES\n\nSincronizada\n\njue, 3 de sept · 6:00 p.m.–7:00 p.m. · capacidad 6\n\nLista\n\nAdult Jiu-Jitsu - BOOKING READINESS TEST OVERLAP\n\nSincronizada\nCancelada\n\njue, 3 de sept · 6:30 p.m.–7:30 p.m. · capacidad 6\n\nLista\n\nAdult Jiu-Jitsu - BOOKING READINESS TEST LOW CAPACITY\n\nManual\n\nmar, 8 de sept · 7:00 p.m.–8:00 p.m. · capacidad 1\n\nLista\n\nAdult Jiu-Jitsu - BOOKING READINESS TEST SERIES\n\nSincronizada\n\njue, 10 de sept · 6:00 p.m.–7:00 p.m. · capacidad 6\n\nLista\n\nAdult Jiu-Jitsu - BOOKING READINESS TEST MODIFIED INSTANCE\n\nSincronizada\n\njue, 17 de sept · 6:30 p.m.–7:30 p.m. · capacidad 6\n\nLista\n\nAdult Jiu-Jitsu - BOOKING READINESS TEST CANCELLATION WITH RESERVATION\n\nSincronizada\nCancelada\n\njue, 24 de sept · 6:00 p.m.–7:00 p.m. · capacidad 6\n\nLista\n\nAdult Jiu-Jitsu - BOOKING READINESS TEST SERIES\n\nSincronizada\n\njue, 1 de oct · 6:00 p.m.–7:00 p.m. · capacidad 6\n\nLista",
+      "viewport": 375,
+      "documentWidth": 375,
+      "bodyWidth": 375,
+      "pageOverflow": false,
+      "outOfBounds": [],
+      "tooSmall": [],
+      "overflowSources": [],
+      "controlCount": 22,
+      "screenshot": "375-es-class-management.jpg",
+      "profileScreenshot": null
+    },
+    {
+      "width": 375,
+      "locale": "es",
+      "surface": "admin",
+      "route": "/es/portal/admin",
+      "mobileMenu": {
+        "present": true,
+        "opened": true
+      },
+      "adminProfile": {
+        "present": true,
+        "tabCount": 4,
+        "tabsFit": true,
+        "pageOverflow": false,
+        "profileTitle": "Tus formularios\nReservas\nNotas de sesión\nAdministración"
+      },
+      "title": "Women-Only BJJ & Self-Defense in Oxnard | Ground Up",
+      "bodyText": "Ayúdanos a entender qué te trae aquí\n\nPermite análisis anónimos y atribución de campañas para que podamos mejorar las experiencias de entrenamiento y Capacidad Adaptativa. Puedes rechazarlo y seguir usando el sitio.\n\nPermitir análisis\nRechazar\n\nAdmin User\n\nAdministración\n\nTU GROUND UP\nHORARIO\nTU ENTRENAMIENTO\nCENTRO DE COACHES\nGESTIÓN DE CLASES\nADMINISTRACIÓN\nEnglish\nCerrar sesión\nPANEL DE ADMINISTRACIÓN\n\nAdministra miembros, rendimiento y análisis\n\n16\n\nUsuarios totales\n\n12\n\nNuevos (30 días)\n\n0\n\nPlanes activos\n\n0\n\nPróximas (7 días)\n\n$0\n\nIngresos (mes)\n\n15 miembros tienen formularios obligatorios incompletos\n\nHaz clic para filtrar la lista de miembros\n\nVer todo\nAlertas del equipo\n1 nuevas\n\nLos nuevos contactos y mensajes aparecen aquí automáticamente.\n\nNuevo registro de Capacidad Adaptativa\n\nUeavnl Eamuovfsj se unió a la lista de interés de Capacidad Adaptativa.\n\n28 ago 2026, 11:01 p.m.\n\nMarcar como leído\nAbrir bandeja\nBandeja de contactos y mensajes\n\nRevisa cada envío público y da seguimiento a lo que sucede después.\n\nContactos de entrenamiento (1)\nCapacidad adaptativa (1)\nMensajes de contacto (0)\n\ncharles zeller\n\nNuevo\ncharleszeller@gmail.com\n8058274510\n29 may 2026, 5:17 p.m.\nNuevo\nPrograma: open\nExperiencia: experienced\nInforme de campañas y embudo\n\nLos análisis con consentimiento aparecen junto a los contactos totales. Los totales pueden diferir porque requieren consentimiento.\n\nEntrenamiento\n\n119\n\nVistas de página\n\n2\n\nPasos del embudo\n\n0\n\nInicios de formularios\n\n0\n\nEnvíos\n\n0\n\nContactos exitosos\n\n1\n\nContactos totales\n\n8\n\nSesiones con consentimiento\n\nFuente / campaña\tRuta de llegada\tVistas\tInicios\tEnviado\tContactos exitosos\tContactos totales\n(none)\n(none) · (none)\n\t/\t115\t0\t0\t0\t0\nig\nsocial · (none)\n\t/\t1\t0\t0\t0\t0\n(none)\n(none) · (none)\n\t/es\t3\t0\t0\t0\t0\n(none)\n(none) · (none)\n\t(none)\t0\t0\t0\t0\t1\nMiembros (16)\nTodos\nFormularios pendientes\n15\n\nMobile Coach\n\nCoach\n\nmobile-qa-coach-rendered-responsive@example.invalid\n\nMobile Member\n\nMiembro\n\nmobile-qa-member-rendered-responsi",
+      "viewport": 375,
+      "documentWidth": 375,
+      "bodyWidth": 375,
+      "pageOverflow": false,
+      "outOfBounds": [],
+      "tooSmall": [],
+      "overflowSources": [
+        {
+          "tag": "button",
+          "className": "min-h-11 px-3 text-xs rounded-lg whitespace-nowrap text-gray-400 hover:text-white",
+          "text": "Men aje  de contacto (0)",
+          "left": 413.2,
+          "right": 581.9,
+          "width": 168.8
+        },
+        {
+          "tag": "table",
+          "className": "w-full text-sm",
+          "text": "Fuente / campaña\tRuta de llegada\tVi ta \tInicio \tEnviado\tContacto  exito o \tConta",
+          "left": 37,
+          "right": 489.5,
+          "width": 452.5
+        },
+        {
+          "tag": "thead",
+          "className": "",
+          "text": "Fuente / campaña\tRuta de llegada\tVi ta \tInicio \tEnviado\tContacto  exito o \tConta",
+          "left": 37,
+          "right": 489.5,
+          "width": 452.5
+        },
+        {
+          "tag": "tr",
+          "className": "text-left text-xs text-gray-500 border-b border-white/10",
+          "text": "Fuente / campaña\tRuta de llegada\tVi ta \tInicio \tEnviado\tContacto  exito o \tConta",
+          "left": 37,
+          "right": 489.5,
+          "width": 452.5
+        },
+        {
+          "tag": "th",
+          "className": "p-2",
+          "text": "Contacto  totale ",
+          "left": 412.9,
+          "right": 489.5,
+          "width": 76.5
+        },
+        {
+          "tag": "tbody",
+          "className": "",
+          "text": "(none)\n(none) · (none)\n\t/\t115\t0\t0\t0\t0\nig\n ocial · (none)\n\t/\t1\t0\t0\t0\t0\n(none)\n(no",
+          "left": 37,
+          "right": 489.5,
+          "width": 452.5
+        },
+        {
+          "tag": "tr",
+          "className": "border-b border-white/5 text-gray-300",
+          "text": "(none)\n(none) · (none)\n\t/\t115\t0\t0\t0\t0",
+          "left": 37,
+          "right": 489.5,
+          "width": 452.5
+        },
+        {
+          "tag": "td",
+          "className": "p-2 text-[#FFB199]",
+          "text": "0",
+          "left": 412.9,
+          "right": 489.5,
+          "width": 76.5
+        },
+        {
+          "tag": "tr",
+          "className": "border-b border-white/5 text-gray-300",
+          "text": "ig\n ocial · (none)\n\t/\t1\t0\t0\t0\t0",
+          "left": 37,
+          "right": 489.5,
+          "width": 452.5
+        },
+        {
+          "tag": "td",
+          "className": "p-2 text-[#FFB199]",
+          "text": "0",
+          "left": 412.9,
+          "right": 489.5,
+          "width": 76.5
+        },
+        {
+          "tag": "tr",
+          "className": "border-b border-white/5 text-gray-300",
+          "text": "(none)\n(none) · (none)\n\t/e \t3\t0\t0\t0\t0",
+          "left": 37,
+          "right": 489.5,
+          "width": 452.5
+        },
+        {
+          "tag": "td",
+          "className": "p-2 text-[#FFB199]",
+          "text": "0",
+          "left": 412.9,
+          "right": 489.5,
+          "width": 76.5
+        }
+      ],
+      "controlCount": 44,
+      "screenshot": "375-es-admin.jpg",
+      "profileScreenshot": "375-es-admin-profile.jpg"
+    },
+    {
+      "width": 390,
+      "locale": "en",
+      "surface": "member-dashboard",
+      "route": "/portal/dashboard",
+      "mobileMenu": {
+        "present": true,
+        "opened": true
+      },
+      "adminProfile": null,
+      "title": "Women-Only BJJ & Self-Defense in Oxnard | Ground Up",
+      "bodyText": "Help us understand what brings people here\n\nAllow anonymous analytics and campaign attribution so we can improve the training and Adaptive Capacity journeys. You can decline and still use the site.\n\nAllow analytics\nDecline\n\nMobile Member\n\nMember\n\nYOUR GROUND UP\nSCHEDULE\nYOUR TRAINING\nEspañol\nLog out\n\nMEMBER PORTAL\n\nWELCOME BACK, MOBILE\n0/6 forms\n\nAction required\n\nComplete your required forms to access all gym services.\n\nStart\nView schedule\nYour Forms\nNext class\n\nNo upcoming classes are booked yet.\n\nFind a class that works for you.\n\nView schedule\nMembership\n\nNo active membership\n\nView programs\nPrivate sessions\n0 upcoming private session(s)\n\nNo upcoming sessions\n\nView schedule\nRequired forms\n0 of 6 required forms submitted\n\nHealth & Physical Activity Readiness (PAR-Q)\n\nRequired\n\nRequired\nStart →\n\nGym Rules Agreement\n\nRequired\n\nRequired\nStart →\n\nTraining Goals & Preferences\n\nRequired\n\nRequired\nStart →\n\nMedia Release Authorization\n\nRequired\n\nRequired\nStart →\n\nMinor Participation Consent\n\nOptional\n\nRequired\nStart →\n\nPersonal Training Intake Form\n\nRequired\n\nRequired\nStart →\n\nMartial Arts Liability Waiver\n\nRequired\n\nRequired\nStart →\nCommunity Event\nFree class — open to everyone\n\nFree Community Self-Defense\n\nSaturday, Sep 5\n\nRepeats every 2 weeks\n\nOpen to everyone. No experience or registration required.\n\nLearn More\n\n© 2026 Ground Up Jiu-Jitsu & Fitness\n\nLiability Waiver\nGym Rules\nContact us",
+      "viewport": 390,
+      "documentWidth": 390,
+      "bodyWidth": 390,
+      "pageOverflow": false,
+      "outOfBounds": [],
+      "tooSmall": [],
+      "overflowSources": [],
+      "controlCount": 26,
+      "screenshot": "390-en-member-dashboard.jpg",
+      "profileScreenshot": null
+    },
+    {
+      "width": 390,
+      "locale": "en",
+      "surface": "member-schedule",
+      "route": "/portal/schedule",
+      "mobileMenu": {
+        "present": true,
+        "opened": true
+      },
+      "adminProfile": null,
+      "title": "Women-Only BJJ & Self-Defense in Oxnard | Ground Up",
+      "bodyText": "Help us understand what brings people here\n\nAllow anonymous analytics and campaign attribution so we can improve the training and Adaptive Capacity journeys. You can decline and still use the site.\n\nAllow analytics\nDecline\n\nLIVE AVAILABILITY · PACIFIC TIME\n\nFIND YOUR NEXT CLASS\n\nChoose a time that works for you and reserve your spot.\n\nGround Up manages your reservation and waitlist status.\n\nNo upcoming classes are available right now.\n\nCheck back soon or contact us and we'll help you find your next class.\n\nContact us",
+      "viewport": 390,
+      "documentWidth": 390,
+      "bodyWidth": 390,
+      "pageOverflow": false,
+      "outOfBounds": [],
+      "tooSmall": [],
+      "overflowSources": [],
+      "controlCount": 5,
+      "screenshot": "390-en-member-schedule.jpg",
+      "profileScreenshot": null
+    },
+    {
+      "width": 390,
+      "locale": "en",
+      "surface": "member-classes",
+      "route": "/portal/my-classes",
+      "mobileMenu": {
+        "present": true,
+        "opened": true
+      },
+      "adminProfile": null,
+      "title": "Women-Only BJJ & Self-Defense in Oxnard | Ground Up",
+      "bodyText": "Help us understand what brings people here\n\nAllow anonymous analytics and campaign attribution so we can improve the training and Adaptive Capacity journeys. You can decline and still use the site.\n\nAllow analytics\nDecline\n\nMobile Member\n\nMember\n\nYOUR GROUND UP\nSCHEDULE\nYOUR TRAINING\nEspañol\nLog out\n\nYOUR RESERVATIONS\n\nYOUR TRAINING\n\nSee the classes you booked and your training history.\n\nUPCOMING & WAITLISTED\n\nNothing here yet.\n\nHISTORY\n\nNothing here yet.\n\nNo upcoming classes are booked yet.\n\nFind a class that works for you.\n\nView schedule",
+      "viewport": 390,
+      "documentWidth": 390,
+      "bodyWidth": 390,
+      "pageOverflow": false,
+      "outOfBounds": [],
+      "tooSmall": [],
+      "overflowSources": [],
+      "controlCount": 10,
+      "screenshot": "390-en-member-classes.jpg",
+      "profileScreenshot": null
+    },
+    {
+      "width": 390,
+      "locale": "en",
+      "surface": "member-form",
+      "route": "/portal/forms/personal-training-intake",
+      "mobileMenu": {
+        "present": true,
+        "opened": true
+      },
+      "adminProfile": null,
+      "title": "Women-Only BJJ & Self-Defense in Oxnard | Ground Up",
+      "bodyText": "Help us understand what brings people here\n\nAllow anonymous analytics and campaign attribution so we can improve the training and Adaptive Capacity journeys. You can decline and still use the site.\n\nAllow analytics\nDecline\n\nMobile Member\n\nMember\n\nYOUR GROUND UP\nSCHEDULE\nYOUR TRAINING\nEspañol\nLog out\nPERSONAL TRAINING INTAKE FORM\n\nPlease complete this form before your first session\n\nFull Name*\nDate of Birth*\nAddress*\nEmergency Contact Name*\nEmergency Contact Phone*\nBJJ Experience Level*\nSelect an option\nComplete Beginner\nLess than 6 months\n6 months - 2 years\n2+ years\nCurrent Belt (if applicable)\nSelect an option\nWhite\nBlue\nPurple\nBrown\nBlack\nNo Belt\nOther Martial Arts Experience\nSave draft\nSubmit form",
+      "viewport": 390,
+      "documentWidth": 390,
+      "bodyWidth": 390,
+      "pageOverflow": false,
+      "outOfBounds": [],
+      "tooSmall": [],
+      "overflowSources": [],
+      "controlCount": 19,
+      "screenshot": "390-en-member-form.jpg",
+      "profileScreenshot": null
+    },
+    {
+      "width": 390,
+      "locale": "en",
+      "surface": "coach",
+      "route": "/portal/coach",
+      "mobileMenu": {
+        "present": true,
+        "opened": true
+      },
+      "adminProfile": null,
+      "title": "Women-Only BJJ & Self-Defense in Oxnard | Ground Up",
+      "bodyText": "Help us understand what brings people here\n\nAllow anonymous analytics and campaign attribution so we can improve the training and Adaptive Capacity journeys. You can decline and still use the site.\n\nAllow analytics\nDecline\n\nMobile Coach\n\nCoach\n\nYOUR GROUND UP\nSCHEDULE\nYOUR TRAINING\nCOACH CENTER\nEspañol\nLog out\nCOACH CENTER\n\nManage your assigned members & session notes\n\nMy members (0)\n\nNo members assigned\n\nSelect a member",
+      "viewport": 390,
+      "documentWidth": 390,
+      "bodyWidth": 390,
+      "pageOverflow": false,
+      "outOfBounds": [],
+      "tooSmall": [],
+      "overflowSources": [],
+      "controlCount": 11,
+      "screenshot": "390-en-coach.jpg",
+      "profileScreenshot": null
+    },
+    {
+      "width": 390,
+      "locale": "en",
+      "surface": "class-management",
+      "route": "/portal/class-admin",
+      "mobileMenu": {
+        "present": true,
+        "opened": true
+      },
+      "adminProfile": null,
+      "title": "Women-Only BJJ & Self-Defense in Oxnard | Ground Up",
+      "bodyText": "Help us understand what brings people here\n\nAllow anonymous analytics and campaign attribution so we can improve the training and Adaptive Capacity journeys. You can decline and still use the site.\n\nAllow analytics\nDecline\n\nAdmin User\n\nAdministrator\n\nYOUR GROUND UP\nSCHEDULE\nYOUR TRAINING\nCOACH CENTER\nCLASS MANAGEMENT\nADMIN\nEspañol\nLog out\n\nOPERATIONS\n\nCLASS BOOKING CONTROL\nGOOGLE CALENDAR SYNCHRONIZATION\n\ninfo@groundupbjj.com\n\nConnected\nLast success 9/2/2026, 7:36:20 AM\nSync now\nApproved schedule calendar\nChoose a connected calendar\nUse calendar\nSYNCHRONIZED OCCURRENCES\n7 in current window\n\nAdult Jiu-Jitsu - BOOKING READINESS TEST SERIES\n\nSynced\n\nThu, Sep 3 · 6:00 PM–7:00 PM · capacity 6\n\nRoster\n\nAdult Jiu-Jitsu - BOOKING READINESS TEST OVERLAP\n\nSynced\nCancelled\n\nThu, Sep 3 · 6:30 PM–7:30 PM · capacity 6\n\nRoster\n\nAdult Jiu-Jitsu - BOOKING READINESS TEST LOW CAPACITY\n\nManual\n\nTue, Sep 8 · 7:00 PM–8:00 PM · capacity 1\n\nRoster\n\nAdult Jiu-Jitsu - BOOKING READINESS TEST SERIES\n\nSynced\n\nThu, Sep 10 · 6:00 PM–7:00 PM · capacity 6\n\nRoster\n\nAdult Jiu-Jitsu - BOOKING READINESS TEST MODIFIED INSTANCE\n\nSynced\n\nThu, Sep 17 · 6:30 PM–7:30 PM · capacity 6\n\nRoster\n\nAdult Jiu-Jitsu - BOOKING READINESS TEST CANCELLATION WITH RESERVATION\n\nSynced\nCancelled\n\nThu, Sep 24 · 6:00 PM–7:00 PM · capacity 6\n\nRoster\n\nAdult Jiu-Jitsu - BOOKING READINESS TEST SERIES\n\nSynced\n\nThu, Oct 1 · 6:00 PM–7:00 PM · capacity 6\n\nRoster",
+      "viewport": 390,
+      "documentWidth": 390,
+      "bodyWidth": 390,
+      "pageOverflow": false,
+      "outOfBounds": [],
+      "tooSmall": [],
+      "overflowSources": [],
+      "controlCount": 22,
+      "screenshot": "390-en-class-management.jpg",
+      "profileScreenshot": null
+    },
+    {
+      "width": 390,
+      "locale": "en",
+      "surface": "admin",
+      "route": "/portal/admin",
+      "mobileMenu": {
+        "present": true,
+        "opened": true
+      },
+      "adminProfile": {
+        "present": true,
+        "tabCount": 4,
+        "tabsFit": true,
+        "pageOverflow": false,
+        "profileTitle": "Your Forms\nBookings\nSession notes\nAdmin"
+      },
+      "title": "Women-Only BJJ & Self-Defense in Oxnard | Ground Up",
+      "bodyText": "Help us understand what brings people here\n\nAllow anonymous analytics and campaign attribution so we can improve the training and Adaptive Capacity journeys. You can decline and still use the site.\n\nAllow analytics\nDecline\n\nAdmin User\n\nAdministrator\n\nYOUR GROUND UP\nSCHEDULE\nYOUR TRAINING\nCOACH CENTER\nCLASS MANAGEMENT\nADMIN\nEspañol\nLog out\nADMIN DASHBOARD\n\nManage members, track performance & analytics\n\n16\n\nTotal users\n\n12\n\nNew (30d)\n\n0\n\nActive plans\n\n0\n\nUpcoming (7d)\n\n$0\n\nRevenue (month)\n\n15 members have incomplete required forms\n\nClick to filter member list\n\nView all\nStaff alerts\n1 new\n\nNew leads and contact messages appear here automatically.\n\nNew Adaptive Capacity signup\n\nUeavnl Eamuovfsj joined the Adaptive Capacity interest list list.\n\nAug 28, 2026, 11:01 PM\n\nMark read\nOpen inbox\nLead & message inbox\n\nReview every public submission, acknowledge it, and track what happens next.\n\nTraining leads (1)\nAdaptive Capacity (1)\nContact messages (0)\n\ncharles zeller\n\nNew\ncharleszeller@gmail.com\n8058274510\nMay 29, 2026, 5:17 PM\nNew\nProgram: open\nExperience: experienced\nCampaign & funnel report\n\nConsent-aware analytics are shown alongside total leads. Totals may differ because analytics require visitor consent.\n\nTraining\n\n119\n\nPage views\n\n2\n\nFunnel steps\n\n0\n\nForm starts\n\n0\n\nSubmissions\n\n0\n\nSuccessful leads\n\n1\n\nTotal leads\n\n8\n\nConsented sessions\n\nSource / campaign\tLanding path\tViews\tStarts\tSubmitted\tSuccessful leads\tTotal leads\n(none)\n(none) · (none)\n\t/\t115\t0\t0\t0\t0\nig\nsocial · (none)\n\t/\t1\t0\t0\t0\t0\n(none)\n(none) · (none)\n\t/es\t3\t0\t0\t0\t0\n(none)\n(none) · (none)\n\t(none)\t0\t0\t0\t0\t1\nMembers (16)\nAll\nNeeds forms\n15\n\nMobile Coach\n\nCoach\n\nmobile-qa-coach-rendered-responsive@example.invalid\n\nMobile Member\n\nMember\n\nmobile-qa-member-rendered-responsive@example.invalid\n\nMobile Coach\n\nCoach\n\nmobile-qa-coach-1788401875639-1766@example.invalid\n\nMobile Member\n\nMember\n\nmobile-qa-member-1788401875639-1766@example.invalid\n\nMobile Coach\n\nCoach\n\nmobile-qa-coach-1788401786730-1591@example.invalid\n\nMobi",
+      "viewport": 390,
+      "documentWidth": 390,
+      "bodyWidth": 390,
+      "pageOverflow": false,
+      "outOfBounds": [],
+      "tooSmall": [],
+      "overflowSources": [
+        {
+          "tag": "table",
+          "className": "w-full text-sm",
+          "text": "Source / campaign\tLanding path\tView \tStart \tSubmitted\tSucce ful lead \tTotal lead",
+          "left": 37,
+          "right": 483.4,
+          "width": 446.4
+        },
+        {
+          "tag": "thead",
+          "className": "",
+          "text": "Source / campaign\tLanding path\tView \tStart \tSubmitted\tSucce ful lead \tTotal lead",
+          "left": 37,
+          "right": 483.4,
+          "width": 446.4
+        },
+        {
+          "tag": "tr",
+          "className": "text-left text-xs text-gray-500 border-b border-white/10",
+          "text": "Source / campaign\tLanding path\tView \tStart \tSubmitted\tSucce ful lead \tTotal lead",
+          "left": 37,
+          "right": 483.4,
+          "width": 446.4
+        },
+        {
+          "tag": "th",
+          "className": "p-2",
+          "text": "Total lead ",
+          "left": 435.6,
+          "right": 483.4,
+          "width": 47.8
+        },
+        {
+          "tag": "tbody",
+          "className": "",
+          "text": "(none)\n(none) · (none)\n\t/\t115\t0\t0\t0\t0\nig\n ocial · (none)\n\t/\t1\t0\t0\t0\t0\n(none)\n(no",
+          "left": 37,
+          "right": 483.4,
+          "width": 446.4
+        },
+        {
+          "tag": "tr",
+          "className": "border-b border-white/5 text-gray-300",
+          "text": "(none)\n(none) · (none)\n\t/\t115\t0\t0\t0\t0",
+          "left": 37,
+          "right": 483.4,
+          "width": 446.4
+        },
+        {
+          "tag": "td",
+          "className": "p-2 text-[#FFB199]",
+          "text": "0",
+          "left": 435.6,
+          "right": 483.4,
+          "width": 47.8
+        },
+        {
+          "tag": "tr",
+          "className": "border-b border-white/5 text-gray-300",
+          "text": "ig\n ocial · (none)\n\t/\t1\t0\t0\t0\t0",
+          "left": 37,
+          "right": 483.4,
+          "width": 446.4
+        },
+        {
+          "tag": "td",
+          "className": "p-2 text-[#FFB199]",
+          "text": "0",
+          "left": 435.6,
+          "right": 483.4,
+          "width": 47.8
+        },
+        {
+          "tag": "tr",
+          "className": "border-b border-white/5 text-gray-300",
+          "text": "(none)\n(none) · (none)\n\t/e \t3\t0\t0\t0\t0",
+          "left": 37,
+          "right": 483.4,
+          "width": 446.4
+        },
+        {
+          "tag": "td",
+          "className": "p-2 text-[#FFB199]",
+          "text": "0",
+          "left": 435.6,
+          "right": 483.4,
+          "width": 47.8
+        },
+        {
+          "tag": "tr",
+          "className": "border-b border-white/5 text-gray-300",
+          "text": "(none)\n(none) · (none)\n\t(none)\t0\t0\t0\t0\t1",
+          "left": 37,
+          "right": 483.4,
+          "width": 446.4
+        }
+      ],
+      "controlCount": 44,
+      "screenshot": "390-en-admin.jpg",
+      "profileScreenshot": "390-en-admin-profile.jpg"
+    },
+    {
+      "width": 390,
+      "locale": "es",
+      "surface": "member-dashboard",
+      "route": "/es/portal/dashboard",
+      "mobileMenu": {
+        "present": true,
+        "opened": true
+      },
+      "adminProfile": null,
+      "title": "Women-Only BJJ & Self-Defense in Oxnard | Ground Up",
+      "bodyText": "Ayúdanos a entender qué te trae aquí\n\nPermite análisis anónimos y atribución de campañas para que podamos mejorar las experiencias de entrenamiento y Capacidad Adaptativa. Puedes rechazarlo y seguir usando el sitio.\n\nPermitir análisis\nRechazar\n\nMobile Member\n\nMiembro\n\nTU GROUND UP\nHORARIO\nTU ENTRENAMIENTO\nEnglish\nCerrar sesión\n\nPORTAL DE MIEMBROS\n\nBIENVENIDA DE NUEVO, MOBILE\n0/6 formularios\n\nAcción requerida\n\nCompleta tus formularios obligatorios para acceder a todos los servicios.\n\nComenzar\nVer horario\nTus formularios\nPróxima clase\n\nTodavía no tienes clases reservadas.\n\nEncuentra una clase que funcione para ti.\n\nVer horario\nMembresía\n\nNo hay membresía activa\n\nVer programas\nSesiones privadas\n0 sesión(es) privada(s) próxima(s)\n\nNo hay sesiones próximas\n\nVer horario\nFormularios obligatorios\n0 de 6 formularios obligatorios enviados\n\nEvaluación de salud y PAR-Q\n\nObligatorio\n\nObligatorio\nComenzar →\n\nAcuerdo de reglas del gimnasio\n\nObligatorio\n\nObligatorio\nComenzar →\n\nObjetivos y preferencias\n\nObligatorio\n\nObligatorio\nComenzar →\n\nAutorización de uso de medios\n\nObligatorio\n\nObligatorio\nComenzar →\n\nConsentimiento para participación de menor\n\nOpcional\n\nObligatorio\nComenzar →\n\nFormulario de ingreso de entrenamiento personal\n\nObligatorio\n\nObligatorio\nComenzar →\n\nExención de responsabilidad de artes marciales\n\nObligatorio\n\nObligatorio\nComenzar →\nEvento comunitario\nClase gratuita — abierta para todos\n\nDefensa personal comunitaria gratuita\n\nsábado, 5 sept\n\nSe repite cada 2 semanas\n\nAbierto para todos. No se requiere experiencia ni registro.\n\nMás información\n\n© 2026 Ground Up Jiu-Jitsu & Fitness\n\nExención de responsabilidad\nReglas del gimnasio\nContáctanos",
+      "viewport": 390,
+      "documentWidth": 390,
+      "bodyWidth": 390,
+      "pageOverflow": false,
+      "outOfBounds": [],
+      "tooSmall": [],
+      "overflowSources": [],
+      "controlCount": 26,
+      "screenshot": "390-es-member-dashboard.jpg",
+      "profileScreenshot": null
+    },
+    {
+      "width": 390,
+      "locale": "es",
+      "surface": "member-schedule",
+      "route": "/es/portal/schedule",
+      "mobileMenu": {
+        "present": true,
+        "opened": true
+      },
+      "adminProfile": null,
+      "title": "Women-Only BJJ & Self-Defense in Oxnard | Ground Up",
+      "bodyText": "Ayúdanos a entender qué te trae aquí\n\nPermite análisis anónimos y atribución de campañas para que podamos mejorar las experiencias de entrenamiento y Capacidad Adaptativa. Puedes rechazarlo y seguir usando el sitio.\n\nPermitir análisis\nRechazar\n\nMobile Member\n\nMiembro\n\nTU GROUND UP\nHORARIO\nTU ENTRENAMIENTO\nEnglish\nCerrar sesión\n\nDISPONIBILIDAD EN VIVO · HORA DEL PACÍFICO\n\nENCUENTRA TU PRÓXIMA CLASE\n\nElige un horario que te funcione y reserva tu lugar.\n\nGround Up administra tus reservas y la lista de espera.\n\nNo hay clases próximas disponibles en este momento.\n\nVuelve pronto o contáctanos para ayudarte a encontrar tu próxima clase.\n\nContáctanos",
+      "viewport": 390,
+      "documentWidth": 390,
+      "bodyWidth": 390,
+      "pageOverflow": false,
+      "outOfBounds": [],
+      "tooSmall": [],
+      "overflowSources": [],
+      "controlCount": 10,
+      "screenshot": "390-es-member-schedule.jpg",
+      "profileScreenshot": null
+    },
+    {
+      "width": 390,
+      "locale": "es",
+      "surface": "member-classes",
+      "route": "/es/portal/my-classes",
+      "mobileMenu": {
+        "present": true,
+        "opened": true
+      },
+      "adminProfile": null,
+      "title": "Women-Only BJJ & Self-Defense in Oxnard | Ground Up",
+      "bodyText": "Ayúdanos a entender qué te trae aquí\n\nPermite análisis anónimos y atribución de campañas para que podamos mejorar las experiencias de entrenamiento y Capacidad Adaptativa. Puedes rechazarlo y seguir usando el sitio.\n\nPermitir análisis\nRechazar\n\nMobile Member\n\nMiembro\n\nTU GROUND UP\nHORARIO\nTU ENTRENAMIENTO\nEnglish\nCerrar sesión\n\nTUS RESERVAS\n\nTU ENTRENAMIENTO\n\nAquí ves las clases que reservaste y tu historial.\n\nPRÓXIMAS & LISTA DE ESPERA\n\nTodavía no hay nada aquí.\n\nHISTORIAL\n\nTodavía no hay nada aquí.\n\nTodavía no tienes clases reservadas.\n\nEncuentra una clase que funcione para ti.\n\nVer horario",
+      "viewport": 390,
+      "documentWidth": 390,
+      "bodyWidth": 390,
+      "pageOverflow": false,
+      "outOfBounds": [],
+      "tooSmall": [],
+      "overflowSources": [],
+      "controlCount": 10,
+      "screenshot": "390-es-member-classes.jpg",
+      "profileScreenshot": null
+    },
+    {
+      "width": 390,
+      "locale": "es",
+      "surface": "member-form",
+      "route": "/es/portal/forms/personal-training-intake",
+      "mobileMenu": {
+        "present": true,
+        "opened": true
+      },
+      "adminProfile": null,
+      "title": "Women-Only BJJ & Self-Defense in Oxnard | Ground Up",
+      "bodyText": "Ayúdanos a entender qué te trae aquí\n\nPermite análisis anónimos y atribución de campañas para que podamos mejorar las experiencias de entrenamiento y Capacidad Adaptativa. Puedes rechazarlo y seguir usando el sitio.\n\nPermitir análisis\nRechazar\n\nMobile Member\n\nMiembro\n\nTU GROUND UP\nHORARIO\nTU ENTRENAMIENTO\nEnglish\nCerrar sesión\nFORMULARIO DE INGRESO DE ENTRENAMIENTO PERSONAL\n\nInformación básica sobre tu experiencia y objetivos de entrenamiento\n\nNombre completo*\nFecha de nacimiento*\nDomicilio*\nNombre del contacto de emergencia*\nTeléfono del contacto de emergencia*\nNivel de experiencia en BJJ*\nSelecciona una opción\nPrincipiante absoluto\nMenos de 6 meses\nDe 6 meses a 2 años\nMás de 2 años\nCinturón actual (si corresponde)\nSelecciona una opción\nBlanco\nAzul\nMorado\nMarrón\nNegro\nSin cinturón\nExperiencia en otras artes marciales\nGuardar borrador\nEnviar formulario",
+      "viewport": 390,
+      "documentWidth": 390,
+      "bodyWidth": 390,
+      "pageOverflow": false,
+      "outOfBounds": [],
+      "tooSmall": [],
+      "overflowSources": [],
+      "controlCount": 19,
+      "screenshot": "390-es-member-form.jpg",
+      "profileScreenshot": null
+    },
+    {
+      "width": 390,
+      "locale": "es",
+      "surface": "coach",
+      "route": "/es/portal/coach",
+      "mobileMenu": {
+        "present": true,
+        "opened": true
+      },
+      "adminProfile": null,
+      "title": "Women-Only BJJ & Self-Defense in Oxnard | Ground Up",
+      "bodyText": "Ayúdanos a entender qué te trae aquí\n\nPermite análisis anónimos y atribución de campañas para que podamos mejorar las experiencias de entrenamiento y Capacidad Adaptativa. Puedes rechazarlo y seguir usando el sitio.\n\nPermitir análisis\nRechazar\n\nMobile Coach\n\nCoach\n\nTU GROUND UP\nHORARIO\nTU ENTRENAMIENTO\nCENTRO DE COACHES\nEnglish\nCerrar sesión\nCENTRO DE COACHES\n\nAdministra tus miembros asignados y notas de sesión\n\nMis miembros (0)\n\nNo hay miembros asignados\n\nSelecciona un miembro",
+      "viewport": 390,
+      "documentWidth": 390,
+      "bodyWidth": 390,
+      "pageOverflow": false,
+      "outOfBounds": [],
+      "tooSmall": [],
+      "overflowSources": [],
+      "controlCount": 11,
+      "screenshot": "390-es-coach.jpg",
+      "profileScreenshot": null
+    },
+    {
+      "width": 390,
+      "locale": "es",
+      "surface": "class-management",
+      "route": "/es/portal/class-admin",
+      "mobileMenu": {
+        "present": true,
+        "opened": true
+      },
+      "adminProfile": null,
+      "title": "Women-Only BJJ & Self-Defense in Oxnard | Ground Up",
+      "bodyText": "Ayúdanos a entender qué te trae aquí\n\nPermite análisis anónimos y atribución de campañas para que podamos mejorar las experiencias de entrenamiento y Capacidad Adaptativa. Puedes rechazarlo y seguir usando el sitio.\n\nPermitir análisis\nRechazar\n\nAdmin User\n\nAdministración\n\nTU GROUND UP\nHORARIO\nTU ENTRENAMIENTO\nCENTRO DE COACHES\nGESTIÓN DE CLASES\nADMINISTRACIÓN\nEnglish\nCerrar sesión\n\nOPERACIONES\n\nCONTROL DE RESERVAS DE CLASES\nSINCRONIZACIÓN CON GOOGLE CALENDAR\n\ninfo@groundupbjj.com\n\nConectado\nÚltima sincronización exitosa 2/9/2026, 7:36:20 a.m.\nSincronizar ahora\nCalendario aprobado del horario\nElige un calendario conectado\nUsar calendario\nCLASES SINCRONIZADAS\n7 en el periodo actual\n\nAdult Jiu-Jitsu - BOOKING READINESS TEST SERIES\n\nSincronizada\n\njue, 3 de sept · 6:00 p.m.–7:00 p.m. · capacidad 6\n\nLista\n\nAdult Jiu-Jitsu - BOOKING READINESS TEST OVERLAP\n\nSincronizada\nCancelada\n\njue, 3 de sept · 6:30 p.m.–7:30 p.m. · capacidad 6\n\nLista\n\nAdult Jiu-Jitsu - BOOKING READINESS TEST LOW CAPACITY\n\nManual\n\nmar, 8 de sept · 7:00 p.m.–8:00 p.m. · capacidad 1\n\nLista\n\nAdult Jiu-Jitsu - BOOKING READINESS TEST SERIES\n\nSincronizada\n\njue, 10 de sept · 6:00 p.m.–7:00 p.m. · capacidad 6\n\nLista\n\nAdult Jiu-Jitsu - BOOKING READINESS TEST MODIFIED INSTANCE\n\nSincronizada\n\njue, 17 de sept · 6:30 p.m.–7:30 p.m. · capacidad 6\n\nLista\n\nAdult Jiu-Jitsu - BOOKING READINESS TEST CANCELLATION WITH RESERVATION\n\nSincronizada\nCancelada\n\njue, 24 de sept · 6:00 p.m.–7:00 p.m. · capacidad 6\n\nLista\n\nAdult Jiu-Jitsu - BOOKING READINESS TEST SERIES\n\nSincronizada\n\njue, 1 de oct · 6:00 p.m.–7:00 p.m. · capacidad 6\n\nLista",
+      "viewport": 390,
+      "documentWidth": 390,
+      "bodyWidth": 390,
+      "pageOverflow": false,
+      "outOfBounds": [],
+      "tooSmall": [],
+      "overflowSources": [],
+      "controlCount": 22,
+      "screenshot": "390-es-class-management.jpg",
+      "profileScreenshot": null
+    },
+    {
+      "width": 390,
+      "locale": "es",
+      "surface": "admin",
+      "route": "/es/portal/admin",
+      "mobileMenu": {
+        "present": true,
+        "opened": true
+      },
+      "adminProfile": {
+        "present": true,
+        "tabCount": 4,
+        "tabsFit": true,
+        "pageOverflow": false,
+        "profileTitle": "Tus formularios\nReservas\nNotas de sesión\nAdministración"
+      },
+      "title": "Women-Only BJJ & Self-Defense in Oxnard | Ground Up",
+      "bodyText": "Ayúdanos a entender qué te trae aquí\n\nPermite análisis anónimos y atribución de campañas para que podamos mejorar las experiencias de entrenamiento y Capacidad Adaptativa. Puedes rechazarlo y seguir usando el sitio.\n\nPermitir análisis\nRechazar\nPANEL DE ADMINISTRACIÓN\n\nAdministra miembros, rendimiento y análisis\n\n16\n\nUsuarios totales\n\n12\n\nNuevos (30 días)\n\n0\n\nPlanes activos\n\n0\n\nPróximas (7 días)\n\n$0\n\nIngresos (mes)\n\n15 miembros tienen formularios obligatorios incompletos\n\nHaz clic para filtrar la lista de miembros\n\nVer todo\nAlertas del equipo\n1 nuevas\n\nLos nuevos contactos y mensajes aparecen aquí automáticamente.\n\nNuevo registro de Capacidad Adaptativa\n\nUeavnl Eamuovfsj se unió a la lista de interés de Capacidad Adaptativa.\n\n28 ago 2026, 11:01 p.m.\n\nMarcar como leído\nAbrir bandeja\nBandeja de contactos y mensajes\n\nRevisa cada envío público y da seguimiento a lo que sucede después.\n\nContactos de entrenamiento (1)\nCapacidad adaptativa (1)\nMensajes de contacto (0)\n\ncharles zeller\n\nNuevo\ncharleszeller@gmail.com\n8058274510\n29 may 2026, 5:17 p.m.\nNuevo\nPrograma: open\nExperiencia: experienced\nInforme de campañas y embudo\n\nLos análisis con consentimiento aparecen junto a los contactos totales. Los totales pueden diferir porque requieren consentimiento.\n\nEntrenamiento\n\n119\n\nVistas de página\n\n2\n\nPasos del embudo\n\n0\n\nInicios de formularios\n\n0\n\nEnvíos\n\n0\n\nContactos exitosos\n\n1\n\nContactos totales\n\n8\n\nSesiones con consentimiento\n\nFuente / campaña\tRuta de llegada\tVistas\tInicios\tEnviado\tContactos exitosos\tContactos totales\n(none)\n(none) · (none)\n\t/\t115\t0\t0\t0\t0\nig\nsocial · (none)\n\t/\t1\t0\t0\t0\t0\n(none)\n(none) · (none)\n\t/es\t3\t0\t0\t0\t0\n(none)\n(none) · (none)\n\t(none)\t0\t0\t0\t0\t1\nMiembros (16)\nTodos\nFormularios pendientes\n15\n\nMobile Coach\n\nCoach\n\nmobile-qa-coach-rendered-responsive@example.invalid\n\nMobile Member\n\nMiembro\n\nmobile-qa-member-rendered-responsive@example.invalid\n\nMobile Coach\n\nCoach\n\nmobile-qa-coach-1788401875639-1766@example.invalid\n\nMobile Member\n\nMiembro\n\nmobile-qa-member-178840",
+      "viewport": 390,
+      "documentWidth": 390,
+      "bodyWidth": 390,
+      "pageOverflow": false,
+      "outOfBounds": [],
+      "tooSmall": [],
+      "overflowSources": [
+        {
+          "tag": "button",
+          "className": "min-h-11 px-3 text-xs rounded-lg whitespace-nowrap text-gray-400 hover:text-white",
+          "text": "Men aje  de contacto (0)",
+          "left": 413.2,
+          "right": 581.9,
+          "width": 168.8
+        },
+        {
+          "tag": "table",
+          "className": "w-full text-sm",
+          "text": "Fuente / campaña\tRuta de llegada\tVi ta \tInicio \tEnviado\tContacto  exito o \tConta",
+          "left": 37,
+          "right": 489.5,
+          "width": 452.5
+        },
+        {
+          "tag": "thead",
+          "className": "",
+          "text": "Fuente / campaña\tRuta de llegada\tVi ta \tInicio \tEnviado\tContacto  exito o \tConta",
+          "left": 37,
+          "right": 489.5,
+          "width": 452.5
+        },
+        {
+          "tag": "tr",
+          "className": "text-left text-xs text-gray-500 border-b border-white/10",
+          "text": "Fuente / campaña\tRuta de llegada\tVi ta \tInicio \tEnviado\tContacto  exito o \tConta",
+          "left": 37,
+          "right": 489.5,
+          "width": 452.5
+        },
+        {
+          "tag": "th",
+          "className": "p-2",
+          "text": "Contacto  totale ",
+          "left": 412.9,
+          "right": 489.5,
+          "width": 76.5
+        },
+        {
+          "tag": "tbody",
+          "className": "",
+          "text": "(none)\n(none) · (none)\n\t/\t115\t0\t0\t0\t0\nig\n ocial · (none)\n\t/\t1\t0\t0\t0\t0\n(none)\n(no",
+          "left": 37,
+          "right": 489.5,
+          "width": 452.5
+        },
+        {
+          "tag": "tr",
+          "className": "border-b border-white/5 text-gray-300",
+          "text": "(none)\n(none) · (none)\n\t/\t115\t0\t0\t0\t0",
+          "left": 37,
+          "right": 489.5,
+          "width": 452.5
+        },
+        {
+          "tag": "td",
+          "className": "p-2 text-[#FFB199]",
+          "text": "0",
+          "left": 412.9,
+          "right": 489.5,
+          "width": 76.5
+        },
+        {
+          "tag": "tr",
+          "className": "border-b border-white/5 text-gray-300",
+          "text": "ig\n ocial · (none)\n\t/\t1\t0\t0\t0\t0",
+          "left": 37,
+          "right": 489.5,
+          "width": 452.5
+        },
+        {
+          "tag": "td",
+          "className": "p-2 text-[#FFB199]",
+          "text": "0",
+          "left": 412.9,
+          "right": 489.5,
+          "width": 76.5
+        },
+        {
+          "tag": "tr",
+          "className": "border-b border-white/5 text-gray-300",
+          "text": "(none)\n(none) · (none)\n\t/e \t3\t0\t0\t0\t0",
+          "left": 37,
+          "right": 489.5,
+          "width": 452.5
+        },
+        {
+          "tag": "td",
+          "className": "p-2 text-[#FFB199]",
+          "text": "0",
+          "left": 412.9,
+          "right": 489.5,
+          "width": 76.5
+        }
+      ],
+      "controlCount": 36,
+      "screenshot": "390-es-admin.jpg",
+      "profileScreenshot": "390-es-admin-profile.jpg"
+    },
+    {
+      "width": 430,
+      "locale": "en",
+      "surface": "member-dashboard",
+      "route": "/portal/dashboard",
+      "mobileMenu": {
+        "present": true,
+        "opened": true
+      },
+      "adminProfile": null,
+      "title": "Women-Only BJJ & Self-Defense in Oxnard | Ground Up",
+      "bodyText": "Help us understand what brings people here\n\nAllow anonymous analytics and campaign attribution so we can improve the training and Adaptive Capacity journeys. You can decline and still use the site.\n\nAllow analytics\nDecline\n\nMEMBER PORTAL\n\nWELCOME BACK, MOBILE\n0/6 forms\n\nAction required\n\nComplete your required forms to access all gym services.\n\nStart\nView schedule\nYour Forms\nNext class\n\nNo upcoming classes are booked yet.\n\nFind a class that works for you.\n\nView schedule\nMembership\n\nNo active membership\n\nView programs\nPrivate sessions\n0 upcoming private session(s)\n\nNo upcoming sessions\n\nView schedule\nRequired forms\n0 of 6 required forms submitted\n\nHealth & Physical Activity Readiness (PAR-Q)\n\nRequired\n\nRequired\nStart →\n\nGym Rules Agreement\n\nRequired\n\nRequired\nStart →\n\nTraining Goals & Preferences\n\nRequired\n\nRequired\nStart →\n\nMedia Release Authorization\n\nRequired\n\nRequired\nStart →\n\nMinor Participation Consent\n\nOptional\n\nRequired\nStart →\n\nPersonal Training Intake Form\n\nRequired\n\nRequired\nStart →\n\nMartial Arts Liability Waiver\n\nRequired\n\nRequired\nStart →\nCommunity Event\nFree class — open to everyone\n\nFree Community Self-Defense\n\nSaturday, Sep 5\n\nRepeats every 2 weeks\n\nOpen to everyone. No experience or registration required.\n\nLearn More\n\n© 2026 Ground Up Jiu-Jitsu & Fitness\n\nLiability Waiver\nGym Rules\nContact us",
+      "viewport": 430,
+      "documentWidth": 430,
+      "bodyWidth": 430,
+      "pageOverflow": false,
+      "outOfBounds": [],
+      "tooSmall": [],
+      "overflowSources": [],
+      "controlCount": 21,
+      "screenshot": "430-en-member-dashboard.jpg",
+      "profileScreenshot": null
+    },
+    {
+      "width": 430,
+      "locale": "en",
+      "surface": "member-schedule",
+      "route": "/portal/schedule",
+      "mobileMenu": {
+        "present": true,
+        "opened": true
+      },
+      "adminProfile": null,
+      "title": "Women-Only BJJ & Self-Defense in Oxnard | Ground Up",
+      "bodyText": "Help us understand what brings people here\n\nAllow anonymous analytics and campaign attribution so we can improve the training and Adaptive Capacity journeys. You can decline and still use the site.\n\nAllow analytics\nDecline\n\nMobile Member\n\nMember\n\nYOUR GROUND UP\nSCHEDULE\nYOUR TRAINING\nEspañol\nLog out\n\nLIVE AVAILABILITY · PACIFIC TIME\n\nFIND YOUR NEXT CLASS\n\nChoose a time that works for you and reserve your spot.\n\nGround Up manages your reservation and waitlist status.\n\nNo upcoming classes are available right now.\n\nCheck back soon or contact us and we'll help you find your next class.\n\nContact us",
+      "viewport": 430,
+      "documentWidth": 430,
+      "bodyWidth": 430,
+      "pageOverflow": false,
+      "outOfBounds": [],
+      "tooSmall": [],
+      "overflowSources": [],
+      "controlCount": 10,
+      "screenshot": "430-en-member-schedule.jpg",
+      "profileScreenshot": null
+    },
+    {
+      "width": 430,
+      "locale": "en",
+      "surface": "member-classes",
+      "route": "/portal/my-classes",
+      "mobileMenu": {
+        "present": true,
+        "opened": true
+      },
+      "adminProfile": null,
+      "title": "Women-Only BJJ & Self-Defense in Oxnard | Ground Up",
+      "bodyText": "Help us understand what brings people here\n\nAllow anonymous analytics and campaign attribution so we can improve the training and Adaptive Capacity journeys. You can decline and still use the site.\n\nAllow analytics\nDecline\n\nMobile Member\n\nMember\n\nYOUR GROUND UP\nSCHEDULE\nYOUR TRAINING\nEspañol\nLog out\n\nYOUR RESERVATIONS\n\nYOUR TRAINING\n\nSee the classes you booked and your training history.\n\nUPCOMING & WAITLISTED\n\nNothing here yet.\n\nHISTORY\n\nNothing here yet.\n\nNo upcoming classes are booked yet.\n\nFind a class that works for you.\n\nView schedule",
+      "viewport": 430,
+      "documentWidth": 430,
+      "bodyWidth": 430,
+      "pageOverflow": false,
+      "outOfBounds": [],
+      "tooSmall": [],
+      "overflowSources": [],
+      "controlCount": 10,
+      "screenshot": "430-en-member-classes.jpg",
+      "profileScreenshot": null
+    },
+    {
+      "width": 430,
+      "locale": "en",
+      "surface": "member-form",
+      "route": "/portal/forms/personal-training-intake",
+      "mobileMenu": {
+        "present": true,
+        "opened": true
+      },
+      "adminProfile": null,
+      "title": "Women-Only BJJ & Self-Defense in Oxnard | Ground Up",
+      "bodyText": "Help us understand what brings people here\n\nAllow anonymous analytics and campaign attribution so we can improve the training and Adaptive Capacity journeys. You can decline and still use the site.\n\nAllow analytics\nDecline\n\nMobile Member\n\nMember\n\nYOUR GROUND UP\nSCHEDULE\nYOUR TRAINING\nEspañol\nLog out\nPERSONAL TRAINING INTAKE FORM\n\nPlease complete this form before your first session\n\nFull Name*\nDate of Birth*\nAddress*\nEmergency Contact Name*\nEmergency Contact Phone*\nBJJ Experience Level*\nSelect an option\nComplete Beginner\nLess than 6 months\n6 months - 2 years\n2+ years\nCurrent Belt (if applicable)\nSelect an option\nWhite\nBlue\nPurple\nBrown\nBlack\nNo Belt\nOther Martial Arts Experience\nSave draft\nSubmit form",
+      "viewport": 430,
+      "documentWidth": 430,
+      "bodyWidth": 430,
+      "pageOverflow": false,
+      "outOfBounds": [],
+      "tooSmall": [],
+      "overflowSources": [],
+      "controlCount": 19,
+      "screenshot": "430-en-member-form.jpg",
+      "profileScreenshot": null
+    },
+    {
+      "width": 430,
+      "locale": "en",
+      "surface": "coach",
+      "route": "/portal/coach",
+      "mobileMenu": {
+        "present": true,
+        "opened": true
+      },
+      "adminProfile": null,
+      "title": "Women-Only BJJ & Self-Defense in Oxnard | Ground Up",
+      "bodyText": "Help us understand what brings people here\n\nAllow anonymous analytics and campaign attribution so we can improve the training and Adaptive Capacity journeys. You can decline and still use the site.\n\nAllow analytics\nDecline\n\nMobile Coach\n\nCoach\n\nYOUR GROUND UP\nSCHEDULE\nYOUR TRAINING\nCOACH CENTER\nEspañol\nLog out\nCOACH CENTER\n\nManage your assigned members & session notes\n\nMy members (0)\n\nNo members assigned\n\nSelect a member",
+      "viewport": 430,
+      "documentWidth": 430,
+      "bodyWidth": 430,
+      "pageOverflow": false,
+      "outOfBounds": [],
+      "tooSmall": [],
+      "overflowSources": [],
+      "controlCount": 11,
+      "screenshot": "430-en-coach.jpg",
+      "profileScreenshot": null
+    },
+    {
+      "width": 430,
+      "locale": "en",
+      "surface": "class-management",
+      "route": "/portal/class-admin",
+      "mobileMenu": {
+        "present": true,
+        "opened": true
+      },
+      "adminProfile": null,
+      "title": "Women-Only BJJ & Self-Defense in Oxnard | Ground Up",
+      "bodyText": "Help us understand what brings people here\n\nAllow anonymous analytics and campaign attribution so we can improve the training and Adaptive Capacity journeys. You can decline and still use the site.\n\nAllow analytics\nDecline\n\nOPERATIONS\n\nCLASS BOOKING CONTROL\nGOOGLE CALENDAR SYNCHRONIZATION\n\ninfo@groundupbjj.com\n\nConnected\nLast success 9/2/2026, 7:36:20 AM\nSync now\nApproved schedule calendar\nChoose a connected calendar\nUse calendar\nSYNCHRONIZED OCCURRENCES\n7 in current window\n\nAdult Jiu-Jitsu - BOOKING READINESS TEST SERIES\n\nSynced\n\nThu, Sep 3 · 6:00 PM–7:00 PM · capacity 6\n\nRoster\n\nAdult Jiu-Jitsu - BOOKING READINESS TEST OVERLAP\n\nSynced\nCancelled\n\nThu, Sep 3 · 6:30 PM–7:30 PM · capacity 6\n\nRoster\n\nAdult Jiu-Jitsu - BOOKING READINESS TEST LOW CAPACITY\n\nManual\n\nTue, Sep 8 · 7:00 PM–8:00 PM · capacity 1\n\nRoster\n\nAdult Jiu-Jitsu - BOOKING READINESS TEST SERIES\n\nSynced\n\nThu, Sep 10 · 6:00 PM–7:00 PM · capacity 6\n\nRoster\n\nAdult Jiu-Jitsu - BOOKING READINESS TEST MODIFIED INSTANCE\n\nSynced\n\nThu, Sep 17 · 6:30 PM–7:30 PM · capacity 6\n\nRoster\n\nAdult Jiu-Jitsu - BOOKING READINESS TEST CANCELLATION WITH RESERVATION\n\nSynced\nCancelled\n\nThu, Sep 24 · 6:00 PM–7:00 PM · capacity 6\n\nRoster\n\nAdult Jiu-Jitsu - BOOKING READINESS TEST SERIES\n\nSynced\n\nThu, Oct 1 · 6:00 PM–7:00 PM · capacity 6\n\nRoster",
+      "viewport": 430,
+      "documentWidth": 430,
+      "bodyWidth": 430,
+      "pageOverflow": false,
+      "outOfBounds": [],
+      "tooSmall": [],
+      "overflowSources": [],
+      "controlCount": 14,
+      "screenshot": "430-en-class-management.jpg",
+      "profileScreenshot": null
+    },
+    {
+      "width": 430,
+      "locale": "en",
+      "surface": "admin",
+      "route": "/portal/admin",
+      "mobileMenu": {
+        "present": true,
+        "opened": true
+      },
+      "adminProfile": {
+        "present": true,
+        "tabCount": 4,
+        "tabsFit": true,
+        "pageOverflow": false,
+        "profileTitle": "Your Forms\nBookings\nSession notes\nAdmin"
+      },
+      "title": "Women-Only BJJ & Self-Defense in Oxnard | Ground Up",
+      "bodyText": "Help us understand what brings people here\n\nAllow anonymous analytics and campaign attribution so we can improve the training and Adaptive Capacity journeys. You can decline and still use the site.\n\nAllow analytics\nDecline\n\nAdmin User\n\nAdministrator\n\nYOUR GROUND UP\nSCHEDULE\nYOUR TRAINING\nCOACH CENTER\nCLASS MANAGEMENT\nADMIN\nEspañol\nLog out\nADMIN DASHBOARD\n\nManage members, track performance & analytics\n\n16\n\nTotal users\n\n12\n\nNew (30d)\n\n0\n\nActive plans\n\n0\n\nUpcoming (7d)\n\n$0\n\nRevenue (month)\n\n15 members have incomplete required forms\n\nClick to filter member list\n\nView all\nStaff alerts\n1 new\n\nNew leads and contact messages appear here automatically.\n\nNew Adaptive Capacity signup\n\nUeavnl Eamuovfsj joined the Adaptive Capacity interest list list.\n\nAug 28, 2026, 11:01 PM\n\nMark read\nOpen inbox\nLead & message inbox\n\nReview every public submission, acknowledge it, and track what happens next.\n\nTraining leads (1)\nAdaptive Capacity (1)\nContact messages (0)\n\ncharles zeller\n\nNew\ncharleszeller@gmail.com\n8058274510\nMay 29, 2026, 5:17 PM\nNew\nProgram: open\nExperience: experienced\nCampaign & funnel report\n\nConsent-aware analytics are shown alongside total leads. Totals may differ because analytics require visitor consent.\n\nTraining\n\n119\n\nPage views\n\n2\n\nFunnel steps\n\n0\n\nForm starts\n\n0\n\nSubmissions\n\n0\n\nSuccessful leads\n\n1\n\nTotal leads\n\n8\n\nConsented sessions\n\nSource / campaign\tLanding path\tViews\tStarts\tSubmitted\tSuccessful leads\tTotal leads\n(none)\n(none) · (none)\n\t/\t115\t0\t0\t0\t0\nig\nsocial · (none)\n\t/\t1\t0\t0\t0\t0\n(none)\n(none) · (none)\n\t/es\t3\t0\t0\t0\t0\n(none)\n(none) · (none)\n\t(none)\t0\t0\t0\t0\t1\nMembers (16)\nAll\nNeeds forms\n15\n\nMobile Coach\n\nCoach\n\nmobile-qa-coach-rendered-responsive@example.invalid\n\nMobile Member\n\nMember\n\nmobile-qa-member-rendered-responsive@example.invalid\n\nMobile Coach\n\nCoach\n\nmobile-qa-coach-1788401875639-1766@example.invalid\n\nMobile Member\n\nMember\n\nmobile-qa-member-1788401875639-1766@example.invalid\n\nMobile Coach\n\nCoach\n\nmobile-qa-coach-1788401786730-1591@example.invalid\n\nMobi",
+      "viewport": 430,
+      "documentWidth": 430,
+      "bodyWidth": 430,
+      "pageOverflow": false,
+      "outOfBounds": [],
+      "tooSmall": [],
+      "overflowSources": [
+        {
+          "tag": "table",
+          "className": "w-full text-sm",
+          "text": "Source / campaign\tLanding path\tView \tStart \tSubmitted\tSucce ful lead \tTotal lead",
+          "left": 37,
+          "right": 483.4,
+          "width": 446.4
+        },
+        {
+          "tag": "thead",
+          "className": "",
+          "text": "Source / campaign\tLanding path\tView \tStart \tSubmitted\tSucce ful lead \tTotal lead",
+          "left": 37,
+          "right": 483.4,
+          "width": 446.4
+        },
+        {
+          "tag": "tr",
+          "className": "text-left text-xs text-gray-500 border-b border-white/10",
+          "text": "Source / campaign\tLanding path\tView \tStart \tSubmitted\tSucce ful lead \tTotal lead",
+          "left": 37,
+          "right": 483.4,
+          "width": 446.4
+        },
+        {
+          "tag": "th",
+          "className": "p-2",
+          "text": "Total lead ",
+          "left": 435.6,
+          "right": 483.4,
+          "width": 47.8
+        },
+        {
+          "tag": "tbody",
+          "className": "",
+          "text": "(none)\n(none) · (none)\n\t/\t115\t0\t0\t0\t0\nig\n ocial · (none)\n\t/\t1\t0\t0\t0\t0\n(none)\n(no",
+          "left": 37,
+          "right": 483.4,
+          "width": 446.4
+        },
+        {
+          "tag": "tr",
+          "className": "border-b border-white/5 text-gray-300",
+          "text": "(none)\n(none) · (none)\n\t/\t115\t0\t0\t0\t0",
+          "left": 37,
+          "right": 483.4,
+          "width": 446.4
+        },
+        {
+          "tag": "td",
+          "className": "p-2 text-[#FFB199]",
+          "text": "0",
+          "left": 435.6,
+          "right": 483.4,
+          "width": 47.8
+        },
+        {
+          "tag": "tr",
+          "className": "border-b border-white/5 text-gray-300",
+          "text": "ig\n ocial · (none)\n\t/\t1\t0\t0\t0\t0",
+          "left": 37,
+          "right": 483.4,
+          "width": 446.4
+        },
+        {
+          "tag": "td",
+          "className": "p-2 text-[#FFB199]",
+          "text": "0",
+          "left": 435.6,
+          "right": 483.4,
+          "width": 47.8
+        },
+        {
+          "tag": "tr",
+          "className": "border-b border-white/5 text-gray-300",
+          "text": "(none)\n(none) · (none)\n\t/e \t3\t0\t0\t0\t0",
+          "left": 37,
+          "right": 483.4,
+          "width": 446.4
+        },
+        {
+          "tag": "td",
+          "className": "p-2 text-[#FFB199]",
+          "text": "0",
+          "left": 435.6,
+          "right": 483.4,
+          "width": 47.8
+        },
+        {
+          "tag": "tr",
+          "className": "border-b border-white/5 text-gray-300",
+          "text": "(none)\n(none) · (none)\n\t(none)\t0\t0\t0\t0\t1",
+          "left": 37,
+          "right": 483.4,
+          "width": 446.4
+        }
+      ],
+      "controlCount": 44,
+      "screenshot": "430-en-admin.jpg",
+      "profileScreenshot": "430-en-admin-profile.jpg"
+    },
+    {
+      "width": 430,
+      "locale": "es",
+      "surface": "member-dashboard",
+      "route": "/es/portal/dashboard",
+      "mobileMenu": {
+        "present": true,
+        "opened": true
+      },
+      "adminProfile": null,
+      "title": "Women-Only BJJ & Self-Defense in Oxnard | Ground Up",
+      "bodyText": "Ayúdanos a entender qué te trae aquí\n\nPermite análisis anónimos y atribución de campañas para que podamos mejorar las experiencias de entrenamiento y Capacidad Adaptativa. Puedes rechazarlo y seguir usando el sitio.\n\nPermitir análisis\nRechazar\n\nMobile Member\n\nMiembro\n\nTU GROUND UP\nHORARIO\nTU ENTRENAMIENTO\nEnglish\nCerrar sesión\n\nPORTAL DE MIEMBROS\n\nBIENVENIDA DE NUEVO, MOBILE\n0/6 formularios\n\nAcción requerida\n\nCompleta tus formularios obligatorios para acceder a todos los servicios.\n\nComenzar\nVer horario\nTus formularios\nPróxima clase\n\nTodavía no tienes clases reservadas.\n\nEncuentra una clase que funcione para ti.\n\nVer horario\nMembresía\n\nNo hay membresía activa\n\nVer programas\nSesiones privadas\n0 sesión(es) privada(s) próxima(s)\n\nNo hay sesiones próximas\n\nVer horario\nFormularios obligatorios\n0 de 6 formularios obligatorios enviados\n\nEvaluación de salud y PAR-Q\n\nObligatorio\n\nObligatorio\nComenzar →\n\nAcuerdo de reglas del gimnasio\n\nObligatorio\n\nObligatorio\nComenzar →\n\nObjetivos y preferencias\n\nObligatorio\n\nObligatorio\nComenzar →\n\nAutorización de uso de medios\n\nObligatorio\n\nObligatorio\nComenzar →\n\nConsentimiento para participación de menor\n\nOpcional\n\nObligatorio\nComenzar →\n\nFormulario de ingreso de entrenamiento personal\n\nObligatorio\n\nObligatorio\nComenzar →\n\nExención de responsabilidad de artes marciales\n\nObligatorio\n\nObligatorio\nComenzar →\nEvento comunitario\nClase gratuita — abierta para todos\n\nDefensa personal comunitaria gratuita\n\nsábado, 5 sept\n\nSe repite cada 2 semanas\n\nAbierto para todos. No se requiere experiencia ni registro.\n\nMás información\n\n© 2026 Ground Up Jiu-Jitsu & Fitness\n\nExención de responsabilidad\nReglas del gimnasio\nContáctanos",
+      "viewport": 430,
+      "documentWidth": 430,
+      "bodyWidth": 430,
+      "pageOverflow": false,
+      "outOfBounds": [],
+      "tooSmall": [],
+      "overflowSources": [],
+      "controlCount": 26,
+      "screenshot": "430-es-member-dashboard.jpg",
+      "profileScreenshot": null
+    },
+    {
+      "width": 430,
+      "locale": "es",
+      "surface": "member-schedule",
+      "route": "/es/portal/schedule",
+      "mobileMenu": {
+        "present": true,
+        "opened": true
+      },
+      "adminProfile": null,
+      "title": "Women-Only BJJ & Self-Defense in Oxnard | Ground Up",
+      "bodyText": "Ayúdanos a entender qué te trae aquí\n\nPermite análisis anónimos y atribución de campañas para que podamos mejorar las experiencias de entrenamiento y Capacidad Adaptativa. Puedes rechazarlo y seguir usando el sitio.\n\nPermitir análisis\nRechazar\n\nMobile Member\n\nMiembro\n\nTU GROUND UP\nHORARIO\nTU ENTRENAMIENTO\nEnglish\nCerrar sesión\n\nDISPONIBILIDAD EN VIVO · HORA DEL PACÍFICO\n\nENCUENTRA TU PRÓXIMA CLASE\n\nElige un horario que te funcione y reserva tu lugar.\n\nGround Up administra tus reservas y la lista de espera.\n\nNo hay clases próximas disponibles en este momento.\n\nVuelve pronto o contáctanos para ayudarte a encontrar tu próxima clase.\n\nContáctanos",
+      "viewport": 430,
+      "documentWidth": 430,
+      "bodyWidth": 430,
+      "pageOverflow": false,
+      "outOfBounds": [],
+      "tooSmall": [],
+      "overflowSources": [],
+      "controlCount": 10,
+      "screenshot": "430-es-member-schedule.jpg",
+      "profileScreenshot": null
+    },
+    {
+      "width": 430,
+      "locale": "es",
+      "surface": "member-classes",
+      "route": "/es/portal/my-classes",
+      "mobileMenu": {
+        "present": true,
+        "opened": true
+      },
+      "adminProfile": null,
+      "title": "Women-Only BJJ & Self-Defense in Oxnard | Ground Up",
+      "bodyText": "Ayúdanos a entender qué te trae aquí\n\nPermite análisis anónimos y atribución de campañas para que podamos mejorar las experiencias de entrenamiento y Capacidad Adaptativa. Puedes rechazarlo y seguir usando el sitio.\n\nPermitir análisis\nRechazar\n\nMobile Member\n\nMiembro\n\nTU GROUND UP\nHORARIO\nTU ENTRENAMIENTO\nEnglish\nCerrar sesión\n\nTUS RESERVAS\n\nTU ENTRENAMIENTO\n\nAquí ves las clases que reservaste y tu historial.\n\nPRÓXIMAS & LISTA DE ESPERA\n\nTodavía no hay nada aquí.\n\nHISTORIAL\n\nTodavía no hay nada aquí.\n\nTodavía no tienes clases reservadas.\n\nEncuentra una clase que funcione para ti.\n\nVer horario",
+      "viewport": 430,
+      "documentWidth": 430,
+      "bodyWidth": 430,
+      "pageOverflow": false,
+      "outOfBounds": [],
+      "tooSmall": [],
+      "overflowSources": [],
+      "controlCount": 10,
+      "screenshot": "430-es-member-classes.jpg",
+      "profileScreenshot": null
+    },
+    {
+      "width": 430,
+      "locale": "es",
+      "surface": "member-form",
+      "route": "/es/portal/forms/personal-training-intake",
+      "mobileMenu": {
+        "present": true,
+        "opened": true
+      },
+      "adminProfile": null,
+      "title": "Women-Only BJJ & Self-Defense in Oxnard | Ground Up",
+      "bodyText": "Ayúdanos a entender qué te trae aquí\n\nPermite análisis anónimos y atribución de campañas para que podamos mejorar las experiencias de entrenamiento y Capacidad Adaptativa. Puedes rechazarlo y seguir usando el sitio.\n\nPermitir análisis\nRechazar\n\nMobile Member\n\nMiembro\n\nTU GROUND UP\nHORARIO\nTU ENTRENAMIENTO\nEnglish\nCerrar sesión\nFORMULARIO DE INGRESO DE ENTRENAMIENTO PERSONAL\n\nInformación básica sobre tu experiencia y objetivos de entrenamiento\n\nNombre completo*\nFecha de nacimiento*\nDomicilio*\nNombre del contacto de emergencia*\nTeléfono del contacto de emergencia*\nNivel de experiencia en BJJ*\nSelecciona una opción\nPrincipiante absoluto\nMenos de 6 meses\nDe 6 meses a 2 años\nMás de 2 años\nCinturón actual (si corresponde)\nSelecciona una opción\nBlanco\nAzul\nMorado\nMarrón\nNegro\nSin cinturón\nExperiencia en otras artes marciales\nGuardar borrador\nEnviar formulario",
+      "viewport": 430,
+      "documentWidth": 430,
+      "bodyWidth": 430,
+      "pageOverflow": false,
+      "outOfBounds": [],
+      "tooSmall": [],
+      "overflowSources": [],
+      "controlCount": 19,
+      "screenshot": "430-es-member-form.jpg",
+      "profileScreenshot": null
+    },
+    {
+      "width": 430,
+      "locale": "es",
+      "surface": "coach",
+      "route": "/es/portal/coach",
+      "mobileMenu": {
+        "present": true,
+        "opened": true
+      },
+      "adminProfile": null,
+      "title": "Women-Only BJJ & Self-Defense in Oxnard | Ground Up",
+      "bodyText": "Ayúdanos a entender qué te trae aquí\n\nPermite análisis anónimos y atribución de campañas para que podamos mejorar las experiencias de entrenamiento y Capacidad Adaptativa. Puedes rechazarlo y seguir usando el sitio.\n\nPermitir análisis\nRechazar\n\nMobile Coach\n\nCoach\n\nTU GROUND UP\nHORARIO\nTU ENTRENAMIENTO\nCENTRO DE COACHES\nEnglish\nCerrar sesión\nCENTRO DE COACHES\n\nAdministra tus miembros asignados y notas de sesión\n\nMis miembros (0)\n\nNo hay miembros asignados\n\nSelecciona un miembro",
+      "viewport": 430,
+      "documentWidth": 430,
+      "bodyWidth": 430,
+      "pageOverflow": false,
+      "outOfBounds": [],
+      "tooSmall": [],
+      "overflowSources": [],
+      "controlCount": 11,
+      "screenshot": "430-es-coach.jpg",
+      "profileScreenshot": null
+    },
+    {
+      "width": 430,
+      "locale": "es",
+      "surface": "class-management",
+      "route": "/es/portal/class-admin",
+      "mobileMenu": {
+        "present": true,
+        "opened": true
+      },
+      "adminProfile": null,
+      "title": "Women-Only BJJ & Self-Defense in Oxnard | Ground Up",
+      "bodyText": "Ayúdanos a entender qué te trae aquí\n\nPermite análisis anónimos y atribución de campañas para que podamos mejorar las experiencias de entrenamiento y Capacidad Adaptativa. Puedes rechazarlo y seguir usando el sitio.\n\nPermitir análisis\nRechazar\n\nAdmin User\n\nAdministración\n\nTU GROUND UP\nHORARIO\nTU ENTRENAMIENTO\nCENTRO DE COACHES\nGESTIÓN DE CLASES\nADMINISTRACIÓN\nEnglish\nCerrar sesión\n\nOPERACIONES\n\nCONTROL DE RESERVAS DE CLASES\nSINCRONIZACIÓN CON GOOGLE CALENDAR\n\ninfo@groundupbjj.com\n\nConectado\nÚltima sincronización exitosa 2/9/2026, 7:36:20 a.m.\nSincronizar ahora\nCalendario aprobado del horario\nElige un calendario conectado\nUsar calendario\nCLASES SINCRONIZADAS\n7 en el periodo actual\n\nAdult Jiu-Jitsu - BOOKING READINESS TEST SERIES\n\nSincronizada\n\njue, 3 de sept · 6:00 p.m.–7:00 p.m. · capacidad 6\n\nLista\n\nAdult Jiu-Jitsu - BOOKING READINESS TEST OVERLAP\n\nSincronizada\nCancelada\n\njue, 3 de sept · 6:30 p.m.–7:30 p.m. · capacidad 6\n\nLista\n\nAdult Jiu-Jitsu - BOOKING READINESS TEST LOW CAPACITY\n\nManual\n\nmar, 8 de sept · 7:00 p.m.–8:00 p.m. · capacidad 1\n\nLista\n\nAdult Jiu-Jitsu - BOOKING READINESS TEST SERIES\n\nSincronizada\n\njue, 10 de sept · 6:00 p.m.–7:00 p.m. · capacidad 6\n\nLista\n\nAdult Jiu-Jitsu - BOOKING READINESS TEST MODIFIED INSTANCE\n\nSincronizada\n\njue, 17 de sept · 6:30 p.m.–7:30 p.m. · capacidad 6\n\nLista\n\nAdult Jiu-Jitsu - BOOKING READINESS TEST CANCELLATION WITH RESERVATION\n\nSincronizada\nCancelada\n\njue, 24 de sept · 6:00 p.m.–7:00 p.m. · capacidad 6\n\nLista\n\nAdult Jiu-Jitsu - BOOKING READINESS TEST SERIES\n\nSincronizada\n\njue, 1 de oct · 6:00 p.m.–7:00 p.m. · capacidad 6\n\nLista",
+      "viewport": 430,
+      "documentWidth": 430,
+      "bodyWidth": 430,
+      "pageOverflow": false,
+      "outOfBounds": [],
+      "tooSmall": [],
+      "overflowSources": [],
+      "controlCount": 22,
+      "screenshot": "430-es-class-management.jpg",
+      "profileScreenshot": null
+    },
+    {
+      "width": 430,
+      "locale": "es",
+      "surface": "admin",
+      "route": "/es/portal/admin",
+      "mobileMenu": {
+        "present": true,
+        "opened": true
+      },
+      "adminProfile": {
+        "present": true,
+        "tabCount": 4,
+        "tabsFit": true,
+        "pageOverflow": false,
+        "profileTitle": "Tus formularios\nReservas\nNotas de sesión\nAdministración"
+      },
+      "title": "Women-Only BJJ & Self-Defense in Oxnard | Ground Up",
+      "bodyText": "Ayúdanos a entender qué te trae aquí\n\nPermite análisis anónimos y atribución de campañas para que podamos mejorar las experiencias de entrenamiento y Capacidad Adaptativa. Puedes rechazarlo y seguir usando el sitio.\n\nPermitir análisis\nRechazar\n\nAdmin User\n\nAdministración\n\nTU GROUND UP\nHORARIO\nTU ENTRENAMIENTO\nCENTRO DE COACHES\nGESTIÓN DE CLASES\nADMINISTRACIÓN\nEnglish\nCerrar sesión\nPANEL DE ADMINISTRACIÓN\n\nAdministra miembros, rendimiento y análisis\n\n16\n\nUsuarios totales\n\n12\n\nNuevos (30 días)\n\n0\n\nPlanes activos\n\n0\n\nPróximas (7 días)\n\n$0\n\nIngresos (mes)\n\n15 miembros tienen formularios obligatorios incompletos\n\nHaz clic para filtrar la lista de miembros\n\nVer todo\nAlertas del equipo\n1 nuevas\n\nLos nuevos contactos y mensajes aparecen aquí automáticamente.\n\nNuevo registro de Capacidad Adaptativa\n\nUeavnl Eamuovfsj se unió a la lista de interés de Capacidad Adaptativa.\n\n28 ago 2026, 11:01 p.m.\n\nMarcar como leído\nAbrir bandeja\nBandeja de contactos y mensajes\n\nRevisa cada envío público y da seguimiento a lo que sucede después.\n\nContactos de entrenamiento (1)\nCapacidad adaptativa (1)\nMensajes de contacto (0)\n\ncharles zeller\n\nNuevo\ncharleszeller@gmail.com\n8058274510\n29 may 2026, 5:17 p.m.\nNuevo\nPrograma: open\nExperiencia: experienced\nInforme de campañas y embudo\n\nLos análisis con consentimiento aparecen junto a los contactos totales. Los totales pueden diferir porque requieren consentimiento.\n\nEntrenamiento\n\n119\n\nVistas de página\n\n2\n\nPasos del embudo\n\n0\n\nInicios de formularios\n\n0\n\nEnvíos\n\n0\n\nContactos exitosos\n\n1\n\nContactos totales\n\n8\n\nSesiones con consentimiento\n\nFuente / campaña\tRuta de llegada\tVistas\tInicios\tEnviado\tContactos exitosos\tContactos totales\n(none)\n(none) · (none)\n\t/\t115\t0\t0\t0\t0\nig\nsocial · (none)\n\t/\t1\t0\t0\t0\t0\n(none)\n(none) · (none)\n\t/es\t3\t0\t0\t0\t0\n(none)\n(none) · (none)\n\t(none)\t0\t0\t0\t0\t1\nMiembros (16)\nTodos\nFormularios pendientes\n15\n\nMobile Coach\n\nCoach\n\nmobile-qa-coach-rendered-responsive@example.invalid\n\nMobile Member\n\nMiembro\n\nmobile-qa-member-rendered-responsi",
+      "viewport": 430,
+      "documentWidth": 430,
+      "bodyWidth": 430,
+      "pageOverflow": false,
+      "outOfBounds": [],
+      "tooSmall": [],
+      "overflowSources": [
+        {
+          "tag": "button",
+          "className": "min-h-11 px-3 text-xs rounded-lg whitespace-nowrap text-gray-400 hover:text-white",
+          "text": "Men aje  de contacto (0)",
+          "left": 413.2,
+          "right": 581.9,
+          "width": 168.8
+        },
+        {
+          "tag": "table",
+          "className": "w-full text-sm",
+          "text": "Fuente / campaña\tRuta de llegada\tVi ta \tInicio \tEnviado\tContacto  exito o \tConta",
+          "left": 37,
+          "right": 489.5,
+          "width": 452.5
+        },
+        {
+          "tag": "thead",
+          "className": "",
+          "text": "Fuente / campaña\tRuta de llegada\tVi ta \tInicio \tEnviado\tContacto  exito o \tConta",
+          "left": 37,
+          "right": 489.5,
+          "width": 452.5
+        },
+        {
+          "tag": "tr",
+          "className": "text-left text-xs text-gray-500 border-b border-white/10",
+          "text": "Fuente / campaña\tRuta de llegada\tVi ta \tInicio \tEnviado\tContacto  exito o \tConta",
+          "left": 37,
+          "right": 489.5,
+          "width": 452.5
+        },
+        {
+          "tag": "th",
+          "className": "p-2",
+          "text": "Contacto  totale ",
+          "left": 412.9,
+          "right": 489.5,
+          "width": 76.5
+        },
+        {
+          "tag": "tbody",
+          "className": "",
+          "text": "(none)\n(none) · (none)\n\t/\t115\t0\t0\t0\t0\nig\n ocial · (none)\n\t/\t1\t0\t0\t0\t0\n(none)\n(no",
+          "left": 37,
+          "right": 489.5,
+          "width": 452.5
+        },
+        {
+          "tag": "tr",
+          "className": "border-b border-white/5 text-gray-300",
+          "text": "(none)\n(none) · (none)\n\t/\t115\t0\t0\t0\t0",
+          "left": 37,
+          "right": 489.5,
+          "width": 452.5
+        },
+        {
+          "tag": "td",
+          "className": "p-2 text-[#FFB199]",
+          "text": "0",
+          "left": 412.9,
+          "right": 489.5,
+          "width": 76.5
+        },
+        {
+          "tag": "tr",
+          "className": "border-b border-white/5 text-gray-300",
+          "text": "ig\n ocial · (none)\n\t/\t1\t0\t0\t0\t0",
+          "left": 37,
+          "right": 489.5,
+          "width": 452.5
+        },
+        {
+          "tag": "td",
+          "className": "p-2 text-[#FFB199]",
+          "text": "0",
+          "left": 412.9,
+          "right": 489.5,
+          "width": 76.5
+        },
+        {
+          "tag": "tr",
+          "className": "border-b border-white/5 text-gray-300",
+          "text": "(none)\n(none) · (none)\n\t/e \t3\t0\t0\t0\t0",
+          "left": 37,
+          "right": 489.5,
+          "width": 452.5
+        },
+        {
+          "tag": "td",
+          "className": "p-2 text-[#FFB199]",
+          "text": "0",
+          "left": 412.9,
+          "right": 489.5,
+          "width": 76.5
+        }
+      ],
+      "controlCount": 44,
+      "screenshot": "430-es-admin.jpg",
+      "profileScreenshot": "430-es-admin-profile.jpg"
+    }
+  ],
+  "summary": {
+    "cases": 56,
+    "pageOverflow": 0,
+    "outOfBoundsControls": 0,
+    "undersizedControls": 0,
+    "mobileMenuFailures": 0,
+    "adminProfileFailures": 0
+  }
+}

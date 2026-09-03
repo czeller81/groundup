@@ -171,7 +171,7 @@ export default function PortalDashboard() {
             ) : (
               <div className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500/10 border border-amber-500/20 rounded-full">
                 <AlertCircle className="h-3.5 w-3.5 text-amber-400" />
-                <span className="text-amber-400 text-xs font-medium">{completedRequired}/{requiredForms.length} forms</span>
+                <span className="text-amber-400 text-xs font-medium">{copy.formsCount(completedRequired, requiredForms.length)}</span>
               </div>
             )}
           </div>
@@ -374,7 +374,7 @@ export default function PortalDashboard() {
                           <IconComp className="h-3.5 w-3.5 text-[#5EEBFF]" />
                         </div>
                         <div className="flex-1 min-w-0">
-                           <p className="font-medium text-sm text-white leading-snug">{form.title}</p>
+                           <p className="font-medium text-sm text-white leading-snug">{localizeFormText(locale, form.slug, "title", form.title)}</p>
                             <p className="text-xs text-gray-500 mt-0.5">{form.isRequired ? copy.required : copy.optional}</p>
                         </div>
                         <div className={`w-2 h-2 rounded-full flex-shrink-0 mt-1.5 ${statusColor}`} />
@@ -411,7 +411,7 @@ export default function PortalDashboard() {
             <CardHeader className="pb-3 pt-4 px-4">
               <CardTitle className="flex items-center gap-2 text-white text-base">
                 <Star className="h-4 w-4 text-[#FFB199]" />
-                Community Event
+                {copy.communityEvent}
               </CardTitle>
               <CardDescription className="text-xs">{copy.freeClassOpen}</CardDescription>
             </CardHeader>

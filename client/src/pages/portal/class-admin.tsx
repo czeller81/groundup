@@ -44,6 +44,12 @@ export default function ClassAdmin() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["/api/portal/admin/class-booking/occurrences", rosterOccurrence?.id, "roster"] }),
   });
   const connection = status.data?.connection;
+  const syncStateLabel = (state: string) => ({
+    synced: copy.syncStateSynced,
+    manual: copy.syncStateManual,
+    unmapped: copy.syncStateUnmapped,
+  } as Record<string, string>)[state] || state;
+  const occurrenceStatusLabel = (value: string) => value === "cancelled" || value === "canceled" ? copy.cancelled : value;
   return (
     <main className="mx-auto min-h-screen max-w-6xl px-4 py-8 text-white">
        <p className="text-xs font-bold uppercase tracking-[0.3em] text-[#5EEBFF]">{copy.operations}</p>
@@ -55,7 +61,7 @@ export default function ClassAdmin() {
              <p className="mt-1 text-sm text-gray-400">{connection?.calendarName || copy.noCalendarSelected}</p>
             <div className="mt-3 flex items-center gap-2">
               {connection?.status === "healthy" ? <CheckCircle className="h-4 w-4 text-emerald-400" /> : <AlertCircle className="h-4 w-4 text-amber-400" />}
-              <span className="text-sm text-gray-300">{connection?.status || copy.notConfigured}</span>
+              <span className="text-sm text-gray-300">{connection?.status === "healthy" ? copy.connectionHealthy : connection?.status || copy.notConfigured}</span>
                {connection?.lastSuccessfulAt && <span className="text-xs text-gray-500">{copy.lastSuccess} {new Date(connection.lastSuccessfulAt).toLocaleString(locale === "es" ? "es-US" : "en-US")}</span>}
             </div>
             {connection?.lastError && <p className="mt-2 max-w-2xl text-sm text-red-300">{connection.lastError}</p>}
@@ -86,8 +92,8 @@ export default function ClassAdmin() {
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="font-bold">{occurrence.title}</p>
-                    <Badge className={occurrence.syncState === "unmapped" ? "bg-amber-500/15 text-amber-300" : "bg-emerald-500/15 text-emerald-300"}>{occurrence.syncState}</Badge>
-                    {occurrence.status !== "active" && <Badge variant="destructive">{occurrence.status}</Badge>}
+                    <Badge className={occurrence.syncState === "unmapped" ? "bg-amber-500/15 text-amber-300" : "bg-emerald-500/15 text-emerald-300"}>{syncStateLabel(occurrence.syncState)}</Badge>
+                    {occurrence.status !== "active" && <Badge variant="destructive">{occurrenceStatusLabel(occurrence.status)}</Badge>}
                   </div>
                    <p className="mt-1 text-sm text-gray-400">{classDateLabel(occurrence.start, locale)} · {classTimeLabel(occurrence.start, occurrence.end, locale)} · {copy.capacity} {occurrence.capacity}</p>
                   {occurrence.syncError && <p className="mt-2 text-xs text-amber-300">{occurrence.syncError}</p>}

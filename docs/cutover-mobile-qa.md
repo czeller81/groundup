@@ -40,3 +40,31 @@ This checklist is required before publishing because the workspace has no browse
 - Repeat login, menu, focus, and logout once at the narrowest width.
 - Check keyboard focus visibility where a keyboard is available.
 - Record exact route, viewport, and observed issue for every failure.
+
+## Rendered viewport pass — 2026-09-03
+
+The deterministic Chromium runner in `scripts/mobile-rendered-qa.mjs` covered all seven
+portal surfaces (member dashboard, schedule, classes, forms, coach, class management,
+and admin) in English and Spanish at **320px, 375px, 390px, and 430px**: **56 cases**.
+Screenshots and the machine-readable report are stored in
+`audit-evidence/mobile-rendered/`.
+
+Result: **PASS**
+
+- Page-level horizontal overflow: 0 cases
+- Out-of-bounds visible controls: 0 cases
+- Undersized visible controls: 0 cases
+- Mobile navigation open/close checks: 56/56 passed
+- Admin member-profile tabs opened and fit at all four widths/locales: 8/8 passed
+- The admin member-management grid and filter controls remain within the viewport.
+- Spanish portal headings, actions, form metadata, system statuses, and notifications
+  use localized copy. User-entered names, calendar titles, and campaign values remain
+  unchanged as expected.
+
+Accepted local scrolling:
+
+- The campaign report table scrolls horizontally within its report container.
+- The admin inbox tab row scrolls horizontally within its tab container.
+- Radix UI's 1px native `<select>` elements are hidden implementation controls; the
+  rendered select trigger is the visible/tappable control and is included in the size
+  audit.

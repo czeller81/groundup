@@ -144,7 +144,7 @@ export default function PortalNavbar() {
             aria-label={mobileMenuOpen ? copy.closeNavigation : copy.openNavigation}
             aria-expanded={mobileMenuOpen}
             aria-controls="portal-mobile-navigation"
-            className="text-white hover:bg-white/10 md:hidden"
+             className="min-h-11 min-w-11 text-white hover:bg-white/10 md:hidden"
           >
             {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </Button>
