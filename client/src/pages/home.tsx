@@ -393,7 +393,7 @@ export default function Home() {
                 desc: "Focused fitness sessions built around mobility, strength, injury prevention, and athletic conditioning.",
                 highlights: ["Personalized coaching", "Functional strength", "Injury prevention", "Athletic conditioning"],
                 img: strengthImg,
-                 imageFit: "contain",
+                 imageFit: "cover",
                 accent: "#5EEBFF",
               },
               {
