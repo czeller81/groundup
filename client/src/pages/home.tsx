@@ -10,7 +10,7 @@ import {
 import { CATEGORY_CONFIG, getClassesForDay, getCurrentDay } from "@/lib/schedule-data";
 import selfDefenseFeaturedImg from "@assets/womens-sparring-1.jpg";
 import bjjFundamentalsImg from "@assets/womens-sparring-2.jpg";
-import kidsClassImg from "@assets/generated_images/kids_martialarts.png";
+import girlsClassImg from "@assets/IMG_5702_1788402569391.jpg";
 import strengthImg from "@assets/IMG_5701_1788402339390.jpg";
 import personalTrainingImg from "@assets/IMG_5699_1788402474136.png";
 import whyDifferentImg from "@assets/womens-team-1.jpg";
@@ -381,10 +381,10 @@ export default function Home() {
                 link: "/womens-self-defense",
               },
               {
-                 title: "Girls / Mother + Daughter",
-                 desc: "A women-centered youth path for girls and female youth. Ask about current eligibility, guardian requirements, and mother-daughter participation.",
-                 highlights: ["Girls / female youth", "Mother + daughter", "Guardian guidance", "Eligibility confirmed"],
-                 img: kidsClassImg,
+                  title: "Girls Jiu-Jitsu & Conditioning",
+                  desc: "A girls-focused program combining Brazilian Jiu-Jitsu fundamentals, movement, strength, and confidence-building in a supportive environment.",
+                  highlights: ["Girls-focused training", "Jiu-Jitsu fundamentals", "Strength & conditioning", "Confidence-building"],
+                  img: girlsClassImg,
                 accent: "#B06CFF",
                  link: "/girls",
               },
