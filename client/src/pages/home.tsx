@@ -11,7 +11,7 @@ import { CATEGORY_CONFIG, getClassesForDay, getCurrentDay } from "@/lib/schedule
 import selfDefenseFeaturedImg from "@assets/womens-sparring-1.jpg";
 import bjjFundamentalsImg from "@assets/womens-sparring-2.jpg";
 import kidsClassImg from "@assets/generated_images/kids_martialarts.png";
-import strengthImg from "@assets/IMG_5700_1788401706037.png";
+import strengthImg from "@assets/IMG_5701_1788402339390.jpg";
 import personalTrainingImg from "@assets/generated_images/women_personaltraining.png";
 import whyDifferentImg from "@assets/womens-team-1.jpg";
 import coachImg from "@assets/raymi-coach.jpg";
