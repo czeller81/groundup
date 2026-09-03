@@ -393,6 +393,7 @@ export default function Home() {
                 desc: "Focused fitness sessions built around mobility, strength, injury prevention, and athletic conditioning.",
                 highlights: ["Personalized coaching", "Functional strength", "Injury prevention", "Athletic conditioning"],
                 img: strengthImg,
+                 imageFit: "contain",
                 accent: "#5EEBFF",
               },
               {
@@ -423,7 +424,7 @@ export default function Home() {
                   <img
                     src={program.img}
                     alt={program.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    className={`w-full h-full ${program.imageFit === "contain" ? "object-contain bg-[#0B0F14]" : "object-cover"} group-hover:scale-105 transition-transform duration-500`}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#121826] via-[#121826]/30 to-transparent" />
                 </div>
