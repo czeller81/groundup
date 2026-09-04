@@ -510,6 +510,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const submission = await storage.createContactSubmission(parsed.data);
       try {
         const notificationMessage = `${submission.firstName} ${submission.lastName} sent a ${submission.subject.toLowerCase()} message.`;
+        const emailText = [
+          "New contact message from the Ground Up website",
+          "",
+          `Name: ${submission.firstName} ${submission.lastName}`,
+          `Email: ${submission.email}`,
+          `Phone: ${submission.phone || "Not provided"}`,
+          `Subject: ${submission.subject}`,
+          "",
+          "Message:",
+          submission.message,
+        ].join("\n");
         await storage.createStaffNotification({
           kind: "contact_message",
           title: "New contact message",
@@ -518,12 +529,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
         try {
           await sendStaffNotificationEmail({
-            subject: "New Ground Up contact message",
-            text: notificationMessage,
+            subject: `New Ground Up contact message: ${submission.subject}`,
+            text: emailText,
             inboxPath: "/portal/admin?inbox=messages",
+            replyTo: submission.email,
           });
         } catch (emailError) {
           console.error("Staff email failed for contact submission:", emailError);
+          return res.status(502).json({ message: "Message saved, but we couldn't send the notification email. Please try again." });
         }
       } catch (notificationError) {
         console.error("Staff notification failed for contact submission:", notificationError);

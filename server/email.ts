@@ -44,6 +44,7 @@ export async function sendStaffNotificationEmail(input: {
   subject: string;
   text: string;
   inboxPath: string;
+  replyTo?: string;
 }) {
   const response = await resend().proxy("resend", "/emails", {
     method: "POST",
@@ -51,6 +52,7 @@ export async function sendStaffNotificationEmail(input: {
     body: JSON.stringify({
       from: "Ground Up <info@groundupbjj.com>",
       to: [STAFF_EMAIL],
+      ...(input.replyTo ? { reply_to: input.replyTo } : {}),
       subject: input.subject,
       text: `${input.text}\n\nOpen in portal: ${input.inboxPath}`,
     }),
