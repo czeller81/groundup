@@ -49,7 +49,7 @@ export class ClassBookingError extends Error {
 }
 import { randomUUID } from "crypto";
 import bcrypt from "bcryptjs";
-import { canRetryWebhook, isPublicOccurrenceText } from "./route-security";
+import { canRetryWebhook, INTERNAL_TEST_EMAIL_PATTERN, isPublicOccurrenceText } from "./route-security";
 
 export interface IStorage {
   getUserById(id: string): Promise<User | undefined>;
@@ -425,6 +425,7 @@ export class DatabaseStorage implements IStorage {
 
   async getBookings(filters?: { trainerId?: string; status?: string; startDate?: Date; endDate?: Date; coachId?: string }): Promise<BookingWithTrainer[]> {
     const conditions = [
+      or(isNull(users.id), not(ilike(users.email, INTERNAL_TEST_EMAIL_PATTERN))),
       filters?.trainerId ? eq(bookings.trainerId, filters.trainerId) : undefined,
       filters?.status ? eq(bookings.status, filters.status) : undefined,
       filters?.startDate ? gte(bookings.start, filters.startDate) : undefined,
@@ -535,9 +536,11 @@ export class DatabaseStorage implements IStorage {
     const completed = await db
       .select({ userId: formResponses.userId })
       .from(formResponses)
+      .innerJoin(users, eq(formResponses.userId, users.id))
       .where(and(
         inArray(formResponses.formId, requiredFormIds),
-        eq(formResponses.status, "submitted")
+        eq(formResponses.status, "submitted"),
+        not(ilike(users.email, INTERNAL_TEST_EMAIL_PATTERN))
       ))
       .groupBy(formResponses.userId)
       .having(sql`COUNT(*) >= ${requiredFormIds.length}`);
@@ -549,7 +552,7 @@ export class DatabaseStorage implements IStorage {
     if (requiredFormIds.length === 0) return [];
     const requiredFormsData = await db.select().from(forms).where(eq(forms.isRequired, true));
     const completedUserIds = await this.getCompletedUserIds(requiredFormIds);
-    const allUsers = await db.select().from(users);
+     const allUsers = await db.select().from(users).where(not(ilike(users.email, INTERNAL_TEST_EMAIL_PATTERN)));
     const result: Array<SafeUser & { missingForms: string[] }> = [];
     for (const user of allUsers) {
       if (completedUserIds.has(user.id)) continue;
@@ -587,15 +590,18 @@ export class DatabaseStorage implements IStorage {
       };
     }
     
-    let whereClause;
+     const visibleUsers = not(ilike(users.email, INTERNAL_TEST_EMAIL_PATTERN));
+     let whereClause;
     if (search) {
       const searchTerm = `%${search}%`;
-      whereClause = or(
+       whereClause = and(visibleUsers, or(
         ilike(users.firstName, searchTerm),
         ilike(users.lastName, searchTerm),
         ilike(users.email, searchTerm),
         ilike(users.phone, searchTerm)
-      );
+       ));
+     } else {
+       whereClause = visibleUsers;
     }
     
     const [countResult] = await db
@@ -641,22 +647,41 @@ export class DatabaseStorage implements IStorage {
     const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     
-    const [totalUsersResult] = await db.select({ count: count() }).from(users);
+     const [totalUsersResult] = await db.select({ count: count() }).from(users).where(not(ilike(users.email, INTERNAL_TEST_EMAIL_PATTERN)));
     
-    const [newUsersResult] = await db.select({ count: count() }).from(users).where(gte(users.createdAt, thirtyDaysAgo));
+     const [newUsersResult] = await db.select({ count: count() }).from(users).where(and(
+       gte(users.createdAt, thirtyDaysAgo),
+       not(ilike(users.email, INTERNAL_TEST_EMAIL_PATTERN)),
+     ));
     
-    const [activeMembershipsResult] = await db.select({ count: count() }).from(memberships).where(eq(memberships.status, "active"));
+     const [activeMembershipsResult] = await db
+       .select({ count: count() })
+       .from(memberships)
+       .innerJoin(users, eq(memberships.userId, users.id))
+       .where(and(
+         eq(memberships.status, "active"),
+         not(ilike(users.email, INTERNAL_TEST_EMAIL_PATTERN)),
+       ));
     
-    const [upcomingSessionsResult] = await db.select({ count: count() }).from(bookings).where(
-      and(gte(bookings.start, now), lte(bookings.start, sevenDaysFromNow), eq(bookings.status, "paid"))
-    );
+     const [upcomingSessionsResult] = await db
+       .select({ count: count() })
+       .from(bookings)
+       .leftJoin(users, eq(bookings.userId, users.id))
+       .where(and(
+         gte(bookings.start, now),
+         lte(bookings.start, sevenDaysFromNow),
+         eq(bookings.status, "paid"),
+         or(isNull(users.id), not(ilike(users.email, INTERNAL_TEST_EMAIL_PATTERN))),
+       ));
     
     const [revenueResult] = await db
       .select({ total: sum(bookings.amountCents) })
       .from(bookings)
+       .leftJoin(users, eq(bookings.userId, users.id))
       .where(and(
         gte(bookings.createdAt, startOfMonth),
-        eq(bookings.status, "paid")
+         eq(bookings.status, "paid"),
+         or(isNull(users.id), not(ilike(users.email, INTERNAL_TEST_EMAIL_PATTERN))),
       ));
     
     const requiredFormIds = await this.getRequiredFormIds();
@@ -1256,7 +1281,10 @@ export class DatabaseStorage implements IStorage {
   async getTrialLeads(program?: string): Promise<import("@shared/schema").TrialLead[]> {
     const { trialLeads } = await import("@shared/schema");
     return db.select().from(trialLeads)
-      .where(program ? eq(trialLeads.program, program) : undefined)
+      .where(and(
+        program ? eq(trialLeads.program, program) : undefined,
+        not(ilike(trialLeads.email, INTERNAL_TEST_EMAIL_PATTERN)),
+      ))
       .orderBy(desc(trialLeads.createdAt));
   }
 
@@ -1298,11 +1326,12 @@ export class DatabaseStorage implements IStorage {
   }) {
     const { analyticsEvents, trialLeads } = await import("@shared/schema");
     const events = await db.select().from(analyticsEvents).where(eq(analyticsEvents.funnel, filters.funnel));
-    const leads = await db.select().from(trialLeads).where(
+    const leads = await db.select().from(trialLeads).where(and(
       filters.funnel === "adaptive_capacity"
         ? eq(trialLeads.program, "adaptive-capacity")
         : sql`${trialLeads.program} <> 'adaptive-capacity'`,
-    );
+      not(ilike(trialLeads.email, INTERNAL_TEST_EMAIL_PATTERN)),
+    ));
     const value = (obj: unknown, key: string) => {
       const v = obj && typeof obj === "object" ? (obj as Record<string, unknown>)[key] : undefined;
       return typeof v === "string" && v.trim() ? v.trim() : "(none)";

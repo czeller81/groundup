@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import crypto from "node:crypto";
 import test from "node:test";
 import Stripe from "stripe";
-import { bookingBelongsToUser, canRetryWebhook, coachCanManageMember, createOriginProtection, createPublicRateLimit, createScannerProbeGuard, isPublicOccurrenceText, isScannerProbePath, requireAuth, requireRole } from "./route-security";
+import { bookingBelongsToUser, canRetryWebhook, coachCanManageMember, createOriginProtection, createPublicRateLimit, createScannerProbeGuard, isInternalTestEmail, isPublicOccurrenceText, isScannerProbePath, requireAuth, requireRole } from "./route-security";
 import { applySecurityHeaders } from "./security-headers";
 import { verifyCalendlySignature, verifyStripeSignature } from "./webhook-security";
 import { FORM_COPY, PORTAL_COPY, localizeFormOption, localizeFormText } from "../client/src/lib/locale";
@@ -107,6 +107,12 @@ test("public occurrence filtering excludes test-marked records without deleting 
   assert.equal(isPublicOccurrenceText("Women’s BJJ", "Beginner class", "Oxnard"), true);
   assert.equal(isPublicOccurrenceText("BOOKING READINESS TEST SERIES", "Internal test", "Oxnard"), false);
   assert.equal(isPublicOccurrenceText("Women’s BJJ", null, "TEST LOCATION"), false);
+});
+
+test("internal QA email markers stay out of production-facing admin data", () => {
+  assert.equal(isInternalTestEmail("mobile-qa-member@example.invalid"), true);
+  assert.equal(isInternalTestEmail("member@gmail.com"), false);
+  assert.equal(isInternalTestEmail(null), false);
 });
 
 test("public rate limits count per IP and path", () => {

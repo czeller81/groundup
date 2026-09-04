@@ -21,7 +21,7 @@ interface AdminStats {
 
 export default function Admin() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [loginData, setLoginData] = useState({ email: "admin@groundupbjj.com", password: "ChangeMe123!" });
+  const [loginData, setLoginData] = useState({ email: "", password: "" });
   const [filters, setFilters] = useState({
     trainerId: "all",
     status: "all",
@@ -94,7 +94,7 @@ export default function Admin() {
 
   const handleLogout = () => {
     setIsLoggedIn(false);
-    setLoginData({ email: "admin@groundupbjj.com", password: "ChangeMe123!" });
+    setLoginData({ email: "", password: "" });
     toast({
       title: "Logged Out",
       description: "You have been logged out successfully",

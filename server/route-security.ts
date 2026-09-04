@@ -12,6 +12,12 @@ export function isPublicOccurrenceText(title?: string | null, description?: stri
   return ![title, description, location].some((value) => value?.toLowerCase().includes("test"));
 }
 
+export const INTERNAL_TEST_EMAIL_PATTERN = "%@example.invalid";
+
+export function isInternalTestEmail(email?: string | null) {
+  return Boolean(email && email.toLowerCase().endsWith("@example.invalid"));
+}
+
 export function canRetryWebhook(status: string, lockedUntil: Date | null | undefined, now = new Date()) {
   if (status === "completed" || status === "failed_terminal") return false;
   if (status === "processing" && lockedUntil && lockedUntil > now) return false;
