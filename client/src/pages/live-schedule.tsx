@@ -6,6 +6,7 @@ import { ClassCard } from "@/components/class-card";
 import type { ClassScheduleResponse } from "@/lib/class-booking";
 import SEO from "@/components/seo";
 import { localizedPublicPath, switchLocalePath, useLocale } from "@/lib/locale";
+import { localizedPortalEntryPath } from "@/lib/portal-navigation";
 
 export default function LiveSchedule() {
   const { locale } = useLocale();
@@ -71,7 +72,7 @@ export default function LiveSchedule() {
           </div>
         )}
         <div className="mt-8 text-center">
-          <Button asChild variant="outline" className="border-white/15 bg-transparent text-white"><Link href={switchLocalePath("/portal/login", locale)}>{copy.login}</Link></Button>
+          <Button asChild variant="outline" className="border-white/15 bg-transparent text-white"><Link href={localizedPortalEntryPath("/portal/login", locale)}>{copy.login}</Link></Button>
         </div>
       </main>
     </div>

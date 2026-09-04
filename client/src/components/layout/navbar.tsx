@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePortalAuth } from "@/lib/portal-auth";
 import { switchLocalePath, useLocale } from "@/lib/locale";
+import { localizedPortalEntryPath } from "@/lib/portal-navigation";
 import logoImage from "@assets/Ground_up_Logo_1772941267349.png";
 
 export default function Navbar() {
@@ -54,7 +55,7 @@ export default function Navbar() {
       ];
   const accountPath = isAuthenticated
     ? (locale === "es" ? "/es/portal/dashboard" : "/portal/dashboard")
-    : (locale === "es" ? "/es/portal/login" : "/portal/login");
+    : localizedPortalEntryPath("/portal/login", locale);
   const firstVisitPath = locale === "es" ? "/es/reservar" : "/book";
 
   const closeMenu = () => setMobileMenuOpen(false);

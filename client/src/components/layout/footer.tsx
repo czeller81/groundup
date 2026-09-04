@@ -2,6 +2,7 @@ import { Link } from "wouter";
 import { MapPin, Phone, Mail, Instagram } from "lucide-react";
 import logoImage from "@assets/Ground_up_Logo_1772941267349.png";
 import { useLocale } from "@/lib/locale";
+import { localizedPortalEntryPath } from "@/lib/portal-navigation";
 
 export default function Footer() {
   const { locale, publicCopy } = useLocale();
@@ -25,7 +26,7 @@ export default function Footer() {
         { href: "/schedule", label: publicCopy.schedule },
         { href: "/contact", label: publicCopy.contact },
         { href: "/privacy", label: publicCopy.privacyPolicy },
-        { href: "/portal/login", label: publicCopy.memberPortal },
+        { href: localizedPortalEntryPath("/portal/login", "en"), label: publicCopy.memberPortal },
       ];
   return (
     <footer className="bg-[#0B0F14] border-t border-white/5">

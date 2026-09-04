@@ -930,6 +930,7 @@ function readBrowserLocale(): Locale {
 
 function routeLocale(pathname: string): Locale | null {
   if (/^\/es(?:\/|$)/.test(pathname)) return "es";
+  if (/^\/portal\/(?:login|reset-password)(?:\?|\/|$)/.test(pathname) && new URLSearchParams(pathname.split("?")[1] || "").get("locale") === "en") return "en";
   if (/^\/portal(?:\/|$)/.test(pathname)) return null;
   return "en";
 }
@@ -956,7 +957,7 @@ export function localizeApiError(message: unknown, locale: Locale, fallback: str
 }
 
 function readPathname() {
-  return typeof window === "undefined" ? "/" : window.location.pathname;
+  return typeof window === "undefined" ? "/" : `${window.location.pathname}${window.location.search}`;
 }
 
 export function setLocale(locale: Locale) {

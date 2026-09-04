@@ -64,6 +64,7 @@ test("one locale resolver gives explicit routes precedence and portal preference
   assert.equal(resolveLocale("/portal/dashboard", "es", "en"), "es");
   assert.equal(resolveLocale("/portal/dashboard", null, "es"), "es");
   assert.equal(resolveLocale("/portal/dashboard", null, null, "es"), "es");
+  assert.equal(resolveLocale("/portal/login?locale=en", "es", "es"), "en");
   assert.equal(localizeApiError("Invalid email or password", "es", "Error"), "El correo o la contraseña no son válidos.");
 });
 
