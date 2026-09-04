@@ -16,8 +16,8 @@ const DEFAULT_OG_IMAGE = "/og-image.jpg";
 const HREFLANG_PAIRS: Record<string, { en?: string; es?: string; xDefault?: string }> = {
   "/": { en: "/", es: "/es", xDefault: "/" },
   "/es": { en: "/", es: "/es", xDefault: "/" },
-  "/pricing": { en: "/pricing", es: "/es/programas" },
-  "/es/programas": { en: "/pricing", es: "/es/programas" },
+  "/pricing": { en: "/pricing", es: "/es/pricing" },
+  "/es/pricing": { en: "/pricing", es: "/es/pricing" },
   "/schedule": { en: "/schedule", es: "/es/horario" },
   "/es/horario": { en: "/schedule", es: "/es/horario" },
   "/book": { en: "/book", es: "/es/reservar" },

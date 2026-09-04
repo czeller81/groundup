@@ -28,7 +28,7 @@ export function localizedPublicPath(pathname: string, locale: Locale) {
     if (normalizedPath === "/es/programas") return `/pricing${suffix}`;
     return `${englishPath || (normalizedPath.startsWith("/es/") ? "/" : normalizedPath)}${suffix}`;
   }
-  if (normalizedPath === "/es/programas") return `/es/programas${suffix}`;
+  if (normalizedPath === "/es/programas") return `/es/pricing${suffix}`;
   return `${PUBLIC_ROUTE_PAIRS[normalizedPath] || (normalizedPath.startsWith("/es/") ? normalizedPath : "/es")}${suffix}`;
 }
 

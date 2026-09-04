@@ -80,35 +80,6 @@ export function SpanishHome() {
   );
 }
 
-export function SpanishPrograms() {
-  return (
-    <SpanishShell title="Programas de Entrenamiento para Mujeres en Oxnard" description="Conoce los programas de jiu-jitsu, defensa personal, fuerza, movimiento y entrenamiento personal de Ground Up." canonical="/es/programas">
-      <section className="px-4 py-16 sm:px-6">
-        <div className="mx-auto max-w-5xl">
-          <p className="text-xs font-bold uppercase tracking-[0.3em] text-[#FFB199]">Programas</p>
-          <h1 className="mt-4 text-4xl font-black uppercase sm:text-6xl">Encuentra tu punto de partida.</h1>
-          <p className="mt-5 max-w-2xl text-lg text-gray-300">Cada programa es para mujeres. Si eres principiante, te acompañamos desde el primer día.</p>
-          <div className="mt-10 grid gap-5 md:grid-cols-2">
-            {[
-              ["Jiu-jitsu para mujeres", "Aprende fundamentos, control y movimiento en un ambiente de apoyo."],
-              ["Defensa personal", "Desarrolla conciencia, límites, escape y confianza física sin miedo ni presión."],
-              ["Fuerza y movimiento", "Construye fuerza útil, movilidad y resiliencia para la vida diaria."],
-              ["Entrenamiento personal", "Coaching individualizado para tus objetivos, ritmo y nivel."],
-              ["Niñas / jóvenes femeninas", "Pregunta por la disponibilidad actual, elegibilidad, guardianes y opciones madre + hija."],
-            ].map(([title, text]) => (
-              <article key={title} className="rounded-2xl border border-white/10 bg-[#121826] p-6">
-                <h2 className="text-xl font-bold text-white">{title}</h2>
-                <p className="mt-3 text-sm leading-relaxed text-gray-400">{text}</p>
-              </article>
-            ))}
-          </div>
-          <Button asChild size="lg" className="mt-10 bg-[#FFB199] font-bold text-[#0B0F14] hover:bg-[#FFB199]/90"><Link href="/es/reservar">Reserva tu primera visita gratis <ArrowRight className="ml-2 h-5 w-5" /></Link></Button>
-        </div>
-      </section>
-    </SpanishShell>
-  );
-}
-
 export function SpanishSchedule() {
   const { data, isLoading, error } = useQuery<ClassScheduleResponse>({ queryKey: ["/api/classes"] });
   return (
