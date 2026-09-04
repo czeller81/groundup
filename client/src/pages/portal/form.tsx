@@ -63,7 +63,10 @@ export default function PortalForm() {
     },
     onSuccess: () => {
       toast({ title: copy.formSubmitted, description: copy.formSubmittedDescription });
-      queryClient.invalidateQueries({ queryKey: ["/api/portal/forms"] });
+      // Mark the forms list stale without refetching the active form query.
+      // Navigation immediately unmounts this page, and cancelling that
+      // refetch can surface as an unhandled browser promise rejection.
+      queryClient.invalidateQueries({ queryKey: ["/api/portal/forms"], refetchType: "none" });
       setLocation(portalPath("/portal/dashboard"));
     },
     onError: (error: any) => {
