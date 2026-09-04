@@ -7,4 +7,4 @@ Client-side routes must be added to both development and production SPA fallback
 
 **Why:** The server intentionally returns real 404s for unknown paths to protect crawlers and scanners, so new public routes do not fall through automatically.
 
-**How to apply:** When adding a public route, update the router, server metadata/content if applicable, and both fallback allowlists; verify the route directly through the proxied preview.
+**How to apply:** When adding a public route, update the router, server metadata/content if applicable, and both fallback allowlists. Normalize trailing slashes before allowlist checks and verify direct proxied-preview navigation.

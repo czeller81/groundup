@@ -14,17 +14,16 @@ import { apiRequest } from "@/lib/queryClient";
 import { MapPin, Phone, Mail, Clock, Send } from "lucide-react";
 import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
+import { localizeApiError, localizedPublicPath, useLocale } from "@/lib/locale";
 
-const contactSchema = z.object({
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
-  email: z.string().email("Please enter a valid email"),
-  phone: z.string().optional(),
-  subject: z.string().min(1, "Please select a subject"),
-  message: z.string().min(1, "Message is required"),
-});
-
-type ContactFormData = z.infer<typeof contactSchema>;
+type ContactFormData = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+  subject: string;
+  message: string;
+};
 
 function Section({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   const ref = useRef(null);
@@ -43,7 +42,41 @@ function Section({ children, className = "" }: { children: React.ReactNode; clas
 }
 
 export default function Contact() {
+  const { locale } = useLocale();
   const { toast } = useToast();
+  const copy = locale === "es" ? {
+    seoTitle: "Contacta a Ground Up | Entrenamiento Solo para Mujeres en Oxnard",
+    seoDescription: "¿Tienes preguntas sobre jiu-jitsu brasileño, defensa personal, fuerza, movimiento o elegibilidad para niñas? Contacta a Ground Up en Oxnard.",
+    title: "HABLEMOS", intro: "¿Tienes una pregunta? ¿Te interesa un programa? ¿No sabes por dónde empezar? Estamos aquí para ayudarte.",
+    sendTitle: "ENVÍA UN MENSAJE", firstName: "Nombre", lastName: "Apellido", email: "Correo electrónico", phone: "Teléfono (opcional)", subject: "Tema", selectSubject: "Selecciona un tema",
+    subjects: [["general", "Consulta general"], ["training", "Entrenamiento personal"], ["pricing", "Información de precios"], ["schedule", "Pregunta sobre el horario"]] as const,
+    message: "Mensaje", messagePlaceholder: "Cuéntanos tus objetivos o tus preguntas...", send: "Enviar mensaje", sending: "Enviando…",
+    sent: "¡Mensaje enviado!", sentDescription: "Recibimos tu mensaje y nos comunicaremos contigo.", failed: "No se pudo enviar el mensaje",
+    contactInfo: "INFORMACIÓN DE CONTACTO", location: "Ubicación", hours: "Horario de entrenamiento", ready: "¿LISTA PARA COMENZAR?",
+    readyDescription: "Tu primera clase es completamente gratis: sin equipo, compromiso ni presión. Reserva directamente y nosotros nos encargamos del resto.",
+    book: "Reserva tu primera visita gratis", phoneLabel: "Teléfono", emailLabel: "Correo", contactButton: "Reserva tu primera visita gratis",
+    validation: { firstName: "El nombre es obligatorio", lastName: "El apellido es obligatorio", email: "Escribe un correo válido", subject: "Selecciona un tema", message: "El mensaje es obligatorio" },
+  } : {
+    seoTitle: "Contact Ground Up | Women-Only Training in Oxnard",
+    seoDescription: "Questions about women-only Brazilian Jiu-Jitsu, practical self-defense, strength, movement, or girls/female-youth eligibility? Contact Ground Up in Oxnard.",
+    title: "GET IN TOUCH", intro: "Have a question? Curious about a program? Not sure where to start? We're here — reach out any time.",
+    sendTitle: "SEND A MESSAGE", firstName: "First Name", lastName: "Last Name", email: "Email", phone: "Phone (optional)", subject: "Subject", selectSubject: "Select a subject",
+    subjects: [["general", "General Inquiry"], ["training", "Personal Training"], ["pricing", "Pricing Information"], ["schedule", "Schedule Question"]] as const,
+    message: "Message", messagePlaceholder: "Tell us about your goals or any questions...", send: "Send Message", sending: "Sending…",
+    sent: "Message Sent!", sentDescription: "We received your message and will be in touch.", failed: "Failed to Send Message",
+    contactInfo: "CONTACT INFO", location: "Location", hours: "Training Hours", ready: "READY TO BEGIN?",
+    readyDescription: "Your first class is completely free — no gear, no commitment, no pressure. Book directly and we'll handle the rest.",
+    book: "Book Your Free First Visit", phoneLabel: "Phone", emailLabel: "Email", contactButton: "Book Your Free First Visit",
+    validation: { firstName: "First name is required", lastName: "Last name is required", email: "Please enter a valid email", subject: "Please select a subject", message: "Message is required" },
+  };
+  const contactSchema = z.object({
+    firstName: z.string().min(1, copy.validation.firstName),
+    lastName: z.string().min(1, copy.validation.lastName),
+    email: z.string().email(copy.validation.email),
+    phone: z.string().optional(),
+    subject: z.string().min(1, copy.validation.subject),
+    message: z.string().min(1, copy.validation.message),
+  });
 
   const form = useForm<ContactFormData>({
     resolver: zodResolver(contactSchema),
@@ -63,11 +96,11 @@ export default function Contact() {
     },
     onSuccess: async (response) => {
       const result = await response.json();
-      toast({ title: "Message Sent!", description: result.message });
+      toast({ title: copy.sent, description: locale === "es" ? copy.sentDescription : result.message });
       form.reset();
     },
     onError: (error) => {
-      toast({ title: "Failed to Send Message", description: error.message, variant: "destructive" });
+      toast({ title: copy.failed, description: localizeApiError(error.message, locale, copy.failed), variant: "destructive" });
     },
   });
 
@@ -78,19 +111,19 @@ export default function Contact() {
   return (
     <div className="flex flex-col bg-[#0B0F14]">
       <SEO
-        title="Contact Ground Up | Women-Only Training in Oxnard"
-        description="Questions about women-only Brazilian Jiu-Jitsu, practical self-defense, strength, movement, or girls/female-youth eligibility? Contact Ground Up in Oxnard."
-        canonical="/contact"
+        title={copy.seoTitle}
+        description={copy.seoDescription}
+        canonical={localizedPublicPath("/contact", locale)}
       />
       <section className="relative pt-32 pb-20 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-[#121826] to-[#0B0F14]" />
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-[#FFB199]/5 rounded-full blur-3xl" />
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-5xl md:text-6xl font-bold text-white mb-6" style={{ fontFamily: 'var(--font-display)' }}>
-            GET IN <span className="gradient-text-warm">TOUCH</span>
+            {copy.title.includes("HABLEMOS") ? <>HABLE<span className="gradient-text-warm">MOS</span></> : <>GET IN <span className="gradient-text-warm">TOUCH</span></>}
           </h1>
           <p className="text-gray-400 max-w-2xl mx-auto text-lg">
-            Have a question? Curious about a program? Not sure where to start? We're here — reach out any time.
+            {copy.intro}
           </p>
         </div>
       </section>
@@ -100,7 +133,7 @@ export default function Contact() {
           <div className="grid lg:grid-cols-5 gap-12">
             <div className="lg:col-span-3">
               <div className="rounded-2xl border border-white/10 bg-[#121826] p-8" data-testid="contact-form">
-                <h2 className="text-2xl font-bold text-white mb-6" style={{ fontFamily: 'var(--font-display)' }}>SEND A MESSAGE</h2>
+                <h2 className="text-2xl font-bold text-white mb-6" style={{ fontFamily: 'var(--font-display)' }}>{copy.sendTitle}</h2>
                 <Form {...form}>
                   <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
                     <div className="grid md:grid-cols-2 gap-4">
@@ -109,7 +142,7 @@ export default function Contact() {
                         name="firstName"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-gray-300">First Name</FormLabel>
+                            <FormLabel className="text-gray-300">{copy.firstName}</FormLabel>
                             <FormControl>
                               <Input
                                 {...field}
@@ -126,7 +159,7 @@ export default function Contact() {
                         name="lastName"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-gray-300">Last Name</FormLabel>
+                            <FormLabel className="text-gray-300">{copy.lastName}</FormLabel>
                             <FormControl>
                               <Input
                                 {...field}
@@ -145,7 +178,7 @@ export default function Contact() {
                       name="email"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-gray-300">Email</FormLabel>
+                          <FormLabel className="text-gray-300">{copy.email}</FormLabel>
                           <FormControl>
                             <Input
                               type="email"
@@ -164,7 +197,7 @@ export default function Contact() {
                       name="phone"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-gray-300">Phone (optional)</FormLabel>
+                          <FormLabel className="text-gray-300">{copy.phone}</FormLabel>
                           <FormControl>
                             <Input
                               type="tel"
@@ -183,17 +216,14 @@ export default function Contact() {
                       name="subject"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-gray-300">Subject</FormLabel>
+                          <FormLabel className="text-gray-300">{copy.subject}</FormLabel>
                           <FormControl>
                             <Select value={field.value} onValueChange={field.onChange}>
                               <SelectTrigger className="bg-white/5 border-white/10 text-white">
-                                <SelectValue placeholder="Select a subject" />
+                                <SelectValue placeholder={copy.selectSubject} />
                               </SelectTrigger>
                               <SelectContent className="bg-[#121826] border-white/10">
-                                <SelectItem value="general">General Inquiry</SelectItem>
-                                <SelectItem value="training">Personal Training</SelectItem>
-                                <SelectItem value="pricing">Pricing Information</SelectItem>
-                                <SelectItem value="schedule">Schedule Question</SelectItem>
+                                {copy.subjects.map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}
                               </SelectContent>
                             </Select>
                           </FormControl>
@@ -207,11 +237,11 @@ export default function Contact() {
                       name="message"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-gray-300">Message</FormLabel>
+                          <FormLabel className="text-gray-300">{copy.message}</FormLabel>
                           <FormControl>
                             <Textarea
                               rows={5}
-                              placeholder="Tell us about your goals or any questions..."
+                              placeholder={copy.messagePlaceholder}
                               {...field}
                               className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-[#5EEBFF]"
                               data-testid="input-message"
@@ -229,10 +259,10 @@ export default function Contact() {
                       data-testid="button-send-message"
                     >
                       {contactMutation.isPending ? (
-                        "Sending..."
+                        copy.sending
                       ) : (
                         <>
-                          Send Message
+                          {copy.send}
                           <Send className="ml-2 h-4 w-4" />
                         </>
                       )}
@@ -244,14 +274,14 @@ export default function Contact() {
 
             <div className="lg:col-span-2 space-y-6">
               <div className="rounded-2xl border border-white/10 bg-[#121826] p-8" data-testid="contact-info">
-                <h3 className="text-xl font-bold text-white mb-6" style={{ fontFamily: 'var(--font-display)' }}>CONTACT INFO</h3>
+                <h3 className="text-xl font-bold text-white mb-6" style={{ fontFamily: 'var(--font-display)' }}>{copy.contactInfo}</h3>
                 <div className="space-y-5">
                   <a href="tel:786-757-1175" className="flex items-start gap-4 group">
                     <div className="w-10 h-10 rounded-lg bg-[#5EEBFF]/10 flex items-center justify-center flex-shrink-0">
                       <Phone className="h-5 w-5 text-[#5EEBFF]" />
                     </div>
                     <div>
-                      <div className="text-gray-400 text-sm">Phone</div>
+                       <div className="text-gray-400 text-sm">{copy.phoneLabel}</div>
                       <div className="text-white group-hover:text-[#5EEBFF] transition-colors">(786) 757-1175</div>
                     </div>
                   </a>
@@ -260,7 +290,7 @@ export default function Contact() {
                       <Mail className="h-5 w-5 text-[#B06CFF]" />
                     </div>
                     <div>
-                      <div className="text-gray-400 text-sm">Email</div>
+                       <div className="text-gray-400 text-sm">{copy.emailLabel}</div>
                       <div className="text-white group-hover:text-[#B06CFF] transition-colors">info@groundupbjj.com</div>
                     </div>
                   </a>
@@ -269,7 +299,7 @@ export default function Contact() {
                       <MapPin className="h-5 w-5 text-[#FFB199]" />
                     </div>
                     <div>
-                      <div className="text-gray-400 text-sm">Location</div>
+                       <div className="text-gray-400 text-sm">{copy.location}</div>
                       <div className="text-white">Oxnard, CA</div>
                     </div>
                   </div>
@@ -278,7 +308,7 @@ export default function Contact() {
                       <Clock className="h-5 w-5 text-[#5EEBFF]" />
                     </div>
                     <div>
-                      <div className="text-gray-400 text-sm">Training Hours</div>
+                       <div className="text-gray-400 text-sm">{copy.hours}</div>
                       <div className="text-white">Mon–Sat: 8am – 5pm</div>
                     </div>
                   </div>
@@ -286,16 +316,16 @@ export default function Contact() {
               </div>
 
               <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-[#5EEBFF]/5 to-[#B06CFF]/5 p-8 text-center">
-                <h3 className="text-xl font-bold text-white mb-3" style={{ fontFamily: 'var(--font-display)' }}>READY TO BEGIN?</h3>
+                 <h3 className="text-xl font-bold text-white mb-3" style={{ fontFamily: 'var(--font-display)' }}>{copy.ready}</h3>
                 <p className="text-gray-400 text-sm mb-6">
-                  Your first class is completely free — no gear, no commitment, no pressure. Book directly and we'll handle the rest.
+                   {copy.readyDescription}
                 </p>
                 <Button
                   asChild
                   className="w-full bg-[#5EEBFF] text-[#0B0F14] font-bold uppercase tracking-wider hover:bg-[#5EEBFF]/90"
                 >
-                  <Link href="/book">
-                    Book Your Free First Visit
+                   <Link href={localizedPublicPath("/book", locale)}>
+                     {copy.contactButton}
                   </Link>
                 </Button>
               </div>

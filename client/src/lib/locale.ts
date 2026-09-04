@@ -5,6 +5,45 @@ export type Locale = "en" | "es";
 const LOCALE_KEY = "groundup-locale";
 const LOCALE_EVENT = "groundup-locale-change";
 
+const PUBLIC_ROUTE_PAIRS: Record<string, string> = {
+  "/": "/es",
+  "/personal-training": "/es/personal-training",
+  "/coaches": "/es/coaches",
+  "/pricing": "/es/pricing",
+  "/contact": "/es/contacto",
+  "/privacy": "/es/privacidad",
+  "/schedule": "/es/horario",
+  "/book": "/es/reservar",
+  "/womens-self-defense": "/es/womens-self-defense",
+  "/girls": "/es/girls",
+  "/kids": "/es/girls",
+  "/adaptive-capacity": "/es/adaptive-capacity",
+};
+
+export function localizedPublicPath(pathname: string, locale: Locale) {
+  const [pathOnly, suffix = ""] = pathname.split(/(?=[?#])/);
+  const normalizedPath = pathOnly.replace(/\/+$/, "") || "/";
+  if (locale === "en") {
+    const englishPath = Object.entries(PUBLIC_ROUTE_PAIRS).find(([, spanishPath]) => spanishPath === normalizedPath)?.[0];
+    if (normalizedPath === "/es/programas") return `/pricing${suffix}`;
+    return `${englishPath || (normalizedPath.startsWith("/es/") ? "/" : normalizedPath)}${suffix}`;
+  }
+  if (normalizedPath === "/es/programas") return `/es/programas${suffix}`;
+  return `${PUBLIC_ROUTE_PAIRS[normalizedPath] || (normalizedPath.startsWith("/es/") ? normalizedPath : "/es")}${suffix}`;
+}
+
+export function switchLocalePath(pathname: string, locale: Locale) {
+  const [pathOnly, suffix = ""] = pathname.split(/(?=[?#])/);
+  if (pathOnly.startsWith("/portal/") || pathOnly === "/portal") {
+    return `${locale === "es" ? `/es${pathOnly}` : pathOnly}${suffix}`;
+  }
+  if (pathOnly.startsWith("/es/portal/") || pathOnly === "/es/portal") {
+    const portalPath = pathOnly.slice(3) || "/portal";
+    return `${locale === "es" ? pathOnly : portalPath}${suffix}`;
+  }
+  return localizedPublicPath(pathOnly, locale) + suffix;
+}
+
 export const PORTAL_COPY = {
   en: {
     dashboard: "Your Ground Up",

@@ -8,10 +8,10 @@ export default function Footer() {
   const prefix = locale === "es" ? "/es" : "";
   const links = locale === "es"
     ? [
-        { href: `${prefix}/programas`, label: publicCopy.personalTraining },
-        { href: `${prefix}/programas`, label: publicCopy.coaches },
-        { href: `${prefix}/programas`, label: publicCopy.programs },
-        { href: `${prefix}/programas`, label: publicCopy.adaptiveCapacity },
+        { href: `${prefix}/personal-training`, label: publicCopy.personalTraining },
+        { href: `${prefix}/coaches`, label: publicCopy.coaches },
+        { href: `${prefix}/pricing`, label: publicCopy.programs },
+        { href: `${prefix}/adaptive-capacity`, label: publicCopy.adaptiveCapacity },
         { href: `${prefix}/horario`, label: publicCopy.schedule },
         { href: `${prefix}/contacto`, label: publicCopy.contact },
         { href: `${prefix}/privacidad`, label: publicCopy.privacyPolicy },

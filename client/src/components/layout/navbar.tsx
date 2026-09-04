@@ -4,7 +4,7 @@ import { LogIn, LogOut, Menu, UserRound, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePortalAuth } from "@/lib/portal-auth";
-import { useLocale } from "@/lib/locale";
+import { switchLocalePath, useLocale } from "@/lib/locale";
 import logoImage from "@assets/Ground_up_Logo_1772941267349.png";
 
 export default function Navbar() {
@@ -36,12 +36,12 @@ export default function Navbar() {
   const navItems = locale === "es"
     ? [
         { path: "/es", label: publicCopy.home },
-        { path: "/es/programas", label: publicCopy.training },
-        { path: "/es/programas", label: publicCopy.selfDefense },
-        { path: "/es/programas", label: publicCopy.girlsMothers },
+         { path: "/es/personal-training", label: publicCopy.training },
+         { path: "/es/womens-self-defense", label: publicCopy.selfDefense },
+         { path: "/es/girls", label: publicCopy.girlsMothers },
         { path: "/es/horario", label: publicCopy.schedule },
-        { path: "/es/programas", label: publicCopy.coaches },
-        { path: "/es/programas", label: publicCopy.programs },
+         { path: "/es/coaches", label: publicCopy.coaches },
+         { path: "/es/pricing", label: publicCopy.programs },
       ]
     : [
         { path: "/", label: publicCopy.home },
@@ -110,7 +110,7 @@ export default function Navbar() {
                   <LogOut className="h-3.5 w-3.5" />
                 </Button>
               ) : (
-                <Link href={locale === "es" ? "/" : "/es"} className="px-2 py-2 text-xs font-bold uppercase tracking-wide text-[#5EEBFF] hover:text-white" data-testid="nav-link-es">
+                <Link href={switchLocalePath(location, locale === "es" ? "en" : "es")} className="px-2 py-2 text-xs font-bold uppercase tracking-wide text-[#5EEBFF] hover:text-white" data-testid="nav-link-es">
                   {locale === "es" ? publicCopy.english : publicCopy.spanish}
                 </Link>
               )}
@@ -171,7 +171,7 @@ export default function Navbar() {
                     <LogOut className="h-4 w-4" />{copy.logout}
                   </button>
                 ) : (
-                  <Link href={locale === "es" ? "/" : "/es"} onClick={closeMenu} className="block rounded-lg px-4 py-3 text-sm font-semibold uppercase tracking-wide text-[#5EEBFF] hover:bg-white/5 hover:text-white">
+                   <Link href={switchLocalePath(location, locale === "es" ? "en" : "es")} onClick={closeMenu} className="block rounded-lg px-4 py-3 text-sm font-semibold uppercase tracking-wide text-[#5EEBFF] hover:bg-white/5 hover:text-white">
                     {locale === "es" ? publicCopy.english : publicCopy.spanish}
                   </Link>
                 )}

@@ -59,11 +59,11 @@ export async function setupVite(app: Express, server: Server) {
         `src="/src/main.tsx?v=${nanoid()}"`,
       );
       const page = await vite.transformIndexHtml(url, template);
-      const requestPath = new URL(req.originalUrl, "http://localhost").pathname;
+       const requestPath = new URL(req.originalUrl, "http://localhost").pathname.replace(/\/+$/, "") || "/";
       const knownPublicPaths = new Set([
         "/", "/schedule", "/pricing", "/coaches", "/personal-training",
          "/contact", "/privacy", "/book", "/womens-self-defense", "/kids", "/girls", "/adaptive-capacity",
-         "/es", "/es/programas", "/es/horario", "/es/reservar", "/es/contacto", "/es/privacidad", "/es/portal/login", "/es/portal/reset-password",
+         "/", "/admin", "/ln/login", "/es", "/es/personal-training", "/es/coaches", "/es/pricing", "/es/programas", "/es/horario", "/es/reservar", "/es/contacto", "/es/privacidad", "/es/womens-self-defense", "/es/girls", "/es/kids", "/es/adaptive-capacity", "/es/portal/login", "/es/portal/reset-password",
       ]);
       const isPortalPath = requestPath === "/portal" || requestPath.startsWith("/portal/") ||
         requestPath === "/es/portal" || requestPath.startsWith("/es/portal/");
@@ -95,11 +95,11 @@ export function serveStatic(app: Express) {
     if (req.path.startsWith("/api/")) {
       return res.status(404).json({ message: "Not found" });
     }
-    const requestPath = new URL(req.originalUrl, "http://localhost").pathname;
+     const requestPath = new URL(req.originalUrl, "http://localhost").pathname.replace(/\/+$/, "") || "/";
     const knownPublicPaths = new Set([
       "/", "/schedule", "/pricing", "/coaches", "/personal-training",
        "/contact", "/privacy", "/book", "/womens-self-defense", "/kids", "/girls", "/adaptive-capacity",
-       "/es", "/es/programas", "/es/horario", "/es/reservar", "/es/contacto", "/es/privacidad", "/es/portal/login", "/es/portal/reset-password",
+       "/", "/admin", "/ln/login", "/es", "/es/personal-training", "/es/coaches", "/es/pricing", "/es/programas", "/es/horario", "/es/reservar", "/es/contacto", "/es/privacidad", "/es/womens-self-defense", "/es/girls", "/es/kids", "/es/adaptive-capacity", "/es/portal/login", "/es/portal/reset-password",
     ]);
     const isPortalPath = requestPath === "/portal" || requestPath.startsWith("/portal/") ||
       requestPath === "/es/portal" || requestPath.startsWith("/es/portal/");

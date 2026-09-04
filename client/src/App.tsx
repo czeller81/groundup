@@ -96,6 +96,15 @@ function Router() {
       <Route path="/es">
         <SpanishHome />
       </Route>
+      <Route path="/es/personal-training">
+        <MainLayout><PersonalTraining /></MainLayout>
+      </Route>
+      <Route path="/es/coaches">
+        <MainLayout><Coaches /></MainLayout>
+      </Route>
+      <Route path="/es/pricing">
+        <MainLayout><Pricing /></MainLayout>
+      </Route>
       <Route path="/es/programas">
         <SpanishPrograms />
       </Route>
@@ -110,6 +119,18 @@ function Router() {
       </Route>
       <Route path="/es/privacidad">
         <SpanishPrivacy />
+      </Route>
+      <Route path="/es/womens-self-defense">
+        <MainLayout><WomensSelfDefense /></MainLayout>
+      </Route>
+      <Route path="/es/girls">
+        <MainLayout><Girls /></MainLayout>
+      </Route>
+      <Route path="/es/kids">
+        <Redirect to="/es/girls" />
+      </Route>
+      <Route path="/es/adaptive-capacity">
+        <MainLayout><AdaptiveCapacity /></MainLayout>
       </Route>
       <Route path="/admin">
         <MainLayout><Admin /></MainLayout>

@@ -72,7 +72,7 @@ export function SpanishHome() {
         <h2 className="text-3xl font-black uppercase">Entrenamiento con propósito</h2>
         <p className="mx-auto mt-4 max-w-2xl text-gray-400">Jiu-jitsu, defensa personal, fuerza y movimiento para desarrollar habilidad, confianza y capacidad.</p>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
-          <Button asChild variant="outline" className="border-white/15 text-white hover:bg-white/5"><Link href="/es/programas">Conoce los programas</Link></Button>
+          <Button asChild variant="outline" className="border-white/15 text-white hover:bg-white/5"><Link href="/es/pricing">Conoce los programas</Link></Button>
           <Button asChild variant="outline" className="border-white/15 text-white hover:bg-white/5"><Link href="/es/contacto">Haz una pregunta</Link></Button>
         </div>
       </section>
