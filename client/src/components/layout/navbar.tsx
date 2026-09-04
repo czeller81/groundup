@@ -4,7 +4,7 @@ import { LogIn, LogOut, Menu, UserRound, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePortalAuth } from "@/lib/portal-auth";
-import { switchLocalePath, useLocale } from "@/lib/locale";
+import { localizedPublicPath, switchLocalePath, useLocale } from "@/lib/locale";
 import { localizedPortalEntryPath } from "@/lib/portal-navigation";
 import logoImage from "@assets/Ground_up_Logo_1772941267349.png";
 
