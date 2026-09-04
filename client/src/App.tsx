@@ -32,7 +32,6 @@ import AdaptiveCapacity from "@/pages/adaptive-capacity";
 import AnalyticsConsent from "@/components/analytics-consent";
 import Privacy from "@/pages/privacy";
 import MetaPixel from "@/components/meta-pixel";
-import { SpanishHome, SpanishSchedule, SpanishBooking, SpanishContact, SpanishPrivacy } from "@/pages/spanish";
 import { LocaleProvider } from "@/lib/locale";
 
 function MainLayout({ children }: { children: React.ReactNode }) {
@@ -94,7 +93,7 @@ function Router() {
         <MainLayout><AdaptiveCapacity /></MainLayout>
       </Route>
       <Route path="/es">
-        <SpanishHome />
+        <MainLayout><Home /></MainLayout>
       </Route>
       <Route path="/es/personal-training">
         <MainLayout><PersonalTraining /></MainLayout>
@@ -109,16 +108,16 @@ function Router() {
         <Redirect to="/es/pricing" />
       </Route>
       <Route path="/es/horario">
-        <SpanishSchedule />
+        <MainLayout><LiveSchedule /></MainLayout>
       </Route>
       <Route path="/es/reservar">
-        <SpanishBooking />
+        <MainLayout><FirstVisitBooking /></MainLayout>
       </Route>
       <Route path="/es/contacto">
-        <SpanishContact />
+        <MainLayout><Contact /></MainLayout>
       </Route>
       <Route path="/es/privacidad">
-        <SpanishPrivacy />
+        <MainLayout><Privacy /></MainLayout>
       </Route>
       <Route path="/es/womens-self-defense">
         <MainLayout><WomensSelfDefense /></MainLayout>
