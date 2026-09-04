@@ -132,7 +132,7 @@ export default function Contact() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-5 gap-12">
             <div className="lg:col-span-3">
-              <div className="rounded-2xl border border-white/10 bg-[#121826] p-4 sm:p-8" data-testid="contact-form">
+               <div id="contact-form" className="rounded-2xl border border-white/10 bg-[#121826] p-4 sm:p-8" data-testid="contact-form">
                 <h2 className="text-2xl font-bold text-white mb-6" style={{ fontFamily: 'var(--font-display)' }}>{copy.sendTitle}</h2>
                 <Form {...form}>
                   <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
@@ -324,7 +324,7 @@ export default function Contact() {
                   asChild
                   className="w-full bg-[#5EEBFF] text-[#0B0F14] font-bold uppercase tracking-wider hover:bg-[#5EEBFF]/90"
                 >
-                   <Link href={localizedPublicPath("/book", locale)}>
+                    <Link href={localizedPublicPath("/contact#contact-form", locale)}>
                      {copy.contactButton}
                   </Link>
                 </Button>

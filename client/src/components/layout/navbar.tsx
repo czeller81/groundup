@@ -56,7 +56,7 @@ export default function Navbar() {
   const accountPath = isAuthenticated
     ? (locale === "es" ? "/es/portal/dashboard" : "/portal/dashboard")
     : localizedPortalEntryPath("/portal/login", locale);
-  const firstVisitPath = locale === "es" ? "/es/reservar" : "/book";
+  const firstVisitPath = localizedPublicPath("/contact#contact-form", locale);
 
   const closeMenu = () => setMobileMenuOpen(false);
   const handleLogout = async () => {

@@ -82,7 +82,7 @@ export default function FirstVisitBooking() {
           <div className="rounded-2xl border border-white/10 bg-[#121826] p-8 text-center">
              <p className="text-gray-300">{copy.noClasses}</p>
              <p className="mt-2 text-sm text-gray-500">{copy.contact}</p>
-             <Button asChild variant="outline" className="mt-4 border-white/15 text-white"><Link href={localizedPublicPath("/contact", locale)}>{copy.contactButton}</Link></Button>
+             <Button asChild variant="outline" className="mt-4 border-white/15 text-white"><Link href={localizedPublicPath("/contact#contact-form", locale)}>{copy.contactButton}</Link></Button>
           </div>
         ) : (
           <>

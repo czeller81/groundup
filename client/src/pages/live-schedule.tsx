@@ -66,7 +66,7 @@ export default function LiveSchedule() {
                 key={occurrence.id}
                 occurrence={occurrence}
                 actionLabel={occurrence.firstVisitEligible ? (occurrence.bookingState === "waitlist" ? copy.waitlist : copy.firstVisit) : copy.member}
-                onAction={() => { window.location.href = occurrence.firstVisitEligible ? `${localizedPublicPath("/book", locale)}?occurrence=${occurrence.id}` : switchLocalePath("/portal/booking", locale); }}
+                onAction={() => { window.location.href = occurrence.firstVisitEligible ? localizedPublicPath("/contact#contact-form", locale) : switchLocalePath("/portal/booking", locale); }}
               />
             ))}
           </div>
