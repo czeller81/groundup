@@ -389,7 +389,7 @@ export default function PortalAdmin() {
 
       <main className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 mb-6">
+        <div className="grid grid-cols-1 min-[360px]:grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 mb-6">
           <Card className="bg-[#121826] border-white/5">
             <CardContent className="p-3 sm:p-5 sm:pb-4">
               <div className="flex items-center gap-2 sm:gap-3">
@@ -398,7 +398,7 @@ export default function PortalAdmin() {
                 </div>
                 <div className="min-w-0">
                   <p className="text-xl sm:text-2xl font-bold text-white">{statsLoading ? "..." : stats?.totalUsers || 0}</p>
-                  <p className="text-xs text-gray-400 whitespace-nowrap">{copy.totalUsers}</p>
+                   <p className="text-xs text-gray-400 break-words">{copy.totalUsers}</p>
                 </div>
               </div>
             </CardContent>
@@ -411,7 +411,7 @@ export default function PortalAdmin() {
                 </div>
                 <div className="min-w-0">
                   <p className="text-xl sm:text-2xl font-bold text-white">{statsLoading ? "..." : stats?.newUsers30Days || 0}</p>
-                  <p className="text-xs text-gray-400 whitespace-nowrap">{copy.new30Days}</p>
+                   <p className="text-xs text-gray-400 break-words">{copy.new30Days}</p>
                 </div>
               </div>
             </CardContent>
@@ -424,7 +424,7 @@ export default function PortalAdmin() {
                 </div>
                 <div className="min-w-0">
                   <p className="text-xl sm:text-2xl font-bold text-white">{statsLoading ? "..." : stats?.activeMemberships || 0}</p>
-                  <p className="text-xs text-gray-400 whitespace-nowrap">{copy.activePlans}</p>
+                   <p className="text-xs text-gray-400 break-words">{copy.activePlans}</p>
                 </div>
               </div>
             </CardContent>
@@ -437,7 +437,7 @@ export default function PortalAdmin() {
                 </div>
                 <div className="min-w-0">
                   <p className="text-xl sm:text-2xl font-bold text-white">{statsLoading ? "..." : stats?.upcomingSessions7Days || 0}</p>
-                  <p className="text-xs text-gray-400 whitespace-nowrap">{copy.upcoming7Days}</p>
+                   <p className="text-xs text-gray-400 break-words">{copy.upcoming7Days}</p>
                 </div>
               </div>
             </CardContent>
@@ -450,7 +450,7 @@ export default function PortalAdmin() {
                 </div>
                 <div className="min-w-0">
                   <p className="text-xl sm:text-2xl font-bold text-white">${statsLoading ? "..." : ((stats?.monthlyRevenue || 0) / 100).toFixed(0)}</p>
-                  <p className="text-xs text-gray-400 whitespace-nowrap">{copy.revenueMonth}</p>
+                   <p className="text-xs text-gray-400 break-words">{copy.revenueMonth}</p>
                 </div>
               </div>
             </CardContent>
@@ -490,13 +490,13 @@ export default function PortalAdmin() {
             {notificationsLoading ? <div className="flex justify-center py-4"><Loader2 className="h-5 w-5 animate-spin text-[#FFB199]" /></div> : notifications.length === 0 ? (
               <p className="text-sm text-gray-400 py-3">{copy.noStaffAlerts}</p>
             ) : notifications.slice(0, 8).map((notification: any) => (
-              <div key={notification.id} className={`flex items-start justify-between gap-4 rounded-lg border p-3 ${notification.readAt ? "border-white/5 bg-[#0B0F14]/60" : "border-[#FFB199]/20 bg-[#FFB199]/5"}`}>
+              <div key={notification.id} className={`flex flex-col items-start justify-between gap-3 rounded-lg border p-3 sm:flex-row ${notification.readAt ? "border-white/5 bg-[#0B0F14]/60" : "border-[#FFB199]/20 bg-[#FFB199]/5"}`}>
                 <div className="min-w-0">
                    <p className="text-sm font-medium text-white">{notificationTitle(notification.title)}</p>
                    <p className="text-xs text-gray-400 mt-1">{notificationMessage(notification.message)}</p>
                    <p className="text-[11px] text-gray-500 mt-1">{dateLabel(notification.createdAt, true)}</p>
                 </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
+                    <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:flex-shrink-0">
                   {!notification.readAt && <button className="min-h-11 px-2 text-[11px] text-gray-400 hover:text-white" onClick={() => notificationReadMutation.mutate(notification.id)}>{copy.markRead}</button>}
                   <a className="text-xs text-[#5EEBFF] hover:underline" href={notification.href}>{copy.openInbox}</a>
                 </div>
@@ -720,8 +720,8 @@ export default function PortalAdmin() {
                 {/* Profile Header */}
                 <Card className="bg-[#121826] border-white/5">
                   <CardContent className="pt-5">
-                    <div className="flex items-start justify-between mb-4">
-                      <div>
+                    <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="min-w-0">
                         <h2 className="text-lg font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>
                           {memberProfile.user.firstName} {memberProfile.user.lastName}
                         </h2>
@@ -734,7 +734,7 @@ export default function PortalAdmin() {
                           )}
                         </div>
                       </div>
-                      <div className="text-right">
+                      <div className="text-left sm:text-right">
                         <p className="text-xs text-gray-400">{copy.formsCompletionLabel}</p>
                         <p className="text-lg font-bold text-[#5EEBFF]">{formsCompletion}%</p>
                       </div>
@@ -859,7 +859,7 @@ export default function PortalAdmin() {
                                       </p>
                                     )}
                                   </div>
-                                  <div className="flex items-center gap-2 flex-shrink-0 ml-3">
+                    <div className="mt-2 flex flex-wrap items-center gap-2 sm:mt-0 flex-shrink-0 sm:ml-3">
                                     {getStatusBadge(response.status)}
                                     {response.status === "submitted" && (
                                       <Button variant="ghost" size="sm" className="text-[#5EEBFF] hover:text-[#5EEBFF]/80 hover:bg-[#5EEBFF]/10"
@@ -891,8 +891,8 @@ export default function PortalAdmin() {
                         ) : (
                           <div className="space-y-2">
                             {memberProfile.bookings.map((booking: any) => (
-                              <div key={booking.id} className="p-3 rounded-lg bg-[#0B0F14] border border-white/5 flex items-center justify-between">
-                                <div>
+                              <div key={booking.id} className="flex flex-col items-start gap-2 rounded-lg border border-white/5 bg-[#0B0F14] p-3 sm:flex-row sm:items-center sm:justify-between">
+                                <div className="min-w-0">
                                   <p className="text-sm font-medium text-white">
                                     {dateLabel(booking.start)}
                                   </p>
@@ -900,7 +900,7 @@ export default function PortalAdmin() {
                                     {timeLabel(booking.start)} - {timeLabel(booking.end)} {copy.with} {booking.trainer?.name}
                                   </p>
                                 </div>
-                                <div className="flex items-center gap-2">
+                                <div className="flex flex-wrap items-center gap-2">
                                   <span className="text-sm text-gray-300">${(booking.amountCents / 100).toFixed(2)}</span>
                                   <Badge className={
                                     booking.status === "paid" ? "bg-green-500/20 text-green-400 border-green-500/30" :

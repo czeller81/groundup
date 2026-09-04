@@ -53,8 +53,8 @@ export default function ClassAdmin() {
   return (
     <main className="mx-auto min-h-screen max-w-6xl px-4 py-8 text-white">
        <p className="text-xs font-bold uppercase tracking-[0.3em] text-[#5EEBFF]">{copy.operations}</p>
-       <h1 className="mt-2 text-3xl font-black uppercase">{copy.classBookingControl}</h1>
-      <section className="mt-8 rounded-2xl border border-white/10 bg-[#121826] p-6">
+        <h1 className="mt-2 break-words text-2xl font-black uppercase sm:text-3xl">{copy.classBookingControl}</h1>
+      <section className="mt-8 rounded-2xl border border-white/10 bg-[#121826] p-4 sm:p-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
              <h2 className="font-bold">{copy.calendarSync}</h2>
@@ -80,7 +80,7 @@ export default function ClassAdmin() {
               </SelectContent>
             </Select>
           </div>
-           <Button onClick={() => configure.mutate()} disabled={!calendarId || configure.isPending} className="self-end bg-[#B06CFF]">{copy.useCalendar}</Button>
+            <Button onClick={() => configure.mutate()} disabled={!calendarId || configure.isPending} className="w-full self-end bg-[#B06CFF] sm:w-auto">{copy.useCalendar}</Button>
         </div>
       </section>
       <section className="mt-8">
@@ -105,7 +105,7 @@ export default function ClassAdmin() {
         </div>
       </section>
       {rosterOccurrence && (
-        <section className="mt-8 rounded-2xl border border-[#5EEBFF]/20 bg-[#121826] p-6">
+         <section className="mt-8 rounded-2xl border border-[#5EEBFF]/20 bg-[#121826] p-4 sm:p-6">
            <div className="flex items-start justify-between gap-3"><div><h2 className="font-bold"> {copy.roster} · {rosterOccurrence.title}</h2><p className="text-sm text-gray-400">{classDateLabel(rosterOccurrence.start, locale)}</p></div><Button variant="ghost" className="min-h-11" onClick={() => setRosterOccurrence(null)}>{copy.close}</Button></div>
           {(["confirmed", "waitlisted"] as const).map((group) => (
             <div key={group} className="mt-5">

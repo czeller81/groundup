@@ -135,7 +135,7 @@ export default function PortalCoach() {
                   />
                 </div>
               </CardHeader>
-              <CardContent className="max-h-[calc(100vh-320px)] overflow-y-auto">
+              <CardContent className="max-h-[45vh] overflow-y-auto lg:max-h-[calc(100vh-320px)]">
                 {membersLoading ? (
                   <div className="flex justify-center py-8">
                     <Loader2 className="h-6 w-6 animate-spin text-[#5EEBFF]" />
@@ -148,7 +148,7 @@ export default function PortalCoach() {
                       <button
                         key={member.id}
                         onClick={() => setSelectedMemberId(member.id)}
-                        className={`w-full text-left p-3 rounded-lg transition-colors flex items-center justify-between group ${
+                        className={`min-h-11 w-full text-left p-3 rounded-lg transition-colors flex items-center justify-between group ${
                           selectedMemberId === member.id
                             ? "bg-[#5EEBFF]/20 border border-[#5EEBFF]/30"
                             : "hover:bg-white/5 border border-transparent"

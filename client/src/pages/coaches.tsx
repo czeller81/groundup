@@ -81,7 +81,7 @@ export default function Coaches() {
         <div className="absolute inset-0 bg-gradient-to-b from-[#121826] to-[#0B0F14]" />
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-[#B06CFF]/5 rounded-full blur-3xl" />
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-5xl md:text-6xl font-bold text-white mb-6" style={{ fontFamily: 'var(--font-display)' }}>
+          <h1 className="break-words text-4xl font-bold text-white mb-6 sm:text-5xl md:text-6xl" style={{ fontFamily: 'var(--font-display)' }}>
             {copy.hero} <span className="gradient-text-purple">{copy.heroAccent}</span>
           </h1>
           <p className="text-gray-400 max-w-2xl mx-auto text-lg">

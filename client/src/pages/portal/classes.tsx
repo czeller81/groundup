@@ -45,10 +45,10 @@ export default function PortalClasses() {
   if (!isAuthenticated) return null;
 
   return (
-    <main className="mx-auto min-h-[calc(100vh-4rem)] max-w-4xl px-4 py-8 text-white sm:py-10">
+    <main className="mx-auto min-h-[calc(100vh-4rem)] max-w-4xl px-3 py-6 text-white sm:px-4 sm:py-10">
       <div className="max-w-2xl">
         <p className="text-xs font-bold uppercase tracking-[0.3em] text-[#5EEBFF]">{copy.liveAvailability}</p>
-        <h1 className="mt-3 text-3xl font-black uppercase sm:text-4xl">{copy.findNextClass}</h1>
+        <h1 className="mt-3 break-words text-3xl font-black uppercase sm:text-4xl">{copy.findNextClass}</h1>
         <p className="mt-3 text-gray-400">{copy.findNextClassDescription}</p>
         <p className="mt-2 text-xs text-gray-500">{copy.bookingManaged}</p>
       </div>
@@ -78,7 +78,7 @@ export default function PortalClasses() {
           ))}
         </div>
       ) : (
-        <div className="mt-8 rounded-2xl border border-white/10 bg-[#121826] p-8 text-center">
+        <div className="mt-8 rounded-2xl border border-white/10 bg-[#121826] p-4 text-center sm:p-8">
           <p className="text-gray-300">{copy.noClasses}</p>
           <p className="mx-auto mt-2 max-w-md text-sm text-gray-500">{copy.noClassesDescription}</p>
           <Button asChild variant="outline" className="mt-5 border-white/10 text-gray-300 hover:bg-white/5">

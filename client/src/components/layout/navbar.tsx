@@ -129,7 +129,7 @@ export default function Navbar() {
              aria-label={mobileMenuOpen ? publicCopy.closeMenu : publicCopy.openMenu}
             aria-expanded={mobileMenuOpen}
             aria-controls="mobile-navigation"
-            className="text-white hover:bg-white/10 md:hidden"
+            className="min-h-11 min-w-11 text-white hover:bg-white/10 md:hidden"
             data-testid="mobile-menu-toggle"
           >
             {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}

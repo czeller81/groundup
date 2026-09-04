@@ -46,16 +46,16 @@ export default function MyClasses() {
       <h2 className="mb-3 text-sm font-bold uppercase tracking-widest text-gray-400">{title}</h2>
       <div className="space-y-3">
         {items.length ? items.map((item) => (
-          <article key={item.id} className="rounded-2xl border border-white/10 bg-[#121826] p-5">
+          <article key={item.id} className="rounded-2xl border border-white/10 bg-[#121826] p-4 sm:p-5">
             <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-              <div>
-                <p className="font-bold text-white">{item.occurrence.title}</p>
+              <div className="min-w-0">
+                <p className="break-words font-bold text-white">{item.occurrence.title}</p>
                 <p className="mt-1 text-sm text-gray-400">{classDateLabel(item.occurrence.start, locale)} · {classTimeLabel(item.occurrence.start, item.occurrence.end, locale)}</p>
                 <p className={`mt-2 text-sm font-semibold ${item.status === "confirmed" ? "text-emerald-300" : item.status === "waitlisted" ? "text-amber-300" : "text-gray-500"}`}>
                   {item.status === "waitlisted" ? `${copy.waitlistPosition} ${item.waitlistPosition}` : statusLabel(item.status)}
                 </p>
               </div>
-              {["confirmed", "waitlisted"].includes(item.status) && <Button variant="outline" disabled={cancel.isPending} onClick={() => cancel.mutate(item.id)} className="border-red-500/30 text-red-300">{copy.cancel}</Button>}
+              {["confirmed", "waitlisted"].includes(item.status) && <Button variant="outline" disabled={cancel.isPending} onClick={() => cancel.mutate(item.id)} className="w-full border-red-500/30 text-red-300 sm:w-auto">{copy.cancel}</Button>}
             </div>
           </article>
         )) : <p className="rounded-2xl border border-white/10 bg-[#121826] p-6 text-gray-500">{copy.nothingHereYet}</p>}

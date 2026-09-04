@@ -98,7 +98,7 @@ export default function AdaptiveCapacity() {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_75%_20%,rgba(94,235,255,.12),transparent_35%),radial-gradient(circle_at_20%_80%,rgba(176,108,255,.12),transparent_30%)]" />
         <div className="relative max-w-6xl mx-auto px-6 pt-36 pb-24 md:pt-48 md:pb-32">
           <p className="text-[#5EEBFF] uppercase tracking-[.3em] text-xs font-semibold mb-6">{copy.eyebrow}</p>
-          <h1 className="max-w-4xl text-5xl md:text-7xl font-bold leading-[.95]" style={{ fontFamily: "var(--font-display)" }}>
+          <h1 className="max-w-4xl break-words text-4xl font-bold leading-[.95] sm:text-5xl md:text-7xl" style={{ fontFamily: "var(--font-display)" }}>
             {copy.title}
           </h1>
           <p className="mt-8 max-w-2xl text-lg md:text-xl text-gray-300 leading-relaxed">

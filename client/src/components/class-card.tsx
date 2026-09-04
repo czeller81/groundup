@@ -29,7 +29,7 @@ export function ClassCard({
     saving: portalCopy.saving,
   };
   return (
-    <article className="rounded-2xl border border-white/10 bg-[#121826] p-5 shadow-lg shadow-black/10">
+    <article className="rounded-2xl border border-white/10 bg-[#121826] p-4 shadow-lg shadow-black/10 sm:p-5">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
         <div className="min-w-0 flex-1">
           <div className="mb-2 flex flex-wrap items-center gap-2">
@@ -41,7 +41,7 @@ export function ClassCard({
               <Badge className="border-emerald-500/25 bg-emerald-500/10 text-emerald-300">{copy.beginner}</Badge>
             )}
           </div>
-          <h2 className="text-lg font-bold text-white">{occurrence.title}</h2>
+          <h2 className="break-words text-lg font-bold text-white">{occurrence.title}</h2>
           <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-400">
             <span className="flex items-center gap-1.5"><Clock className="h-3.5 w-3.5" />{classTimeLabel(occurrence.start, occurrence.end, activeLocale)}</span>
             {occurrence.instructorName && <span className="flex items-center gap-1.5"><UserRound className="h-3.5 w-3.5" />{occurrence.instructorName}</span>}
@@ -58,7 +58,7 @@ export function ClassCard({
           <Button
             onClick={onAction}
             disabled={busy}
-            className={waitlist ? "bg-amber-400 text-black hover:bg-amber-300" : "bg-[#B06CFF] text-white hover:bg-[#B06CFF]/90"}
+             className={`w-full sm:w-auto ${waitlist ? "bg-amber-400 text-black hover:bg-amber-300" : "bg-[#B06CFF] text-white hover:bg-[#B06CFF]/90"}`}
           >
             {busy ? copy.saving : actionLabel}
           </Button>

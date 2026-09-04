@@ -47,10 +47,11 @@ export default function Calendar({ selectedTrainerId, selectedDate, selectedTime
     <div className="bg-muted p-4 rounded-lg space-y-4" data-testid="booking-calendar">
       {/* Calendar Header */}
       <div className="flex justify-between items-center">
-        <Button 
+          <Button
           variant="ghost" 
           size="sm" 
           onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
+            className="min-h-11 min-w-11"
           data-testid="calendar-prev-month"
         >
           <ChevronLeft className="h-4 w-4" />
@@ -58,10 +59,11 @@ export default function Calendar({ selectedTrainerId, selectedDate, selectedTime
         <div className="font-semibold" data-testid="calendar-month-year">
           {format(currentMonth, 'MMMM yyyy')}
         </div>
-        <Button 
+          <Button
           variant="ghost" 
           size="sm" 
           onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
+            className="min-h-11 min-w-11"
           data-testid="calendar-next-month"
         >
           <ChevronRight className="h-4 w-4" />
@@ -71,16 +73,16 @@ export default function Calendar({ selectedTrainerId, selectedDate, selectedTime
       {/* Calendar Grid */}
       <div>
         {/* Day headers */}
-        <div className="grid grid-cols-7 gap-2 mb-2">
+        <div className="mb-2 grid grid-cols-7 gap-1 sm:gap-2">
           {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-            <div key={day} className="text-xs text-center text-muted-foreground p-2">
+            <div key={day} className="p-1 text-center text-xs text-muted-foreground sm:p-2">
               {day}
             </div>
           ))}
         </div>
 
         {/* Calendar days */}
-        <div className="grid grid-cols-7 gap-2">
+        <div className="grid grid-cols-7 gap-1 sm:gap-2">
           {days.map(day => {
             const dateString = format(day, 'yyyy-MM-dd');
             const isPast = isBefore(day, today);
@@ -93,7 +95,7 @@ export default function Calendar({ selectedTrainerId, selectedDate, selectedTime
                 onClick={() => handleDateClick(day)}
                 disabled={isPast}
                 className={`
-                  aspect-square flex items-center justify-center border rounded-lg text-sm transition-all
+                   flex aspect-square min-h-11 items-center justify-center rounded-lg border text-sm transition-all
                   ${isPast 
                     ? 'bg-muted text-muted-foreground cursor-not-allowed' 
                     : 'hover:bg-accent cursor-pointer'
@@ -137,7 +139,7 @@ export default function Calendar({ selectedTrainerId, selectedDate, selectedTime
                     variant={selectedTime === time ? "default" : "outline"}
                     size="sm"
                     onClick={() => handleTimeClick(time)}
-                    className="transition-all"
+                    className="min-h-11 transition-all"
                     data-testid={`time-slot-${time}`}
                   >
                     {displayTime}

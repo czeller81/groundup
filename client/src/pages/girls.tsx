@@ -46,7 +46,7 @@ export default function Girls() {
         <div className="absolute inset-0 bg-gradient-to-b from-[#121826] to-[#0B0F14]" aria-hidden="true" />
         <div className="relative mx-auto max-w-5xl">
           <p className="text-xs font-bold uppercase tracking-[0.3em] text-[#FFB199]">{copy.eyebrow}</p>
-          <h1 className="mt-5 max-w-4xl text-5xl font-black uppercase leading-[0.92] tracking-tight sm:text-7xl">
+          <h1 className="mt-5 max-w-4xl break-words text-4xl font-black uppercase leading-[0.92] tracking-tight sm:text-5xl md:text-7xl">
             {copy.title} <span className="text-[#5EEBFF]">{copy.accent}</span>
           </h1>
           <p className="mt-7 max-w-2xl text-lg leading-relaxed text-gray-300">

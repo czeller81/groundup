@@ -281,14 +281,14 @@ export default function Home() {
               {t("WOMEN ONLY · OXNARD, CA")}
             </motion.div>
 
-            <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold leading-[0.9] mb-6 tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>
+            <h1 className="text-[clamp(2.75rem,13vw,4.5rem)] md:text-7xl lg:text-8xl font-bold leading-[0.9] mb-6 tracking-tight break-words" style={{ fontFamily: 'var(--font-display)' }}>
                <span className="text-white">{t("CONFIDENCE")}</span>
               <br />
                <span className="gradient-text-cyan">{t("BUILT")}</span>
               <br />
                <span className="gradient-text-purple">{t("HERE.")}</span>
               <br />
-               <span className="text-white text-3xl md:text-4xl lg:text-5xl font-semibold">{t("discover what your body can do")}</span>
+                <span className="text-white text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold">{t("discover what your body can do")}</span>
             </h1>
 
             <motion.p

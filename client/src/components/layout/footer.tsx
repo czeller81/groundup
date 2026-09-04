@@ -52,7 +52,7 @@ export default function Footer() {
                 <Link
                   key={`${link.href}-${link.label}-${index}`}
                   href={link.href}
-                  className="block text-gray-400 hover:text-[#5EEBFF] text-sm transition-colors"
+                  className="flex min-h-11 items-center text-gray-400 hover:text-[#5EEBFF] text-sm transition-colors"
                 >
                   {link.label}
                 </Link>
@@ -65,11 +65,11 @@ export default function Footer() {
               {publicCopy.getInTouch}
             </h4>
             <div className="space-y-3">
-              <a href="tel:786-757-1175" className="flex items-center space-x-3 text-gray-400 hover:text-[#5EEBFF] text-sm transition-colors">
+              <a href="tel:786-757-1175" className="flex min-h-11 items-center space-x-3 text-gray-400 hover:text-[#5EEBFF] text-sm transition-colors">
                 <Phone className="h-4 w-4 flex-shrink-0" />
                 <span>(786) 757-1175</span>
               </a>
-              <a href="mailto:info@groundupbjj.com" className="flex items-center space-x-3 text-gray-400 hover:text-[#5EEBFF] text-sm transition-colors">
+              <a href="mailto:info@groundupbjj.com" className="flex min-h-11 items-center space-x-3 text-gray-400 hover:text-[#5EEBFF] text-sm transition-colors">
                 <Mail className="h-4 w-4 flex-shrink-0" />
                 <span>info@groundupbjj.com</span>
               </a>
@@ -86,7 +86,7 @@ export default function Footer() {
              &copy; {new Date().getFullYear()} Ground Up Women's BJJ. {publicCopy.allRightsReserved}
           </p>
           <div className="flex items-center space-x-4">
-            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-[#5EEBFF] transition-colors">
+            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="flex min-h-11 min-w-11 items-center justify-center text-gray-500 hover:text-[#5EEBFF] transition-colors">
               <Instagram className="h-5 w-5" />
             </a>
           </div>

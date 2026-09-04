@@ -75,7 +75,7 @@ export default function FirstVisitBooking() {
       <div className="mx-auto max-w-3xl">
         <div className="mb-8 text-center">
            <p className="text-xs font-bold uppercase tracking-[0.3em] text-[#FFB199]">{copy.noAccount}</p>
-           <h1 className="mt-3 text-4xl font-black uppercase">{copy.title}</h1>
+            <h1 className="mt-3 text-3xl font-black uppercase break-words sm:text-4xl">{copy.title}</h1>
            <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-gray-400">{copy.intro}</p>
         </div>
         {isLoading ? <Loader2 className="mx-auto h-8 w-8 animate-spin text-[#5EEBFF]" /> : !selected ? (
@@ -87,7 +87,7 @@ export default function FirstVisitBooking() {
         ) : (
           <>
             <ClassCard occurrence={selected} />
-              <form className="mt-5 rounded-2xl border border-white/10 bg-[#121826] p-6" onSubmit={(event) => { event.preventDefault(); track("funnel_step", "training", { step: "reservation_submitted" }); reserve.mutate(); }}>
+              <form className="mt-5 rounded-2xl border border-white/10 bg-[#121826] p-4 sm:p-6" onSubmit={(event) => { event.preventDefault(); track("funnel_step", "training", { step: "reservation_submitted" }); reserve.mutate(); }}>
               <div className="grid gap-4 sm:grid-cols-2">
                 {(["firstName", "lastName", "email", "phone"] as const).map((field) => (
                   <div key={field}>

@@ -85,7 +85,7 @@ export default function PersonalTraining() {
         />
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-[#5EEBFF]/5 rounded-full blur-3xl" />
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-5xl md:text-7xl font-bold text-white mb-6" style={{ fontFamily: 'var(--font-display)' }}>
+          <h1 className="break-words text-4xl font-bold text-white mb-6 sm:text-5xl md:text-7xl" style={{ fontFamily: 'var(--font-display)' }}>
             {copy.title} <span className="gradient-text-cyan">{copy.accent}</span>
           </h1>
           <p className="text-gray-300 max-w-2xl mx-auto text-lg mb-10">

@@ -57,7 +57,7 @@ export default function PortalBooking() {
         <div
           className="calendly-inline-widget rounded-2xl overflow-hidden border border-white/10"
           data-url={`${CALENDLY_URL}?hide_gdpr_banner=1&background_color=121826&text_color=e2e8f0&primary_color=5eebff${prefill}`}
-          style={{ minWidth: "320px", height: "700px" }}
+           style={{ width: "100%", minWidth: 0, height: "700px" }}
         />
       </main>
     </div>

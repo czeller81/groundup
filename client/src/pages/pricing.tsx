@@ -71,7 +71,7 @@ export default function Pricing() {
           transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
           className="relative z-10 max-w-3xl mx-auto text-center"
         >
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-white uppercase tracking-tight leading-none mb-5" style={{ fontFamily: 'var(--font-display)' }}>
+          <h1 className="break-words text-3xl sm:text-5xl md:text-6xl font-black text-white uppercase tracking-tight leading-none mb-5" style={{ fontFamily: 'var(--font-display)' }}>
             Start Your Training<br />at <span className="text-[#5EEBFF]">Ground Up</span>
           </h1>
           <p className="text-gray-300 text-base sm:text-lg max-w-xl mx-auto leading-relaxed mb-8">
@@ -317,7 +317,7 @@ function SpanishPricing() {
       <section className="relative pt-32 pb-20 px-4 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-[#121826] to-[#0B0F14]" />
         <div className="relative z-10 max-w-3xl mx-auto text-center">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-white uppercase tracking-tight leading-none mb-5" style={{ fontFamily: "var(--font-display)" }}>Comienza tu entrenamiento<br />en <span className="text-[#5EEBFF]">Ground Up</span></h1>
+          <h1 className="break-words text-3xl sm:text-5xl md:text-6xl font-black text-white uppercase tracking-tight leading-none mb-5" style={{ fontFamily: "var(--font-display)" }}>Comienza tu entrenamiento<br />en <span className="text-[#5EEBFF]">Ground Up</span></h1>
           <p className="text-gray-300 text-base sm:text-lg max-w-xl mx-auto leading-relaxed mb-8">Un centro de entrenamiento solo para mujeres para jiu-jitsu brasileño, defensa personal práctica, fuerza, movimiento y coaching personal. Las principiantes son bienvenidas.</p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Button asChild size="lg" className="bg-[#FFB199] text-[#0B0F14] font-bold uppercase tracking-wider"><Link href={bookPath}>Reserva tu primera visita gratis <ArrowRight className="ml-2 h-4 w-4" /></Link></Button>

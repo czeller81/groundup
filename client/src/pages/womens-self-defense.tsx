@@ -94,7 +94,7 @@ export default function WomensSelfDefense() {
               <Shield className="h-3.5 w-3.5" /> Women's Program · Oxnard, CA
             </div>
 
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold leading-[0.9] mb-6 tracking-tight" style={{ fontFamily: "var(--font-display)" }}>
+            <h1 className="break-words text-4xl font-bold leading-[0.9] mb-6 tracking-tight sm:text-5xl md:text-6xl lg:text-7xl" style={{ fontFamily: "var(--font-display)" }}>
               <span className="text-white">8 WEEKS TO</span>
               <br />
               <span style={{ color: "#FF6B8A" }}>REAL</span>
@@ -390,7 +390,7 @@ function SpanishWomensSelfDefense() {
         <div className="absolute inset-0 bg-gradient-to-br from-[#0B0F14] via-[#1A0B1A] to-[#0B0F14]" /><img src={selfDefenseFeaturedImg} alt="Entrenamiento de defensa personal para mujeres" className="absolute inset-0 w-full h-full object-cover opacity-20" /><div className="absolute inset-0 bg-gradient-to-t from-[#0B0F14] via-[#0B0F14]/70 to-[#0B0F14]/40" />
         <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-24 w-full"><div className="max-w-2xl">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[#FF6B8A]/30 bg-[#FF6B8A]/10 text-[#FF6B8A] text-xs font-semibold uppercase tracking-wider mb-6"><Shield className="h-3.5 w-3.5" /> Programa para mujeres · Oxnard, CA</div>
-          <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold leading-[.9] mb-6" style={{ fontFamily: "var(--font-display)" }}><span className="text-white">8 SEMANAS PARA</span><br /><span className="text-[#FF6B8A]">DEFENDERTE</span><br /><span className="text-white">EN LA VIDA REAL</span></h1>
+          <h1 className="break-words text-4xl font-bold leading-[.9] mb-6 sm:text-5xl md:text-6xl lg:text-7xl" style={{ fontFamily: "var(--font-display)" }}><span className="text-white">8 SEMANAS PARA</span><br /><span className="text-[#FF6B8A]">DEFENDERTE</span><br /><span className="text-white">EN LA VIDA REAL</span></h1>
           <p className="text-lg text-gray-300 mb-8 leading-relaxed">Técnicas prácticas que realmente usarás. Un espacio acogedor solo para mujeres y una coach que se asegura de que salgas de cada clase sintiéndote capaz.</p>
           <div className="flex flex-col sm:flex-row gap-4"><Button asChild size="lg" className="h-14 px-8 font-bold uppercase tracking-wider bg-[#FF6B8A] text-[#0B0F14]"><Link href={bookPath}>Reserva tu primera visita gratis <ArrowRight className="ml-2 h-5 w-5" /></Link></Button><Button asChild variant="outline" size="lg" className="h-14 border-white/20 text-white bg-transparent"><Link href={schedulePath}>Ver horarios</Link></Button></div>
         </div></div>

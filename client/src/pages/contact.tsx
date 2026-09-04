@@ -119,7 +119,7 @@ export default function Contact() {
         <div className="absolute inset-0 bg-gradient-to-b from-[#121826] to-[#0B0F14]" />
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-[#FFB199]/5 rounded-full blur-3xl" />
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-5xl md:text-6xl font-bold text-white mb-6" style={{ fontFamily: 'var(--font-display)' }}>
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-6 break-words" style={{ fontFamily: 'var(--font-display)' }}>
             {copy.title.includes("HABLEMOS") ? <>HABLE<span className="gradient-text-warm">MOS</span></> : <>GET IN <span className="gradient-text-warm">TOUCH</span></>}
           </h1>
           <p className="text-gray-400 max-w-2xl mx-auto text-lg">
@@ -132,7 +132,7 @@ export default function Contact() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-5 gap-12">
             <div className="lg:col-span-3">
-              <div className="rounded-2xl border border-white/10 bg-[#121826] p-8" data-testid="contact-form">
+              <div className="rounded-2xl border border-white/10 bg-[#121826] p-4 sm:p-8" data-testid="contact-form">
                 <h2 className="text-2xl font-bold text-white mb-6" style={{ fontFamily: 'var(--font-display)' }}>{copy.sendTitle}</h2>
                 <Form {...form}>
                   <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
@@ -273,10 +273,10 @@ export default function Contact() {
             </div>
 
             <div className="lg:col-span-2 space-y-6">
-              <div className="rounded-2xl border border-white/10 bg-[#121826] p-8" data-testid="contact-info">
+              <div className="rounded-2xl border border-white/10 bg-[#121826] p-4 sm:p-8" data-testid="contact-info">
                 <h3 className="text-xl font-bold text-white mb-6" style={{ fontFamily: 'var(--font-display)' }}>{copy.contactInfo}</h3>
                 <div className="space-y-5">
-                  <a href="tel:786-757-1175" className="flex items-start gap-4 group">
+                  <a href="tel:786-757-1175" className="flex min-h-11 items-start gap-4 group">
                     <div className="w-10 h-10 rounded-lg bg-[#5EEBFF]/10 flex items-center justify-center flex-shrink-0">
                       <Phone className="h-5 w-5 text-[#5EEBFF]" />
                     </div>
@@ -285,7 +285,7 @@ export default function Contact() {
                       <div className="text-white group-hover:text-[#5EEBFF] transition-colors">(786) 757-1175</div>
                     </div>
                   </a>
-                  <a href="mailto:info@groundupbjj.com" className="flex items-start gap-4 group">
+                  <a href="mailto:info@groundupbjj.com" className="flex min-h-11 items-start gap-4 group">
                     <div className="w-10 h-10 rounded-lg bg-[#B06CFF]/10 flex items-center justify-center flex-shrink-0">
                       <Mail className="h-5 w-5 text-[#B06CFF]" />
                     </div>
@@ -315,7 +315,7 @@ export default function Contact() {
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-[#5EEBFF]/5 to-[#B06CFF]/5 p-8 text-center">
+              <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-[#5EEBFF]/5 to-[#B06CFF]/5 p-4 sm:p-8 text-center">
                  <h3 className="text-xl font-bold text-white mb-3" style={{ fontFamily: 'var(--font-display)' }}>{copy.ready}</h3>
                 <p className="text-gray-400 text-sm mb-6">
                    {copy.readyDescription}
