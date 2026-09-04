@@ -25,6 +25,7 @@ export default function PortalForm() {
   const { toast } = useToast();
   const [answers, setAnswers] = useState<Record<string, any>>({});
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { data, isLoading } = useQuery<{ form: any; response: any }>({
     queryKey: ["/api/portal/forms", slug],
@@ -50,6 +51,9 @@ export default function PortalForm() {
       setLastSaved(new Date());
       queryClient.invalidateQueries({ queryKey: ["/api/portal/forms"] });
     },
+    onError: (error: any) => {
+      toast({ title: copy.error, description: localizeApiError(error.message, locale, copy.failedToSaveForm), variant: "destructive" });
+    },
   });
 
   const submitMutation = useMutation({
@@ -63,6 +67,7 @@ export default function PortalForm() {
       setLocation(portalPath("/portal/dashboard"));
     },
     onError: (error: any) => {
+      setIsSubmitting(false);
       toast({ title: copy.error, description: localizeApiError(error.message, locale, copy.failedToSubmitForm), variant: "destructive" });
     },
   });
@@ -73,6 +78,7 @@ export default function PortalForm() {
       return res.json();
     },
     onSuccess: () => {
+      setIsSubmitting(false);
       setAnswers({});
       queryClient.invalidateQueries({ queryKey: ["/api/portal/forms", slug] });
       queryClient.invalidateQueries({ queryKey: ["/api/portal/forms"] });
@@ -84,10 +90,10 @@ export default function PortalForm() {
   });
 
   const debouncedSave = useCallback(() => {
-    if (!isSubmitted && Object.keys(answers).length > 0) {
+    if (!isSubmitted && !isSubmitting && !submitMutation.isPending && Object.keys(answers).length > 0) {
       saveMutation.mutate();
     }
-  }, [answers, isSubmitted]);
+  }, [answers, isSubmitted, isSubmitting, submitMutation.isPending]);
 
   useEffect(() => {
     const timer = setTimeout(debouncedSave, 2000);
@@ -143,6 +149,8 @@ export default function PortalForm() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting || submitMutation.isPending) return;
+    setIsSubmitting(true);
     submitMutation.mutate();
   };
 
@@ -376,7 +384,7 @@ export default function PortalForm() {
                     </Button>
                     <Button
                       type="submit"
-                      disabled={submitMutation.isPending}
+                      disabled={submitMutation.isPending || isSubmitting}
                       data-testid="button-submit-form"
                     >
                       {submitMutation.isPending ? (
