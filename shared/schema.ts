@@ -435,6 +435,13 @@ export const insertMinorProfileSchema = createInsertSchema(minorProfiles).omit({
   consentSignature: z.string().trim().min(2).max(160),
 });
 
+export const minorConsentRenewalSchema = z.object({
+  consentGiven: z.literal(true),
+  consentSignature: z.string().trim().min(2).max(160),
+}).strict();
+
+export type MinorConsentRenewal = z.infer<typeof minorConsentRenewalSchema>;
+
 export const insertDiscoveryPassSchema = createInsertSchema(discoveryPasses).omit({
   id: true,
   createdAt: true,

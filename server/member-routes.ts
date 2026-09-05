@@ -17,6 +17,7 @@ import {
   memberLifecycles,
   memberships,
   membershipPlans,
+  minorConsentRenewalSchema,
   minorProfiles,
   trialLeads,
   users,
@@ -398,6 +399,56 @@ export function registerMemberRoutes(app: Express) {
     } catch (error) {
       console.error(error);
       res.status(500).json({ code: "MINOR_CONSENT_REVOKE_FAILED", message: "Failed to revoke participant consent." });
+    }
+  });
+
+  app.post("/api/portal/minors/:id/restore-consent", requireAuth, async (req, res) => {
+    try {
+      const data = minorConsentRenewalSchema.parse(req.body);
+      const profile = await db.transaction(async (tx) => {
+        const [before] = await tx.select().from(minorProfiles).where(and(
+          eq(minorProfiles.id, req.params.id),
+          eq(minorProfiles.guardianUserId, req.session.userId!),
+        ));
+        if (!before) return null;
+        if (!before.consentRevokedAt) return { alreadyActive: true, profile: before };
+
+        const now = new Date();
+        const [after] = await tx.update(minorProfiles).set({
+          consentSignature: data.consentSignature,
+          consentedAt: now,
+          consentRevokedAt: null,
+          updatedAt: now,
+        }).where(eq(minorProfiles.id, before.id)).returning();
+        await tx.insert(memberAuditEvents).values({
+          actorId: req.session.userId!,
+          userId: req.session.userId!,
+          targetType: "minor_profile",
+          targetId: before.id,
+          action: "minor_consent_restored",
+          before: {
+            consentSignature: before.consentSignature,
+            consentedAt: before.consentedAt.toISOString(),
+            consentRevokedAt: before.consentRevokedAt.toISOString(),
+          },
+          after: {
+            consentSignature: after.consentSignature,
+            consentedAt: after.consentedAt.toISOString(),
+            consentRevokedAt: null,
+          },
+          reason: "Guardian provided fresh consent after revocation",
+        });
+        return { alreadyActive: false, profile: after };
+      });
+      if (!profile) return res.status(404).json({ code: "MINOR_PROFILE_NOT_FOUND" });
+      if (profile.alreadyActive) return res.status(409).json({ code: "MINOR_CONSENT_NOT_REVOKED", message: "This participant already has active consent." });
+      res.json(minorProfileResponse(profile.profile));
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ code: "INVALID_MINOR_CONSENT", message: "Please confirm consent and provide a valid guardian signature.", errors: error.flatten() });
+      }
+      console.error(error);
+      res.status(500).json({ code: "MINOR_CONSENT_RESTORE_FAILED", message: "Failed to restore participant consent." });
     }
   });
 

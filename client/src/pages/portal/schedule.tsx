@@ -61,7 +61,9 @@ export default function PortalSchedule() {
   const [activeDay, setActiveDay] = useState<DayOfWeek>(todayDay);
   const [selectedMinorId, setSelectedMinorId] = useState("");
   const [minorDialogOpen, setMinorDialogOpen] = useState(false);
+  const [consentDialogOpen, setConsentDialogOpen] = useState(false);
   const [editingMinorId, setEditingMinorId] = useState<string | null>(null);
+  const [reconsentMinorId, setReconsentMinorId] = useState<string | null>(null);
   const [minorForm, setMinorForm] = useState({
     firstName: "", lastName: "", dateOfBirth: "", emergencyContactName: "",
     emergencyContactPhone: "", emergencyContactRelationship: "", consentSignature: "", consentGiven: false,
@@ -138,6 +140,25 @@ export default function PortalSchedule() {
       variant: "destructive",
     }),
   });
+  const reconsent = useMutation({
+    mutationFn: async () => (await apiRequest("POST", `/api/portal/minors/${reconsentMinorId}/restore-consent`, {
+      consentGiven: minorForm.consentGiven,
+      consentSignature: minorForm.consentSignature,
+    })).json(),
+    onSuccess: (profile) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/portal/minors"] });
+      setSelectedMinorId(profile.id);
+      setConsentDialogOpen(false);
+      setReconsentMinorId(null);
+      setMinorForm({ firstName: "", lastName: "", dateOfBirth: "", emergencyContactName: "", emergencyContactPhone: "", emergencyContactRelationship: "", consentSignature: "", consentGiven: false });
+      toast({ title: copy.consentRestored });
+    },
+    onError: (error: Error) => toast({
+      title: copy.consentRestoreError,
+      description: localizeApiError(error.message, locale, copy.consentRestoreError),
+      variant: "destructive",
+    }),
+  });
   const classes = schedule.data || [];
   const classesForDay = (day: DayOfWeek) => classes.filter((item) => dayForOccurrence(item.start) === day);
   const todayClasses = classesForDay(todayDay);
@@ -159,6 +180,13 @@ export default function PortalSchedule() {
     minorSaveError: "No se pudo guardar el perfil",
     consentRevoked: "Consentimiento revocado",
     consentRevokeError: "No se pudo revocar el consentimiento",
+    consentRestored: "Consentimiento restaurado",
+    consentRestoreError: "No se pudo restaurar el consentimiento",
+    restoreConsent: "Restaurar consentimiento",
+    restoreConsentTitle: "Restaurar consentimiento",
+    restoreConsentDescription: "Confirma de nuevo el consentimiento para que esta participante pueda reservar clases.",
+    restoreConsentConfirm: "Confirmo que soy la tutora autorizada y vuelvo a dar consentimiento para participar.",
+    restoreConsentSave: "Confirmar y restaurar",
     minorFirstName: "Nombre de la menor",
     minorLastName: "Apellido de la menor",
     dateOfBirth: "Fecha de nacimiento",
@@ -200,6 +228,13 @@ export default function PortalSchedule() {
     minorSaveError: "Could not save participant profile",
     consentRevoked: "Consent revoked",
     consentRevokeError: "Could not revoke consent",
+    consentRestored: "Consent restored",
+    consentRestoreError: "Could not restore consent",
+    restoreConsent: "Restore consent",
+    restoreConsentTitle: "Restore consent",
+    restoreConsentDescription: "Confirm consent again so this participant can book classes.",
+    restoreConsentConfirm: "I confirm that I am the authorized guardian and give consent again for participation.",
+    restoreConsentSave: "Confirm and restore",
     minorFirstName: "Participant first name",
     minorLastName: "Participant last name",
     dateOfBirth: "Date of birth",
@@ -243,6 +278,11 @@ export default function PortalSchedule() {
       consentGiven: true,
     });
     setMinorDialogOpen(true);
+  };
+  const openReconsentDialog = (minor: MinorProfile) => {
+    setReconsentMinorId(minor.id);
+    setMinorForm({ firstName: "", lastName: "", dateOfBirth: "", emergencyContactName: "", emergencyContactPhone: "", emergencyContactRelationship: "", consentSignature: "", consentGiven: false });
+    setConsentDialogOpen(true);
   };
   const selectedMinor = (minors.data || []).find((minor) => minor.id === selectedMinorId);
   const actionFor = (item: LiveClass) => {
@@ -299,7 +339,8 @@ export default function PortalSchedule() {
                       <span className="text-sm text-gray-200">{minor.firstName} {minor.lastName}{minor.consentRevokedAt && <span className="ml-2 text-xs text-amber-300">{copy.consentRevokedStatus}</span>}</span>
                       <div className="flex gap-2">
                         <Button variant="ghost" size="sm" className="text-[#5EEBFF]" onClick={() => openEditMinorDialog(minor)}>{copy.editMinor}</Button>
-                        {!minor.consentRevokedAt && <Button variant="ghost" size="sm" className="text-amber-300" disabled={revokeConsent.isPending} onClick={() => window.confirm(copy.revokeConfirm) && revokeConsent.mutate(minor.id)}>{copy.revokeConsent}</Button>}
+                        {minor.consentRevokedAt ? <Button variant="ghost" size="sm" className="text-[#5EEBFF]" disabled={reconsent.isPending} onClick={() => openReconsentDialog(minor)}>{copy.restoreConsent}</Button> :
+                          <Button variant="ghost" size="sm" className="text-amber-300" disabled={revokeConsent.isPending} onClick={() => window.confirm(copy.revokeConfirm) && revokeConsent.mutate(minor.id)}>{copy.revokeConsent}</Button>}
                       </div>
                     </div>)}
                   </div>}
@@ -395,6 +436,30 @@ export default function PortalSchedule() {
             <Button variant="ghost" onClick={() => setMinorDialogOpen(false)}>{copy.cancel}</Button>
             <Button onClick={() => editingMinorId ? updateMinor.mutate() : createMinor.mutate()} disabled={createMinor.isPending || updateMinor.isPending || !minorForm.firstName || !minorForm.lastName || !minorForm.dateOfBirth || !minorForm.emergencyContactName || !minorForm.emergencyContactPhone || !minorForm.emergencyContactRelationship || (!editingMinorId && (!minorForm.consentGiven || !minorForm.consentSignature))} className="bg-[#B06CFF] text-white hover:bg-[#B06CFF]/90">
               {(createMinor.isPending || updateMinor.isPending) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}{copy.saveMinor}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={consentDialogOpen} onOpenChange={setConsentDialogOpen}>
+        <DialogContent className="border-white/10 bg-[#121826] text-white">
+          <DialogHeader>
+            <DialogTitle>{copy.restoreConsentTitle}</DialogTitle>
+            <DialogDescription className="text-gray-400">{copy.restoreConsentDescription}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="renewed-minor-signature">{copy.guardianSignature}</Label>
+              <Input id="renewed-minor-signature" value={minorForm.consentSignature} onChange={(event) => setMinorForm({ ...minorForm, consentSignature: event.target.value })} className="border-white/10 bg-[#0B0F14] text-white" />
+            </div>
+            <label className="flex items-start gap-3 text-sm text-gray-300">
+              <input type="checkbox" checked={minorForm.consentGiven} onChange={(event) => setMinorForm({ ...minorForm, consentGiven: event.target.checked })} className="mt-1 h-4 w-4 accent-[#B06CFF]" />
+              {copy.restoreConsentConfirm}
+            </label>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setConsentDialogOpen(false)}>{copy.cancel}</Button>
+            <Button onClick={() => reconsent.mutate()} disabled={reconsent.isPending || !minorForm.consentGiven || !minorForm.consentSignature.trim()} className="bg-[#B06CFF] text-white hover:bg-[#B06CFF]/90">
+              {reconsent.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}{copy.restoreConsentSave}
             </Button>
           </DialogFooter>
         </DialogContent>

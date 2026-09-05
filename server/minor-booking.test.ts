@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { insertMinorProfileSchema } from "@shared/schema";
+import { insertMinorProfileSchema, minorConsentRenewalSchema } from "@shared/schema";
 import { isGirlsClass, minorAgeAt } from "./member-entitlements";
 import { localizeFormText } from "../client/src/lib/locale";
 import { localizedClassTitle } from "../client/src/lib/class-booking";
@@ -45,6 +45,21 @@ test("minor profile data requires contact details and guardian consent fields", 
     emergencyContactRelationship: "Mother",
     consentSignature: "",
     consentedAt: new Date(),
+  }).success, false);
+});
+
+test("restoring consent requires a fresh guardian signature and explicit confirmation", () => {
+  assert.equal(minorConsentRenewalSchema.safeParse({
+    consentGiven: true,
+    consentSignature: "Ana Rivera",
+  }).success, true);
+  assert.equal(minorConsentRenewalSchema.safeParse({
+    consentGiven: false,
+    consentSignature: "Ana Rivera",
+  }).success, false);
+  assert.equal(minorConsentRenewalSchema.safeParse({
+    consentGiven: true,
+    consentSignature: " ",
   }).success, false);
 });
 
