@@ -1,0 +1,1053 @@
+You are Replit Agent.
+
+The Ground Up Member System foundation is implemented.
+
+This task is the FINAL PILOT-READINESS IMPLEMENTATION PASS.
+
+Do NOT redesign the public website.
+Do NOT replace Google Calendar.
+Do NOT replace class_reservations.
+Do NOT create duplicate booking, waitlist, member, or attendance systems.
+Do NOT add recurring billing yet.
+
+The remaining work is:
+
+1. Complete the phone-first coach class check-in workflow
+2. Complete the admin membership-plan and Discovery Pass management UI
+3. Execute a full fixture-backed Discovery → Membership → Weekly Entitlement lifecycle proof
+4. Add the minimum capacity/utilization reporting needed to operate a small boutique gym
+5. Complete English/Spanish parity for every new operational surface
+
+When complete, Ground Up should be usable by:
+
+- prospect
+- Discovery Pass guest
+- active member
+- coach
+- admin
+
+without requiring direct database/API manipulation.
+
+---
+
+# 1. COACH CLASS CHECK-IN — BUILD THE UI
+
+Create a phone-first coach roster/check-in experience.
+
+The coach should not need to use admin class-management screens.
+
+Entry point:
+
+COACH
+→ TODAY'S CLASSES
+→ SELECT CLASS
+→ ROSTER
+
+Each roster row should clearly show:
+
+- member name
+- preferred language if useful
+- reservation status
+- membership / Discovery indicator
+- Discovery category if applicable:
+  SKILL
+  STRENGTH
+- attendance status
+
+Actions:
+
+PRESENT
+NO SHOW
+LATE CANCEL
+EXCUSED
+
+Do not show cancelled-on-time members as active attendees unless useful in a collapsed history section.
+
+---
+
+# 2. COACH CHECK-IN UX
+
+Optimize for a coach holding a phone.
+
+Requirements:
+
+- large tap targets
+- no desktop table dependency
+- six members should fit comfortably into a short scroll
+- confirmation should be immediate
+- accidental double taps must not create duplicate events
+- corrections should be possible
+- corrections should require reason when entitlement behavior changes
+
+Suggested display:
+
+MARIA G.
+Ground Up 3
+Discovery: none
+
+[ PRESENT ]
+
+or after action:
+
+✓ PRESENT
+[ Correct ]
+
+---
+
+# 3. COACH CLASS SUMMARY
+
+At the top of each class show:
+
+Class name
+Date
+Time
+Coach
+Capacity
+
+Then:
+
+Reserved: 6
+Present: 5
+No-show: 1
+Waitlisted: 2
+
+If Discovery participants are present:
+
+Discovery: 1
+
+Keep this operational, not analytical.
+
+---
+
+# 4. COACH MEMBER QUICK VIEW
+
+From the roster, allow authorized coach to open a lightweight member drawer/page containing:
+
+- name
+- goals
+- membership/pass
+- Discovery progress
+- recent attendance
+- required-form completion
+- coach notes
+
+Do not expose admin-only information.
+
+Preserve assigned-member/object authorization.
+
+---
+
+# 5. ADMIN OPERATIONS UI
+
+The APIs already exist.
+
+Now build the UI required to operate them.
+
+Create clean admin sections for:
+
+MEMBERSHIP PLANS
+
+DISCOVERY PASSES
+
+MEMBER PROGRAM
+
+ATTENDANCE / UTILIZATION
+
+Do not turn the portal into a generic ERP.
+
+---
+
+# 6. ADMIN MEMBERSHIP PLAN UI
+
+Create:
+
+Admin
+→ Membership Plans
+
+Show:
+
+- plan name
+- status
+- weekly sessions
+- eligible classes/categories
+- booking window
+- waitlist
+- cancellation cutoff
+- private-session allowance
+- personalized-program flag
+
+Actions:
+
+- create plan
+- edit plan
+- activate/deactivate
+
+Do not expose raw JSON to normal admins.
+
+---
+
+# 7. PLAN EDITING
+
+Plan form should support:
+
+Plan Name
+
+Internal Key
+(read-only after creation if necessary)
+
+Weekly Sessions
+
+Eligible Categories:
+- Skill
+- Strength
+- Both
+
+Booking Window
+
+Week Start
+
+Timezone
+
+Waitlist Allowed
+
+Cancellation Cutoff
+
+Late Cancel Behavior
+
+No-Show Behavior
+
+Rollover Policy
+
+Private Sessions / Month
+
+Personalized Program
+
+Display Price
+
+Active / Inactive
+
+Use plain operational language.
+
+---
+
+# 8. INITIAL PLAN FIXTURES — ONLY IF AUTHORIZED BY EXISTING CONFIG
+
+Do not hard-code commercial pricing unless it has already been approved.
+
+However, the system must be capable of representing:
+
+GROUND UP 2
+2 sessions/week
+
+GROUND UP 3
+3 sessions/week
+
+GROUND UP PERSONAL
+weekly sessions + private/personalized benefits
+
+If these do not already exist, create safe inactive draft plans or leave creation to admin.
+
+Do not invent final prices.
+
+---
+
+# 9. ADMIN MEMBER PROGRAM UI
+
+Inside member profile add a clear:
+
+PROGRAM
+
+section.
+
+Display:
+
+Lifecycle:
+PROSPECT / DISCOVERY / ACTIVE / INACTIVE
+
+Current Plan
+
+Effective Date
+
+Weekly Sessions
+
+This Week:
+2 of 3 used/scheduled
+
+Discovery Pass:
+if applicable
+
+Actions available to admin:
+
+- assign plan
+- change plan
+- pause
+- cancel
+- issue Discovery Pass
+- extend Discovery Pass
+- restore entitlement
+- mark follow-up
+- convert
+
+All exceptional actions must audit actor + reason.
+
+---
+
+# 10. DISCOVERY PASS ADMIN UI
+
+Create:
+
+Admin
+→ Discovery Passes
+
+Filters:
+
+- Active
+- Completed
+- Expiring
+- Converted
+- Expired
+- Follow Up
+
+Each record should show:
+
+Name
+Claim date
+Expiration
+Skill status
+Strength status
+Overall progress
+Follow-up status
+Conversion state
+
+---
+
+# 11. DISCOVERY DETAIL
+
+For one prospect show:
+
+DISCOVERY PASS
+
+Skill
+Jiu-Jitsu / Self-Defense
+AVAILABLE / BOOKED / ATTENDED / EXPIRED
+
+Strength
+Strength & Conditioning
+AVAILABLE / BOOKED / ATTENDED / EXPIRED
+
+Pass expires:
+[date]
+
+Actions:
+
+EXTEND
+RESTORE SKILL
+RESTORE STRENGTH
+CANCEL PASS
+CONVERT TO MEMBER
+
+Admin overrides require reason.
+
+---
+
+# 12. DISCOVERY FOLLOW-UP QUEUE
+
+Create a practical queue for staff.
+
+Important groups:
+
+COMPLETED — NEEDS FOLLOW-UP
+
+EXPIRING SOON
+
+COMPLETED — JOINED
+
+NOT READY
+
+FOLLOW UP
+
+DECLINED
+
+The highest-value queue is:
+
+2 of 2 completed
+→ membership conversation needed
+
+Do not automate aggressive sales outreach.
+
+---
+
+# 13. MEMBER DASHBOARD — COMPLETE DISCOVERY EXPERIENCE
+
+Verify that a Discovery participant sees:
+
+YOUR GROUND UP DISCOVERY PASS
+
+Skill:
+status + action
+
+Strength:
+status + action
+
+Progress:
+0/2
+1/2
+2/2
+
+Expiration
+
+After 2/2 attended:
+
+YOU'VE EXPERIENCED BOTH SIDES OF GROUND UP
+
+Then:
+
+VIEW MEMBERSHIP OPTIONS
+
+or
+
+TALK TO US ABOUT MEMBERSHIP
+
+depending on current commerce state.
+
+---
+
+# 14. MEMBER DASHBOARD — ACTIVE MEMBER
+
+For ACTIVE_MEMBER show:
+
+YOUR TRAINING THIS WEEK
+
+Example:
+
+2 of 3 sessions scheduled
+
+1 session remaining
+
+Then:
+
+NEXT CLASS
+
+and:
+
+VIEW SCHEDULE
+
+Do not show Discovery Pass actions to a normal active member unless an admin explicitly issued one.
+
+---
+
+# 15. ENTITLEMENT UX
+
+Translate structured server eligibility codes into clear member language.
+
+Examples:
+
+WEEKLY_LIMIT_REACHED
+
+English:
+You've scheduled all of your sessions for this week.
+
+Spanish:
+Ya reservaste todas tus sesiones de esta semana.
+
+BOOKING_WINDOW_CLOSED
+
+English:
+Booking for this class is not open yet.
+
+Spanish:
+Las reservaciones para esta clase todavía no están abiertas.
+
+CLASS_FULL_WAITLIST_AVAILABLE
+
+English:
+This class is full. You can join the waitlist.
+
+Spanish:
+Esta clase está llena. Puedes unirte a la lista de espera.
+
+No raw enum codes may appear in UI.
+
+---
+
+# 16. FULL FIXTURE-BACKED LIFECYCLE PROOF
+
+This is mandatory.
+
+Create isolated synthetic test data.
+
+Execute:
+
+PROSPECT
+→ onboarding
+→ Discovery Pass issued/claimed
+→ Skill class reserved
+→ Skill attended
+→ Strength class reserved
+→ Strength attended
+→ Discovery completed
+→ staff follow-up created
+→ membership plan assigned
+→ lifecycle becomes ACTIVE_MEMBER
+→ weekly entitlement becomes available
+→ member books eligible class
+→ ledger reservation entry
+→ member attends
+→ ledger consumed
+→ member books another class
+→ timely cancellation
+→ entitlement released
+→ My Training reflects correct state
+
+Use real application services and database logic.
+
+Do not create a fake parallel test engine.
+
+---
+
+# 17. DISCOVERY ORDER TEST
+
+Also prove:
+
+Strength first
+→ Skill second
+
+works correctly.
+
+The Discovery Pass must not require Skill to occur before Strength.
+
+---
+
+# 18. DISCOVERY DUPLICATE TEST
+
+Prove:
+
+same normalized email / phone / existing pass
+
+cannot obtain another Discovery Pass automatically.
+
+Then prove:
+
+admin override
++ reason
++ audit event
+
+works.
+
+---
+
+# 19. WEEKLY ENTITLEMENT PROOF
+
+Create synthetic plans:
+
+TEST_2X
+weekly limit = 2
+
+TEST_3X
+weekly limit = 3
+
+Test:
+
+2X member:
+
+booking 1 → allowed
+booking 2 → allowed
+booking 3 → WEEKLY_LIMIT_REACHED
+
+Then:
+
+cancel booking 2 on time
+
+booking 3 → allowed
+
+---
+
+# 20. WEEK BOUNDARY TEST
+
+Prove Monday–Sunday behavior.
+
+Example:
+
+Sunday class belongs to prior membership week.
+
+Monday class belongs to next week.
+
+A reservation created earlier must still consume entitlement based on class occurrence date.
+
+Test America/Los_Angeles.
+
+---
+
+# 21. WAITLIST + ENTITLEMENT TEST
+
+Prove:
+
+full class
+→ member joins waitlist
+→ zero entitlement consumed
+
+seat opens
+→ promotion runs eligibility again
+
+If member has meanwhile used weekly allowance elsewhere:
+
+do NOT promote illegally.
+
+Handle according to existing safe policy and report result.
+
+---
+
+# 22. NO-SHOW / LATE-CANCEL TEST
+
+Using plan policy:
+
+NO SHOW
+
+LATE CANCEL
+
+Verify whether the session remains consumed according to configuration.
+
+Do not add fees.
+
+---
+
+# 23. ATTENDANCE CORRECTION TEST
+
+Coach/admin:
+
+PRESENT
+→ corrected to EXCUSED
+
+Verify:
+
+- audit history
+- actor
+- reason
+- entitlement reconciliation if policy requires it
+
+Historical state must remain auditable.
+
+---
+
+# 24. CAPACITY / UTILIZATION ADMIN REPORT
+
+Build the minimum useful boutique-gym operational report.
+
+Admin
+→ Capacity
+
+THIS WEEK
+
+Total Class Seats
+
+Reserved
+
+Attended
+
+Waitlisted
+
+Reservation Utilization %
+
+Attendance Utilization %
+
+Discovery Visits
+
+No-Shows
+
+---
+
+# 25. CLASS-LEVEL UTILIZATION
+
+Show each class:
+
+Monday 5 PM
+Jiu-Jitsu / Self-Defense
+
+Capacity: 6
+Reserved: 6
+Attended: 5
+Waitlisted: 2
+
+Utilization:
+83% attendance
+
+This should help decide whether another class time is needed.
+
+---
+
+# 26. MEMBERSHIP ENTITLEMENT DEMAND
+
+Display:
+
+WEEKLY SEAT SUPPLY
+
+versus
+
+WEEKLY MEMBER ENTITLEMENT
+
+Example:
+
+Available weekly seats:
+66
+
+Active weekly entitlement:
+48
+
+Do NOT automatically block sales yet.
+
+Flag states:
+
+HEALTHY
+
+WATCH
+
+CAPACITY RISK
+
+Use simple thresholds only if clearly documented and configurable.
+
+Do not present them as scientific certainty.
+
+---
+
+# 27. DISCOVERY CONVERSION REPORT
+
+Track:
+
+Passes claimed
+
+Skill attended
+
+Strength attended
+
+2 of 2 completed
+
+Converted
+
+Conversion rate
+
+Do not count CLAIMED as a completed trial.
+
+---
+
+# 28. ENGLISH / SPANISH PARITY
+
+Every UI built in this pass must be fully localized.
+
+English selected:
+English everywhere.
+
+Español selected:
+Spanish everywhere.
+
+Cover:
+
+coach check-in
+
+admin plan UI
+
+Discovery admin
+
+member program
+
+capacity report
+
+eligibility messages
+
+attendance
+
+follow-up states
+
+audit actions
+
+No mixed-language interfaces.
+
+---
+
+# 29. CANONICAL VALUES
+
+Internal:
+
+PRESENT
+NO_SHOW
+DISCOVERY_PASS
+SKILL
+STRENGTH
+FOLLOW_UP
+
+UI:
+
+English/Spanish dictionaries
+
+Do not store Spanish strings as domain state.
+
+---
+
+# 30. MOBILE QA
+
+Manually or through available rendered QA test:
+
+320px
+375px
+390px
+430px
+
+Priority:
+
+Coach roster
+
+Discovery dashboard
+
+Member Schedule
+
+Admin Discovery list
+
+Admin member program
+
+Admin plan edit
+
+No page-level horizontal overflow.
+
+---
+
+# 31. ADMIN DESKTOP QA
+
+Because admin configuration is more complex, also test standard desktop widths.
+
+Verify:
+
+- usable tables
+- filters
+- edit dialogs
+- plan forms
+- member program
+- capacity report
+
+---
+
+# 32. FORM RESPONSE INTEGRITY
+
+The audit previously noted the app assumes one response per user/form.
+
+Verify whether the new uniqueness constraint was actually implemented safely.
+
+If not:
+
+add a safe migration for unique `(userId, formId)`
+
+ONLY after checking for existing duplicates.
+
+If duplicates exist:
+
+do not delete blindly.
+
+Reconcile them with a documented migration strategy.
+
+---
+
+# 33. DO NOT BUILD BILLING
+
+Still no recurring Stripe membership billing in this pass.
+
+The operating model must work with admin-assigned membership first.
+
+---
+
+# 34. DO NOT ENABLE RESERVED DISCOVERY SEATS
+
+Keep Discovery-specific seat reservation disabled.
+
+Measure real utilization first.
+
+Do not create artificial capacity complexity before pilot data exists.
+
+---
+
+# 35. EMAIL / NOTIFICATION MINIMUM
+
+Implement at least in-app/staff notification for:
+
+Discovery Pass completed
+
+Discovery Pass expiring soon
+
+Membership conversion ready
+
+Do not block pilot if fully automated email campaigns are incomplete.
+
+Class booking lifecycle email must remain working.
+
+---
+
+# 36. TEST SUITE
+
+Run:
+
+npm run check
+npm test
+npm run test:evidence
+npm run build
+git diff --check
+
+Add new targeted evidence test if appropriate:
+
+npm run test:member-system
+
+or equivalent.
+
+Report exact test counts.
+
+---
+
+# 37. FIXTURE CLEANUP
+
+After lifecycle proof:
+
+remove:
+
+- synthetic users
+- test memberships
+- test plans
+- Discovery passes
+- reservations
+- occurrences
+- ledger entries
+- notifications
+
+No test data should remain in production-facing development datasets unless explicitly namespaced.
+
+---
+
+# 38. PRODUCTION SAFETY
+
+Do NOT publish automatically.
+
+At completion state whether Replit Publish is safe.
+
+Production schema migration must be included in the normal deployment process.
+
+---
+
+# 39. FINAL EVIDENCE TABLE
+
+Return:
+
+| Capability | Result |
+|---|---|
+| Coach mobile check-in | PASS/FAIL |
+| Admin plan UI | PASS/FAIL |
+| Discovery admin UI | PASS/FAIL |
+| Prospect onboarding | PASS/FAIL |
+| Skill Discovery booking | PASS/FAIL |
+| Strength Discovery booking | PASS/FAIL |
+| 2 of 2 completion | PASS/FAIL |
+| Duplicate protection | PASS/FAIL |
+| Conversion to membership | PASS/FAIL |
+| 2x weekly limit | PASS/FAIL |
+| 3x weekly limit | PASS/FAIL |
+| Weekly reset | PASS/FAIL |
+| Cancellation release | PASS/FAIL |
+| Waitlist entitlement | PASS/FAIL |
+| Attendance consumption | PASS/FAIL |
+| Attendance correction | PASS/FAIL |
+| Capacity report | PASS/FAIL |
+| English UI | PASS/FAIL |
+| Spanish UI | PASS/FAIL |
+| Mobile QA | PASS/FAIL |
+
+No "implemented" result counts as PASS without exercised evidence.
+
+---
+
+# 40. FINAL REPORT
+
+Return:
+
+# GROUND UP MEMBER SYSTEM PILOT-READINESS REPORT
+
+A. Coach Check-In
+
+B. Admin Membership Management
+
+C. Discovery Management
+
+D. Member Discovery Experience
+
+E. Active Member Experience
+
+F. Entitlement Engine Evidence
+
+G. Discovery Lifecycle Proof
+
+H. Membership Conversion Proof
+
+I. Attendance
+
+J. Waitlist
+
+K. Capacity Analytics
+
+L. English / Spanish
+
+M. Mobile QA
+
+N. Security
+
+O. Database Migration
+
+P. Tests
+
+Q. Fixture Cleanup
+
+R. Remaining Limitations
+
+S. Publish Recommendation
+
+---
+
+# 41. FINAL VERDICT
+
+End with exactly one:
+
+GROUND UP MEMBER SYSTEM READY FOR PILOT
+
+GROUND UP MEMBER SYSTEM READY FOR PILOT — DOCUMENTED LIMITATIONS
+
+GROUND UP MEMBER SYSTEM NOT READY — OPERATIONS UI
+
+GROUND UP MEMBER SYSTEM NOT READY — ENTITLEMENT PROOF
+
+GROUND UP MEMBER SYSTEM NOT READY — LOCALIZATION
+
+GROUND UP MEMBER SYSTEM NOT READY — MULTIPLE BLOCKERS
+
+---
+
+# FINAL OPERATING MODEL
+
+The coach should be able to run today's class from a phone.
+
+The admin should be able to manage memberships and Discovery Passes without touching code or APIs.
+
+A prospect should move:
+
+REGISTER
+→ DISCOVERY PASS
+→ SKILL
+→ STRENGTH
+→ MEMBERSHIP
+
+An active member should see:
+
+WHAT CAN I BOOK?
+WHAT HAVE I BOOKED?
+HOW MANY SESSIONS DO I HAVE THIS WEEK?
+WHAT IS MY NEXT CLASS?
+
+And Ground Up management should know:
+
+HOW FULL ARE OUR CLASSES?
+WHERE ARE THE WAITLISTS?
+HOW MANY DISCOVERY VISITORS CONVERT?
+HOW CLOSE ARE WE TO CAPACITY?
+
+Complete these operational surfaces and prove the lifecycle before publishing.
