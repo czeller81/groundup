@@ -8,6 +8,7 @@ import {
   entitlementLedger,
   memberships,
   membershipPlans,
+  type MinorProfile,
   type ClassOccurrence,
   type MembershipPlan,
   type User,
@@ -28,17 +29,24 @@ export type BookingEligibilityCode =
   | "DISCOVERY_STRENGTH_ALREADY_USED"
   | "DISCOVERY_EXPIRED"
   | "DUPLICATE_RESERVATION"
-  | "OVERLAPPING_RESERVATION";
+  | "OVERLAPPING_RESERVATION"
+  | "MINOR_PROFILE_REQUIRED"
+  | "MINOR_CONSENT_REQUIRED"
+  | "MINOR_AGE_RESTRICTED"
+  | "GIRLS_CLASS_ONLY"
+  | "MINOR_DUPLICATE_RESERVATION"
+  | "MINOR_OVERLAPPING_RESERVATION";
 
 export type BookingEligibility = {
   eligible: boolean;
   code: BookingEligibilityCode;
   message: string;
   waitlistAllowed: boolean;
-  source: "legacy" | "membership" | "discovery";
+  source: "legacy" | "membership" | "discovery" | "minor";
   membershipId?: string;
   plan?: MembershipPlan;
   discoveryEntitlementId?: string;
+  minorProfileId?: string;
   weekStart?: Date;
 };
 
@@ -58,7 +66,26 @@ const messages: Record<BookingEligibilityCode, string> = {
   DISCOVERY_EXPIRED: "Your Discovery Pass has expired.",
   DUPLICATE_RESERVATION: "You already have a reservation for this class.",
   OVERLAPPING_RESERVATION: "You already have another class during this time.",
+  MINOR_PROFILE_REQUIRED: "A guardian must select an approved minor profile for this girls' class.",
+  MINOR_CONSENT_REQUIRED: "Guardian consent and emergency contact details are required before booking.",
+  MINOR_AGE_RESTRICTED: "This class is reserved for participants under 18.",
+  GIRLS_CLASS_ONLY: "This participant profile can only be used for a girls' class.",
+  MINOR_DUPLICATE_RESERVATION: "This participant is already reserved for this class.",
+  MINOR_OVERLAPPING_RESERVATION: "This participant already has another class during this time.",
 };
+
+export const GIRLS_CLASS_CATEGORY = "GIRLS_JIU_JITSU_SELF_DEFENSE";
+
+export function isGirlsClass(occurrence: Pick<ClassOccurrence, "canonicalCategory" | "audienceGroup">) {
+  return occurrence.canonicalCategory === GIRLS_CLASS_CATEGORY || occurrence.audienceGroup === "FEMALE_YOUTH";
+}
+
+export function minorAgeAt(dateOfBirth: Date, at: Date) {
+  let age = at.getUTCFullYear() - dateOfBirth.getUTCFullYear();
+  const month = at.getUTCMonth() - dateOfBirth.getUTCMonth();
+  if (month < 0 || (month === 0 && at.getUTCDate() < dateOfBirth.getUTCDate())) age -= 1;
+  return age;
+}
 
 function result(
   code: BookingEligibilityCode,
@@ -191,6 +218,7 @@ export async function evaluateBookingEligibilityWithExecutor(
   if (occurrence.start <= now || occurrence.status !== "active" || !occurrence.bookingEnabled) {
     return result("BOOKING_WINDOW_CLOSED");
   }
+  if (isGirlsClass(occurrence)) return result("MINOR_PROFILE_REQUIRED");
 
   const classType = occurrence.classTypeId
     ? (await executor.select().from(classTypes).where(eq(classTypes.id, occurrence.classTypeId))).at(0) || null
@@ -279,6 +307,53 @@ export async function evaluateBookingEligibilityWithExecutor(
     waitlistAllowed: plan.waitlistAllowed,
     weekStart,
   }));
+}
+
+export async function evaluateMinorBookingEligibilityWithExecutor(
+  minorProfile: MinorProfile,
+  occurrence: ClassOccurrence,
+  executor: SelectExecutor,
+): Promise<BookingEligibility> {
+  const now = new Date();
+  if (occurrence.start <= now || occurrence.status !== "active" || !occurrence.bookingEnabled) {
+    return result("BOOKING_WINDOW_CLOSED", { source: "minor", minorProfileId: minorProfile.id });
+  }
+  if (!isGirlsClass(occurrence)) {
+    return result("GIRLS_CLASS_ONLY", { source: "minor", minorProfileId: minorProfile.id });
+  }
+  if (!minorProfile.consentedAt || !minorProfile.consentSignature || !minorProfile.emergencyContactName || !minorProfile.emergencyContactPhone) {
+    return result("MINOR_CONSENT_REQUIRED", { source: "minor", minorProfileId: minorProfile.id });
+  }
+  if (minorAgeAt(minorProfile.dateOfBirth, occurrence.start) < 0 || minorAgeAt(minorProfile.dateOfBirth, occurrence.start) >= 18) {
+    return result("MINOR_AGE_RESTRICTED", { source: "minor", minorProfileId: minorProfile.id });
+  }
+
+  const duplicate = await executor.select({ id: classReservations.id }).from(classReservations).where(and(
+    eq(classReservations.occurrenceId, occurrence.id),
+    eq(classReservations.minorProfileId, minorProfile.id),
+    inArray(classReservations.status, ["confirmed", "waitlisted"]),
+  )).limit(1);
+  if (duplicate.length) return result("MINOR_DUPLICATE_RESERVATION", { source: "minor", minorProfileId: minorProfile.id });
+
+  const overlap = await executor.select({ id: classReservations.id })
+    .from(classReservations)
+    .innerJoin(classOccurrences, eq(classReservations.occurrenceId, classOccurrences.id))
+    .where(and(
+      eq(classReservations.minorProfileId, minorProfile.id),
+      eq(classReservations.status, "confirmed"),
+      sql`${classOccurrences.start} < ${occurrence.end}`,
+      sql`${classOccurrences.end} > ${occurrence.start}`,
+    )).limit(1);
+  if (overlap.length) return result("MINOR_OVERLAPPING_RESERVATION", { source: "minor", minorProfileId: minorProfile.id });
+
+  const [confirmed] = await executor.select({ value: count() }).from(classReservations).where(and(
+    eq(classReservations.occurrenceId, occurrence.id),
+    eq(classReservations.status, "confirmed"),
+  ));
+  return result(
+    Number(confirmed?.value || 0) >= occurrence.capacity ? "CLASS_FULL_WAITLIST_AVAILABLE" : "ELIGIBLE",
+    { source: "minor", minorProfileId: minorProfile.id, waitlistAllowed: true },
+  );
 }
 
 async function applyReservationChecks(

@@ -175,8 +175,8 @@ export default function PortalCoach() {
                     <div key={reservation.id} className="rounded-lg border border-white/5 bg-[#121826] p-3">
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <button onClick={() => reservation.member?.id && setQuickViewMemberId(reservation.member.id)} className="min-w-0 text-left">
-                          <p className="truncate text-sm font-semibold text-white">{reservation.member ? `${reservation.member.firstName} ${reservation.member.lastName}` : `${reservation.visitorFirstName || ""} ${reservation.visitorLastName || ""}`}</p>
-                          <p className="text-xs text-gray-400">{reservation.program === "DISCOVERY_PASS" ? `${copy.discoveryPassTitle} · ${reservation.discoveryCategory}` : copy.member} · {reservation.status === "waitlisted" ? copy.waitlisted : copy.confirmed}</p>
+                          <p className="truncate text-sm font-semibold text-white">{reservation.minorProfile ? `${reservation.minorProfile.firstName} ${reservation.minorProfile.lastName}` : reservation.member ? `${reservation.member.firstName} ${reservation.member.lastName}` : `${reservation.visitorFirstName || ""} ${reservation.visitorLastName || ""}`}</p>
+                          <p className="text-xs text-gray-400">{reservation.program === "MINOR" ? (locale === "es" ? "Participante menor" : "Minor participant") : reservation.program === "DISCOVERY_PASS" ? `${copy.discoveryPassTitle} · ${reservation.discoveryCategory}` : copy.member} · {reservation.status === "waitlisted" ? copy.waitlisted : copy.confirmed}</p>
                         </button>
                         {reservation.status === "confirmed" && (
                           <div className="grid grid-cols-2 gap-1 sm:flex">

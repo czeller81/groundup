@@ -71,7 +71,7 @@ const CANONICAL_CLASS_TYPES = [
     defaultTrainerId: null,
     membershipRequired: true,
     active: true,
-    bookingEnabled: false,
+    bookingEnabled: true,
   },
   {
     name: "Strength & Conditioning — Lower Body",

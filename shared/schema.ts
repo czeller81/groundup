@@ -197,6 +197,23 @@ export const emergencyContacts = pgTable("emergency_contacts", {
   userUnique: uniqueIndex("emergency_contacts_user_unique").on(table.userId),
 }));
 
+export const minorProfiles = pgTable("minor_profiles", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  guardianUserId: varchar("guardian_user_id").notNull().references(() => users.id),
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name").notNull(),
+  dateOfBirth: timestamp("date_of_birth").notNull(),
+  emergencyContactName: text("emergency_contact_name").notNull(),
+  emergencyContactPhone: text("emergency_contact_phone").notNull(),
+  emergencyContactRelationship: text("emergency_contact_relationship").notNull(),
+  consentSignature: text("consent_signature").notNull(),
+  consentedAt: timestamp("consented_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  guardianIndex: index("minor_profiles_guardian_idx").on(table.guardianUserId),
+}));
+
 export const discoveryPasses = pgTable("discovery_passes", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id),
@@ -403,6 +420,20 @@ export const insertEmergencyContactSchema = createInsertSchema(emergencyContacts
   updatedAt: true,
 });
 
+export const insertMinorProfileSchema = createInsertSchema(minorProfiles).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  firstName: z.string().trim().min(1).max(80),
+  lastName: z.string().trim().min(1).max(80),
+  dateOfBirth: z.coerce.date(),
+  emergencyContactName: z.string().trim().min(1).max(120),
+  emergencyContactPhone: z.string().trim().min(7).max(30),
+  emergencyContactRelationship: z.string().trim().min(1).max(80),
+  consentSignature: z.string().trim().min(2).max(160),
+});
+
 export const insertDiscoveryPassSchema = createInsertSchema(discoveryPasses).omit({
   id: true,
   createdAt: true,
@@ -468,6 +499,9 @@ export type MemberGoal = typeof memberGoals.$inferSelect;
 
 export type InsertEmergencyContact = z.infer<typeof insertEmergencyContactSchema>;
 export type EmergencyContact = typeof emergencyContacts.$inferSelect;
+
+export type InsertMinorProfile = z.infer<typeof insertMinorProfileSchema>;
+export type MinorProfile = typeof minorProfiles.$inferSelect;
 
 export type InsertDiscoveryPass = z.infer<typeof insertDiscoveryPassSchema>;
 export type DiscoveryPass = typeof discoveryPasses.$inferSelect;
@@ -698,6 +732,7 @@ export const classReservations = pgTable("class_reservations", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   occurrenceId: varchar("occurrence_id").notNull().references(() => classOccurrences.id),
   userId: varchar("user_id").references(() => users.id),
+  minorProfileId: varchar("minor_profile_id").references(() => minorProfiles.id),
   visitorFirstName: text("visitor_first_name"),
   visitorLastName: text("visitor_last_name"),
   visitorEmail: text("visitor_email"),

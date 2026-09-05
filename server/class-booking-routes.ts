@@ -10,7 +10,7 @@ import {
   ensureDefaultClassTypes,
   syncGoogleClassSchedule,
 } from "./class-booking-sync";
-import { evaluateBookingEligibility } from "./member-entitlements";
+import { evaluateBookingEligibility, isGirlsClass } from "./member-entitlements";
 import { sendClassLifecycleEmail } from "./email";
 
 const reservationSchema = z.object({
@@ -66,6 +66,7 @@ function publicOccurrence(occurrence: Awaited<ReturnType<typeof storage.listClas
     firstVisitEligible: occurrence.firstVisitEligible,
     audience: occurrence.audience,
     audienceGroup: occurrence.audienceGroup,
+    girlsClass: isGirlsClass(occurrence),
     canonicalCategory: occurrence.canonicalCategory,
     strengthFocus: occurrence.strengthFocus,
     classType: occurrence.classType ? {
@@ -82,6 +83,13 @@ function publicOccurrence(occurrence: Awaited<ReturnType<typeof storage.listClas
 
 function safeReservation<T extends { manageTokenHash?: string | null }>(reservation: T) {
   const { manageTokenHash: _manageTokenHash, ...safe } = reservation;
+  if ("minorProfile" in safe && safe.minorProfile) {
+    const profile = safe.minorProfile as { id: string; firstName: string; lastName: string };
+    return {
+      ...safe,
+      minorProfile: { id: profile.id, firstName: profile.firstName, lastName: profile.lastName },
+    };
+  }
   return safe;
 }
 
@@ -211,12 +219,16 @@ export function registerClassBookingRoutes(app: Express) {
 
   app.post("/api/portal/class-reservations", requireAuth, async (req, res) => {
     try {
-      const data = z.object({ occurrenceId: z.string().uuid() }).strict().parse(req.body);
+      const data = z.object({
+        occurrenceId: z.string().uuid(),
+        minorProfileId: z.string().uuid().optional(),
+      }).strict().parse(req.body);
       const user = await storage.getUserById(req.session.userId!);
       if (!user) return res.status(401).json({ message: "User not found" });
       const result = await storage.reserveClassOccurrence({
         occurrenceId: data.occurrenceId,
         userId: user.id,
+        minorProfileId: data.minorProfileId,
         firstName: user.firstName,
         lastName: user.lastName,
         email: user.email,

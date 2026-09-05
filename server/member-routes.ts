@@ -17,15 +17,21 @@ import {
   memberLifecycles,
   memberships,
   membershipPlans,
+  minorProfiles,
   trialLeads,
   users,
 } from "@shared/schema";
 import { db } from "./db";
 import { storage } from "./storage";
 import { coachCanManageMember, requireAuth, requireRole } from "./route-security";
-import { evaluateBookingEligibility, getMembershipWeekStart } from "./member-entitlements";
+import { evaluateBookingEligibility, evaluateMinorBookingEligibilityWithExecutor, getMembershipWeekStart, minorAgeAt } from "./member-entitlements";
 
 const discoveryDurationDays = 7;
+
+function minorProfileResponse(profile: typeof minorProfiles.$inferSelect) {
+  const { guardianUserId: _guardianUserId, consentSignature: _consentSignature, ...safeProfile } = profile;
+  return safeProfile;
+}
 
 function publicPass(pass: typeof discoveryPasses.$inferSelect, entitlements: Array<typeof discoveryEntitlements.$inferSelect>) {
   const statuses = entitlements.map((entitlement) => entitlement.status);
@@ -216,9 +222,64 @@ export function registerMemberRoutes(app: Express) {
       const user = await storage.getUserById(req.session.userId!);
       const occurrence = await storage.getClassOccurrence(req.params.occurrenceId);
       if (!user || !occurrence) return res.status(404).json({ code: "NOT_FOUND" });
+      if (typeof req.query.minorProfileId === "string") {
+        const [profile] = await db.select().from(minorProfiles).where(and(
+          eq(minorProfiles.id, req.query.minorProfileId),
+          eq(minorProfiles.guardianUserId, user.id),
+        ));
+        if (!profile) return res.status(404).json({ code: "MINOR_PROFILE_NOT_FOUND" });
+        return res.json(await evaluateMinorBookingEligibilityWithExecutor(profile, occurrence, db));
+      }
       res.json(await evaluateBookingEligibility(user, occurrence));
     } catch (error) {
       res.status(500).json({ code: "ELIGIBILITY_FAILED", message: "Failed to evaluate booking eligibility." });
+    }
+  });
+
+  app.get("/api/portal/minors", requireAuth, async (req, res) => {
+    try {
+      const profiles = await storage.listMinorProfiles(req.session.userId!);
+      res.json(profiles.map(minorProfileResponse));
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ code: "MINOR_PROFILES_LOAD_FAILED", message: "Failed to load participant profiles." });
+    }
+  });
+
+  app.post("/api/portal/minors", requireAuth, async (req, res) => {
+    try {
+      const data = z.object({
+        firstName: z.string().trim().min(1).max(80),
+        lastName: z.string().trim().min(1).max(80),
+        dateOfBirth: z.coerce.date(),
+        emergencyContactName: z.string().trim().min(1).max(120),
+        emergencyContactPhone: z.string().trim().min(7).max(30),
+        emergencyContactRelationship: z.string().trim().min(1).max(80),
+        consentGiven: z.literal(true),
+        consentSignature: z.string().trim().min(2).max(160),
+      }).strict().parse(req.body);
+      const now = new Date();
+      if (Number.isNaN(data.dateOfBirth.getTime()) || data.dateOfBirth > now || minorAgeAt(data.dateOfBirth, now) < 0 || minorAgeAt(data.dateOfBirth, now) >= 18) {
+        return res.status(400).json({ code: "MINOR_AGE_INVALID", message: "Participant must be under 18 years old." });
+      }
+      const profile = await storage.createMinorProfile({
+        guardianUserId: req.session.userId!,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        dateOfBirth: data.dateOfBirth,
+        emergencyContactName: data.emergencyContactName,
+        emergencyContactPhone: data.emergencyContactPhone,
+        emergencyContactRelationship: data.emergencyContactRelationship,
+        consentSignature: data.consentSignature,
+        consentedAt: now,
+      });
+      res.status(201).json(minorProfileResponse(profile));
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ code: "INVALID_MINOR_PROFILE", message: "Please complete the participant, contact, and guardian consent fields.", errors: error.flatten() });
+      }
+      console.error(error);
+      res.status(500).json({ code: "MINOR_PROFILE_CREATE_FAILED", message: "Failed to save the participant profile." });
     }
   });
 
@@ -346,9 +407,10 @@ export function registerMemberRoutes(app: Express) {
       )).orderBy(asc(classOccurrences.start));
 
       const classes = await Promise.all(occurrences.map(async (occurrence) => {
-        const rows = await db.select({ reservation: classReservations, member: users })
+        const rows = await db.select({ reservation: classReservations, member: users, minorProfile: minorProfiles })
           .from(classReservations)
           .leftJoin(users, eq(classReservations.userId, users.id))
+          .leftJoin(minorProfiles, eq(classReservations.minorProfileId, minorProfiles.id))
           .where(and(
             eq(classReservations.occurrenceId, occurrence.id),
             inArray(classReservations.status, ["confirmed", "waitlisted"]),
@@ -362,20 +424,33 @@ export function registerMemberRoutes(app: Express) {
             .where(inArray(discoveryPasses.userId, memberIds))
           : [];
         const visibleRows = rows.filter((row) => !row.member || req.session.userRole === "admin" || coachCanManageMember(row.member, req.session.userId));
-        const roster = visibleRows.map(({ reservation, member }) => {
+        const roster = visibleRows.map(({ reservation, member, minorProfile }) => {
           const passEntitlement = member
             ? passes.find((item) => item.pass.userId === member.id && item.entitlement.reservationId === reservation.id)
             : undefined;
           return {
-            ...reservation,
-            member: member ? {
+            id: reservation.id,
+            occurrenceId: reservation.occurrenceId,
+            minorProfileId: reservation.minorProfileId,
+            visitorFirstName: reservation.visitorFirstName,
+            visitorLastName: reservation.visitorLastName,
+            status: reservation.status,
+            waitlistPosition: reservation.waitlistPosition,
+            attendance: reservation.attendance,
+            attendanceRecordedAt: reservation.attendanceRecordedAt,
+            member: minorProfile ? null : member ? {
               id: member.id,
               firstName: member.firstName,
               lastName: member.lastName,
               locale: member.locale,
               assignedCoachId: member.assignedCoachId,
             } : null,
-            program: passEntitlement ? "DISCOVERY_PASS" : "MEMBERSHIP",
+            minorProfile: minorProfile ? {
+              id: minorProfile.id,
+              firstName: minorProfile.firstName,
+              lastName: minorProfile.lastName,
+            } : null,
+            program: minorProfile ? "MINOR" : passEntitlement ? "DISCOVERY_PASS" : "MEMBERSHIP",
             discoveryCategory: passEntitlement?.entitlement.category || null,
             discoveryStatus: passEntitlement?.entitlement.status || null,
           };

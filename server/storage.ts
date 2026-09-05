@@ -12,6 +12,7 @@ import {
   memberLifecycleEvents,
   memberGoals,
   emergencyContacts,
+  minorProfiles,
   discoveryPasses,
   discoveryEntitlements,
   entitlementLedger,
@@ -51,7 +52,8 @@ import {
   type CalendarConnection,
   type ClassType,
   type ClassOccurrence,
-  type ClassReservation
+  type ClassReservation,
+  type MinorProfile
 } from "@shared/schema";
 import { db } from "./db";
  import { eq, and, gte, gt, lte, desc, asc, sql, count, sum, or, ilike, inArray, isNotNull, isNull, not } from "drizzle-orm";
@@ -68,12 +70,15 @@ import { canRetryWebhook, INTERNAL_TEST_EMAIL_PATTERN, isPublicOccurrenceText } 
 import {
   discoveryCategory,
   evaluateBookingEligibilityWithExecutor,
+  evaluateMinorBookingEligibilityWithExecutor,
   getMembershipWeekStart,
   type BookingEligibility,
 } from "./member-entitlements";
 
 export interface IStorage {
   getUserById(id: string): Promise<User | undefined>;
+  listMinorProfiles(guardianUserId: string): Promise<MinorProfile[]>;
+  createMinorProfile(data: Omit<MinorProfile, "id" | "createdAt" | "updatedAt">): Promise<MinorProfile>;
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(email: string, password: string, firstName: string, lastName: string, phone?: string, locale?: "en" | "es"): Promise<SafeUser>;
   createUserFromWebhook(email: string, firstName: string, lastName: string): Promise<SafeUser>;
@@ -152,6 +157,7 @@ export interface IStorage {
   reserveClassOccurrence(input: {
     occurrenceId: string;
     userId?: string;
+    minorProfileId?: string;
     firstName: string;
     lastName: string;
     email: string;
@@ -200,6 +206,17 @@ export class DatabaseStorage implements IStorage {
   async getUserById(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user;
+  }
+
+  async listMinorProfiles(guardianUserId: string): Promise<MinorProfile[]> {
+    return db.select().from(minorProfiles)
+      .where(eq(minorProfiles.guardianUserId, guardianUserId))
+      .orderBy(asc(minorProfiles.firstName), asc(minorProfiles.lastName));
+  }
+
+  async createMinorProfile(data: Omit<MinorProfile, "id" | "createdAt" | "updatedAt">): Promise<MinorProfile> {
+    const [profile] = await db.insert(minorProfiles).values(data).returning();
+    return profile;
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
@@ -1014,6 +1031,7 @@ export class DatabaseStorage implements IStorage {
   async reserveClassOccurrence(input: {
     occurrenceId: string;
     userId?: string;
+    minorProfileId?: string;
     firstName: string;
     lastName: string;
     email: string;
@@ -1037,16 +1055,30 @@ export class DatabaseStorage implements IStorage {
       }
 
       let eligibility: BookingEligibility | undefined;
+      let minorProfile: MinorProfile | undefined;
       if (input.userId) {
         const user = await this.getUserById(input.userId);
         if (!user) throw new ClassBookingError("USER_NOT_FOUND", "This member account could not be found.", 401);
-        eligibility = await evaluateBookingEligibilityWithExecutor(user, occurrence, tx);
+        if (input.minorProfileId) {
+          [minorProfile] = await tx.select().from(minorProfiles).where(and(
+            eq(minorProfiles.id, input.minorProfileId),
+            eq(minorProfiles.guardianUserId, input.userId),
+          ));
+          if (!minorProfile) {
+            throw new ClassBookingError("MINOR_PROFILE_FORBIDDEN", "This participant profile is not available to your account.", 403);
+          }
+          eligibility = await evaluateMinorBookingEligibilityWithExecutor(minorProfile, occurrence, tx);
+        } else {
+          eligibility = await evaluateBookingEligibilityWithExecutor(user, occurrence, tx);
+        }
         if (!eligibility.eligible) {
           throw new ClassBookingError(eligibility.code, eligibility.message, 409);
         }
       }
 
-      const personCondition = input.userId
+      const personCondition = input.minorProfileId
+        ? eq(classReservations.minorProfileId, input.minorProfileId)
+        : input.userId
         ? or(
             eq(classReservations.userId, input.userId),
             sql`lower(${classReservations.visitorEmail}) = lower(${input.email})`,
@@ -1104,6 +1136,7 @@ export class DatabaseStorage implements IStorage {
         visitorPhone: input.phone,
         locale: input.locale || "en",
         experience: input.experience,
+        minorProfileId: input.minorProfileId,
         status,
         waitlistPosition,
         manageTokenHash: input.manageTokenHash,
@@ -1112,7 +1145,10 @@ export class DatabaseStorage implements IStorage {
         reservationId: reservation.id,
         occurrenceId: occurrence.id,
         event: status === "confirmed" ? "reservation_confirmed" : "waitlist_joined",
-        metadata: { source: input.userId ? "member_portal" : "first_visit" },
+        metadata: {
+          source: input.minorProfileId ? "guardian_portal" : input.userId ? "member_portal" : "first_visit",
+          minorProfileId: input.minorProfileId || null,
+        },
       });
       if (input.userId && eligibility && status === "confirmed") {
         if (eligibility.source === "discovery" && eligibility.discoveryEntitlementId) {
@@ -1141,23 +1177,26 @@ export class DatabaseStorage implements IStorage {
     });
   }
 
-  async getUserClassReservations(userId: string): Promise<Array<ClassReservation & { occurrence: ClassOccurrence; trainer: Trainer | null; classType: ClassType | null }>> {
+  async getUserClassReservations(userId: string): Promise<Array<ClassReservation & { occurrence: ClassOccurrence; trainer: Trainer | null; classType: ClassType | null; minorProfile: MinorProfile | null }>> {
     const rows = await db.select({
       reservation: classReservations,
       occurrence: classOccurrences,
       trainer: trainers,
       classType: classTypes,
+      minorProfile: minorProfiles,
     }).from(classReservations)
       .innerJoin(classOccurrences, eq(classReservations.occurrenceId, classOccurrences.id))
       .leftJoin(trainers, eq(classOccurrences.trainerId, trainers.id))
       .leftJoin(classTypes, eq(classOccurrences.classTypeId, classTypes.id))
+      .leftJoin(minorProfiles, eq(classReservations.minorProfileId, minorProfiles.id))
       .where(eq(classReservations.userId, userId))
       .orderBy(desc(classOccurrences.start));
-    return rows.map(({ reservation, occurrence, trainer, classType }) => ({
+    return rows.map(({ reservation, occurrence, trainer, classType, minorProfile }) => ({
       ...reservation,
       occurrence,
       trainer,
       classType,
+      minorProfile,
     }));
   }
 

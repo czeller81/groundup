@@ -17,6 +17,7 @@ export type LiveClass = {
   firstVisitEligible: boolean;
   audience: "all" | "members";
   audienceGroup: string;
+  girlsClass?: boolean;
   canonicalCategory: string;
   strengthFocus: string | null;
   eligibility?: {
