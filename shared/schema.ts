@@ -105,16 +105,159 @@ export const adminUsers = pgTable("admin_users", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const membershipPlans = pgTable("membership_plans", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  internalKey: text("internal_key").notNull().unique(),
+  displayName: text("display_name").notNull(),
+  active: boolean("active").notNull().default(true),
+  weeklySessionLimit: integer("weekly_session_limit"),
+  eligibleClassCategories: jsonb("eligible_class_categories").notNull().default(sql`'["skill","strength"]'::jsonb`),
+  bookingWindowHours: integer("booking_window_hours").notNull().default(168),
+  weekStartDay: integer("week_start_day").notNull().default(1),
+  timezone: text("timezone").notNull().default("America/Los_Angeles"),
+  rolloverPolicy: text("rollover_policy").notNull().default("none"),
+  waitlistAllowed: boolean("waitlist_allowed").notNull().default(true),
+  cancellationCutoffHours: integer("cancellation_cutoff_hours").notNull().default(4),
+  lateCancelPolicy: text("late_cancel_policy").notNull().default("consume"),
+  noShowPolicy: text("no_show_policy").notNull().default("consume"),
+  discoveryEligible: boolean("discovery_eligible").notNull().default(false),
+  privateSessionsPerMonth: integer("private_sessions_per_month").notNull().default(0),
+  personalizedProgram: boolean("personalized_program").notNull().default(false),
+  displayPriceCents: integer("display_price_cents"),
+  effectiveStart: timestamp("effective_start"),
+  effectiveEnd: timestamp("effective_end"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 export const memberships = pgTable("memberships", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id),
+  planId: varchar("plan_id").references(() => membershipPlans.id),
   type: text("type").notNull().default("per_session"),
   status: text("status").notNull().default("active"),
   startDate: timestamp("start_date").defaultNow().notNull(),
   endDate: timestamp("end_date"),
   priceCents: integer("price_cents").notNull().default(2000),
+  assignedBy: varchar("assigned_by").references(() => users.id),
+  source: text("source"),
+  pausedAt: timestamp("paused_at"),
+  cancelledAt: timestamp("cancelled_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
+
+export const memberLifecycles = pgTable("member_lifecycles", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  currentState: text("current_state").notNull().default("PROSPECT"),
+  source: text("source"),
+  convertedAt: timestamp("converted_at"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  userUnique: uniqueIndex("member_lifecycles_user_unique").on(table.userId),
+}));
+
+export const memberLifecycleEvents = pgTable("member_lifecycle_events", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  actorId: varchar("actor_id").references(() => users.id),
+  previousState: text("previous_state"),
+  nextState: text("next_state").notNull(),
+  reason: text("reason"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  userIndex: index("member_lifecycle_events_user_idx").on(table.userId),
+}));
+
+export const memberGoals = pgTable("member_goals", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  goal: text("goal").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  userGoalUnique: uniqueIndex("member_goals_user_goal_unique").on(table.userId, table.goal),
+}));
+
+export const emergencyContacts = pgTable("emergency_contacts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  name: text("name").notNull(),
+  relationship: text("relationship").notNull(),
+  phone: text("phone").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  userUnique: uniqueIndex("emergency_contacts_user_unique").on(table.userId),
+}));
+
+export const discoveryPasses = pgTable("discovery_passes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  claimTimestamp: timestamp("claim_timestamp").defaultNow().notNull(),
+  activationTimestamp: timestamp("activation_timestamp"),
+  expirationTimestamp: timestamp("expiration_timestamp").notNull(),
+  status: text("status").notNull().default("CLAIMED"),
+  convertedAt: timestamp("converted_at"),
+  followUpState: text("follow_up_state"),
+  duplicateCheck: jsonb("duplicate_check").notNull().default({}),
+  adminOverrideReason: text("admin_override_reason"),
+  createdBy: varchar("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  userIndex: index("discovery_passes_user_idx").on(table.userId),
+  activePassUnique: uniqueIndex("discovery_passes_active_user_unique").on(table.userId, table.status),
+}));
+
+export const discoveryEntitlements = pgTable("discovery_entitlements", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  discoveryPassId: varchar("discovery_pass_id").notNull().references(() => discoveryPasses.id),
+  category: text("category").notNull(),
+  status: text("status").notNull().default("AVAILABLE"),
+  reservationId: varchar("reservation_id").references(() => classReservations.id),
+  bookedAt: timestamp("booked_at"),
+  attendedAt: timestamp("attended_at"),
+  cancelledAt: timestamp("cancelled_at"),
+  expiredAt: timestamp("expired_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  passCategoryUnique: uniqueIndex("discovery_entitlements_pass_category_unique").on(table.discoveryPassId, table.category),
+}));
+
+export const entitlementLedger = pgTable("entitlement_ledger", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  membershipId: varchar("membership_id").references(() => memberships.id),
+  occurrenceId: varchar("occurrence_id").references(() => classOccurrences.id),
+  reservationId: varchar("reservation_id").references(() => classReservations.id),
+  weekStart: timestamp("week_start").notNull(),
+  reserved: integer("reserved").notNull().default(0),
+  consumed: integer("consumed").notNull().default(0),
+  released: integer("released").notNull().default(0),
+  reason: text("reason").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  userWeekIndex: index("entitlement_ledger_user_week_idx").on(table.userId, table.weekStart),
+}));
+
+export const memberAuditEvents = pgTable("member_audit_events", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  actorId: varchar("actor_id").references(() => users.id),
+  userId: varchar("user_id").references(() => users.id),
+  targetType: text("target_type").notNull(),
+  targetId: varchar("target_id"),
+  action: text("action").notNull(),
+  before: jsonb("before"),
+  after: jsonb("after"),
+  reason: text("reason"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  userIndex: index("member_audit_events_user_idx").on(table.userId),
+}));
 
 export const sessionNotes = pgTable("session_notes", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),

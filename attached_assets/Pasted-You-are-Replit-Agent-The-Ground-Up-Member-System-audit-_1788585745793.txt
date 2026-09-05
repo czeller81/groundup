@@ -1,0 +1,1670 @@
+You are Replit Agent.
+
+The Ground Up Member System audit is complete.
+
+We are now authorized to IMPLEMENT the new member operating system on top of the existing architecture.
+
+Do NOT rebuild the booking engine.
+
+Do NOT create duplicate member, attendance, waitlist, form, schedule, or identity systems.
+
+Reuse the audited foundations.
+
+The objective is to implement:
+
+1. Member lifecycle
+2. Ground Up Discovery Pass
+3. Membership plans and weekly session entitlements
+4. Attendance normalization
+5. Guided onboarding
+6. Coach check-in
+7. Admin membership/pass operations
+8. Member weekly-training experience
+9. Operational reporting
+10. English/Spanish parity
+
+---
+
+# 1. EXISTING AUTHORITIES — DO NOT REPLACE
+
+Keep these authoritative:
+
+Schedule:
+Google Calendar
+
+Class read model:
+`class_occurrences`
+
+Reservations:
+`class_reservations`
+
+Capacity:
+existing transactional reservation logic
+
+Waitlist:
+existing reservation/waitlist implementation
+
+Reservation history:
+`class_reservation_events`
+
+Identity:
+`users`
+
+Forms:
+`forms` + `form_responses`
+
+Coach assignment:
+existing scoped authorization
+
+Locale:
+`users.locale` + existing locale infrastructure
+
+Do not create parallel replacements.
+
+---
+
+# 2. IMPLEMENT IN CONTROLLED PHASES
+
+Use migrations and logical checkpoints.
+
+Recommended order:
+
+PHASE 1
+Lifecycle + canonical member profile
+
+PHASE 2
+Attendance normalization
+
+PHASE 3
+Discovery Pass
+
+PHASE 4
+Membership plan catalog + assignment
+
+PHASE 5
+Entitlement engine
+
+PHASE 6
+Member onboarding/dashboard
+
+PHASE 7
+Coach/admin operations
+
+PHASE 8
+Notifications + utilization analytics
+
+PHASE 9
+Migration + regression + QA
+
+Do not jump directly to UI before server/domain rules exist.
+
+---
+
+# 3. MEMBER LIFECYCLE
+
+Authorization role and customer lifecycle must remain separate.
+
+Existing authorization roles remain:
+
+- admin
+- coach
+- member
+
+Add lifecycle states:
+
+- PROSPECT
+- DISCOVERY_PASS
+- ACTIVE_MEMBER
+- INACTIVE_MEMBER
+
+Do not add these to `users.role`.
+
+Create an additive lifecycle model or equivalent normalized structure.
+
+Track:
+
+- userId
+- currentState
+- changedAt
+- source
+- convertedAt
+- optional notes
+- created/updated timestamps
+
+Add audit history for lifecycle changes.
+
+---
+
+# 4. EXISTING MEMBER MIGRATION
+
+Existing users must not be broken.
+
+Create deterministic migration/default rules.
+
+Examples:
+
+Existing normal member with active membership:
+→ ACTIVE_MEMBER
+
+Existing member without active membership:
+→ determine safe default based on actual records
+
+Coach/admin:
+authorization remains coach/admin
+customer lifecycle should not accidentally change their permissions
+
+Do not invent historical Discovery Pass activity for existing users.
+
+---
+
+# 5. CANONICAL MEMBER PROFILE
+
+Extend the existing member view rather than creating another identity table.
+
+Member overview should aggregate:
+
+IDENTITY
+- name
+- email
+- phone
+- preferred language
+
+TRAINING
+- lifecycle
+- membership
+- interests/goals
+- belt rank if applicable
+- assigned coach
+
+SAFETY
+- emergency contact where operationally required
+- required form completion
+- training limitations only where already legitimately collected
+
+ACTIVITY
+- upcoming reservation
+- attendance history
+- weekly usage
+- Discovery Pass state
+
+NOTES
+- coach notes
+- admin notes
+
+Do not copy all form-response data into `users`.
+
+---
+
+# 6. CANONICAL GOALS / INTERESTS
+
+Implement queryable canonical values:
+
+GET_STRONGER
+LEARN_JIU_JITSU
+LEARN_SELF_DEFENSE
+IMPROVE_CONDITIONING
+LEARN_NEW_SKILL
+BUILD_CONFIDENCE
+STRENGTH_BODY_DEVELOPMENT
+A_LITTLE_OF_EVERYTHING
+
+Labels must be localized.
+
+English and Spanish are display layers only.
+
+Do not store translated strings as business values.
+
+---
+
+# 7. ATTENDANCE NORMALIZATION
+
+Keep `class_reservations` as the member/class relationship.
+
+Normalize attendance outcomes.
+
+Recommended canonical attendance:
+
+PENDING
+PRESENT
+NO_SHOW
+LATE_CANCEL
+EXCUSED_CANCEL
+
+On-time cancellation remains:
+
+reservation status = cancelled
+
+with cancellation metadata.
+
+Add:
+
+- attendanceRecordedAt
+- attendanceRecordedBy
+- attendanceUpdatedAt if needed
+- correction reason where appropriate
+
+Do not create an unrelated attendance table unless a separate immutable audit event is needed.
+
+---
+
+# 8. LEGACY ATTENDANCE COUNT
+
+`users.attendanceCount` is not authoritative.
+
+Stop treating it as manual truth.
+
+Prefer deriving attendance totals from class reservations where:
+
+attendance = PRESENT
+
+If needed for performance:
+
+maintain it as a projection/cache
+
+but updates must derive from authoritative reservation attendance.
+
+Do not allow manual editing to silently diverge.
+
+---
+
+# 9. ATTENDANCE MIGRATION
+
+Review existing values:
+
+present
+absent
+late
+excused
+
+Do not blindly map ambiguous values.
+
+Safe mappings:
+
+present → PRESENT
+
+For:
+absent
+late
+excused
+
+inspect actual historical semantics before migration.
+
+If ambiguity exists:
+
+preserve historical raw value and migrate conservatively.
+
+Report unresolved legacy values.
+
+---
+
+# 10. COACH CHECK-IN
+
+Create a fast mobile-first class roster.
+
+For each occurrence show:
+
+- member name
+- reservation state
+- membership/pass state
+- Discovery Pass marker
+- preferred language if useful
+- attendance control
+
+Actions:
+
+PRESENT
+NO SHOW
+LATE CANCEL
+EXCUSED
+
+On-time cancelled members should not normally appear as active attendees.
+
+Make this usable on a phone.
+
+---
+
+# 11. DISCOVERY PASS PRODUCT
+
+Implement:
+
+# THE GROUND UP DISCOVERY PASS
+
+For eligible first-time adult women.
+
+Includes exactly:
+
+1 SKILL entitlement
+
+1 STRENGTH entitlement
+
+Suggested internal categories:
+
+SKILL
+STRENGTH
+
+SKILL should map to eligible:
+
+JIU_JITSU_SELF_DEFENSE
+
+STRENGTH maps to:
+
+STRENGTH_CONDITIONING
+
+Do not allow one category to consume the other.
+
+---
+
+# 12. DISCOVERY PASS TABLE
+
+Create additive model:
+
+`discovery_passes`
+
+Fields should support:
+
+- id
+- userId
+- claimTimestamp
+- activationTimestamp
+- expirationTimestamp
+- overall derived/current status
+- convertedAt
+- followUpState
+- duplicateCheck result/reference
+- admin override metadata
+- createdBy
+- timestamps
+
+One active Discovery Pass per eligible person unless admin override.
+
+---
+
+# 13. DISCOVERY ENTITLEMENTS
+
+Create:
+
+`discovery_entitlements`
+
+Fields:
+
+- id
+- discoveryPassId
+- category
+- status
+- reservationId
+- bookedAt
+- attendedAt
+- cancelledAt
+- expiredAt
+- timestamps
+
+Statuses can include:
+
+AVAILABLE
+BOOKED
+ATTENDED
+EXPIRED
+CANCELLED
+
+Enforce unique:
+
+(discoveryPassId, category)
+
+at database level.
+
+---
+
+# 14. DISCOVERY PASS OVERALL STATE
+
+Do not rely solely on a rigid sequential enum.
+
+Derive from the two entitlement records.
+
+Possible display states:
+
+CLAIMED
+PARTIALLY_BOOKED
+PARTIALLY_ATTENDED
+COMPLETED
+EXPIRED
+CONVERTED
+CANCELLED
+
+The person may attend Strength before Skill.
+
+That must work.
+
+---
+
+# 15. DISCOVERY PASS EXPIRATION
+
+Make duration configurable.
+
+Initial default:
+
+7 days
+
+Do not hard-code permanently.
+
+Clearly define whether expiration starts at:
+
+CLAIM
+ACTIVATION
+FIRST BOOKING
+FIRST ATTENDANCE
+
+Recommended initial default:
+
+claim/activation timestamp
+
+but expose this as one documented business rule.
+
+---
+
+# 16. DISCOVERY DUPLICATE DETECTION
+
+Use practical duplicate checks against existing data:
+
+- authenticated user
+- normalized email
+- normalized phone
+- existing trial lead
+- existing class reservation
+- existing Discovery Pass
+
+Do not use invasive identity verification.
+
+If suspected duplicate:
+
+do not silently issue another free pass.
+
+Return:
+
+DISCOVERY_ALREADY_USED
+or
+ADMIN_REVIEW_REQUIRED
+
+Admin override requires:
+
+- admin permission
+- reason
+- audit event
+
+---
+
+# 17. DISCOVERY BOOKING RULES
+
+Discovery SKILL entitlement can reserve only eligible skill classes.
+
+Discovery STRENGTH entitlement can reserve only eligible strength classes.
+
+Rules:
+
+AVAILABLE
+→ BOOKED when confirmed
+
+Waitlist:
+does not consume entitlement until promotion
+
+On-time cancellation:
+restore entitlement if pass remains valid
+
+Attendance:
+mark ATTENDED
+
+Late cancel/no-show:
+use configurable policy
+
+Pass expired:
+unused entitlement becomes EXPIRED
+
+---
+
+# 18. DISCOVERY PASS DASHBOARD
+
+For lifecycle = DISCOVERY_PASS:
+
+Dashboard primary card:
+
+# YOUR GROUND UP DISCOVERY PASS
+
+Show:
+
+JIU-JITSU / SELF-DEFENSE
+status
+[BOOK]
+
+STRENGTH & CONDITIONING
+status
+[BOOK]
+
+Progress:
+
+0 of 2 completed
+1 of 2 completed
+2 of 2 completed
+
+Show expiration date.
+
+Keep this in the existing dashboard.
+
+Do not create a separate top-level Discovery navigation item.
+
+---
+
+# 19. DISCOVERY COMPLETION
+
+After both entitlements are ATTENDED:
+
+mark overall pass:
+
+COMPLETED
+
+Create staff notification.
+
+Dashboard should show:
+
+# YOU'VE EXPERIENCED BOTH SIDES OF GROUND UP
+
+Then membership invitation:
+
+[VIEW MEMBERSHIP OPTIONS]
+
+If online commerce is not implemented:
+
+route to membership inquiry/contact/admin-assisted conversion.
+
+Do not build recurring billing in this phase.
+
+---
+
+# 20. DISCOVERY CONVERSION WORKFLOW
+
+Staff should see:
+
+Member
+Pass completion
+Skill ✓
+Strength ✓
+Goals/interests
+
+Follow-up status:
+
+CONTACTED
+JOINED
+NOT_READY
+FOLLOW_UP
+DECLINED
+
+If JOINED:
+
+record convertedAt
+
+and transition lifecycle to:
+
+ACTIVE_MEMBER
+
+once membership assignment is active.
+
+---
+
+# 21. MEMBERSHIP PLAN CATALOG
+
+Create configurable plan entity.
+
+Do not use free-form membership type as operational logic.
+
+Suggested fields:
+
+- id
+- internalKey
+- displayName
+- active
+- weeklySessionLimit
+- eligibleClassCategories
+- bookingWindowHours/days
+- weekStartDay
+- timezone
+- rolloverPolicy
+- waitlistAllowed
+- cancellationCutoffHours
+- lateCancelPolicy
+- noShowPolicy
+- discoveryEligible
+- privateSessionsPerMonth
+- personalizedProgram
+- displayPrice
+- effectiveStart
+- effectiveEnd
+- timestamps
+
+Price is DISPLAY/COMMERCIAL DATA.
+
+Do not use price as entitlement logic.
+
+---
+
+# 22. INITIAL PLAN READINESS
+
+Architect so admin can later configure plans such as:
+
+GROUND UP 2
+2 sessions/week
+
+GROUND UP 3
+3 sessions/week
+
+GROUND UP PERSONAL
+group entitlement + private/personalized benefits
+
+Do not lock those commercial names/prices if admin has not finalized them.
+
+Build the engine to support them.
+
+---
+
+# 23. MEMBERSHIP ASSIGNMENT
+
+Extend/migrate existing `memberships`.
+
+Preferred normalized assignment:
+
+- userId
+- planId
+- status
+- effectiveStart
+- effectiveEnd
+- assignedBy
+- source
+- pausedAt
+- cancelledAt
+- optional billing reference
+- timestamps
+
+Statuses:
+
+ACTIVE
+PAUSED
+CANCELLED
+EXPIRED
+
+Preserve historical existing membership records.
+
+Do not pretend old records had entitlement rules before this feature existed.
+
+---
+
+# 24. SERVER-SIDE ENTITLEMENT SERVICE
+
+Create ONE authoritative service:
+
+evaluateBookingEligibility(user, occurrence)
+
+Do not scatter membership checks across UI.
+
+Return structured result.
+
+Possible codes:
+
+ELIGIBLE
+WEEKLY_LIMIT_REACHED
+CLASS_FULL_WAITLIST_AVAILABLE
+BOOKING_WINDOW_CLOSED
+PLAN_NOT_ELIGIBLE
+MEMBERSHIP_INACTIVE
+DISCOVERY_SKILL_ALREADY_USED
+DISCOVERY_STRENGTH_ALREADY_USED
+DISCOVERY_EXPIRED
+REQUIRED_FORM_INCOMPLETE
+DUPLICATE_RESERVATION
+OVERLAPPING_RESERVATION
+
+UI translates these codes.
+
+---
+
+# 25. BOOKING ELIGIBILITY ORDER
+
+Evaluate:
+
+1. authenticated/customer state
+2. lifecycle
+3. membership/pass active dates
+4. required forms if configured
+5. class eligibility
+6. booking window
+7. weekly entitlement
+8. existing reservation
+9. overlap
+10. capacity
+11. waitlist eligibility
+12. Discovery category entitlement
+
+Preserve existing transactional capacity lock.
+
+---
+
+# 26. WEEKLY ENTITLEMENT
+
+Membership week is based on CLASS OCCURRENCE TIME.
+
+Default:
+
+Monday → Sunday
+America/Los_Angeles
+
+Make configurable.
+
+Example:
+
+GROUND UP 2:
+2 class sessions in that occurrence week.
+
+GROUND UP 3:
+3.
+
+Reservation creation date does not determine which week's entitlement is consumed.
+
+---
+
+# 27. ENTITLEMENT LEDGER
+
+Implement auditable usage.
+
+Either:
+
+derive from reservations + events
+
+or:
+
+create explicit entitlement ledger.
+
+Given the audit recommendation, an explicit ledger is appropriate if it makes overrides and historical decisions reliable.
+
+Track:
+
+- membership
+- user
+- week
+- occurrence
+- reservation
+- reserved
+- consumed
+- released
+- reason
+- timestamp
+
+Avoid mutable counters as sole truth.
+
+---
+
+# 28. CREDIT BEHAVIOR
+
+Initial operational logic:
+
+CONFIRMED reservation:
+reserves one weekly session
+
+WAITLIST:
+consumes zero
+
+ON-TIME CANCEL:
+releases reservation/entitlement
+
+PRESENT:
+finalizes consumption
+
+LATE CANCEL:
+configurable, likely remains consumed
+
+NO SHOW:
+configurable, likely remains consumed
+
+Do not implement monetary penalties.
+
+---
+
+# 29. BOOKING WINDOW
+
+Support configurable advance booking.
+
+Likely initial policy:
+
+7 days
+
+Admin-configurable.
+
+Do not implement old 24-hour assumption globally.
+
+---
+
+# 30. MEMBER WEEKLY TRAINING DISPLAY
+
+For active members show:
+
+# YOUR TRAINING THIS WEEK
+
+Examples:
+
+2 of 3 sessions scheduled
+
+1 session remaining
+
+or:
+
+3 of 3 sessions scheduled
+
+Avoid overly transactional terminology like “credits” in primary member UI.
+
+Use “sessions.”
+
+---
+
+# 31. MEMBER SCHEDULE
+
+Class cards should show:
+
+- date
+- time
+- class name
+- category
+- strength focus
+- coach
+- spots remaining
+- eligibility
+- Reserve
+- Join Waitlist
+
+Strength metadata:
+
+LOWER_BODY
+UPPER_BODY
+FULL_BODY
+
+must belong to the class template/occurrence, not the weekday.
+
+---
+
+# 32. CURRENT WEEKLY PROGRAM
+
+Make the taxonomy capable of representing:
+
+SKILL
+JIU_JITSU_SELF_DEFENSE
+
+STRENGTH
+STRENGTH_CONDITIONING
+
+Strength focus:
+
+LOWER_BODY
+UPPER_BODY
+FULL_BODY
+
+Do not hard-code Monday=lower body etc.
+
+Calendar/class configuration should determine the occurrence.
+
+---
+
+# 33. GUIDED ONBOARDING
+
+New prospect registration should not just dump the person into forms.
+
+Create guided onboarding:
+
+STEP 1
+Your Information
+
+STEP 2
+Your Goals
+
+STEP 3
+Required Forms
+
+STEP 4
+Your Discovery Pass / Membership
+
+STEP 5
+Book Your First Session
+
+Show progress.
+
+Existing members should bypass prospect onboarding where appropriate.
+
+---
+
+# 34. REQUIRED FORMS
+
+Audit the existing required flags.
+
+Allow forms to be configured as:
+
+required before booking
+or
+required before attendance
+
+Do not automatically block booking for every form.
+
+Eligibility service should return:
+
+REQUIRED_FORM_INCOMPLETE
+
+only when the specific configured gate requires it.
+
+---
+
+# 35. EMERGENCY CONTACT
+
+If not already captured in reusable structured data, add:
+
+- name
+- relationship
+- phone
+
+Do not duplicate it if existing forms can expose it reliably.
+
+Prefer one canonical reusable emergency-contact profile if staff needs fast access.
+
+---
+
+# 36. COACH MEMBER VIEW
+
+Add:
+
+- lifecycle
+- active plan/pass
+- preferred language
+- goals
+- upcoming class
+- recent attendance
+- Discovery progress
+- forms completion
+- coach notes
+
+Preserve assigned-member authorization.
+
+---
+
+# 37. ADMIN MEMBER VIEW
+
+Add tabs/sections:
+
+OVERVIEW
+MEMBERSHIP
+DISCOVERY PASS
+ATTENDANCE
+RESERVATIONS
+FORMS
+NOTES
+ACCOUNT
+
+Show:
+
+- lifecycle
+- plan
+- weekly use
+- upcoming bookings
+- waitlists
+- attendance
+- no-shows
+- Discovery state
+- conversion state
+
+---
+
+# 38. ADMIN PLAN MANAGEMENT
+
+Create admin CRUD for plan configuration.
+
+Allow:
+
+- activate/deactivate
+- weekly session limit
+- class eligibility
+- booking window
+- cancellation cutoff
+- rollover
+- waitlist
+- private-session allowance
+- personalized program flag
+
+Do not require code deployment to modify membership benefits.
+
+---
+
+# 39. ADMIN DISCOVERY OPERATIONS
+
+Allow admin to:
+
+- issue pass
+- extend pass
+- restore one entitlement
+- cancel pass
+- mark conversion follow-up
+- override duplicate restriction
+- convert member
+
+Require reason for exceptional overrides.
+
+Audit every override.
+
+---
+
+# 40. ATTENDANCE CORRECTION
+
+Allow authorized coach/admin to correct attendance.
+
+Track:
+
+- old value
+- new value
+- actor
+- timestamp
+- reason if correction affects entitlement
+
+Do not silently overwrite history.
+
+---
+
+# 41. NO-SHOW REPORTING
+
+Track:
+
+- last 30 days
+- recent no-shows
+- total
+
+Do not automatically punish.
+
+This implementation collects reliable behavior data first.
+
+---
+
+# 42. ADMIN OPERATIONS DASHBOARD
+
+Build only useful operational metrics.
+
+TODAY:
+- classes
+- reservations
+- available seats
+- waitlisted
+- Discovery visitors
+
+THIS WEEK:
+- seat capacity
+- reservations
+- attendance
+- cancellations
+- no-shows
+- utilization
+
+MEMBERS:
+- active
+- Discovery active
+- passes completed
+- conversions
+
+Do not create vanity analytics.
+
+---
+
+# 43. CAPACITY REPORT
+
+Compute:
+
+weekly available seat inventory
+
+vs
+
+weekly active member entitlement demand
+
+Example:
+
+sum weekly capacities
+
+vs
+
+sum plan weekly session allowances
+
+Also report:
+
+reservation utilization
+attendance utilization
+waitlist demand
+
+This will support future membership sales caps.
+
+Do not automatically stop sales yet.
+
+---
+
+# 44. DISCOVERY RESERVED SEATS
+
+DO NOT ENABLE by default.
+
+The audit correctly recommends measuring first.
+
+Add architecture/config support only if clean.
+
+Default:
+
+disabled.
+
+Later we may support:
+
+discoveryReservedSeats
+releaseHoursBeforeClass
+
+Do not complicate first launch.
+
+---
+
+# 45. PERSONAL COACHING EXTENSIBILITY
+
+Plan engine should support:
+
+privateSessionsPerMonth
+personalizedProgram
+progressReviewFrequency
+
+Do not build full bodybuilding tracking yet.
+
+Do not require weight/body-fat/photo tracking for normal members.
+
+---
+
+# 46. NOTES SECURITY
+
+Keep:
+
+coach notes
+admin notes
+
+separate.
+
+Members must not see internal notes.
+
+Any future member-visible note must have explicit visibility field.
+
+---
+
+# 47. AUDIT EVENTS
+
+Create operational audit history for:
+
+- lifecycle changed
+- pass issued
+- pass extended
+- pass override
+- membership assigned
+- membership changed
+- membership paused
+- membership cancelled
+- attendance corrected
+- no-show recorded
+- entitlement override
+- admin cancellation
+- conversion changed
+
+Include:
+
+actor
+target
+action
+timestamp
+before/after
+reason
+
+---
+
+# 48. STAFF NOTIFICATIONS
+
+Reuse `staff_notifications`.
+
+Add kinds such as:
+
+DISCOVERY_PASS_COMPLETED
+DISCOVERY_PASS_EXPIRING
+MEMBERSHIP_CONVERSION_READY
+REPEATED_NO_SHOW
+ENTITLEMENT_OVERRIDE
+
+Do not build a second staff queue.
+
+---
+
+# 49. EMAIL LIFECYCLE
+
+Reuse existing localized email system.
+
+Add:
+
+Discovery claimed
+Skill booked
+Strength booked
+Pass expiring
+1 of 2 completed
+2 of 2 completed
+Waitlist promotion
+Membership follow-up where appropriate
+
+Respect stored locale.
+
+Do not send aggressive automated sales messages.
+
+---
+
+# 50. EMAIL RELIABILITY
+
+The audit noted important lifecycle email delivery status is weak.
+
+If existing outbox/retry infrastructure can be extended safely:
+
+do so.
+
+At minimum persist:
+
+- message type
+- recipient reference
+- delivery status
+- attempts
+- last error
+- timestamps
+
+Do not make a reservation/pass fail because email delivery failed.
+
+---
+
+# 51. ENGLISH / SPANISH
+
+Everything new must have full language parity.
+
+No hard-coded user-facing strings.
+
+Canonical internal values only.
+
+Cover:
+
+- onboarding
+- Discovery Pass
+- membership
+- weekly training
+- schedule eligibility
+- attendance
+- admin
+- coach
+- notifications
+- email
+- errors
+- empty states
+
+Missing Spanish keys must fail QA.
+
+---
+
+# 52. MOBILE-FIRST COACH EXPERIENCE
+
+Coach roster/check-in must be excellent at:
+
+320px
+375px
+390px
+430px
+
+Large tap targets.
+
+No wide admin table required for attendance.
+
+One coach should be able to mark six women quickly from a phone.
+
+---
+
+# 53. MEMBER MOBILE EXPERIENCE
+
+Test:
+
+- onboarding
+- Discovery Pass
+- Schedule
+- Reserve
+- Waitlist
+- Weekly training
+- Your Training/history
+- Forms
+- Account
+
+Keep hierarchy clean.
+
+---
+
+# 54. DATABASE MIGRATIONS
+
+All schema changes must be versioned and additive where possible.
+
+Do not rely only on ad-hoc `drizzle-kit push` for production history.
+
+Create migration files appropriate to the existing project.
+
+Report every migration.
+
+---
+
+# 55. DATA CONSTRAINTS
+
+Add important database guarantees where appropriate.
+
+Examples:
+
+- unique Discovery entitlement/category per pass
+- membership plan key uniqueness
+- one active pass rule where enforceable
+- form response uniqueness if current one-response assumption is intentional
+
+Do not add constraints that could destroy valid existing historical data without migration analysis.
+
+---
+
+# 56. TESTS — DISCOVERY
+
+Add tests for:
+
+- eligible pass issuance
+- duplicate denial
+- admin override
+- Skill booking
+- Strength booking
+- wrong-category rejection
+- waitlist no-consumption
+- cancellation restoration
+- attendance redemption
+- expiration
+- completion
+- conversion
+
+---
+
+# 57. TESTS — MEMBERSHIP
+
+Add tests for:
+
+- 2/week entitlement
+- 3/week entitlement
+- weekly reset
+- occurrence-week attribution
+- booking window
+- ineligible class
+- inactive membership
+- waitlist
+- on-time cancellation release
+- late cancel policy
+- no-show policy
+- admin override
+
+---
+
+# 58. TESTS — ATTENDANCE
+
+Test:
+
+reservation confirmed
+→ present
+→ consumed
+
+confirmed
+→ on-time cancel
+→ released
+
+confirmed
+→ no-show
+→ policy-consumed
+
+waitlist
+→ no entitlement use
+
+promotion
+→ eligibility rechecked
+
+---
+
+# 59. TESTS — SECURITY
+
+Verify:
+
+member sees only own membership/pass/history
+
+coach sees only assigned/authorized member details
+
+coach cannot perform admin plan overrides
+
+admin can perform authorized overrides
+
+anonymous user cannot call member entitlement APIs
+
+UI hiding is not authorization.
+
+---
+
+# 60. TESTS — LOCALIZATION
+
+Verify English and Spanish for:
+
+Discovery dashboard
+member weekly usage
+booking rejection reasons
+coach attendance
+admin plan management
+conversion workflow
+
+No English fallback on normal Spanish UI.
+
+---
+
+# 61. BUILD GATE
+
+Run:
+
+npm run check
+npm test
+npm run build
+git diff --check
+
+Add any new targeted evidence tests needed.
+
+All must pass.
+
+---
+
+# 62. FIXTURE-BASED LIFECYCLE PROOF
+
+Create synthetic test data and execute:
+
+Prospect created
+→ Discovery Pass
+→ Skill booked
+→ Skill attended
+→ Strength booked
+→ Strength attended
+→ Pass complete
+→ staff notification
+→ membership assigned
+→ ACTIVE_MEMBER
+→ weekly membership booking
+→ attendance
+→ cancellation
+→ entitlement reconciliation
+
+Remove test fixtures afterward.
+
+---
+
+# 63. DO NOT IMPLEMENT RECURRING BILLING YET
+
+Stripe currently belongs primarily to legacy/private booking.
+
+Do not bolt subscription billing onto this feature.
+
+Membership assignment is operational/manual initially.
+
+Billing comes after plan rules are proven.
+
+---
+
+# 64. DO NOT MERGE LEGACY PRIVATE BOOKINGS
+
+Keep legacy:
+
+`bookings`
+Calendly
+Stripe private-session logic
+
+isolated.
+
+Do not use them as group membership authority.
+
+---
+
+# 65. DO NOT REBUILD THE PORTAL VISUALLY
+
+Preserve current unified Ground Up UX.
+
+This feature should integrate elegantly.
+
+Avoid creating a massive administrative ERP look.
+
+Member experience stays simple:
+
+Your Ground Up
+Schedule
+Your Training
+Forms
+Account
+
+---
+
+# 66. MEMBER EXPERIENCE PRINCIPLE
+
+A member should not need to know:
+
+entitlement ledger
+reservation event
+occurrence
+lifecycle enum
+
+Translate system complexity into human language.
+
+Examples:
+
+“You have 1 session left this week.”
+
+“This class is full. Join the waitlist.”
+
+“You’ve completed 1 of your 2 Discovery experiences.”
+
+---
+
+# 67. FINAL REPORT
+
+Return:
+
+# GROUND UP MEMBER SYSTEM IMPLEMENTATION REPORT
+
+## A. Architecture Implemented
+
+## B. Database Migrations
+
+## C. Member Lifecycle
+
+## D. Discovery Pass
+
+## E. Membership Plans
+
+## F. Entitlement Engine
+
+## G. Attendance
+
+## H. Member Onboarding
+
+## I. Member Dashboard
+
+## J. Schedule Integration
+
+## K. Coach Check-In
+
+## L. Admin Operations
+
+## M. Capacity Analytics
+
+## N. Notifications / Email
+
+## O. English / Spanish
+
+## P. Security
+
+## Q. Migration of Existing Members
+
+## R. Executed Lifecycle Proof
+
+## S. Tests
+Exact results.
+
+## T. Remaining Limitations
+
+## U. Production Recommendation
+
+---
+
+# 68. FINAL VERDICT
+
+End with exactly one:
+
+GROUND UP MEMBER SYSTEM COMPLETE — READY FOR PILOT
+
+GROUND UP MEMBER SYSTEM COMPLETE — READY WITH DOCUMENTED LIMITATIONS
+
+GROUND UP MEMBER SYSTEM BLOCKED — DATA MODEL
+
+GROUND UP MEMBER SYSTEM BLOCKED — ENTITLEMENTS
+
+GROUND UP MEMBER SYSTEM BLOCKED — DISCOVERY PASS
+
+GROUND UP MEMBER SYSTEM BLOCKED — MIGRATION
+
+---
+
+# FINAL PRODUCT RULE
+
+Ground Up should have ONE operational story for every woman:
+
+WHO SHE IS
+→ WHY SHE CAME
+→ WHAT SHE CAN BOOK
+→ WHAT SHE BOOKED
+→ WHAT SHE ATTENDED
+→ WHAT SHE HAS LEFT THIS WEEK
+→ WHAT FORMS SHE COMPLETED
+→ WHAT HER NEXT CLASS IS
+→ WHETHER SHE IS DISCOVERING OR A MEMBER
+
+Discovery Pass:
+
+1 SKILL
++
+1 STRENGTH
+
+Membership:
+
+weekly session allowance
++
+small class capacity
++
+required reservation
++
+waitlist
++
+no rollover according to plan policy
+
+Do not duplicate the systems that already work.
+
+Extend the existing architecture cleanly.
