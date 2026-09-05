@@ -167,6 +167,10 @@ export interface IStorage {
     manageTokenHash?: string;
   }): Promise<{ reservation: ClassReservation; occurrence: ClassOccurrence; promoted?: ClassReservation }>;
   getUserClassReservations(userId: string): Promise<Array<ClassReservation & { occurrence: ClassOccurrence; trainer: Trainer | null; classType: ClassType | null }>>;
+  getGuardianMinorReservations(guardianUserId: string): Promise<Array<ClassReservation & {
+    occurrence: ClassOccurrence;
+    minorProfile: Pick<MinorProfile, "id" | "firstName" | "lastName" | "consentRevokedAt">;
+  }>>;
   getClassReservation(id: string): Promise<(ClassReservation & { occurrence: ClassOccurrence }) | undefined>;
   cancelClassReservation(input: { reservationId: string; userId?: string; manageTokenHash?: string; reason?: string }): Promise<{ reservation: ClassReservation; promoted?: ClassReservation }>;
   getOccurrenceReservations(occurrenceId: string): Promise<{ confirmed: ClassReservation[]; waitlisted: ClassReservation[] }>;
@@ -1196,6 +1200,31 @@ export class DatabaseStorage implements IStorage {
       occurrence,
       trainer,
       classType,
+      minorProfile,
+    }));
+  }
+
+  async getGuardianMinorReservations(guardianUserId: string): Promise<Array<ClassReservation & {
+    occurrence: ClassOccurrence;
+    minorProfile: Pick<MinorProfile, "id" | "firstName" | "lastName" | "consentRevokedAt">;
+  }>> {
+    const rows = await db.select({
+      reservation: classReservations,
+      occurrence: classOccurrences,
+      minorProfile: {
+        id: minorProfiles.id,
+        firstName: minorProfiles.firstName,
+        lastName: minorProfiles.lastName,
+        consentRevokedAt: minorProfiles.consentRevokedAt,
+      },
+    }).from(classReservations)
+      .innerJoin(minorProfiles, eq(classReservations.minorProfileId, minorProfiles.id))
+      .innerJoin(classOccurrences, eq(classReservations.occurrenceId, classOccurrences.id))
+      .where(eq(minorProfiles.guardianUserId, guardianUserId))
+      .orderBy(desc(classOccurrences.start), desc(classReservations.createdAt));
+    return rows.map(({ reservation, occurrence, minorProfile }) => ({
+      ...reservation,
+      occurrence,
       minorProfile,
     }));
   }

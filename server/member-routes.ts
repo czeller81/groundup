@@ -246,6 +246,30 @@ export function registerMemberRoutes(app: Express) {
     }
   });
 
+  app.get("/api/portal/minor-reservations", requireAuth, async (req, res) => {
+    try {
+      const reservations = await storage.getGuardianMinorReservations(req.session.userId!);
+      res.json(reservations.map(({ id, status, waitlistPosition, attendance, attendanceRecordedAt, occurrence, minorProfile }) => ({
+        id,
+        status,
+        waitlistPosition,
+        attendance,
+        attendanceRecordedAt,
+        participant: minorProfile,
+        occurrence: {
+          id: occurrence.id,
+          title: occurrence.title,
+          start: occurrence.start,
+          end: occurrence.end,
+          location: occurrence.location,
+        },
+      })));
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ code: "MINOR_RESERVATIONS_LOAD_FAILED", message: "Failed to load participant reservations." });
+    }
+  });
+
   app.post("/api/portal/minors", requireAuth, async (req, res) => {
     try {
       const data = z.object({

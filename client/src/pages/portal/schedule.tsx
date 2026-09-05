@@ -5,7 +5,7 @@ import { CalendarDays, ChevronRight, Loader2, Plus, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ClassCard } from "@/components/class-card";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { classDateLabel, localizedClassTitle, type LiveClass } from "@/lib/class-booking";
+import { classDateLabel, classTimeLabel, localizedClassTitle, type LiveClass } from "@/lib/class-booking";
 import { localizeApiError, useLocale } from "@/lib/locale";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -21,6 +21,16 @@ type MinorProfile = {
   emergencyContactPhone: string;
   emergencyContactRelationship: string;
   consentRevokedAt: string | null;
+};
+
+type MinorReservation = {
+  id: string;
+  status: string;
+  waitlistPosition: number | null;
+  attendance: string | null;
+  attendanceRecordedAt: string | null;
+  participant: Pick<MinorProfile, "id" | "firstName" | "lastName" | "consentRevokedAt">;
+  occurrence: { id: string; title: string; start: string; end: string; location: string | null };
 };
 
 type DayOfWeek = "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday" | "Sunday";
@@ -67,6 +77,7 @@ export default function PortalSchedule() {
     queryKey: [`/api/portal/classes?from=${encodeURIComponent(range.from)}&to=${encodeURIComponent(range.to)}`],
   });
   const minors = useQuery<MinorProfile[]>({ queryKey: ["/api/portal/minors"] });
+  const minorReservations = useQuery<MinorReservation[]>({ queryKey: ["/api/portal/minor-reservations"] });
   const reserve = useMutation({
     mutationFn: async ({ occurrenceId, minorProfileId }: { occurrenceId: string; minorProfileId?: string }) => (
       await apiRequest("POST", "/api/portal/class-reservations", { occurrenceId, minorProfileId })
@@ -138,6 +149,7 @@ export default function PortalSchedule() {
     notEligible: "Tu plan actual no incluye esta clase.", loading: "Cargando horario…",
     error: "No se pudo cargar el horario.", couldNotBook: "No se pudo reservar la clase", type: "Tipos de clase", full: "Ver horario completo",
     fullDescription: "Consulta todas las clases en el sitio público.",
+    confirmed: "Confirmada", cancelled: "Cancelada",
     minorParticipant: "Participante menor",
     addMinor: "Agregar participante",
     chooseMinor: "Selecciona quién asistirá",
@@ -161,6 +173,16 @@ export default function PortalSchedule() {
     revokeConsent: "Revocar consentimiento",
     consentRevokedStatus: "Consentimiento revocado",
     revokeConfirm: "¿Revocar el consentimiento de esta participante? No podrá reservar nuevas clases.",
+    participantHistory: "Reservas de participantes",
+    participantHistoryDescription: "Revisa las reservas próximas y anteriores de tus participantes.",
+    noParticipantReservations: "Aún no hay reservas de participantes.",
+    reservationStatus: "Reserva",
+    attendanceOutcome: "Asistencia",
+    attendanceNotRecorded: "Sin registro",
+    attendancePresent: "Presente",
+    attendanceNoShow: "No asistió",
+    attendanceLateCancel: "Cancelación tardía",
+    attendanceExcused: "Justificada",
   } : {
     title: "ACADEMY SCHEDULE", subtitle: "Weekly program authorized by the academy calendar",
     today: "Today", classes: "classes", browse: "Browse by day", noClasses: "No classes scheduled.",
@@ -168,6 +190,7 @@ export default function PortalSchedule() {
     notEligible: "Your current plan does not include this class.", loading: "Loading schedule…",
     error: "The schedule could not be loaded.", couldNotBook: "Could not book class", type: "Class types", full: "View full schedule",
     fullDescription: "See every class on the public website.",
+    confirmed: "Confirmed", cancelled: "Cancelled",
     minorParticipant: "Minor participant",
     addMinor: "Add participant",
     chooseMinor: "Select who will attend",
@@ -191,6 +214,16 @@ export default function PortalSchedule() {
     revokeConsent: "Revoke consent",
     consentRevokedStatus: "Consent revoked",
     revokeConfirm: "Revoke consent for this participant? They will not be able to book new classes.",
+    participantHistory: "Participant reservations",
+    participantHistoryDescription: "Review upcoming and past reservations for your participants.",
+    noParticipantReservations: "No participant reservations yet.",
+    reservationStatus: "Reservation",
+    attendanceOutcome: "Attendance",
+    attendanceNotRecorded: "Not recorded",
+    attendancePresent: "Present",
+    attendanceNoShow: "No show",
+    attendanceLateCancel: "Late cancellation",
+    attendanceExcused: "Excused",
   };
   const openNewMinorDialog = () => {
     setEditingMinorId(null);
@@ -239,7 +272,7 @@ export default function PortalSchedule() {
         {schedule.isLoading ? <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-[#5EEBFF]" /></div> :
           schedule.error ? <p className="rounded-2xl border border-red-500/20 bg-red-500/10 p-5 text-red-200">{copy.error}</p> : (
             <>
-              {classes.some((item) => item.girlsClass) && (
+              {(classes.some((item) => item.girlsClass) || (minors.data || []).length > 0 || (minorReservations.data || []).length > 0 || minorReservations.isLoading) && (
                 <section className="mb-5 rounded-2xl border border-[#B06CFF]/20 bg-[#121826] p-4">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                     <div>
@@ -270,6 +303,37 @@ export default function PortalSchedule() {
                       </div>
                     </div>)}
                   </div>}
+                  <div className="mt-4 border-t border-white/5 pt-4">
+                    <div className="mb-3">
+                      <p className="text-sm font-semibold text-white">{copy.participantHistory}</p>
+                      <p className="mt-1 text-xs text-gray-400">{copy.participantHistoryDescription}</p>
+                    </div>
+                    {minorReservations.isLoading ? <div className="flex items-center gap-2 py-3 text-sm text-gray-400"><Loader2 className="h-4 w-4 animate-spin text-[#5EEBFF]" />{copy.loading}…</div> :
+                      minorReservations.error ? <p className="rounded-lg border border-red-500/20 bg-red-500/10 p-3 text-xs text-red-200">{copy.error}</p> :
+                        minorReservations.data?.length ? <div className="space-y-2">
+                          {minorReservations.data.map((reservation) => {
+                            const statusLabel = reservation.status === "confirmed" ? copy.confirmed : reservation.status === "waitlisted" ? copy.waitlist : copy.cancelled;
+                            const attendanceLabel = reservation.attendance === "PRESENT" ? copy.attendancePresent :
+                              reservation.attendance === "NO_SHOW" ? copy.attendanceNoShow :
+                                reservation.attendance === "LATE_CANCEL" ? copy.attendanceLateCancel :
+                                  reservation.attendance === "EXCUSED" ? copy.attendanceExcused : copy.attendanceNotRecorded;
+                            return <div key={reservation.id} className="rounded-lg bg-[#0B0F14] px-3 py-3">
+                              <div className="flex flex-wrap items-start justify-between gap-2">
+                                <div className="min-w-0">
+                                  <p className="text-sm font-medium text-gray-100">{reservation.participant.firstName} {reservation.participant.lastName}</p>
+                                  <p className="mt-1 break-words text-sm text-gray-300">{reservation.occurrence.title}</p>
+                                  <p className="mt-1 text-xs text-gray-500">{classDateLabel(reservation.occurrence.start, locale)} · {reservation.occurrence.location || classTimeLabel(reservation.occurrence.start, reservation.occurrence.end, locale)}</p>
+                                </div>
+                                {reservation.participant.consentRevokedAt && <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-amber-300">{copy.consentRevokedStatus}</span>}
+                              </div>
+                              <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-400">
+                                <span>{copy.reservationStatus}: <strong className="font-medium text-gray-200">{statusLabel}</strong></span>
+                                <span>{copy.attendanceOutcome}: <strong className="font-medium text-gray-200">{attendanceLabel}</strong></span>
+                              </div>
+                            </div>;
+                          })}
+                        </div> : <p className="rounded-lg bg-[#0B0F14] p-3 text-sm text-gray-500">{copy.noParticipantReservations}</p>}
+                  </div>
                 </section>
               )}
               <section className="mb-5 rounded-2xl border border-[#5EEBFF]/15 bg-[#121826] p-4">

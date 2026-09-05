@@ -75,6 +75,11 @@ export default function PortalDashboard() {
     enabled: isAuthenticated,
   });
 
+  const { data: minorReservations = [], isLoading: minorReservationsLoading } = useQuery<any[]>({
+    queryKey: ["/api/portal/minor-reservations"],
+    enabled: isAuthenticated,
+  });
+
   const { data: membership } = useQuery<any>({
     queryKey: ["/api/portal/my-membership"],
     enabled: isAuthenticated,
@@ -265,6 +270,41 @@ export default function PortalDashboard() {
             )}
           </CardContent>
         </Card>
+
+        {(minorReservationsLoading || minorReservations.length > 0) && (
+          <Card className="mb-4 border-[#B06CFF]/20 bg-[#121826]">
+            <CardHeader className="pb-2 pt-4 px-4">
+              <CardTitle className="flex items-center gap-2 text-base text-white">
+                <Users className="h-4 w-4 text-[#B06CFF]" />
+                {copy.participantHistory}
+              </CardTitle>
+              <CardDescription className="text-xs">{copy.participantHistoryDescription}</CardDescription>
+            </CardHeader>
+            <CardContent className="px-4 pb-4">
+              {minorReservationsLoading ? <div className="flex items-center gap-2 py-2 text-sm text-gray-400"><Loader2 className="h-4 w-4 animate-spin text-[#5EEBFF]" />{copy.loading}…</div> :
+                <div className="space-y-2">
+                  {minorReservations.slice(0, 4).map((reservation: any) => (
+                    <div key={reservation.id} className="rounded-lg border border-white/5 bg-white/[0.02] p-3">
+                      <div className="flex flex-wrap items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-white">{reservation.participant.firstName} {reservation.participant.lastName}</p>
+                          <p className="mt-1 break-words text-sm text-gray-300">{reservation.occurrence.title}</p>
+                          <p className="mt-1 text-xs text-gray-500">{classDateLabel(reservation.occurrence.start, locale)} · {classTimeLabel(reservation.occurrence.start, reservation.occurrence.end, locale)}</p>
+                        </div>
+                        {reservation.participant.consentRevokedAt && <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-amber-300">{copy.consentRevokedStatus}</span>}
+                      </div>
+                      <p className="mt-2 text-xs text-gray-400">
+                        {copy.reservationStatus}: <span className="text-gray-200">{reservation.status === "confirmed" ? copy.confirmed : reservation.status === "waitlisted" ? copy.waitlisted : copy.cancelled}</span>
+                        {" · "}
+                        {copy.attendanceOutcome}: <span className="text-gray-200">{reservation.attendance === "PRESENT" ? copy.attendancePresent : reservation.attendance === "NO_SHOW" ? copy.attendanceNoShow : reservation.attendance === "LATE_CANCEL" ? copy.attendanceLateCancel : reservation.attendance === "EXCUSED" ? copy.attendanceExcused : copy.attendanceNotRecorded}</span>
+                      </p>
+                    </div>
+                  ))}
+                  {minorReservations.length > 4 && <Button variant="outline" size="sm" className="mt-1 w-full border-white/10 text-gray-300 hover:bg-white/5" asChild><Link href={portalPath("/portal/schedule")}>{copy.viewSchedule}</Link></Button>}
+                </div>}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Main content grid: 1-col mobile, 2-col md, 3-col lg */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
