@@ -1,0 +1,1666 @@
+You are Replit Agent.
+
+We are now designing the NEXT MAJOR PRODUCT LAYER for the Ground Up portal.
+
+Ground Up is a women-only training center in Oxnard.
+
+The portal already contains meaningful work around:
+
+- authentication
+- member accounts
+- forms
+- schedule
+- class reservations
+- Google Calendar-backed occurrences
+- waitlists
+- cancellations
+- attendance
+- coach/admin roles
+- English/Spanish locale
+- email lifecycle handling
+- password reset
+- member dashboard
+
+We do NOT want to blindly rebuild any of that.
+
+# FIRST AUDIT WHAT EXISTS.
+# THEN DESIGN THE NEW MEMBER / MEMBERSHIP / DISCOVERY-PASS SYSTEM ON TOP OF IT.
+
+The goal is to turn the portal into the operating system for the entire Ground Up member journey.
+
+---
+
+# 1. BUSINESS MODEL WE ARE DESIGNING FOR
+
+Ground Up combines:
+
+- Women’s Brazilian Jiu-Jitsu
+- Practical self-defense
+- Strength & conditioning
+- Individualized strength/bodybuilding coaching as a premium layer
+
+Current weekly schedule concept:
+
+Monday
+5:00 PM — Jiu-Jitsu / Self-Defense
+6:00 PM — Strength & Conditioning — Lower Body
+
+Tuesday
+5:00 PM — Jiu-Jitsu / Self-Defense
+6:00 PM — Strength & Conditioning — Upper Body
+
+Wednesday
+5:00 PM — Jiu-Jitsu / Self-Defense
+6:00 PM — Strength & Conditioning — Lower Body
+
+Thursday
+5:00 PM — Jiu-Jitsu / Self-Defense
+6:00 PM — Strength & Conditioning — Upper Body
+
+Friday
+5:00 PM — Jiu-Jitsu / Self-Defense
+6:00 PM — Strength & Conditioning — Full Body
+
+Saturday
+9:00 AM — Strength & Conditioning — Full Body
+
+The business is a SMALL BOUTIQUE environment with intentionally limited class capacity.
+
+Members must reserve classes.
+
+Full classes should use a waitlist.
+
+---
+
+# 2. NEW INTRODUCTORY OFFER
+
+We want to implement:
+
+# THE GROUND UP DISCOVERY PASS
+
+For first-time women only.
+
+Includes:
+
+- 1 Jiu-Jitsu / Self-Defense class
+- 1 Strength & Conditioning class
+
+Both complimentary.
+
+The purpose is for a prospect to experience BOTH sides of Ground Up before choosing membership.
+
+Suggested validity:
+
+7 days from activation / first booking.
+
+The exact policy should be configurable, not hard-coded.
+
+The pass must NOT function as unlimited free access.
+
+---
+
+# 3. DISCOVERY PASS RULES
+
+A Discovery Pass should support:
+
+- first-time prospect only
+- one Skill-class entitlement
+- one Strength-class entitlement
+- configurable expiration
+- reservation required
+- subject to capacity
+- waitlist allowed
+- no rollover
+- one Discovery Pass per person unless admin manually overrides
+- track claimed / booked / attended / cancelled / expired / converted
+
+Do not allow someone to repeatedly create accounts for unlimited free passes.
+
+Design reasonable duplicate detection around existing account/email/phone data without invasive identity verification.
+
+---
+
+# 4. FUTURE MEMBERSHIP MODEL
+
+We are considering membership tiers similar to:
+
+GROUND UP 2
+- 2 class sessions per week
+
+GROUND UP 3
+- 3 class sessions per week
+
+GROUND UP PERSONAL
+- group-session entitlement
+- plus individualized coaching/private training benefits
+
+Do NOT hard-code these exact commercial tiers yet.
+
+Instead build a configurable membership-benefit engine capable of supporting:
+
+- sessions per week
+- eligible class categories
+- booking window
+- rollover policy
+- waitlist access
+- cancellation cutoff
+- trial/first-visit eligibility
+- private-session benefits
+- active/inactive dates
+
+The admin should be able to change rules later without rewriting booking logic.
+
+---
+
+# 5. WEEKLY CLASS CREDIT MODEL
+
+Architect for a weekly entitlement system.
+
+Examples:
+
+2x membership:
+2 eligible class credits per membership week.
+
+3x membership:
+3 eligible class credits per membership week.
+
+Important:
+
+Credits reset.
+
+Unused weekly classes do not automatically roll over unless the membership plan explicitly allows it.
+
+The entitlement should be based on the week in which the CLASS OCCURS, not merely the reservation creation timestamp.
+
+Define an authoritative membership-week boundary.
+
+Recommended default:
+
+Monday → Sunday
+
+but make it configurable.
+
+---
+
+# 6. BOOKING WINDOW
+
+Support a configurable advance booking window.
+
+Likely starting point:
+
+7 days.
+
+Example:
+
+Monday’s class opens for reservation the previous Monday.
+
+Do not hard-code 24 hours.
+
+Admin must be able to configure:
+
+booking_window_days
+or
+booking_window_hours
+
+per membership plan or globally.
+
+---
+
+# 7. CAPACITY
+
+Class capacity must remain controlled by the existing class-occurrence system.
+
+Do not duplicate capacity logic.
+
+Potential default class capacity may be small, such as six women, but:
+
+DO NOT hard-code six unless it already exists as authoritative configuration.
+
+Capacity must be configurable per class/occurrence.
+
+---
+
+# 8. WAITLIST
+
+Preserve/enhance existing waitlist behavior.
+
+When class capacity is reached:
+
+FULL
+→ JOIN WAITLIST
+
+Track:
+
+- waitlist position
+- join timestamp
+- promotion timestamp
+- promotion notification
+- decline/expiration if appropriate
+
+If a seat becomes available:
+
+promote eligible member according to defined ordering.
+
+Do not exceed membership weekly entitlement during promotion.
+
+---
+
+# 9. DISCOVERY-PASS RESERVED SEATS
+
+Evaluate whether Ground Up should optionally reserve:
+
+1 trial/discovery seat per class
+
+or another configurable quantity.
+
+This should be an ADMIN CONFIGURATION feature.
+
+Possible logic:
+
+class capacity = 6
+member inventory = 5
+discovery inventory = 1
+
+At configurable time before class, e.g. 6–8 hours:
+
+unused Discovery inventory can be released to member waitlist.
+
+Do NOT implement this blindly.
+
+Audit the existing capacity model first and recommend the cleanest extension.
+
+---
+
+# 10. AUDIT CURRENT DATA MODEL FIRST
+
+Before coding, map all existing tables/entities related to:
+
+- users
+- members
+- coaches
+- roles
+- forms
+- form submissions
+- class types
+- class occurrences
+- reservations
+- waitlists
+- attendance
+- memberships
+- payments
+- plans
+- Google Calendar connections
+- notifications
+- email lifecycle
+- leads
+- first visits
+- locale
+
+Return:
+
+CURRENT ENTITY MAP
+
+with relationships.
+
+Do not create duplicate concepts if an appropriate existing entity already exists.
+
+---
+
+# 11. AUDIT CURRENT MEMBER PROFILE
+
+Determine exactly what information is currently stored for a member.
+
+Possible existing fields may include:
+
+- name
+- email
+- phone
+- locale
+- role
+- form completion
+- bookings
+- attendance
+- belt rank
+- notes
+
+Do not assume.
+
+Inspect source/schema.
+
+Then identify what is missing for a basic boutique gym/member profile.
+
+---
+
+# 12. BASIC MEMBER INFORMATION
+
+We need one coherent Member Profile.
+
+Recommended categories:
+
+## Identity
+- first name
+- last name
+- email
+- phone
+- preferred language
+
+## Emergency
+- emergency contact name
+- relationship
+- phone
+
+## Training
+- membership status
+- membership plan
+- start date
+- primary interests
+- experience level
+- class history
+- attendance
+
+## Health / Safety
+Only information reasonably required for safe training.
+
+Potential:
+- injuries/limitations
+- relevant training considerations
+
+Do NOT collect unnecessary medical data.
+
+Use current forms if this information already exists rather than duplicating it into multiple databases.
+
+---
+
+# 13. GOALS / INTERESTS
+
+During onboarding allow members/prospects to indicate:
+
+What brought you to Ground Up?
+
+Possible values:
+
+- Get stronger
+- Learn Jiu-Jitsu
+- Learn self-defense
+- Improve conditioning
+- Learn a new skill
+- Build confidence
+- Strength/body-development goals
+- A little of everything
+
+Store canonical values.
+
+Translate labels EN/ES.
+
+This information should be useful to the coach.
+
+---
+
+# 14. MEMBER PROFILE SHOULD AGGREGATE, NOT DUPLICATE
+
+The profile should provide a unified view of:
+
+member
+→ forms
+→ membership
+→ bookings
+→ attendance
+→ goals
+→ coach notes
+
+Do not copy every form response into member columns.
+
+Use relational references where appropriate.
+
+---
+
+# 15. ATTENDANCE SYSTEM
+
+Attendance must become a first-class operational feature.
+
+For every scheduled class/member reservation track:
+
+- reserved
+- waitlisted
+- attended
+- absent/no-show
+- late cancellation
+- excused cancellation if used
+- cancelled on time
+
+Use canonical status values.
+
+Do not rely on free-text attendance.
+
+---
+
+# 16. ATTENDANCE CHECK-IN WORKFLOW
+
+Coach/admin should have a simple class roster.
+
+For each class:
+
+- member
+- membership/trial status
+- reserved/waitlisted
+- Discovery Pass indicator
+- attendance action
+
+Actions:
+
+PRESENT
+NO SHOW
+CANCELLED
+LATE CANCEL
+
+Keep it extremely fast for a coach using a phone.
+
+---
+
+# 17. MEMBER ATTENDANCE HISTORY
+
+Member portal should show meaningful history:
+
+This Week
+- 2 of 3 sessions used
+
+This Month
+- classes attended
+- upcoming reservations
+
+Training History
+- date
+- class type
+- attended/cancelled
+
+Do not shame members for missed attendance.
+
+Use neutral language.
+
+---
+
+# 18. COACH MEMBER VIEW
+
+Coach should be able to open a member and understand the situation quickly.
+
+Show:
+
+- name
+- preferred language
+- active membership
+- Discovery Pass state if applicable
+- interests/goals
+- upcoming class
+- recent attendance
+- forms status
+- training notes
+- belt/rank if applicable
+
+Do not expose sensitive information that coach role is not authorized to see.
+
+Preserve object-level authorization.
+
+---
+
+# 19. ADMIN MEMBER VIEW
+
+Admin should have a more complete member operating view.
+
+Possible tabs:
+
+Overview
+Membership
+Attendance
+Reservations
+Forms
+Notes
+Account
+
+Include:
+
+- membership start/status
+- weekly entitlement
+- credits used
+- upcoming bookings
+- waitlists
+- attendance
+- Discovery Pass lifecycle
+- conversion state
+
+---
+
+# 20. DISCOVERY PASS LIFECYCLE
+
+Create explicit lifecycle states.
+
+Recommended:
+
+CLAIMED
+SKILL_BOOKED
+SKILL_ATTENDED
+STRENGTH_BOOKED
+STRENGTH_ATTENDED
+COMPLETED
+EXPIRED
+CONVERTED
+CANCELLED
+
+Do not rely solely on these sequential labels if the user can take Strength first.
+
+Better internal model:
+
+Discovery Pass
++
+two entitlement records:
+
+SKILL
+STRENGTH
+
+Each entitlement has:
+
+AVAILABLE
+BOOKED
+ATTENDED
+EXPIRED
+CANCELLED
+
+Then overall status can be derived.
+
+Design this cleanly.
+
+---
+
+# 21. DISCOVERY PASS DASHBOARD EXPERIENCE
+
+For a prospect with the Discovery Pass:
+
+Dashboard should immediately show:
+
+# YOUR GROUND UP DISCOVERY PASS
+
+Then:
+
+Skill
+Jiu-Jitsu / Self-Defense
+[BOOK YOUR CLASS]
+
+Strength
+Strength & Conditioning
+[BOOK YOUR CLASS]
+
+If booked:
+
+date/time
+confirmed status
+manage reservation
+
+After attending:
+
+COMPLETED ✓
+
+Show:
+
+1 of 2 experiences completed
+
+Then:
+
+2 of 2 experiences completed
+
+---
+
+# 22. TRIAL CONVERSION MOMENT
+
+Once both Discovery sessions are attended:
+
+the dashboard should transition into a membership invitation.
+
+Example:
+
+# YOU'VE EXPERIENCED BOTH SIDES OF GROUND UP.
+
+You learned a skill.
+You built strength.
+
+Now choose how you'd like to keep training.
+
+[VIEW MEMBERSHIPS]
+
+Do not force purchase.
+
+If membership commerce is not implemented, route to:
+
+membership inquiry/contact/admin conversion flow.
+
+---
+
+# 23. COACH CONVERSION WORKFLOW
+
+After the second Discovery Pass attendance:
+
+create an internal staff notification:
+
+Discovery Pass Complete
+
+Member:
+[Name]
+
+Completed:
+Skill ✓
+Strength ✓
+
+Interest:
+[...]
+
+Follow-up:
+Membership conversation
+
+Allow staff to mark:
+
+CONTACTED
+JOINED
+NOT READY
+FOLLOW UP
+DECLINED
+
+Do not create aggressive automated sales messaging.
+
+---
+
+# 24. MEMBERSHIP ENTITLEMENT ENGINE
+
+Create or extend an entitlement service.
+
+It should answer:
+
+Can this member reserve this occurrence?
+
+Evaluation may include:
+
+- account active
+- membership active
+- class eligible for plan
+- booking window open
+- weekly entitlement remaining
+- capacity
+- existing booking
+- overlap rule
+- Discovery Pass entitlement
+- suspension/restriction if applicable
+
+Return structured reasons.
+
+Examples:
+
+ELIGIBLE
+
+WEEKLY_LIMIT_REACHED
+
+CLASS_FULL_WAITLIST_AVAILABLE
+
+BOOKING_WINDOW_CLOSED
+
+PLAN_NOT_ELIGIBLE
+
+DISCOVERY_SKILL_ALREADY_USED
+
+DISCOVERY_STRENGTH_ALREADY_USED
+
+Do not scatter membership-rule logic across React components.
+
+Server is authoritative.
+
+---
+
+# 25. WEEKLY USAGE LEDGER
+
+Track weekly entitlement consumption reliably.
+
+Do not simply decrement a mutable integer without auditability.
+
+Preferred approach:
+
+derive usage from qualifying reservation/attendance records
+or
+maintain an auditable entitlement ledger.
+
+Define whether a credit is consumed at:
+
+BOOKING
+
+or
+
+ATTENDANCE.
+
+Recommended behavior:
+
+Reservation temporarily reserves the weekly credit.
+
+On timely cancellation:
+credit becomes available again.
+
+On late cancellation/no-show:
+policy may choose whether credit remains consumed.
+
+Make this policy configurable.
+
+---
+
+# 26. CANCELLATION POLICY ENGINE
+
+Support configurable:
+
+cancellation_cutoff_hours
+
+Potential initial value:
+
+4 hours
+
+Do not hard-code until admin confirms.
+
+Classify:
+
+ON_TIME_CANCEL
+LATE_CANCEL
+NO_SHOW
+
+Plan rules can determine:
+
+- whether weekly credit returns
+- whether penalties apply
+- whether warning is issued
+
+Do NOT implement monetary penalties unless specifically authorized later.
+
+---
+
+# 27. NO-SHOW TRACKING
+
+Track no-shows.
+
+Admin should see:
+
+- last 30 days
+- lifetime total
+- recent pattern
+
+Do not automatically punish people in this implementation.
+
+Build data first.
+
+Future policy could include booking restrictions or fees.
+
+---
+
+# 28. MEMBERSHIP WEEK DISPLAY
+
+Member dashboard should clearly show:
+
+THIS WEEK
+
+2 of 3 sessions booked/used
+
+or
+
+1 session remaining
+
+Avoid the word “credits” if it feels transactional.
+
+Potential member-facing language:
+
+# YOUR TRAINING THIS WEEK
+
+2 of 3 sessions scheduled
+
+---
+
+# 29. MEMBER SCHEDULE UX
+
+Each class card should show:
+
+- day/date
+- time
+- class category
+- strength focus if applicable
+- coach
+- spots remaining
+- eligibility state
+- reserve / waitlist
+
+Examples:
+
+Jiu-Jitsu / Self-Defense
+
+Strength & Conditioning
+Lower Body
+
+Strength & Conditioning
+Upper Body
+
+Strength & Conditioning
+Full Body
+
+---
+
+# 30. CLASS TAXONOMY
+
+Audit current class types.
+
+We need clean canonical categories.
+
+Likely:
+
+SKILL
+- JIU_JITSU_SELF_DEFENSE
+
+STRENGTH
+- STRENGTH_CONDITIONING
+
+Strength focus:
+
+LOWER_BODY
+UPPER_BODY
+FULL_BODY
+
+Do not encode “Lower Body” as a property of Monday itself.
+
+It belongs to the specific class occurrence/template.
+
+---
+
+# 31. ENGLISH / SPANISH
+
+Everything introduced in this feature must support:
+
+English
+Español
+
+Including:
+
+- Discovery Pass
+- booking eligibility
+- weekly usage
+- attendance labels
+- membership
+- coach roster
+- admin member overview
+- notifications
+- email copy
+- errors
+- empty states
+
+Do not repeat the previous mixed-language issue.
+
+No user-facing hard-coded strings.
+
+---
+
+# 32. DISCOVERY PASS SPANISH
+
+Suggested public/member language:
+
+# PASE DE DESCUBRIMIENTO GROUND UP
+
+Includes:
+
+1 clase de Jiu-Jitsu / Defensa Personal
+
+1 clase de Fuerza y Acondicionamiento
+
+Spanish should be natural rather than literal.
+
+---
+
+# 33. MEMBER ONBOARDING
+
+After account registration:
+
+do not simply dump the person into forms.
+
+Create a guided onboarding state.
+
+Example:
+
+WELCOME TO GROUND UP
+
+Step 1
+Your Information
+
+Step 2
+Training Goals
+
+Step 3
+Required Forms
+
+Step 4
+Your Discovery Pass / Membership
+
+Step 5
+Book Your First Class
+
+Existing members should NOT be forced through new-prospect onboarding unnecessarily.
+
+---
+
+# 34. DIFFERENT ACCOUNT STATES
+
+The portal must understand:
+
+PROSPECT
+DISCOVERY_PASS
+ACTIVE_MEMBER
+INACTIVE_MEMBER
+COACH
+ADMIN
+
+Do not overload the role column if lifecycle state is conceptually different from authorization role.
+
+Authorization role and customer lifecycle are separate concepts.
+
+---
+
+# 35. PROSPECT ACCOUNT
+
+A prospect who registered but has not activated a pass/membership should see:
+
+- complete profile
+- required forms
+- claim/book Discovery Pass if eligible
+- contact Ground Up
+
+Not normal member weekly entitlements.
+
+---
+
+# 36. ACTIVE MEMBER DASHBOARD
+
+Show:
+
+- next class
+- weekly training usage
+- available sessions
+- schedule
+- incomplete forms
+- recent attendance
+
+Keep it clean.
+
+Do not create a complicated analytics dashboard.
+
+---
+
+# 37. MEMBER NOTES
+
+Separate clearly:
+
+COACH NOTES
+
+ADMIN NOTES
+
+Do not expose internal notes to members unless explicitly designated as member-visible.
+
+Preserve access control.
+
+---
+
+# 38. DATA PRIVACY
+
+The portal may contain personal and training information.
+
+Apply least privilege.
+
+Members:
+their own data.
+
+Coaches:
+authorized training/member information.
+
+Admins:
+operationally required data.
+
+Do not expose:
+
+- other member data
+- internal notes
+- unrelated financial data
+- sensitive form responses without legitimate need
+
+---
+
+# 39. AUDIT LOG
+
+For important membership actions track:
+
+- membership assigned
+- membership changed
+- Discovery Pass activated
+- entitlement override
+- attendance change
+- no-show
+- weekly-limit override
+- admin cancellation
+- membership deactivation
+
+Store:
+
+actor
+timestamp
+action
+target
+before/after where appropriate
+
+---
+
+# 40. ADMIN OVERRIDES
+
+Admin may need to override normal rules.
+
+Examples:
+
+- give extra session this week
+- restore Discovery Pass class
+- extend pass expiration
+- manually promote
+- mark attendance
+- correct no-show
+- change membership
+
+Overrides must:
+
+- require admin
+- be audited
+- optionally include reason
+
+Do not silently mutate history.
+
+---
+
+# 41. MEMBER SEARCH / DIRECTORY
+
+Admin should be able to search by:
+
+- name
+- email
+- phone
+
+Filter:
+
+- Discovery Pass
+- active members
+- inactive
+- upcoming trial
+- forms incomplete
+- attendance issue
+
+Coach search must remain scope-limited.
+
+---
+
+# 42. BASIC GYM OPERATIONS DASHBOARD
+
+Admin dashboard should eventually show useful metrics.
+
+Do not build giant analytics yet.
+
+Initial metrics:
+
+TODAY
+- classes
+- reservations
+- available seats
+- waitlisted
+- Discovery visitors
+
+THIS WEEK
+- attendance
+- no-shows
+- cancellations
+- utilization
+
+MEMBERS
+- active
+- Discovery Pass active
+- passes completed
+- conversions
+
+---
+
+# 43. CAPACITY ANALYTICS
+
+Because Ground Up is small, build basic utilization reporting.
+
+For each class:
+
+capacity
+confirmed
+attended
+waitlisted
+
+Compute:
+
+reservation utilization
+attendance utilization
+
+Weekly:
+
+total seat inventory
+reserved seat visits
+attended seat visits
+
+This will help determine when to add classes.
+
+---
+
+# 44. MEMBERSHIP CAPACITY PLANNING
+
+Do not enforce automatic sales caps yet.
+
+But calculate:
+
+weekly class-seat supply
+
+versus
+
+weekly member entitlement demand
+
+Example concept:
+
+sum(active_plan.weekly_session_limit)
+
+vs
+
+sum(class capacities for week)
+
+Report this to admin.
+
+This is particularly important for a boutique gym.
+
+---
+
+# 45. PERSONAL / BODYBUILDING COACHING
+
+Do not mix premium private coaching into normal group-class credits.
+
+Create extensibility for plan benefits such as:
+
+private_sessions_per_month
+personalized_program = true
+progress_review_frequency
+
+Do not build the full bodybuilding system unless it already exists.
+
+For now make the membership engine capable of representing it.
+
+---
+
+# 46. PROGRESS INFORMATION
+
+Avoid unnecessary body-image tracking by default.
+
+Do not require:
+
+- weight
+- measurements
+- body fat
+- photos
+
+Those should only exist inside an explicit personalized-coaching program if the member opts in and the business actually needs them.
+
+The core Ground Up product is capability, not body surveillance.
+
+---
+
+# 47. FORMS
+
+Audit existing forms first.
+
+Map:
+
+- intake
+- waiver
+- training questionnaire
+- health/safety
+- goals
+- consent
+
+Determine which onboarding information already exists.
+
+Reuse it.
+
+Do not ask the same information twice.
+
+---
+
+# 48. REQUIRED FORMS GATE
+
+If certain forms must legally/operationally be complete before participation:
+
+support:
+
+REQUIRED BEFORE CLASS
+
+Do not make all forms blocking automatically.
+
+Admin must configure which forms are required.
+
+Booking eligibility service should understand required-form status if needed.
+
+---
+
+# 49. GUARDIAN / GIRLS
+
+Do not break the girls/mother-daughter architecture.
+
+If youth accounts exist or are built later:
+
+guardian controls minor participation.
+
+Do not issue a normal adult Discovery Pass directly to a minor.
+
+Keep this feature extensible but focus current implementation on adult women unless current source already contains approved minor workflows.
+
+---
+
+# 50. PAYMENT / BILLING
+
+AUDIT FIRST.
+
+Determine whether Stripe/member billing is currently active, legacy, partial, or intentionally not used.
+
+Do NOT build new recurring billing automatically.
+
+The membership system can initially track:
+
+plan
+status
+start/end
+entitlement
+
+without processing recurring charges.
+
+If billing is already safely implemented, document how plans can integrate later.
+
+---
+
+# 51. ADMIN PLAN CONFIGURATION
+
+Eventually admin should be able to define:
+
+Plan Name
+
+Weekly Sessions
+
+Eligible Categories
+
+Booking Window
+
+Rollover
+
+Cancellation Cutoff
+
+Waitlist Allowed
+
+Discovery Eligible
+
+Private Session Benefit
+
+Active/Inactive
+
+Do not make code changes necessary whenever pricing/products change.
+
+---
+
+# 52. PRICE SHOULD BE DATA, NOT LOGIC
+
+Do not encode prices inside eligibility logic.
+
+Commercial price and operational benefits are separate.
+
+Membership plan may store/display price if needed, but:
+
+weekly entitlement logic should depend on benefit configuration.
+
+---
+
+# 53. MEMBERSHIP ASSIGNMENT
+
+Admin workflow:
+
+Member
+→ Membership
+→ Assign Plan
+→ Effective Date
+
+Support:
+
+ACTIVE
+PAUSED
+CANCELLED
+EXPIRED
+
+Do not create complex proration/billing logic unless explicitly authorized.
+
+---
+
+# 54. ATTENDANCE AND WEEKLY CREDIT
+
+Define and document exact behavior.
+
+Recommended:
+
+Confirmed reservation:
+holds one weekly session.
+
+On-time cancellation:
+releases it.
+
+Attendance:
+finalizes use.
+
+Late cancel/no-show:
+may count as used according to policy.
+
+Waitlist:
+does NOT consume entitlement until promoted/confirmed.
+
+Test this explicitly.
+
+---
+
+# 55. DISCOVERY PASS ENTITLEMENT
+
+Discovery Pass should operate independently from membership weekly credits.
+
+Skill entitlement allows only eligible skill classes.
+
+Strength entitlement allows only eligible strength classes.
+
+Attending one does not consume the other.
+
+Waitlist does not consume until confirmed.
+
+On-time cancellation restores the entitlement if still within expiration.
+
+---
+
+# 56. EMAILS / NOTIFICATIONS
+
+Add lifecycle support as appropriate:
+
+Discovery Pass claimed
+
+Skill class booked
+
+Strength class booked
+
+Class reminder
+
+Cancellation
+
+Waitlist promotion
+
+Discovery Pass 1 of 2 completed
+
+Discovery Pass complete
+
+Membership follow-up
+
+English/Spanish based on stored locale.
+
+Do not send production messages during development tests.
+
+---
+
+# 57. REMINDERS
+
+Audit whether reminder scheduling currently exists.
+
+If not:
+
+design but do not over-engineer.
+
+We eventually want:
+
+class reminder
+Discovery Pass expiration reminder
+
+Do not introduce fragile cron infrastructure unnecessarily without auditing current job capabilities.
+
+---
+
+# 58. MEMBER PORTAL EXPERIENCE
+
+Keep the portal elegant.
+
+Normal member top-level experience should remain roughly:
+
+Your Ground Up
+Schedule
+Your Training
+Forms
+Account
+
+Do NOT create:
+
+Discovery
+Membership
+Credits
+Attendance
+Reservations
+Waitlist
+
+as seven separate top-nav items.
+
+Those concepts should be incorporated into the relevant views.
+
+---
+
+# 59. YOUR TRAINING
+
+Consider making “Your Training” the unified member history area.
+
+Could contain:
+
+Upcoming
+History
+Attendance
+
+Avoid duplicating My Classes and Attendance pages unnecessarily.
+
+---
+
+# 60. MOBILE-FIRST
+
+Coach attendance and member booking are likely phone-heavy.
+
+Design:
+
+- large controls
+- one-hand usability
+- short rosters
+- sticky primary action only where helpful
+- no giant desktop tables
+
+Admin can remain denser on desktop but must remain usable on mobile.
+
+---
+
+# 61. ACCESSIBILITY
+
+Maintain:
+
+- labels
+- keyboard operation
+- focus states
+- status semantics
+- language metadata
+- contrast
+- sufficient tap targets
+
+Attendance status must not be communicated by color alone.
+
+---
+
+# 62. MIGRATION SAFETY
+
+Do not destroy current member data.
+
+Schema additions should be additive where possible.
+
+Create migration plan for existing members.
+
+Examples:
+
+existing user
+→ no lifecycle state?
+assign appropriate default based on current role/member data.
+
+existing reservations
+must remain intact.
+
+Do not reinterpret historical reservations incorrectly as membership usage if rules did not exist at the time.
+
+---
+
+# 63. FIRST DELIVERABLE — AUDIT REPORT
+
+BEFORE IMPLEMENTATION, return:
+
+# GROUND UP MEMBER SYSTEM AUDIT
+
+Include:
+
+A. Current schema
+
+B. Existing member model
+
+C. Existing attendance implementation
+
+D. Existing membership/payment concepts
+
+E. Current reservation model
+
+F. Current forms
+
+G. Current coach/admin member tools
+
+H. Existing analytics
+
+I. Existing locale support
+
+J. What can be reused
+
+K. What must be added
+
+L. What must NOT be duplicated
+
+M. Proposed schema changes
+
+N. Proposed membership entitlement architecture
+
+O. Proposed Discovery Pass architecture
+
+P. Proposed attendance architecture
+
+Q. Migration risks
+
+R. Implementation phases
+
+---
+
+# 64. STOP AFTER AUDIT
+
+This is important.
+
+Do NOT immediately implement the entire system during the first pass.
+
+We want the audit and architecture proposal first.
+
+Do not make large schema or workflow changes until the current implementation has been reconciled.
+
+Safe inspection/tests are allowed.
+
+---
+
+# 65. PROPOSED IMPLEMENTATION PHASES
+
+After audit recommend a phased plan similar to:
+
+Phase 1
+Member lifecycle + profile model
+
+Phase 2
+Attendance normalization
+
+Phase 3
+Discovery Pass
+
+Phase 4
+Membership entitlement engine
+
+Phase 5
+Member dashboard / weekly usage
+
+Phase 6
+Coach/admin workflows
+
+Phase 7
+Notifications and analytics
+
+Phase 8
+Cutover / migration / QA
+
+Adjust based on actual source.
+
+---
+
+# 66. FINAL AUDIT VERDICT
+
+End the first response with exactly one:
+
+GROUND UP MEMBER SYSTEM AUDIT COMPLETE — READY TO BUILD
+
+GROUND UP MEMBER SYSTEM AUDIT COMPLETE — DATA MODEL CLEANUP REQUIRED FIRST
+
+GROUND UP MEMBER SYSTEM AUDIT COMPLETE — EXISTING FEATURES CAN BE EXTENDED
+
+GROUND UP MEMBER SYSTEM AUDIT BLOCKED
+
+---
+
+# FINAL PRODUCT VISION
+
+Ground Up should know the complete training lifecycle of every member:
+
+WHO SHE IS
+
+WHY SHE JOINED
+
+WHICH PROGRAM SHE HAS
+
+WHAT SHE CAN BOOK
+
+WHAT SHE BOOKED
+
+WHAT SHE ATTENDED
+
+WHAT SHE MISSED
+
+WHAT FORMS SHE COMPLETED
+
+WHAT HER NEXT CLASS IS
+
+WHERE SHE IS IN HER DISCOVERY PASS
+
+WHETHER SHE BECAME A MEMBER
+
+The portal should become the operational source of truth for Ground Up.
+
+But first:
+
+# AUDIT THE SYSTEM THAT ALREADY EXISTS.
+
+Reuse what works.
+
+Do not duplicate data.
+
+Then design the new Discovery Pass + membership + attendance system cleanly on top of it.
