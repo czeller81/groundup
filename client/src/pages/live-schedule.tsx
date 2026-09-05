@@ -14,23 +14,23 @@ export default function LiveSchedule() {
     seoTitle: "Horario de Clases en Vivo | Ground Up Jiu-Jitsu y Fitness",
     seoDescription: "Consulta las próximas clases de Ground Up, disponibilidad en vivo y lista de espera en horario del Pacífico.",
     eyebrow: "Horario en vivo · Hora del Pacífico",
-    title: "Elige tu próxima clase",
-    description: "Las fechas, horarios, disponibilidad y cancelaciones se sincronizan desde el calendario de la academia.",
+     title: "HORARIO SEMANAL",
+     description: "Jiu-Jitsu, defensa personal y entrenamiento de fuerza para mujeres y niñas. Las fechas, horarios y disponibilidad se sincronizan desde el calendario de la academia.",
     loadError: "No se pudo cargar el horario en vivo.",
     configuring: "La reserva de clases está en configuración. Todavía no se está anunciando disponibilidad en vivo.",
     noClasses: "No hay clases reservables disponibles en este momento.",
-    waitlist: "Unirme a la lista de espera", firstVisit: "Reservar primera visita", member: "Reserva para miembros",
+     waitlist: "Unirme a la lista de espera", firstVisit: "Reservar primera visita", member: "Reserva para miembros", girls: "Consultar disponibilidad",
     login: "Acceso de miembros",
   } : {
     seoTitle: "Live Class Schedule | Ground Up Jiu-Jitsu & Fitness",
     seoDescription: "See upcoming Ground Up classes, live availability, and waitlist status in Pacific time.",
     eyebrow: "Live schedule · Pacific time",
-    title: "Choose your next class",
-    description: "Dates, times, availability, and cancellations are synchronized from the academy calendar.",
+     title: "WEEKLY SCHEDULE",
+     description: "Women’s Jiu-Jitsu, Self-Defense & Strength Training. Dates, times, availability, and cancellations are synchronized from the academy calendar.",
     loadError: "The live schedule could not be loaded.",
     configuring: "Online class booking is being configured. No live availability is being claimed yet.",
     noClasses: "No bookable classes are currently listed.",
-    waitlist: "Join waitlist", firstVisit: "Book first visit", member: "Member booking",
+     waitlist: "Join waitlist", firstVisit: "Book first visit", member: "Member booking", girls: "Contact / inquire",
     login: "Member login",
   };
   const { data, isLoading, error } = useQuery<ClassScheduleResponse>({
@@ -65,8 +65,8 @@ export default function LiveSchedule() {
               <ClassCard
                 key={occurrence.id}
                 occurrence={occurrence}
-                actionLabel={occurrence.firstVisitEligible ? (occurrence.bookingState === "waitlist" ? copy.waitlist : copy.firstVisit) : copy.member}
-                onAction={() => { window.location.href = occurrence.firstVisitEligible ? localizedPublicPath("/contact#contact-form", locale) : switchLocalePath("/portal/booking", locale); }}
+                 actionLabel={occurrence.bookingState === "not_available" ? copy.girls : occurrence.firstVisitEligible ? (occurrence.bookingState === "waitlist" ? copy.waitlist : copy.firstVisit) : copy.member}
+                 onAction={occurrence.bookingState === "not_available" ? () => { window.location.href = localizedPublicPath("/contact#contact-form", locale); } : () => { window.location.href = occurrence.firstVisitEligible ? localizedPublicPath("/contact#contact-form", locale) : switchLocalePath("/portal/booking", locale); }}
               />
             ))}
           </div>

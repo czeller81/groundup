@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { classDateLabel, classTimeLabel } from "@/lib/class-booking";
+import { localizedClassTitle } from "@/lib/class-booking";
 import { useToast } from "@/hooks/use-toast";
 import { localizeApiError, useLocale } from "@/lib/locale";
 
@@ -91,11 +92,12 @@ export default function ClassAdmin() {
               <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-bold">{occurrence.title}</p>
+                    <p className="font-bold">{localizedClassTitle(occurrence, locale)}</p>
                     <Badge className={occurrence.syncState === "unmapped" ? "bg-amber-500/15 text-amber-300" : "bg-emerald-500/15 text-emerald-300"}>{syncStateLabel(occurrence.syncState)}</Badge>
                     {occurrence.status !== "active" && <Badge variant="destructive">{occurrenceStatusLabel(occurrence.status)}</Badge>}
                   </div>
-                   <p className="mt-1 text-sm text-gray-400">{classDateLabel(occurrence.start, locale)} · {classTimeLabel(occurrence.start, occurrence.end, locale)} · {copy.capacity} {occurrence.capacity}</p>
+                    <p className="mt-1 text-sm text-gray-400">{classDateLabel(occurrence.start, locale)} · {classTimeLabel(occurrence.start, occurrence.end, locale)} · {copy.capacity} {occurrence.capacity}</p>
+                    <p className="mt-1 text-xs text-gray-500">{occurrence.audienceGroup || "ALL"} · {occurrence.canonicalCategory || "LEGACY"}{occurrence.strengthFocus ? ` · ${occurrence.strengthFocus}` : ""} · Google {occurrence.googleRecurringEventId || occurrence.googleEventId}</p>
                   {occurrence.syncError && <p className="mt-2 text-xs text-amber-300">{occurrence.syncError}</p>}
                 </div>
                  <Button variant="outline" onClick={() => setRosterOccurrence(occurrence)} className="min-h-11 border-white/15 text-white"><Users className="mr-2 h-4 w-4" />{copy.roster}</Button>
@@ -106,7 +108,7 @@ export default function ClassAdmin() {
       </section>
       {rosterOccurrence && (
          <section className="mt-8 rounded-2xl border border-[#5EEBFF]/20 bg-[#121826] p-4 sm:p-6">
-           <div className="flex items-start justify-between gap-3"><div><h2 className="font-bold"> {copy.roster} · {rosterOccurrence.title}</h2><p className="text-sm text-gray-400">{classDateLabel(rosterOccurrence.start, locale)}</p></div><Button variant="ghost" className="min-h-11" onClick={() => setRosterOccurrence(null)}>{copy.close}</Button></div>
+             <div className="flex items-start justify-between gap-3"><div><h2 className="font-bold"> {copy.roster} · {localizedClassTitle(rosterOccurrence, locale)}</h2><p className="text-sm text-gray-400">{classDateLabel(rosterOccurrence.start, locale)}</p></div><Button variant="ghost" className="min-h-11" onClick={() => setRosterOccurrence(null)}>{copy.close}</Button></div>
           {(["confirmed", "waitlisted"] as const).map((group) => (
             <div key={group} className="mt-5">
                  <h3 className="mb-2 text-xs font-bold uppercase tracking-widest text-gray-500">{group === "confirmed" ? copy.confirmed : copy.waitlisted}</h3>

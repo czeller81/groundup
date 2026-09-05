@@ -1,4 +1,5 @@
 import { Link } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { useId, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import SEO from "@/components/seo";
@@ -7,7 +8,7 @@ import {
   Shield, Users, Award, ChevronDown, ChevronUp,
   Star, ArrowRight, Zap, Heart, CheckCircle, CalendarDays, Clock
 } from "lucide-react";
-import { CATEGORY_CONFIG, getClassesForDay, getCurrentDay } from "@/lib/schedule-data";
+import { classDateLabel, classTimeLabel, localizedClassTitle, type ClassScheduleResponse } from "@/lib/class-booking";
 import { localizedPublicPath, useLocale } from "@/lib/locale";
 import selfDefenseFeaturedImg from "@assets/womens-sparring-1.jpg";
 import bjjFundamentalsImg from "@assets/womens-sparring-2.jpg";
@@ -237,10 +238,8 @@ export default function Home() {
   const t = (value: string) => locale === "es" ? (HOME_COPY[value] || value) : value;
   const path = (value: string) => localizedPublicPath(value, locale);
   const contactFormPath = path("/contact#contact-form");
-  const todayDay = getCurrentDay();
-  const todayRawClasses = getClassesForDay(todayDay);
-  const displayDay = todayRawClasses.length > 0 ? todayDay : "Monday";
-  const displayClasses = todayRawClasses.length > 0 ? todayRawClasses : getClassesForDay("Monday");
+  const schedule = useQuery<ClassScheduleResponse>({ queryKey: ["/api/classes"] });
+  const displayClasses = (schedule.data?.occurrences || []).slice(0, 6);
 
   return (
     <div className="flex flex-col bg-[#0B0F14]">
@@ -625,7 +624,7 @@ export default function Home() {
             <div>
               <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[#5EEBFF]/20 bg-[#5EEBFF]/5 text-[#5EEBFF] text-xs font-semibold uppercase tracking-widest mb-4">
                 <CalendarDays className="h-3.5 w-3.5" />
-                  {displayDay === todayDay ? t("Today's Classes") : t("Upcoming Classes")}
+                  {t("Upcoming Classes")}
               </div>
               <h2 className="text-3xl md:text-4xl font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>
                  {t("FIND A CLASS")} <span className="gradient-text-cyan">{t("THAT FITS YOU")}</span>
@@ -651,8 +650,8 @@ export default function Home() {
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {displayClasses.slice(0, 6).map((entry, i) => {
-              const cfg = CATEGORY_CONFIG[entry.category];
+            {displayClasses.map((entry, i) => {
+              const accent = entry.canonicalCategory === "GIRLS_JIU_JITSU_SELF_DEFENSE" ? "#B06CFF" : entry.canonicalCategory === "STRENGTH_CONDITIONING" ? "#34D399" : "#5EEBFF";
               return (
                 <motion.div
                   key={entry.id}
@@ -660,16 +659,16 @@ export default function Home() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.06, duration: 0.35 }}
-                  className={`rounded-xl border ${cfg.border} bg-[#0B0F14]/80 p-4 flex items-center gap-3 hover:brightness-110 transition-all`}
+                  className="rounded-xl border border-white/10 bg-[#0B0F14]/80 p-4 flex items-center gap-3 hover:brightness-110 transition-all"
                 >
-                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 text-lg ${cfg.bg}`}>
-                    {cfg.icon}
+                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg text-lg" style={{ color: accent, backgroundColor: `${accent}20` }}>
+                    {entry.canonicalCategory === "STRENGTH_CONDITIONING" ? "💪" : "🥋"}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-white font-semibold text-sm leading-snug">{t(entry.title)}</p>
+                    <p className="text-sm font-semibold leading-snug text-white">{localizedClassTitle(entry, locale)}</p>
                     <div className="flex items-center gap-1 mt-0.5">
-                      <Clock className={`h-3 w-3 flex-shrink-0 ${cfg.color}`} />
-                      <p className={`text-xs font-medium ${cfg.color}`}>{entry.startTime}{entry.endTime ? ` – ${entry.endTime}` : ""}</p>
+                      <Clock className="h-3 w-3 flex-shrink-0" style={{ color: accent }} />
+                      <p className="text-xs font-medium" style={{ color: accent }}>{classDateLabel(entry.start, locale)} · {classTimeLabel(entry.start, entry.end, locale)}</p>
                     </div>
                   </div>
                 </motion.div>

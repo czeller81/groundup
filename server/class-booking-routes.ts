@@ -10,6 +10,7 @@ import {
   ensureDefaultClassTypes,
   syncGoogleClassSchedule,
 } from "./class-booking-sync";
+import { evaluateBookingEligibility } from "./member-entitlements";
 import { sendClassLifecycleEmail } from "./email";
 
 const reservationSchema = z.object({
@@ -60,12 +61,19 @@ function publicOccurrence(occurrence: Awaited<ReturnType<typeof storage.listClas
     confirmedCount: occurrence.confirmedCount,
     waitlistCount: occurrence.waitlistCount,
     spotsRemaining: Math.max(occurrence.capacity - occurrence.confirmedCount, 0),
-    bookingState: occurrence.confirmedCount >= occurrence.capacity ? "waitlist" : "available",
+    bookable: occurrence.bookingEnabled,
+    bookingState: !occurrence.bookingEnabled ? "not_available" : occurrence.confirmedCount >= occurrence.capacity ? "waitlist" : "available",
     firstVisitEligible: occurrence.firstVisitEligible,
     audience: occurrence.audience,
+    audienceGroup: occurrence.audienceGroup,
+    canonicalCategory: occurrence.canonicalCategory,
+    strengthFocus: occurrence.strengthFocus,
     classType: occurrence.classType ? {
       id: occurrence.classType.id,
       name: occurrence.classType.name,
+      canonicalCategory: occurrence.classType.canonicalCategory,
+      strengthFocus: occurrence.classType.strengthFocus,
+      audienceGroup: occurrence.classType.audienceGroup,
       beginnerFriendly: occurrence.classType.beginnerFriendly,
       membershipRequired: occurrence.classType.membershipRequired,
     } : null,
@@ -156,6 +164,9 @@ export function registerClassBookingRoutes(app: Express) {
           waitlistCount: result.reservation.status === "waitlisted" ? 1 : 0,
           trainer: null,
           classType: null,
+          canonicalCategory: "LEGACY",
+          strengthFocus: null,
+          audienceGroup: "ALL",
         }),
         manageToken,
       });
@@ -188,7 +199,11 @@ export function registerClassBookingRoutes(app: Express) {
     try {
       const { from, to } = dateRange(req);
       const occurrences = await storage.listClassOccurrences(from, to);
-      res.json(occurrences.map(publicOccurrence));
+      const user = await storage.getUserById(req.session.userId!);
+      res.json(await Promise.all(occurrences.map(async (occurrence) => ({
+        ...publicOccurrence(occurrence),
+        eligibility: user ? await evaluateBookingEligibility(user, occurrence) : null,
+      }))));
     } catch (error) {
       respondError(res, error, "Failed to load classes.");
     }

@@ -15,12 +15,40 @@ export class CalendarConfigurationError extends Error {
   code = "GOOGLE_CALENDAR_NOT_CONFIGURED";
 }
 
-const DEFAULT_CLASS_TYPES = [
+export const FINAL_SCHEDULE_TAXONOMY = {
+  adultSkill: "JIU_JITSU_SELF_DEFENSE",
+  girlsSkill: "GIRLS_JIU_JITSU_SELF_DEFENSE",
+  strength: "STRENGTH_CONDITIONING",
+  lowerBody: "LOWER_BODY",
+  upperBodyCore: "UPPER_BODY_CORE",
+  fullBody: "FULL_BODY",
+} as const;
+
+export const FINAL_WEEKLY_SCHEDULE = [
+  { day: "Monday", time: "17:00", durationMinutes: 55, canonicalCategory: FINAL_SCHEDULE_TAXONOMY.adultSkill },
+  { day: "Monday", time: "18:00", durationMinutes: 55, canonicalCategory: FINAL_SCHEDULE_TAXONOMY.strength, strengthFocus: FINAL_SCHEDULE_TAXONOMY.lowerBody },
+  { day: "Tuesday", time: "16:15", durationMinutes: 45, canonicalCategory: FINAL_SCHEDULE_TAXONOMY.girlsSkill },
+  { day: "Tuesday", time: "17:00", durationMinutes: 55, canonicalCategory: FINAL_SCHEDULE_TAXONOMY.adultSkill },
+  { day: "Tuesday", time: "18:00", durationMinutes: 55, canonicalCategory: FINAL_SCHEDULE_TAXONOMY.strength, strengthFocus: FINAL_SCHEDULE_TAXONOMY.upperBodyCore },
+  { day: "Wednesday", time: "17:00", durationMinutes: 55, canonicalCategory: FINAL_SCHEDULE_TAXONOMY.adultSkill },
+  { day: "Wednesday", time: "18:00", durationMinutes: 55, canonicalCategory: FINAL_SCHEDULE_TAXONOMY.strength, strengthFocus: FINAL_SCHEDULE_TAXONOMY.lowerBody },
+  { day: "Thursday", time: "16:15", durationMinutes: 45, canonicalCategory: FINAL_SCHEDULE_TAXONOMY.girlsSkill },
+  { day: "Thursday", time: "17:00", durationMinutes: 55, canonicalCategory: FINAL_SCHEDULE_TAXONOMY.adultSkill },
+  { day: "Thursday", time: "18:00", durationMinutes: 55, canonicalCategory: FINAL_SCHEDULE_TAXONOMY.strength, strengthFocus: FINAL_SCHEDULE_TAXONOMY.upperBodyCore },
+  { day: "Friday", time: "17:00", durationMinutes: 55, canonicalCategory: FINAL_SCHEDULE_TAXONOMY.adultSkill },
+  { day: "Friday", time: "18:00", durationMinutes: 55, canonicalCategory: FINAL_SCHEDULE_TAXONOMY.strength, strengthFocus: FINAL_SCHEDULE_TAXONOMY.fullBody },
+  { day: "Saturday", time: "09:00", durationMinutes: 55, canonicalCategory: FINAL_SCHEDULE_TAXONOMY.strength, strengthFocus: FINAL_SCHEDULE_TAXONOMY.fullBody },
+] as const;
+
+const CANONICAL_CLASS_TYPES = [
   {
-    name: "Women's Jiu-Jitsu",
-    description: "Beginner-friendly women-focused jiu-jitsu class.",
-    category: "jiu-jitsu",
-    matchPattern: "women",
+    name: "Jiu-Jitsu / Self-Defense",
+    description: "Adult women’s jiu-jitsu and practical self-defense.",
+    category: "skill",
+    canonicalCategory: FINAL_SCHEDULE_TAXONOMY.adultSkill,
+    strengthFocus: null,
+    audienceGroup: "ADULT_WOMEN",
+    matchPattern: "ground up — jiu-jitsu / self-defense",
     defaultCapacity: 6,
     beginnerFriendly: true,
     firstVisitEligible: true,
@@ -30,10 +58,29 @@ const DEFAULT_CLASS_TYPES = [
     bookingEnabled: true,
   },
   {
-    name: "Adult Jiu-Jitsu",
-    description: "Adult jiu-jitsu class.",
-    category: "jiu-jitsu",
-    matchPattern: "adult",
+    name: "Girls’ Jiu-Jitsu / Self-Defense",
+    description: "Girls’ jiu-jitsu and practical self-defense. Guardian workflow required before booking.",
+    category: "girls-skill",
+    canonicalCategory: FINAL_SCHEDULE_TAXONOMY.girlsSkill,
+    strengthFocus: null,
+    audienceGroup: "FEMALE_YOUTH",
+    matchPattern: "ground up — girls’ jiu-jitsu / self-defense",
+    defaultCapacity: 6,
+    beginnerFriendly: true,
+    firstVisitEligible: false,
+    defaultTrainerId: null,
+    membershipRequired: true,
+    active: true,
+    bookingEnabled: false,
+  },
+  {
+    name: "Strength & Conditioning — Lower Body",
+    description: "Strength and conditioning with a lower-body focus.",
+    category: "strength",
+    canonicalCategory: FINAL_SCHEDULE_TAXONOMY.strength,
+    strengthFocus: FINAL_SCHEDULE_TAXONOMY.lowerBody,
+    audienceGroup: "ADULT_WOMEN",
+    matchPattern: "strength & conditioning — lower body",
     defaultCapacity: 6,
     beginnerFriendly: true,
     firstVisitEligible: true,
@@ -43,10 +90,13 @@ const DEFAULT_CLASS_TYPES = [
     bookingEnabled: true,
   },
   {
-    name: "Kids Jiu-Jitsu",
-    description: "Youth jiu-jitsu class.",
-    category: "jiu-jitsu",
-    matchPattern: "kids",
+    name: "Strength & Conditioning — Upper Body + Core",
+    description: "Strength and conditioning with an upper-body and core focus.",
+    category: "strength",
+    canonicalCategory: FINAL_SCHEDULE_TAXONOMY.strength,
+    strengthFocus: FINAL_SCHEDULE_TAXONOMY.upperBodyCore,
+    audienceGroup: "ADULT_WOMEN",
+    matchPattern: "strength & conditioning — upper body + core",
     defaultCapacity: 6,
     beginnerFriendly: true,
     firstVisitEligible: true,
@@ -56,10 +106,13 @@ const DEFAULT_CLASS_TYPES = [
     bookingEnabled: true,
   },
   {
-    name: "Strength & Conditioning",
-    description: "Strength and conditioning class.",
-    category: "fitness",
-    matchPattern: "strength",
+    name: "Strength & Conditioning — Full Body",
+    description: "Strength and conditioning with a full-body focus.",
+    category: "strength",
+    canonicalCategory: FINAL_SCHEDULE_TAXONOMY.strength,
+    strengthFocus: FINAL_SCHEDULE_TAXONOMY.fullBody,
+    audienceGroup: "ADULT_WOMEN",
+    matchPattern: "strength & conditioning — full body",
     defaultCapacity: 6,
     beginnerFriendly: true,
     firstVisitEligible: true,
@@ -72,16 +125,52 @@ const DEFAULT_CLASS_TYPES = [
 
 export async function ensureDefaultClassTypes(): Promise<ClassType[]> {
   let types = await storage.getClassTypes();
-  if (types.length) return types;
-  for (const classType of DEFAULT_CLASS_TYPES) {
-    await storage.createClassType(classType);
+  for (const classType of CANONICAL_CLASS_TYPES) {
+    const existing = types.find((candidate) => candidate.name === classType.name);
+    if (existing) {
+      await storage.updateClassType(existing.id, {
+        canonicalCategory: classType.canonicalCategory,
+        strengthFocus: classType.strengthFocus || null,
+        audienceGroup: classType.audienceGroup,
+        category: classType.category,
+        matchPattern: classType.matchPattern,
+        bookingEnabled: classType.bookingEnabled,
+        firstVisitEligible: classType.firstVisitEligible,
+        membershipRequired: classType.membershipRequired,
+      });
+    } else {
+      await storage.createClassType(classType);
+    }
   }
   types = await storage.getClassTypes();
   return types;
 }
 
-function matchClassType(title: string, classTypes: ClassType[]): ClassType | undefined {
-  const normalized = title.toLowerCase();
+function normalizedTitle(title: string) {
+  return title
+    .toLowerCase()
+    .replace(/[’‘]/g, "'")
+    .replace(/[—–-]/g, " ")
+    .replace(/[\/+&]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+export function matchClassType(title: string, classTypes: ClassType[]): ClassType | undefined {
+  const normalized = normalizedTitle(title);
+  const canonical = classTypes.filter((classType) => classType.active && classType.canonicalCategory !== "LEGACY");
+  if (normalized.includes("girls") || normalized.includes("girl")) {
+    return canonical.find((classType) => classType.canonicalCategory === FINAL_SCHEDULE_TAXONOMY.girlsSkill);
+  }
+  if (normalized.includes("strength") || normalized.includes("conditioning")) {
+    const strength = canonical.filter((classType) => classType.canonicalCategory === FINAL_SCHEDULE_TAXONOMY.strength);
+    if (normalized.includes("lower body")) return strength.find((classType) => classType.strengthFocus === FINAL_SCHEDULE_TAXONOMY.lowerBody);
+    if (normalized.includes("upper body") || normalized.includes("core")) return strength.find((classType) => classType.strengthFocus === FINAL_SCHEDULE_TAXONOMY.upperBodyCore);
+    if (normalized.includes("full body")) return strength.find((classType) => classType.strengthFocus === FINAL_SCHEDULE_TAXONOMY.fullBody);
+  }
+  if (normalized.includes("self defense") && !normalized.includes("girls")) {
+    return canonical.find((classType) => classType.canonicalCategory === FINAL_SCHEDULE_TAXONOMY.adultSkill);
+  }
   return classTypes.find((classType) => {
     if (!classType.active) return false;
     const pattern = (classType.matchPattern || classType.name).trim().toLowerCase();
@@ -166,6 +255,7 @@ export async function syncGoogleClassSchedule(
         : undefined;
       const classType = mappedType || matchClassType(title, classTypes);
       const preserveManual = existing?.syncState === "manual";
+      const preserveHistory = Boolean(existing && times.start < now);
       const originalStart = googleDateToDate(event.originalStartTime);
       await storage.upsertClassOccurrence({
         calendarConnectionId: connection.id,
@@ -173,21 +263,24 @@ export async function syncGoogleClassSchedule(
         googleEventId: event.id,
         googleRecurringEventId: event.recurringEventId || null,
         googleOriginalStartTime: originalStart,
-        title,
-        description: sanitizeCalendarText(event.description),
-        start: times.start,
-        end: times.end,
-        location: sanitizeCalendarText(event.location, 300),
-        instructorName: preserveManual ? existing.instructorName : null,
-        trainerId: preserveManual ? existing.trainerId : (classType?.defaultTrainerId || null),
-        classTypeId: classType?.id || null,
-        status: "active",
-        syncState: preserveManual ? "manual" : classType ? "synced" : "unmapped",
-        syncError: classType ? null : "No class type mapping matched this Google event title.",
-        capacity: preserveManual ? existing.capacity : (classType?.defaultCapacity || 6),
-        firstVisitEligible: preserveManual ? existing.firstVisitEligible : (classType?.firstVisitEligible || false),
-        bookingEnabled: preserveManual ? existing.bookingEnabled : Boolean(classType?.bookingEnabled),
-        audience: preserveManual ? existing.audience : classType?.membershipRequired ? "members" : "all",
+        title: preserveHistory ? existing!.title : title,
+        description: preserveHistory ? existing!.description : sanitizeCalendarText(event.description),
+        start: preserveHistory ? existing!.start : times.start,
+        end: preserveHistory ? existing!.end : times.end,
+        location: preserveHistory ? existing!.location : sanitizeCalendarText(event.location, 300),
+        instructorName: preserveHistory || preserveManual ? existing!.instructorName : null,
+        trainerId: preserveHistory || preserveManual ? existing!.trainerId : (classType?.defaultTrainerId || null),
+        classTypeId: preserveHistory ? existing!.classTypeId : classType?.id || null,
+        canonicalCategory: preserveHistory ? existing!.canonicalCategory : classType?.canonicalCategory || "LEGACY",
+        strengthFocus: preserveHistory ? existing!.strengthFocus : classType?.strengthFocus || null,
+        audienceGroup: preserveHistory ? existing!.audienceGroup : classType?.audienceGroup || "ALL",
+        status: preserveHistory ? existing!.status : "active",
+        syncState: preserveHistory ? existing!.syncState : preserveManual ? "manual" : classType ? "synced" : "unmapped",
+        syncError: preserveHistory ? existing!.syncError : classType ? null : "No class type mapping matched this Google event title.",
+        capacity: preserveHistory || preserveManual ? existing!.capacity : (classType?.defaultCapacity || 6),
+        firstVisitEligible: preserveHistory || preserveManual ? existing!.firstVisitEligible : (classType?.firstVisitEligible || false),
+        bookingEnabled: preserveHistory || preserveManual ? existing!.bookingEnabled : Boolean(classType?.bookingEnabled),
+        audience: preserveHistory || preserveManual ? existing!.audience : "all",
         remoteUpdatedAt: event.updated ? new Date(event.updated) : null,
         lastSyncedAt: now,
       });

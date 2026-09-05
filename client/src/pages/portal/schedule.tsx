@@ -1,190 +1,127 @@
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useMemo, useState } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
+import { CalendarDays, ChevronRight, Loader2, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Clock, CalendarDays, Zap, ChevronRight } from "lucide-react";
-import {
-  DAYS, CATEGORY_CONFIG, getClassesForDay, getCurrentDay,
-  type DayOfWeek, type ClassEntry
-} from "@/lib/schedule-data";
+import { ClassCard } from "@/components/class-card";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { classDateLabel, localizedClassTitle, type LiveClass } from "@/lib/class-booking";
+import { useLocale } from "@/lib/locale";
 
-const DAY_SHORT: Record<DayOfWeek, string> = {
-  Monday: "Mon", Tuesday: "Tue", Wednesday: "Wed", Thursday: "Thu",
-  Friday: "Fri", Saturday: "Sat", Sunday: "Sun",
+type DayOfWeek = "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday" | "Sunday";
+const DAYS: DayOfWeek[] = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+const DAY_SHORT: Record<DayOfWeek, { en: string; es: string }> = {
+  Monday: { en: "Mon", es: "Lun" }, Tuesday: { en: "Tue", es: "Mar" }, Wednesday: { en: "Wed", es: "Mié" },
+  Thursday: { en: "Thu", es: "Jue" }, Friday: { en: "Fri", es: "Vie" }, Saturday: { en: "Sat", es: "Sáb" },
+  Sunday: { en: "Sun", es: "Dom" },
+};
+const DAY_LABEL: Record<DayOfWeek, { en: string; es: string }> = {
+  Monday: { en: "Monday", es: "Lunes" }, Tuesday: { en: "Tuesday", es: "Martes" }, Wednesday: { en: "Wednesday", es: "Miércoles" },
+  Thursday: { en: "Thursday", es: "Jueves" }, Friday: { en: "Friday", es: "Viernes" }, Saturday: { en: "Saturday", es: "Sábado" },
+  Sunday: { en: "Sunday", es: "Domingo" },
 };
 
-function PortalClassCard({ entry, index }: { entry: ClassEntry; index: number }) {
-  const cfg = CATEGORY_CONFIG[entry.category];
-  const duration = entry.endTime
-    ? (() => {
-        const toMin = (t: string) => {
-          const [time, period] = t.split(" ");
-          const [h, m] = time.split(":").map(Number);
-          return (period === "PM" && h !== 12 ? h + 12 : period === "AM" && h === 12 ? 0 : h) * 60 + m;
-        };
-        return toMin(entry.endTime) - toMin(entry.startTime);
-      })()
-    : null;
+function dayForOccurrence(value: string): DayOfWeek {
+  return new Intl.DateTimeFormat("en-US", { timeZone: "America/Los_Angeles", weekday: "long" }).format(new Date(value)) as DayOfWeek;
+}
 
-  return (
-    <motion.div
-      initial={{ opacity: 0, x: -10 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ delay: index * 0.04, duration: 0.3 }}
-      className={`flex items-center gap-3 p-3 rounded-xl border ${cfg.border} ${cfg.bg} hover:brightness-110 transition-all duration-200`}
-    >
-      <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-black/20 text-base`}>
-        {cfg.icon}
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-white font-medium text-sm leading-snug truncate">{entry.title}</p>
-        <div className="flex items-center gap-2 mt-0.5">
-          <span className={`text-xs font-semibold ${cfg.color}`}>{entry.startTime}</span>
-          {entry.endTime && <span className="text-gray-600 text-xs">→ {entry.endTime}</span>}
-          {duration && <span className="text-gray-600 text-[10px]">· {duration}m</span>}
-        </div>
-      </div>
-      <div className="flex flex-wrap gap-1 flex-shrink-0 max-w-[80px] justify-end">
-        {entry.tags.slice(0, 1).map((tag) => (
-          <span key={tag} className="text-[10px] px-1.5 py-0.5 rounded bg-black/20 text-gray-400">{tag}</span>
-        ))}
-      </div>
-    </motion.div>
-  );
+function currentDay(): DayOfWeek {
+  return dayForOccurrence(new Date().toISOString());
 }
 
 export default function PortalSchedule() {
-  const todayDay = getCurrentDay();
+  const { locale } = useLocale();
+  const todayDay = currentDay();
   const [activeDay, setActiveDay] = useState<DayOfWeek>(todayDay);
-
-  const dayClasses = getClassesForDay(activeDay);
-  const todayClasses = getClassesForDay(todayDay);
+  const range = useMemo(() => {
+    const from = new Date();
+    from.setHours(0, 0, 0, 0);
+    const to = new Date(from);
+    to.setDate(to.getDate() + 90);
+    return { from: from.toISOString(), to: to.toISOString() };
+  }, []);
+  const schedule = useQuery<LiveClass[]>({
+    queryKey: [`/api/portal/classes?from=${encodeURIComponent(range.from)}&to=${encodeURIComponent(range.to)}`],
+  });
+  const reserve = useMutation({
+    mutationFn: async (occurrenceId: string) => (await apiRequest("POST", "/api/portal/class-reservations", { occurrenceId })).json(),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["/api/portal/classes"] }),
+  });
+  const classes = schedule.data || [];
+  const classesForDay = (day: DayOfWeek) => classes.filter((item) => dayForOccurrence(item.start) === day);
+  const todayClasses = classesForDay(todayDay);
+  const selectedClasses = classesForDay(activeDay);
+  const copy = locale === "es" ? {
+    title: "HORARIO DE LA ACADEMIA", subtitle: "Programa semanal autorizado por el calendario de la academia",
+    today: "Hoy", classes: "clases", browse: "Ver por día", noClasses: "No hay clases programadas.",
+    book: "Reservar", waitlist: "Unirse a lista de espera", notAvailable: "Consulta al equipo",
+    notEligible: "Tu plan actual no incluye esta clase.", loading: "Cargando horario…",
+    error: "No se pudo cargar el horario.", type: "Tipos de clase", full: "Ver horario completo",
+    fullDescription: "Consulta todas las clases en el sitio público.",
+  } : {
+    title: "ACADEMY SCHEDULE", subtitle: "Weekly program authorized by the academy calendar",
+    today: "Today", classes: "classes", browse: "Browse by day", noClasses: "No classes scheduled.",
+    book: "Reserve", waitlist: "Join waitlist", notAvailable: "Contact the team",
+    notEligible: "Your current plan does not include this class.", loading: "Loading schedule…",
+    error: "The schedule could not be loaded.", type: "Class types", full: "View full schedule",
+    fullDescription: "See every class on the public website.",
+  };
+  const actionFor = (item: LiveClass) => {
+    if (!item.bookable) return undefined;
+    if (item.eligibility && !item.eligibility.eligible) return undefined;
+    return item.bookingState === "waitlist" ? copy.waitlist : copy.book;
+  };
 
   return (
     <div className="min-h-screen bg-[#0B0F14]">
-      {/* Header */}
-      <div className="bg-[#121826]/50 border-b border-white/5 py-4 px-4 sm:px-6">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>
-              ACADEMY <span className="text-[#5EEBFF]">SCHEDULE</span>
-            </h1>
-            <p className="text-sm text-gray-400">Weekly class times &amp; programs</p>
-          </div>
-          <Button asChild size="sm" className="bg-[#FFB199] text-[#0B0F14] font-bold hover:bg-[#FFB199]/90 text-xs">
-            <Link href="/portal/booking">Book Session</Link>
-          </Button>
+      <div className="border-b border-white/5 bg-[#121826]/50 px-4 py-4 sm:px-6">
+        <div className="mx-auto max-w-4xl">
+          <h1 className="text-xl font-bold text-white">{copy.title}</h1>
+          <p className="text-sm text-gray-400">{copy.subtitle}</p>
         </div>
       </div>
-
-      <main className="max-w-4xl mx-auto px-3 sm:px-4 py-5">
-
-        {/* Today's classes highlight */}
-        {todayDay && (
-          <div className="mb-5 p-4 rounded-2xl bg-[#121826] border border-[#5EEBFF]/15">
-            <div className="flex items-center gap-2 mb-3">
-              <Zap className="h-4 w-4 text-[#5EEBFF]" />
-              <span className="text-[#5EEBFF] text-sm font-bold uppercase tracking-wider">Today — {todayDay}</span>
-              <span className="ml-auto text-gray-600 text-xs">{todayClasses.length} classes</span>
-            </div>
-            {todayClasses.length === 0 ? (
-              <p className="text-gray-500 text-sm text-center py-3">No classes scheduled today.</p>
-            ) : (
-              <div className="space-y-2">
-                {todayClasses.map((entry, i) => (
-                  <PortalClassCard key={entry.id} entry={entry} index={i} />
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Day selector */}
-        <div className="mb-4">
-          <p className="text-xs text-gray-500 uppercase tracking-widest mb-2 font-medium">Browse by Day</p>
-          <div className="flex gap-1.5 overflow-x-auto pb-1">
-            {DAYS.map((day) => {
-              const isToday = day === todayDay;
-              const isActive = day === activeDay;
-              const count = getClassesForDay(day).length;
-              return (
-                <button
-                  key={day}
-                  onClick={() => setActiveDay(day)}
-                  className={`relative flex-shrink-0 flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all duration-200 ${
-                    isActive
-                      ? "bg-[#B06CFF] text-white shadow-lg shadow-[#B06CFF]/25"
-                      : "bg-[#121826] text-gray-400 hover:text-white border border-white/5"
-                  }`}
-                >
-                  {isToday && !isActive && (
-                    <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-[#5EEBFF]" />
-                  )}
-                  <span className="uppercase tracking-wide">{DAY_SHORT[day]}</span>
-                  <span className={`text-[9px] ${isActive ? "text-white/60" : "text-gray-600"}`}>{count}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Selected day classes */}
-        <div className="bg-[#121826] rounded-2xl border border-white/5 p-4">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-white font-bold text-base" style={{ fontFamily: 'var(--font-display)' }}>
-              {activeDay} <span className="text-gray-500 font-normal text-sm">— {dayClasses.length} classes</span>
-            </h2>
-            {activeDay === todayDay && (
-              <span className="text-[10px] font-semibold uppercase tracking-widest text-[#5EEBFF] bg-[#5EEBFF]/10 px-2 py-1 rounded-full border border-[#5EEBFF]/20">Today</span>
-            )}
-          </div>
-
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeDay}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.15 }}
-              className="space-y-2"
-            >
-              {dayClasses.length === 0 ? (
-                <div className="text-center py-10 text-gray-600">
-                  <CalendarDays className="h-8 w-8 mx-auto mb-2 opacity-30" />
-                  <p className="text-sm">No classes scheduled.</p>
+      <main className="mx-auto max-w-4xl px-3 py-5 sm:px-4">
+        {schedule.isLoading ? <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-[#5EEBFF]" /></div> :
+          schedule.error ? <p className="rounded-2xl border border-red-500/20 bg-red-500/10 p-5 text-red-200">{copy.error}</p> : (
+            <>
+              <section className="mb-5 rounded-2xl border border-[#5EEBFF]/15 bg-[#121826] p-4">
+                <div className="mb-3 flex items-center gap-2">
+                  <Zap className="h-4 w-4 text-[#5EEBFF]" />
+                  <span className="text-sm font-bold uppercase tracking-wider text-[#5EEBFF]">{copy.today} — {DAY_LABEL[todayDay][locale]}</span>
+                  <span className="ml-auto text-xs text-gray-600">{todayClasses.length} {copy.classes}</span>
                 </div>
-              ) : (
-                dayClasses.map((entry, i) => <PortalClassCard key={entry.id} entry={entry} index={i} />)
-              )}
-            </motion.div>
-          </AnimatePresence>
-        </div>
-
-        {/* Category legend */}
-        <div className="mt-5 p-4 bg-[#121826] rounded-2xl border border-white/5">
-          <p className="text-xs text-gray-500 uppercase tracking-widest mb-3 font-medium">Class Types</p>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            {Object.entries(CATEGORY_CONFIG).map(([key, cfg]) => (
-              <div key={key} className="flex items-center gap-2">
-                <span className="text-sm">{cfg.icon}</span>
-                <span className={`text-xs font-medium ${cfg.color}`}>{cfg.label}</span>
+                {todayClasses.length ? <div className="space-y-3">{todayClasses.map((item) => <ClassCard key={item.id} occurrence={item} actionLabel={actionFor(item)} busy={reserve.isPending} onAction={() => reserve.mutate(item.id)} />)}</div> :
+                  <p className="py-3 text-center text-sm text-gray-500">{copy.noClasses}</p>}
+              </section>
+              <div className="mb-4">
+                <p className="mb-2 text-xs font-medium uppercase tracking-widest text-gray-500">{copy.browse}</p>
+                <div className="flex gap-1.5 overflow-x-auto pb-1">
+                  {DAYS.map((day) => {
+                    const active = day === activeDay;
+                    return <button key={day} onClick={() => setActiveDay(day)} className={`relative flex min-h-14 flex-shrink-0 flex-col items-center gap-0.5 rounded-xl px-3 py-2 text-xs font-semibold ${active ? "bg-[#B06CFF] text-white" : "border border-white/5 bg-[#121826] text-gray-400"}`}>
+                      {day === todayDay && !active && <span className="absolute right-1 top-1 h-1.5 w-1.5 rounded-full bg-[#5EEBFF]" />}
+                      <span className="uppercase tracking-wide">{DAY_SHORT[day][locale]}</span><span className={active ? "text-white/60" : "text-gray-600"}>{classesForDay(day).length}</span>
+                    </button>;
+                  })}
+                </div>
               </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Full schedule CTA */}
-        <div className="mt-5 flex items-center justify-between p-4 rounded-2xl bg-gradient-to-r from-[#B06CFF]/10 to-[#5EEBFF]/10 border border-white/5">
-          <div>
-            <p className="text-white text-sm font-semibold">View Full Schedule</p>
-            <p className="text-gray-500 text-xs">See all classes on the public website</p>
-          </div>
-          <Button asChild variant="ghost" size="sm" className="text-[#5EEBFF] hover:text-[#5EEBFF] hover:bg-[#5EEBFF]/10">
-            <Link href="/schedule">
-              Open <ChevronRight className="h-3.5 w-3.5 ml-1" />
-            </Link>
-          </Button>
-        </div>
+              <section className="rounded-2xl border border-white/5 bg-[#121826] p-4">
+                <div className="mb-4 flex items-center justify-between">
+                  <h2 className="font-bold text-white">{DAY_LABEL[activeDay][locale]} <span className="text-sm font-normal text-gray-500">— {selectedClasses.length} {copy.classes}</span></h2>
+                  {activeDay === todayDay && <span className="rounded-full border border-[#5EEBFF]/20 bg-[#5EEBFF]/10 px-2 py-1 text-[10px] font-semibold uppercase tracking-widest text-[#5EEBFF]">{copy.today}</span>}
+                </div>
+                {selectedClasses.length ? <div className="space-y-3">{selectedClasses.map((item) => <div key={item.id}>
+                  <ClassCard occurrence={item} actionLabel={actionFor(item)} busy={reserve.isPending} onAction={() => reserve.mutate(item.id)} />
+                  {item.bookable && item.eligibility && !item.eligibility.eligible && <p className="mt-1 px-2 text-xs text-amber-300">{item.eligibility.message || copy.notEligible}</p>}
+                </div>)}</div> :
+                  <div className="py-10 text-center text-gray-600"><CalendarDays className="mx-auto mb-2 h-8 w-8 opacity-30" /><p className="text-sm">{copy.noClasses}</p></div>}
+              </section>
+              <div className="mt-5 flex items-center justify-between rounded-2xl border border-white/5 bg-gradient-to-r from-[#B06CFF]/10 to-[#5EEBFF]/10 p-4">
+                <div><p className="text-sm font-semibold text-white">{copy.full}</p><p className="text-xs text-gray-500">{copy.fullDescription}</p></div>
+                <Button asChild variant="ghost" size="sm" className="text-[#5EEBFF]"><Link href="/schedule"><ChevronRight className="mr-1 h-3.5 w-3.5" /></Link></Button>
+              </div>
+            </>
+          )}
       </main>
     </div>
   );

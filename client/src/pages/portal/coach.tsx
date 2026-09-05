@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useLocale } from "@/lib/locale";
 import { localizedPortalPath } from "@/lib/portal-navigation";
+import { localizedClassTitle } from "@/lib/class-booking";
 
 export default function PortalCoach() {
   const [, setLocation] = useLocation();
@@ -157,7 +158,8 @@ export default function PortalCoach() {
             <div className="space-y-2">
               {todaysClassesLoading ? <Loader2 className="mx-auto my-8 h-6 w-6 animate-spin text-[#5EEBFF]" /> : todaysClasses.length === 0 ? <p className="rounded-lg border border-white/5 bg-[#0B0F14] p-4 text-sm text-gray-400">{copy.noClassesToday}</p> : todaysClasses.map((item: any) => (
                 <button key={item.id} onClick={() => setSelectedClassId(item.id)} className={`min-h-16 w-full rounded-lg border p-3 text-left ${selectedClass?.id === item.id ? "border-[#5EEBFF]/50 bg-[#5EEBFF]/10" : "border-white/5 bg-[#0B0F14]"}`}>
-                  <p className="text-sm font-semibold text-white">{item.title}</p>
+                   <p className="text-sm font-semibold text-white">{localizedClassTitle(item, locale)}</p>
+                   <p className="mt-1 text-[11px] text-gray-500">{item.audienceGroup} · {item.canonicalCategory}{item.strengthFocus ? ` · ${item.strengthFocus}` : ""}</p>
                   <p className="mt-1 text-xs text-gray-400">{new Date(item.start).toLocaleTimeString(locale === "es" ? "es-US" : "en-US", { hour: "numeric", minute: "2-digit" })} · {item.summary.reserved} {copy.reservedLabel}</p>
                 </button>
               ))}
@@ -165,7 +167,7 @@ export default function PortalCoach() {
             {selectedClass && (
               <div className="rounded-lg border border-white/5 bg-[#0B0F14] p-4">
                 <div className="flex flex-col gap-3 border-b border-white/5 pb-4 sm:flex-row sm:items-start sm:justify-between">
-                  <div><h3 className="font-bold text-white">{selectedClass.title}</h3><p className="text-sm text-gray-400">{new Date(selectedClass.start).toLocaleDateString(locale === "es" ? "es-US" : "en-US", { weekday: "long", month: "short", day: "numeric" })} · {new Date(selectedClass.start).toLocaleTimeString(locale === "es" ? "es-US" : "en-US", { hour: "numeric", minute: "2-digit" })}</p></div>
+                   <div><h3 className="font-bold text-white">{localizedClassTitle(selectedClass, locale)}</h3><p className="text-sm text-gray-400">{new Date(selectedClass.start).toLocaleDateString(locale === "es" ? "es-US" : "en-US", { weekday: "long", month: "short", day: "numeric" })} · {new Date(selectedClass.start).toLocaleTimeString(locale === "es" ? "es-US" : "en-US", { hour: "numeric", minute: "2-digit" })}</p><p className="mt-1 text-xs text-gray-500">{selectedClass.audienceGroup} · {selectedClass.canonicalCategory}{selectedClass.strengthFocus ? ` · ${selectedClass.strengthFocus}` : ""}</p></div>
                   <div className="grid grid-cols-3 gap-2 text-center text-[11px]"><span><strong className="block text-white">{selectedClass.summary.reserved}</strong>{copy.reservedLabel}</span><span><strong className="block text-emerald-300">{selectedClass.summary.present}</strong>{copy.presentLabel}</span><span><strong className="block text-amber-300">{selectedClass.summary.waitlisted}</strong>{copy.waitlistedLabel}</span></div>
                 </div>
                 <div className="mt-3 space-y-2">

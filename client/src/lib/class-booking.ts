@@ -12,16 +12,47 @@ export type LiveClass = {
   confirmedCount: number;
   waitlistCount: number;
   spotsRemaining: number;
-  bookingState: "available" | "waitlist";
+  bookable: boolean;
+  bookingState: "available" | "waitlist" | "not_available";
   firstVisitEligible: boolean;
   audience: "all" | "members";
+  audienceGroup: string;
+  canonicalCategory: string;
+  strengthFocus: string | null;
+  eligibility?: {
+    eligible: boolean;
+    code: string;
+    message: string;
+    waitlistAllowed: boolean;
+  } | null;
   classType: {
     id: string;
     name: string;
+    canonicalCategory: string;
+    strengthFocus: string | null;
+    audienceGroup: string;
     beginnerFriendly: boolean;
     membershipRequired: boolean;
   } | null;
 };
+
+export function localizedClassTitle(
+  occurrence: Pick<LiveClass, "title" | "canonicalCategory" | "strengthFocus">,
+  locale: Locale = "en",
+) {
+  if (locale === "en") return occurrence.title;
+  if (occurrence.canonicalCategory === "GIRLS_JIU_JITSU_SELF_DEFENSE") return "Jiu-Jitsu / Defensa Personal para Niñas";
+  if (occurrence.canonicalCategory === "JIU_JITSU_SELF_DEFENSE") return "Jiu-Jitsu / Defensa Personal";
+  if (occurrence.canonicalCategory === "STRENGTH_CONDITIONING") {
+    const focus = occurrence.strengthFocus === "LOWER_BODY"
+      ? "Tren Inferior"
+      : occurrence.strengthFocus === "UPPER_BODY_CORE"
+        ? "Tren Superior + Core"
+        : "Cuerpo Completo";
+    return `Fuerza y Acondicionamiento — ${focus}`;
+  }
+  return occurrence.title;
+}
 
 export type ClassScheduleResponse = {
   timezone: string;

@@ -102,6 +102,15 @@ export function getMembershipWeekStart(
 
 function normalizedClassCategories(classType: typeof classTypes.$inferSelect | null) {
   if (!classType) return [];
+  if (classType.canonicalCategory === "GIRLS_JIU_JITSU_SELF_DEFENSE") {
+    return ["girls_skill", "GIRLS_JIU_JITSU_SELF_DEFENSE"];
+  }
+  if (classType.canonicalCategory === "JIU_JITSU_SELF_DEFENSE") {
+    return ["skill", "jiu_jitsu_self_defense", "JIU_JITSU_SELF_DEFENSE"];
+  }
+  if (classType.canonicalCategory === "STRENGTH_CONDITIONING") {
+    return ["strength", "strength_conditioning", "STRENGTH_CONDITIONING"];
+  }
   const text = [classType.category, classType.name, classType.matchPattern]
     .filter(Boolean)
     .join(" ")
