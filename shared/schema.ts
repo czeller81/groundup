@@ -39,6 +39,8 @@ export const forms = pgTable("forms", {
   fields: jsonb("fields").notNull(),
   isRequired: boolean("is_required").notNull().default(true),
   retakeable: boolean("retakeable").notNull().default(false),
+  requiredBeforeBooking: boolean("required_before_booking").notNull().default(false),
+  requiredBeforeAttendance: boolean("required_before_attendance").notNull().default(false),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -311,6 +313,10 @@ export const membershipsRelations = relations(memberships, ({ one }) => ({
     fields: [memberships.userId],
     references: [users.id],
   }),
+  plan: one(membershipPlans, {
+    fields: [memberships.planId],
+    references: [membershipPlans.id],
+  }),
 }));
 
 export const sessionNotesRelations = relations(sessionNotes, ({ one }) => ({
@@ -367,6 +373,56 @@ export const insertMembershipSchema = createInsertSchema(memberships).omit({
   createdAt: true,
 });
 
+export const insertMembershipPlanSchema = createInsertSchema(membershipPlans).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertMemberLifecycleSchema = createInsertSchema(memberLifecycles).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertMemberLifecycleEventSchema = createInsertSchema(memberLifecycleEvents).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertMemberGoalSchema = createInsertSchema(memberGoals).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertEmergencyContactSchema = createInsertSchema(emergencyContacts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertDiscoveryPassSchema = createInsertSchema(discoveryPasses).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertDiscoveryEntitlementSchema = createInsertSchema(discoveryEntitlements).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertEntitlementLedgerSchema = createInsertSchema(entitlementLedger).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertMemberAuditEventSchema = createInsertSchema(memberAuditEvents).omit({
+  id: true,
+  createdAt: true,
+});
+
 export const insertSessionNoteSchema = createInsertSchema(sessionNotes).omit({
   id: true,
   createdAt: true,
@@ -395,6 +451,33 @@ export type AdminUser = typeof adminUsers.$inferSelect;
 
 export type InsertMembership = z.infer<typeof insertMembershipSchema>;
 export type Membership = typeof memberships.$inferSelect;
+
+export type InsertMembershipPlan = z.infer<typeof insertMembershipPlanSchema>;
+export type MembershipPlan = typeof membershipPlans.$inferSelect;
+
+export type InsertMemberLifecycle = z.infer<typeof insertMemberLifecycleSchema>;
+export type MemberLifecycle = typeof memberLifecycles.$inferSelect;
+
+export type InsertMemberLifecycleEvent = z.infer<typeof insertMemberLifecycleEventSchema>;
+export type MemberLifecycleEvent = typeof memberLifecycleEvents.$inferSelect;
+
+export type InsertMemberGoal = z.infer<typeof insertMemberGoalSchema>;
+export type MemberGoal = typeof memberGoals.$inferSelect;
+
+export type InsertEmergencyContact = z.infer<typeof insertEmergencyContactSchema>;
+export type EmergencyContact = typeof emergencyContacts.$inferSelect;
+
+export type InsertDiscoveryPass = z.infer<typeof insertDiscoveryPassSchema>;
+export type DiscoveryPass = typeof discoveryPasses.$inferSelect;
+
+export type InsertDiscoveryEntitlement = z.infer<typeof insertDiscoveryEntitlementSchema>;
+export type DiscoveryEntitlement = typeof discoveryEntitlements.$inferSelect;
+
+export type InsertEntitlementLedger = z.infer<typeof insertEntitlementLedgerSchema>;
+export type EntitlementLedger = typeof entitlementLedger.$inferSelect;
+
+export type InsertMemberAuditEvent = z.infer<typeof insertMemberAuditEventSchema>;
+export type MemberAuditEvent = typeof memberAuditEvents.$inferSelect;
 
 export type InsertSessionNote = z.infer<typeof insertSessionNoteSchema>;
 export type SessionNote = typeof sessionNotes.$inferSelect;
@@ -616,6 +699,9 @@ export const classReservations = pgTable("class_reservations", {
   status: text("status").notNull().default("confirmed"),
   waitlistPosition: integer("waitlist_position"),
   attendance: text("attendance"),
+  attendanceRecordedAt: timestamp("attendance_recorded_at"),
+  attendanceRecordedBy: varchar("attendance_recorded_by").references(() => users.id),
+  attendanceUpdatedAt: timestamp("attendance_updated_at"),
   cancellationReason: text("cancellation_reason"),
   manageTokenHash: text("manage_token_hash"),
   createdAt: timestamp("created_at").defaultNow().notNull(),

@@ -7,7 +7,7 @@
     "dev": "NODE_ENV=development tsx server/index.ts",
     "build": "vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
     "start": "NODE_ENV=production node dist/index.js",
-    "test": "tsx --test server/security.test.ts",
+    "test": "tsx --test server/security.test.ts server/member-entitlements.test.ts",
     "test:evidence": "NODE_ENV=development tsx --test server/cutover-evidence.test.ts",
     "mobile:qa": "node scripts/mobile-responsive-audit.mjs",
     "check": "tsc && npm run check:public-routes",

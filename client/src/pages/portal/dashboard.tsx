@@ -80,6 +80,24 @@ export default function PortalDashboard() {
     enabled: isAuthenticated,
   });
 
+  const { data: memberProgram } = useQuery<any>({
+    queryKey: ["/api/portal/member-program"],
+    enabled: isAuthenticated,
+  });
+
+  const claimDiscovery = useMutation({
+    mutationFn: async () => (await apiRequest("POST", "/api/portal/discovery/claim", {})).json(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/portal/member-program"] });
+      toast({ title: copy.discoveryPassTitle });
+    },
+    onError: (error: Error) => toast({
+      title: copy.error,
+      description: localizeApiError(error.message, locale, copy.loadError),
+      variant: "destructive",
+    }),
+  });
+
   const { data: formDetail } = useQuery<any>({
     queryKey: ["/api/portal/forms", formViewDialog.slug],
     enabled: !!formViewDialog.slug && formViewDialog.open,
@@ -295,6 +313,58 @@ export default function PortalDashboard() {
                    <p className="text-gray-400 text-sm mb-3">{copy.noActiveMembership}</p>
                   <Button asChild size="sm" className="bg-[#B06CFF] text-white hover:bg-[#B06CFF]/90 w-full">
                      <Link href={locale === "es" ? "/es/programas" : "/pricing"}>{copy.viewPrograms}</Link>
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* MEMBER PROGRAM / DISCOVERY PASS */}
+          <Card className="bg-[#121826] border-white/10">
+            <CardHeader className="pb-3 pt-4 px-4">
+              <CardTitle className="flex items-center gap-2 text-white text-base">
+                <Dumbbell className="h-4 w-4 text-[#5EEBFF]" />
+                {copy.memberProgram}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 px-4 pb-4">
+              {memberProgram?.discoveryPass ? (
+                <>
+                  <div className="rounded-lg border border-[#5EEBFF]/20 bg-[#5EEBFF]/10 p-3">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-[#5EEBFF]">{copy.discoveryPassTitle}</p>
+                    <div className="mt-3 space-y-2 text-sm">
+                      {memberProgram.discoveryPass.entitlements.map((entitlement: any) => (
+                        <div key={entitlement.id} className="flex items-center justify-between gap-3">
+                          <span className="text-gray-300">{entitlement.category === "SKILL" ? copy.skillExperience : copy.strengthExperience}</span>
+                          <Badge className="border-white/10 bg-black/20 text-gray-200">
+                            {entitlement.status === "AVAILABLE" ? copy.available : entitlement.status === "BOOKED" ? copy.booked : copy.attended}
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <Button asChild size="sm" className="w-full bg-[#5EEBFF] text-[#0B0F14] hover:bg-[#5EEBFF]/90">
+                    <Link href={portalPath("/portal/schedule")}>{copy.viewSchedule}</Link>
+                  </Button>
+                </>
+              ) : memberProgram?.membership ? (
+                <div className="rounded-lg border border-white/10 bg-white/[0.03] p-3">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">{copy.weeklyTraining}</p>
+                  <p className="mt-1 text-xl font-bold text-white">
+                    {copy.sessionsUsed(
+                      Math.max(0, (memberProgram.weekly?.reserved || 0) - (memberProgram.weekly?.released || 0)),
+                      memberProgram.weekly?.limit ?? null,
+                    )}
+                  </p>
+                  <Button asChild size="sm" className="mt-3 w-full bg-[#B06CFF] text-white hover:bg-[#B06CFF]/90">
+                    <Link href={portalPath("/portal/schedule")}>{copy.viewSchedule}</Link>
+                  </Button>
+                </div>
+              ) : (
+                <div className="text-center">
+                  <p className="text-sm text-gray-400">{copy.noActiveMembership}</p>
+                  <Button onClick={() => claimDiscovery.mutate()} disabled={claimDiscovery.isPending} size="sm" className="mt-3 w-full bg-[#5EEBFF] text-[#0B0F14] hover:bg-[#5EEBFF]/90">
+                    {claimDiscovery.isPending ? copy.loading : copy.claimDiscoveryPass}
                   </Button>
                 </div>
               )}

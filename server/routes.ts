@@ -13,6 +13,7 @@ import { parseRawJsonBody, verifyCalendlySignature, verifyStripeSignature } from
 import { bookingBelongsToUser, coachCanManageMember, createPublicRateLimit, requireAuth, requireRole } from "./route-security";
 import { sendPasswordResetEmail, sendStaffNotificationEmail } from "./email";
 import { registerClassBookingRoutes } from "./class-booking-routes";
+import { registerMemberRoutes } from "./member-routes";
 
 const PAGE_META: Record<string, { title: string; description: string; canonical: string }> = {
   "/": {
@@ -268,6 +269,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use("/api/admin", staffMutationRateLimit());
   app.use("/api/bookings", staffMutationRateLimit());
   registerClassBookingRoutes(app);
+  registerMemberRoutes(app);
 
   // ============================================
   // SEO: robots.txt and sitemap.xml
@@ -1246,20 +1248,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/portal/memberships", requireRole("admin"), async (req, res) => {
     try {
-      const { userId, type, priceCents, endDate } = req.body;
-      if (!userId || !type) {
-        return res.status(400).json({ message: "User ID and type are required" });
-      }
+      const data = z.object({
+        userId: z.string().uuid(),
+        type: z.string().trim().min(1).max(80),
+        planId: z.string().uuid().nullable().optional(),
+        priceCents: z.number().int().nonnegative().optional(),
+        endDate: z.string().datetime().nullable().optional(),
+      }).strict().parse(req.body);
       const membership = await storage.createMembership({
-        userId,
-        type,
+        userId: data.userId,
+        type: data.type,
+        planId: data.planId ?? null,
         status: "active",
-        priceCents: priceCents || 2000,
+        priceCents: data.priceCents ?? 2000,
         startDate: new Date(),
-        endDate: endDate ? new Date(endDate) : null,
+        endDate: data.endDate ? new Date(data.endDate) : null,
+        assignedBy: req.session.userId,
+        source: "admin_assignment",
       });
       res.status(201).json(membership);
     } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ code: "INVALID_REQUEST", errors: error.flatten() });
+      }
       res.status(500).json({ message: "Failed to create membership" });
     }
   });

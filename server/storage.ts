@@ -7,6 +7,15 @@ import {
   forms,
   formResponses,
   memberships,
+  membershipPlans,
+  memberLifecycles,
+  memberLifecycleEvents,
+  memberGoals,
+  emergencyContacts,
+  discoveryPasses,
+  discoveryEntitlements,
+  entitlementLedger,
+  memberAuditEvents,
   sessionNotes,
   webhookEvents,
   calendarConnections,
@@ -31,6 +40,12 @@ import {
   type FormResponseWithForm,
   type Membership,
   type InsertMembership,
+  type MembershipPlan,
+  type InsertMembershipPlan,
+  type MemberLifecycle,
+  type DiscoveryPass,
+  type DiscoveryEntitlement,
+  type EntitlementLedger,
   type SessionNote,
   type InsertSessionNote,
   type CalendarConnection,
@@ -50,6 +65,12 @@ export class ClassBookingError extends Error {
 import { randomUUID } from "crypto";
 import bcrypt from "bcryptjs";
 import { canRetryWebhook, INTERNAL_TEST_EMAIL_PATTERN, isPublicOccurrenceText } from "./route-security";
+import {
+  discoveryCategory,
+  evaluateBookingEligibilityWithExecutor,
+  getMembershipWeekStart,
+  type BookingEligibility,
+} from "./member-entitlements";
 
 export interface IStorage {
   getUserById(id: string): Promise<User | undefined>;
@@ -143,7 +164,7 @@ export interface IStorage {
   getClassReservation(id: string): Promise<(ClassReservation & { occurrence: ClassOccurrence }) | undefined>;
   cancelClassReservation(input: { reservationId: string; userId?: string; manageTokenHash?: string; reason?: string }): Promise<{ reservation: ClassReservation; promoted?: ClassReservation }>;
   getOccurrenceReservations(occurrenceId: string): Promise<{ confirmed: ClassReservation[]; waitlisted: ClassReservation[] }>;
-  updateClassReservation(id: string, updates: Partial<Pick<ClassReservation, "status" | "attendance" | "cancellationReason">>): Promise<ClassReservation | undefined>;
+  updateClassReservation(id: string, updates: Partial<Pick<ClassReservation, "status" | "attendance" | "cancellationReason">>, actorId?: string, reason?: string): Promise<ClassReservation | undefined>;
   recordClassReservationEvent(data: { reservationId?: string; occurrenceId?: string; event: string; metadata?: Record<string, unknown> }): Promise<void>;
   
   deleteFormResponse(userId: string, formId: string): Promise<void>;
@@ -704,8 +725,34 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createMembership(membership: InsertMembership): Promise<Membership> {
-    const [newMembership] = await db.insert(memberships).values(membership).returning();
-    return newMembership;
+    return db.transaction(async (tx) => {
+      const [newMembership] = await tx.insert(memberships).values(membership).returning();
+      const [existingLifecycle] = await tx.select().from(memberLifecycles).where(eq(memberLifecycles.userId, membership.userId));
+      if (membership.status === "active" || membership.status === "ACTIVE") {
+        if (existingLifecycle) {
+          await tx.update(memberLifecycles).set({
+            currentState: "ACTIVE_MEMBER",
+            convertedAt: existingLifecycle.convertedAt || new Date(),
+            updatedAt: new Date(),
+          }).where(eq(memberLifecycles.id, existingLifecycle.id));
+        } else {
+          await tx.insert(memberLifecycles).values({
+            userId: membership.userId,
+            currentState: "ACTIVE_MEMBER",
+            source: membership.source || "membership_assignment",
+            convertedAt: new Date(),
+          });
+        }
+        await tx.insert(memberLifecycleEvents).values({
+          userId: membership.userId,
+          actorId: membership.assignedBy || null,
+          previousState: existingLifecycle?.currentState || null,
+          nextState: "ACTIVE_MEMBER",
+          reason: "Membership assigned",
+        });
+      }
+      return newMembership;
+    });
   }
 
   async updateMembership(id: string, updates: Partial<Pick<Membership, 'status' | 'endDate'>>): Promise<Membership | undefined> {
@@ -987,6 +1034,16 @@ export class DatabaseStorage implements IStorage {
         throw new ClassBookingError("MEMBERSHIP_REQUIRED", "This class requires a member account.", 403);
       }
 
+      let eligibility: BookingEligibility | undefined;
+      if (input.userId) {
+        const user = await this.getUserById(input.userId);
+        if (!user) throw new ClassBookingError("USER_NOT_FOUND", "This member account could not be found.", 401);
+        eligibility = await evaluateBookingEligibilityWithExecutor(user, occurrence, tx);
+        if (!eligibility.eligible) {
+          throw new ClassBookingError(eligibility.code, eligibility.message, 409);
+        }
+      }
+
       const personCondition = input.userId
         ? or(
             eq(classReservations.userId, input.userId),
@@ -1025,6 +1082,9 @@ export class DatabaseStorage implements IStorage {
       let status = "confirmed";
       let waitlistPosition: number | null = null;
       if (confirmedCount >= occurrence.capacity) {
+        if (eligibility && !eligibility.waitlistAllowed) {
+          throw new ClassBookingError("WAITLIST_NOT_ALLOWED", "The class is full and your plan does not allow waitlisting.", 409);
+        }
         status = "waitlisted";
         const [waitlistTotal] = await tx.select({ value: count() }).from(classReservations).where(and(
           eq(classReservations.occurrenceId, occurrence.id),
@@ -1052,6 +1112,29 @@ export class DatabaseStorage implements IStorage {
         event: status === "confirmed" ? "reservation_confirmed" : "waitlist_joined",
         metadata: { source: input.userId ? "member_portal" : "first_visit" },
       });
+      if (input.userId && eligibility && status === "confirmed") {
+        if (eligibility.source === "discovery" && eligibility.discoveryEntitlementId) {
+          await tx.update(discoveryEntitlements).set({
+            status: "BOOKED",
+            reservationId: reservation.id,
+            bookedAt: new Date(),
+            updatedAt: new Date(),
+          }).where(and(
+            eq(discoveryEntitlements.id, eligibility.discoveryEntitlementId),
+            eq(discoveryEntitlements.status, "AVAILABLE"),
+          ));
+        } else if (eligibility.source === "membership" && eligibility.membershipId && eligibility.weekStart) {
+          await tx.insert(entitlementLedger).values({
+            userId: input.userId,
+            membershipId: eligibility.membershipId,
+            occurrenceId: occurrence.id,
+            reservationId: reservation.id,
+            weekStart: eligibility.weekStart,
+            reserved: 1,
+            reason: "reservation_confirmed",
+          });
+        }
+      }
       return { reservation, occurrence };
     });
   }
@@ -1089,6 +1172,7 @@ export class DatabaseStorage implements IStorage {
       const [current] = await tx.select().from(classReservations).where(eq(classReservations.id, input.reservationId));
       if (!current) throw new ClassBookingError("RESERVATION_NOT_FOUND", "Reservation not found.", 404);
       await tx.execute(sql`select id from class_occurrences where id = ${current.occurrenceId} for update`);
+      const [occurrence] = await tx.select().from(classOccurrences).where(eq(classOccurrences.id, current.occurrenceId));
       const authorized = (input.userId && current.userId === input.userId)
         || (input.manageTokenHash && current.manageTokenHash === input.manageTokenHash);
       if (!authorized) throw new ClassBookingError("RESERVATION_FORBIDDEN", "You cannot manage this reservation.", 403);
@@ -1110,6 +1194,53 @@ export class DatabaseStorage implements IStorage {
         metadata: { previousStatus: current.status },
       });
 
+      if (current.userId && current.status === "confirmed") {
+        const [reservationLedger] = await tx.select().from(entitlementLedger).where(and(
+          eq(entitlementLedger.reservationId, current.id),
+          eq(entitlementLedger.reserved, 1),
+        )).orderBy(desc(entitlementLedger.createdAt)).limit(1);
+        const [member] = await tx.select({
+          membership: memberships,
+          plan: membershipPlans,
+        }).from(memberships)
+          .leftJoin(membershipPlans, eq(memberships.planId, membershipPlans.id))
+          .where(and(
+            eq(memberships.userId, current.userId),
+            inArray(memberships.status, ["active", "ACTIVE"]),
+            lte(memberships.startDate, occurrence?.start || new Date()),
+            or(isNull(memberships.endDate), gte(memberships.endDate, occurrence?.start || new Date())),
+          )).orderBy(desc(memberships.startDate)).limit(1);
+        const cutoffHours = member?.plan?.cancellationCutoffHours ?? 4;
+        const late = Boolean(occurrence && occurrence.start.getTime() - Date.now() < cutoffHours * 60 * 60 * 1000);
+        const consumes = late && (member?.plan?.lateCancelPolicy || "consume") === "consume";
+        if (reservationLedger && !consumes) {
+          await tx.insert(entitlementLedger).values({
+            userId: current.userId,
+            membershipId: reservationLedger.membershipId,
+            occurrenceId: current.occurrenceId,
+            reservationId: current.id,
+            weekStart: reservationLedger.weekStart,
+            released: 1,
+            reason: late ? "late_cancel_released_override" : "reservation_cancelled",
+          });
+        }
+        const [discoveryEntitlement] = await tx.select().from(discoveryEntitlements).where(and(
+          eq(discoveryEntitlements.reservationId, current.id),
+          eq(discoveryEntitlements.status, "BOOKED"),
+        ));
+        if (discoveryEntitlement && !consumes) {
+          const [pass] = await tx.select().from(discoveryPasses).where(eq(discoveryPasses.id, discoveryEntitlement.discoveryPassId));
+          if (pass && pass.expirationTimestamp > new Date()) {
+            await tx.update(discoveryEntitlements).set({
+              status: "AVAILABLE",
+              reservationId: null,
+              cancelledAt: new Date(),
+              updatedAt: new Date(),
+            }).where(eq(discoveryEntitlements.id, discoveryEntitlement.id));
+          }
+        }
+      }
+
       let promoted: ClassReservation | undefined;
       if (current.status === "confirmed") {
         const [next] = await tx.select().from(classReservations).where(and(
@@ -1127,6 +1258,62 @@ export class DatabaseStorage implements IStorage {
             occurrenceId: promoted.occurrenceId,
             event: "waitlist_promoted",
           });
+          if (promoted.userId) {
+            const [promotedLedger] = await tx.select().from(entitlementLedger).where(and(
+              eq(entitlementLedger.reservationId, promoted.id),
+              eq(entitlementLedger.reserved, 1),
+            )).limit(1);
+            if (!promotedLedger) {
+              const [promotedMembership] = await tx.select({
+                membership: memberships,
+                plan: membershipPlans,
+              }).from(memberships)
+                .leftJoin(membershipPlans, eq(memberships.planId, membershipPlans.id))
+                .where(and(
+                  eq(memberships.userId, promoted.userId),
+                  inArray(memberships.status, ["active", "ACTIVE"]),
+                  lte(memberships.startDate, occurrence?.start || new Date()),
+                  or(isNull(memberships.endDate), gte(memberships.endDate, occurrence?.start || new Date())),
+                )).orderBy(desc(memberships.startDate)).limit(1);
+              if (promotedMembership?.membership && promotedMembership.plan) {
+                await tx.insert(entitlementLedger).values({
+                  userId: promoted.userId,
+                  membershipId: promotedMembership.membership.id,
+                  occurrenceId: promoted.occurrenceId,
+                  reservationId: promoted.id,
+                  weekStart: getMembershipWeekStart(occurrence.start, promotedMembership.plan.weekStartDay, promotedMembership.plan.timezone),
+                  reserved: 1,
+                  reason: "waitlist_promoted",
+                });
+              }
+            }
+            const [promotedOccurrenceType] = promoted.occurrenceId
+              ? await tx.select().from(classTypes).where(eq(classTypes.id, occurrence?.classTypeId || ""))
+              : [];
+            const promotedCategory = discoveryCategory(promotedOccurrenceType || null);
+            if (promotedCategory) {
+              const [promotedPass] = await tx.select().from(discoveryPasses).where(and(
+                eq(discoveryPasses.userId, promoted.userId),
+                gte(discoveryPasses.expirationTimestamp, new Date()),
+                inArray(discoveryPasses.status, ["CLAIMED", "PARTIALLY_BOOKED", "PARTIALLY_ATTENDED"]),
+              )).orderBy(desc(discoveryPasses.createdAt)).limit(1);
+              if (promotedPass) {
+                const [promotedDiscovery] = await tx.select().from(discoveryEntitlements).where(and(
+                  eq(discoveryEntitlements.discoveryPassId, promotedPass.id),
+                  eq(discoveryEntitlements.category, promotedCategory),
+                  eq(discoveryEntitlements.status, "AVAILABLE"),
+                ));
+                if (promotedDiscovery) {
+                  await tx.update(discoveryEntitlements).set({
+                    status: "BOOKED",
+                    reservationId: promoted.id,
+                    bookedAt: new Date(),
+                    updatedAt: new Date(),
+                  }).where(eq(discoveryEntitlements.id, promotedDiscovery.id));
+                }
+              }
+            }
+          }
         }
       }
       await tx.execute(sql`
@@ -1182,20 +1369,98 @@ export class DatabaseStorage implements IStorage {
     });
   }
 
-  async updateClassReservation(id: string, updates: Partial<Pick<ClassReservation, "status" | "attendance" | "cancellationReason">>): Promise<ClassReservation | undefined> {
-    const [reservation] = await db.update(classReservations)
-      .set({ ...updates, updatedAt: new Date() })
-      .where(eq(classReservations.id, id))
-      .returning();
-    if (reservation) {
-      await this.recordClassReservationEvent({
+  async updateClassReservation(
+    id: string,
+    updates: Partial<Pick<ClassReservation, "status" | "attendance" | "cancellationReason">>,
+    actorId?: string,
+    reason?: string,
+  ): Promise<ClassReservation | undefined> {
+    const validAttendance = [null, "PRESENT", "NO_SHOW", "LATE_CANCEL", "EXCUSED"];
+    if (updates.attendance !== undefined && !validAttendance.includes(updates.attendance)) {
+      throw new ClassBookingError("INVALID_ATTENDANCE", "Choose a valid attendance outcome.", 400);
+    }
+    return db.transaction(async (tx) => {
+      const [before] = await tx.select().from(classReservations).where(eq(classReservations.id, id));
+      if (!before) return undefined;
+      const [reservation] = await tx.update(classReservations)
+        .set({
+          ...updates,
+          attendanceRecordedAt: updates.attendance !== undefined ? new Date() : before.attendanceRecordedAt,
+          attendanceRecordedBy: updates.attendance !== undefined ? actorId || null : before.attendanceRecordedBy,
+          attendanceUpdatedAt: updates.attendance !== undefined ? new Date() : before.attendanceUpdatedAt,
+          updatedAt: new Date(),
+        })
+        .where(eq(classReservations.id, id))
+        .returning();
+      if (!reservation) return undefined;
+
+      await tx.insert(classReservationEvents).values({
         reservationId: reservation.id,
         occurrenceId: reservation.occurrenceId,
-        event: updates.attendance ? "attendance_updated" : "reservation_updated",
-        metadata: updates,
+        event: updates.attendance !== undefined ? "attendance_updated" : "reservation_updated",
+        metadata: {
+          ...updates,
+          previousAttendance: before.attendance,
+          actorId: actorId || null,
+          reason: reason || null,
+        },
       });
-    }
-    return reservation;
+      if (updates.attendance !== undefined && before.userId) {
+        const [ledger] = await tx.select().from(entitlementLedger).where(and(
+          eq(entitlementLedger.reservationId, reservation.id),
+          eq(entitlementLedger.reserved, 1),
+        )).orderBy(desc(entitlementLedger.createdAt)).limit(1);
+        if (ledger && updates.attendance === "PRESENT" && before.attendance !== "PRESENT") {
+          await tx.insert(entitlementLedger).values({
+            userId: before.userId,
+            membershipId: ledger.membershipId,
+            occurrenceId: reservation.occurrenceId,
+            reservationId: reservation.id,
+            weekStart: ledger.weekStart,
+            consumed: 1,
+            reason: "attendance_present",
+          });
+        } else if (ledger && before.attendance === "PRESENT" && updates.attendance !== "PRESENT") {
+          await tx.insert(entitlementLedger).values({
+            userId: before.userId,
+            membershipId: ledger.membershipId,
+            occurrenceId: reservation.occurrenceId,
+            reservationId: reservation.id,
+            weekStart: ledger.weekStart,
+            consumed: -1,
+            reason: "attendance_correction",
+          });
+        }
+        const [discoveryEntitlement] = await tx.select().from(discoveryEntitlements).where(eq(discoveryEntitlements.reservationId, reservation.id));
+        if (discoveryEntitlement) {
+          await tx.update(discoveryEntitlements).set({
+            status: updates.attendance === "PRESENT" ? "ATTENDED" : "EXPIRED",
+            attendedAt: updates.attendance === "PRESENT" ? new Date() : null,
+            updatedAt: new Date(),
+          }).where(eq(discoveryEntitlements.id, discoveryEntitlement.id));
+        }
+        const [attendanceTotal] = await tx.select({ value: count() }).from(classReservations).where(and(
+          eq(classReservations.userId, before.userId),
+          eq(classReservations.attendance, "PRESENT"),
+        ));
+        await tx.update(users).set({
+          attendanceCount: Number(attendanceTotal?.value || 0),
+        }).where(eq(users.id, before.userId));
+      }
+      if (updates.attendance !== undefined && actorId) {
+        await tx.insert(memberAuditEvents).values({
+          actorId,
+          userId: before.userId,
+          targetType: "class_reservation",
+          targetId: before.id,
+          action: "attendance_corrected",
+          before: { attendance: before.attendance },
+          after: { attendance: updates.attendance },
+          reason: reason || null,
+        });
+      }
+      return reservation;
+    });
   }
 
   async recordClassReservationEvent(data: { reservationId?: string; occurrenceId?: string; event: string; metadata?: Record<string, unknown> }): Promise<void> {

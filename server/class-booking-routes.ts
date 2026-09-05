@@ -331,9 +331,21 @@ export function registerClassBookingRoutes(app: Express) {
   app.patch("/api/portal/admin/class-booking/reservations/:id", requireRole("admin"), async (req, res) => {
     try {
       const data = z.object({
-        attendance: z.enum(["present", "absent", "late", "excused"]).nullable().optional(),
+        attendance: z.enum(["PRESENT", "NO_SHOW", "LATE_CANCEL", "EXCUSED", "present", "absent", "late", "excused"]).nullable().optional()
+          .transform((value) => value === null || value === undefined ? value : ({
+            present: "PRESENT",
+            absent: "NO_SHOW",
+            late: "LATE_CANCEL",
+            excused: "EXCUSED",
+          } as Record<string, string>)[value] || value),
+        reason: z.string().trim().max(240).optional(),
       }).strict().parse(req.body);
-      const reservation = await storage.updateClassReservation(req.params.id, data);
+      const reservation = await storage.updateClassReservation(
+        req.params.id,
+        { attendance: data.attendance },
+        req.session.userId,
+        data.reason,
+      );
       if (!reservation) return res.status(404).json({ message: "Reservation not found." });
       res.json(safeReservation(reservation));
     } catch (error) {
