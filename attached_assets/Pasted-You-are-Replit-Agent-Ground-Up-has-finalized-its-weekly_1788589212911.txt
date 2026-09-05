@@ -1,0 +1,880 @@
+You are Replit Agent.
+
+Ground Up has finalized its weekly training schedule.
+
+Your task is to update the existing Google Calendar-backed class system so this schedule becomes the authoritative recurring weekly program used by:
+
+- Google Calendar
+- public website schedule
+- member portal schedule
+- Discovery Pass booking
+- membership entitlement booking
+- coach Today’s Classes / roster
+- admin class operations
+- capacity/utilization reporting
+
+IMPORTANT:
+The Google Calendar integration already exists and is already the schedule source of truth.
+
+Do NOT create a parallel schedule system.
+Do NOT replace Google Calendar.
+Do NOT create duplicate class occurrence tables.
+Do NOT rebuild class reservations.
+Do NOT change membership pricing or Stripe in this task.
+
+This is a schedule cutover and verification task.
+
+---
+
+# 1. FINAL APPROVED WEEKLY SCHEDULE
+
+Use this exact recurring schedule.
+
+Timezone:
+
+America/Los_Angeles
+
+Location:
+
+Ground Up
+Oxnard, California
+
+Use the existing configured street address if it is already stored and authoritative.
+Do not invent a new address.
+
+---
+
+## MONDAY
+
+5:00 PM
+JIU-JITSU / SELF-DEFENSE
+
+6:00 PM
+STRENGTH & CONDITIONING
+Focus:
+LOWER BODY
+
+---
+
+## TUESDAY
+
+4:15 PM
+GIRLS’ JIU-JITSU / SELF-DEFENSE
+
+5:00 PM
+JIU-JITSU / SELF-DEFENSE
+
+6:00 PM
+STRENGTH & CONDITIONING
+Focus:
+UPPER BODY + CORE
+
+---
+
+## WEDNESDAY
+
+5:00 PM
+JIU-JITSU / SELF-DEFENSE
+
+6:00 PM
+STRENGTH & CONDITIONING
+Focus:
+LOWER BODY
+
+---
+
+## THURSDAY
+
+4:15 PM
+GIRLS’ JIU-JITSU / SELF-DEFENSE
+
+5:00 PM
+JIU-JITSU / SELF-DEFENSE
+
+6:00 PM
+STRENGTH & CONDITIONING
+Focus:
+UPPER BODY + CORE
+
+---
+
+## FRIDAY
+
+5:00 PM
+JIU-JITSU / SELF-DEFENSE
+
+6:00 PM
+STRENGTH & CONDITIONING
+Focus:
+FULL BODY
+
+---
+
+## SATURDAY
+
+9:00 AM
+STRENGTH & CONDITIONING
+Focus:
+FULL BODY
+
+---
+
+# 2. RECURRING GOOGLE CALENDAR EVENTS
+
+Audit the current connected Ground Up Google Calendar.
+
+Identify:
+
+- existing recurring class events
+- obsolete class events
+- duplicate recurring events
+- conflicting old schedule entries
+- current class naming conventions
+- currently configured durations
+- calendar ID used by the production integration
+
+Then update/create the recurring schedule using the existing Google Calendar integration.
+
+Do NOT create duplicate series if the same recurring class already exists and can be safely updated.
+
+Preserve stable provider IDs where practical.
+
+---
+
+# 3. CLASS DURATIONS
+
+Audit current duration conventions.
+
+If existing production classes already use a consistent approved duration, preserve it.
+
+If duration is missing or inconsistent, use:
+
+- Girls’ Jiu-Jitsu / Self-Defense: 45 minutes
+- Jiu-Jitsu / Self-Defense: 55 minutes
+- Strength & Conditioning: 55 minutes
+
+But only use these defaults if no existing approved duration is already authoritative.
+
+Report the final durations used.
+
+---
+
+# 4. CLASS TAXONOMY
+
+Make sure all recurring events map correctly into the existing `class_types` / occurrence taxonomy.
+
+Canonical categories:
+
+ADULT SKILL:
+JIU_JITSU_SELF_DEFENSE
+
+GIRLS SKILL:
+GIRLS_JIU_JITSU_SELF_DEFENSE
+
+STRENGTH:
+STRENGTH_CONDITIONING
+
+Strength focus:
+
+LOWER_BODY
+UPPER_BODY_CORE
+FULL_BODY
+
+Do not infer strength focus from weekday in application logic.
+
+The focus should be attached to the class template / occurrence metadata.
+
+---
+
+# 5. AUDIENCE
+
+Adult classes:
+
+audience = WOMEN / ADULT_WOMEN
+according to the existing canonical schema
+
+Girls’ classes:
+
+audience = GIRLS / FEMALE_YOUTH
+according to the existing canonical schema
+
+Do not classify girls’ classes as general kids classes.
+
+Do not expose them to adult-only Discovery Pass eligibility unless explicitly configured later.
+
+---
+
+# 6. DISCOVERY PASS ELIGIBILITY
+
+Adult Discovery Pass currently includes:
+
+1 SKILL
++
+1 STRENGTH
+
+Adult eligible Skill classes:
+
+5:00 PM Jiu-Jitsu / Self-Defense
+
+Adult eligible Strength classes:
+
+6:00 PM weekday Strength & Conditioning
+9:00 AM Saturday Strength & Conditioning
+
+Girls’ 4:15 PM classes must NOT be eligible for the standard adult Discovery Pass.
+
+Do not create a girls’ Discovery Pass in this task.
+
+---
+
+# 7. MEMBERSHIP ELIGIBILITY
+
+Preserve the existing membership entitlement engine.
+
+Adult membership plans should continue to evaluate eligibility from the canonical class category.
+
+Do not hard-code pricing.
+
+Do not hard-code a particular plan such as 2x or 3x.
+
+Girls’ class membership/pricing will be configured later.
+
+For now:
+
+make the girls’ class category operationally distinct and ready for a future girls-specific plan.
+
+---
+
+# 8. CAPACITY
+
+Audit existing class capacity configuration.
+
+Do NOT assume every class has the same capacity if the database already has configured values.
+
+If no explicit capacity exists for these new recurring classes:
+
+use the current Ground Up approved default class capacity already present in the system.
+
+Do not invent a different capacity.
+
+Girls’ class capacity should be separately configurable.
+
+---
+
+# 9. WEBSITE SCHEDULE
+
+Update the public schedule so it reflects the finalized weekly schedule exactly.
+
+English:
+
+MONDAY
+5:00 PM — Jiu-Jitsu / Self-Defense
+6:00 PM — Strength & Conditioning — Lower Body
+
+TUESDAY
+4:15 PM — Girls’ Jiu-Jitsu / Self-Defense
+5:00 PM — Jiu-Jitsu / Self-Defense
+6:00 PM — Strength & Conditioning — Upper Body + Core
+
+WEDNESDAY
+5:00 PM — Jiu-Jitsu / Self-Defense
+6:00 PM — Strength & Conditioning — Lower Body
+
+THURSDAY
+4:15 PM — Girls’ Jiu-Jitsu / Self-Defense
+5:00 PM — Jiu-Jitsu / Self-Defense
+6:00 PM — Strength & Conditioning — Upper Body + Core
+
+FRIDAY
+5:00 PM — Jiu-Jitsu / Self-Defense
+6:00 PM — Strength & Conditioning — Full Body
+
+SATURDAY
+9:00 AM — Strength & Conditioning — Full Body
+
+Do not maintain a second hard-coded public schedule if the page can render from the existing class API.
+
+Prefer the live authoritative schedule API.
+
+---
+
+# 10. SPANISH SCHEDULE
+
+Provide complete Spanish parity.
+
+Suggested labels:
+
+Jiu-Jitsu / Self-Defense
+→ Jiu-Jitsu / Defensa Personal
+
+Girls’ Jiu-Jitsu / Self-Defense
+→ Jiu-Jitsu / Defensa Personal para Niñas
+
+Strength & Conditioning
+→ Fuerza y Acondicionamiento
+
+Lower Body
+→ Tren Inferior
+
+Upper Body + Core
+→ Tren Superior + Core
+
+Full Body
+→ Cuerpo Completo
+
+Use the project’s existing translation architecture.
+
+No mixed English/Spanish schedule UI.
+
+---
+
+# 11. MEMBER PORTAL
+
+Verify the authenticated member Schedule renders the same authoritative recurring program.
+
+Member cards should show:
+
+- class title
+- date
+- time
+- category
+- strength focus
+- coach
+- capacity/spots
+- eligibility
+- Reserve
+- Join Waitlist
+
+Do not show girls’ classes as bookable to an adult member unless that user has a future eligible girls-specific relationship/plan.
+
+---
+
+# 12. COACH PORTAL
+
+Verify:
+
+Today’s Classes
+
+correctly includes the finalized schedule.
+
+Tuesday and Thursday should include:
+
+4:15 PM Girls’ Jiu-Jitsu / Self-Defense
+5:00 PM Jiu-Jitsu / Self-Defense
+6:00 PM Strength & Conditioning
+
+Coach roster/check-in must distinguish girls’ classes from adult classes.
+
+---
+
+# 13. ADMIN OPERATIONS
+
+Verify admin class operations show:
+
+- all recurring events
+- correct audience
+- correct category
+- correct capacity
+- correct strength focus
+- correct source Google event/series ID
+
+Admin should not need to manually repair taxonomy after every calendar sync.
+
+---
+
+# 14. GOOGLE SYNC MAPPING
+
+Audit the current event-title matching rules.
+
+Add/update safe mapping rules so the Google Calendar event names resolve deterministically.
+
+Suggested recurring Google event titles:
+
+Ground Up — Jiu-Jitsu / Self-Defense
+
+Ground Up — Girls’ Jiu-Jitsu / Self-Defense
+
+Ground Up — Strength & Conditioning — Lower Body
+
+Ground Up — Strength & Conditioning — Upper Body + Core
+
+Ground Up — Strength & Conditioning — Full Body
+
+Avoid fragile broad substring matching where possible.
+
+---
+
+# 15. DUPLICATE PROTECTION
+
+Before creating/updating recurring events:
+
+search the connected Google Calendar for matching existing series.
+
+Prevent:
+
+- two Monday 5 PM adult skill series
+- two Tuesday 4:15 PM girls series
+- duplicate 6 PM strength series
+- orphaned old recurring schedule entries still appearing publicly
+
+If obsolete events must be retired:
+
+cancel or remove them through the existing provider-safe path.
+
+Do not delete unrelated Google Calendar events.
+
+---
+
+# 16. LEGACY SCHEDULE CLEANUP
+
+Identify all obsolete Ground Up recurring class events that conflict with the new final schedule.
+
+Return them in the report.
+
+Only change events clearly belonging to the Ground Up class schedule.
+
+Do not touch:
+
+- personal events
+- unrelated business events
+- private sessions
+- appointments
+- other calendars
+
+---
+
+# 17. EFFECTIVE DATE
+
+Use a clean schedule cutover.
+
+Do not create recurring classes retroactively.
+
+Start the finalized recurring program from the next reasonable weekly boundary after the current date, unless an existing production series can be safely edited in place without corrupting historical occurrences.
+
+Preserve historical reservations and attendance.
+
+Do not rewrite past classes.
+
+---
+
+# 18. HISTORY PRESERVATION
+
+This is critical.
+
+Past:
+
+- reservations
+- attendance
+- waitlists
+- class history
+- entitlement ledger records
+
+must remain historically accurate.
+
+New schedule changes should affect future occurrences only.
+
+Do not mutate old occurrence titles/categories in a way that changes historical reporting.
+
+---
+
+# 19. GIRLS’ CLASS READINESS
+
+Girls’ classes are now official recurring schedule items.
+
+For this task support:
+
+- Google Calendar
+- occurrence generation
+- public schedule display
+- coach roster
+- admin view
+- future-plan eligibility
+
+Do NOT implement girls’ pricing or Stripe products.
+
+Do NOT implement girls’ membership commerce yet.
+
+Do NOT automatically allow adult member booking.
+
+---
+
+# 20. GUARDIAN SAFETY
+
+Audit whether girls/minor booking currently has a guardian relationship.
+
+If not complete:
+
+do not expose direct self-service girls booking publicly.
+
+The girls’ schedule may be visible publicly, but booking should remain:
+
+NOT YET AVAILABLE
+or
+CONTACT / INQUIRE
+
+until a safe guardian/minor workflow is explicitly implemented.
+
+Do not create a normal adult account for a child.
+
+Report current state.
+
+---
+
+# 21. PUBLIC CALENDAR COPY
+
+Use:
+
+WEEKLY SCHEDULE
+
+Women’s Jiu-Jitsu, Self-Defense & Strength Training
+
+Footer/copy can note:
+
+Beginner Friendly • Women’s & Girls’ Classes
+Oxnard, California
+
+Do not say all classes are women’s adult classes because two are girls’ classes.
+
+---
+
+# 22. BOOKING API VERIFICATION
+
+After calendar sync, verify:
+
+GET /api/classes
+
+returns the correct upcoming classes.
+
+Verify member schedule API returns the correct classes.
+
+Verify class taxonomy.
+
+Verify girls classes are not incorrectly adult Discovery-eligible.
+
+Verify adult classes remain bookable according to existing entitlement rules.
+
+---
+
+# 23. DISCOVERY PASS PROOF
+
+Using fixture/test user:
+
+Adult Discovery Pass
+
+Skill booking:
+5 PM adult Jiu-Jitsu
+
+Strength booking:
+one eligible Strength class
+
+PASS.
+
+Then try:
+
+4:15 PM Girls’ Jiu-Jitsu
+
+Expected:
+NOT ELIGIBLE
+
+Prove this.
+
+---
+
+# 24. WEEKLY MEMBERSHIP PROOF
+
+Using a synthetic active adult member:
+
+book an adult skill class
+
+book a strength class
+
+verify weekly entitlement tracking
+
+attempt girls class
+
+expected:
+PLAN_NOT_ELIGIBLE
+unless the synthetic plan explicitly includes girls category
+
+---
+
+# 25. PUBLIC WEBSITE QA
+
+Verify desktop and mobile schedule.
+
+Widths:
+
+320
+375
+390
+430
+desktop
+
+Ensure:
+
+- Tuesday/Thursday three rows do not overflow
+- 4:15 PM remains readable
+- Upper Body + Core wraps cleanly
+- girls label is readable
+- no horizontal page scroll
+
+---
+
+# 26. GOOGLE CALENDAR QA
+
+Verify every future series:
+
+Monday:
+5 PM adult skill
+6 PM lower-body strength
+
+Tuesday:
+4:15 PM girls skill
+5 PM adult skill
+6 PM upper-body + core strength
+
+Wednesday:
+5 PM adult skill
+6 PM lower-body strength
+
+Thursday:
+4:15 PM girls skill
+5 PM adult skill
+6 PM upper-body + core strength
+
+Friday:
+5 PM adult skill
+6 PM full-body strength
+
+Saturday:
+9 AM full-body strength
+
+Total recurring weekly class slots:
+
+13
+
+Breakdown:
+
+Adult Jiu-Jitsu / Self-Defense:
+5
+
+Girls’ Jiu-Jitsu / Self-Defense:
+2
+
+Strength & Conditioning:
+6
+
+Confirm the system produces exactly this weekly pattern.
+
+---
+
+# 27. TIMEZONE / DST
+
+Use:
+
+America/Los_Angeles
+
+Do not store recurring wall-clock times as fixed UTC offsets.
+
+Verify recurrence remains at the intended local times across daylight saving transitions.
+
+---
+
+# 28. NO STRIPE CHANGES
+
+Do not create:
+
+- Stripe products
+- Stripe prices
+- subscriptions
+- checkout flows
+
+Pricing will be handled in a separate task.
+
+---
+
+# 29. NO MEMBERSHIP PRICE CHANGES
+
+Do not assign or modify membership prices.
+
+This task is only:
+
+schedule
+calendar
+taxonomy
+booking readiness
+display
+verification
+
+---
+
+# 30. TESTS
+
+Run:
+
+npm run check
+npm test
+npm run test:evidence
+npm run build
+npm run mobile:qa
+git diff --check
+
+Add focused tests for:
+
+- final weekly schedule mapping
+- girls vs adult category
+- Discovery eligibility
+- adult plan eligibility
+- Google title mapping
+- no duplicate occurrences
+- timezone handling if not already covered
+
+---
+
+# 31. LIVE CALENDAR VERIFICATION
+
+Because the app already has Google Calendar access:
+
+verify the actual connected Ground Up calendar after writes.
+
+Report:
+
+- calendar ID/name used
+- recurring series created
+- recurring series updated
+- recurring series retired
+- first future occurrence date/time for each series
+- provider IDs
+- sync result
+
+Do not expose secrets/tokens.
+
+---
+
+# 32. FINAL REPORT
+
+Return:
+
+# GROUND UP FINAL WEEKLY SCHEDULE CUTOVER REPORT
+
+A. Connected Google Calendar
+
+B. Previous Schedule Audit
+
+C. Recurring Series Created
+
+D. Recurring Series Updated
+
+E. Old Series Retired
+
+F. Final Weekly Schedule
+
+G. Class Taxonomy
+
+H. Adult/Girls Audience Mapping
+
+I. Discovery Eligibility
+
+J. Membership Eligibility
+
+K. Capacity
+
+L. Public Website Schedule
+
+M. Member Portal Schedule
+
+N. Coach Portal
+
+O. Admin Operations
+
+P. English / Spanish
+
+Q. Guardian/Minor Booking Status
+
+R. Google Sync Evidence
+
+S. Booking Evidence
+
+T. Mobile QA
+
+U. Tests
+
+V. Remaining Limitations
+
+W. Publish Recommendation
+
+---
+
+# 33. EVIDENCE TABLE
+
+Return:
+
+| Capability | Result |
+|---|---|
+| Monday 5 PM adult skill | PASS/FAIL |
+| Monday 6 PM lower strength | PASS/FAIL |
+| Tuesday 4:15 PM girls skill | PASS/FAIL |
+| Tuesday 5 PM adult skill | PASS/FAIL |
+| Tuesday 6 PM upper+core strength | PASS/FAIL |
+| Wednesday 5 PM adult skill | PASS/FAIL |
+| Wednesday 6 PM lower strength | PASS/FAIL |
+| Thursday 4:15 PM girls skill | PASS/FAIL |
+| Thursday 5 PM adult skill | PASS/FAIL |
+| Thursday 6 PM upper+core strength | PASS/FAIL |
+| Friday 5 PM adult skill | PASS/FAIL |
+| Friday 6 PM full-body strength | PASS/FAIL |
+| Saturday 9 AM full-body strength | PASS/FAIL |
+| Google recurrence | PASS/FAIL |
+| Public schedule | PASS/FAIL |
+| Member schedule | PASS/FAIL |
+| Coach roster | PASS/FAIL |
+| Adult Discovery skill | PASS/FAIL |
+| Adult Discovery strength | PASS/FAIL |
+| Girls excluded from adult Discovery | PASS/FAIL |
+| English | PASS/FAIL |
+| Spanish | PASS/FAIL |
+| Mobile | PASS/FAIL |
+
+---
+
+# 34. FINAL VERDICT
+
+End with exactly one:
+
+GROUND UP FINAL SCHEDULE LIVE — READY TO PUBLISH
+
+GROUND UP FINAL SCHEDULE READY — PUBLISH REQUIRED
+
+GROUND UP FINAL SCHEDULE NOT READY — GOOGLE CALENDAR
+
+GROUND UP FINAL SCHEDULE NOT READY — BOOKING MAPPING
+
+GROUND UP FINAL SCHEDULE NOT READY — GIRLS SAFETY
+
+GROUND UP FINAL SCHEDULE NOT READY — MULTIPLE BLOCKERS
+
+---
+
+# FINAL RULE
+
+There must be ONE authoritative future schedule.
+
+Google Calendar
+→ class_occurrences
+→ website
+→ portal
+→ booking
+→ coach roster
+→ admin reporting
+
+All must agree.
+
+Final weekly total:
+
+13 classes
+
+5 adult Jiu-Jitsu / Self-Defense
+2 Girls’ Jiu-Jitsu / Self-Defense
+6 Strength & Conditioning
+
+Do not touch pricing or Stripe in this task.
