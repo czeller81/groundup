@@ -20,6 +20,7 @@ import {
   TrendingUp, UserPlus, Activity, StickyNote, ChevronLeft, Shield,
   Award, Hash, AlertTriangle, Filter, BarChart3
 } from "lucide-react";
+import AdminPilotOps from "./admin-pilot-ops";
 
 export default function PortalAdmin() {
   const [, setLocation] = useLocation();
@@ -388,6 +389,7 @@ export default function PortalAdmin() {
       </div>
 
       <main className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
+        {isAdmin && <AdminPilotOps />}
         {/* Stats Cards */}
         <div className="grid grid-cols-1 min-[360px]:grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 mb-6">
           <Card className="bg-[#121826] border-white/5">

@@ -53,7 +53,9 @@ export const formResponses = pgTable("form_responses", {
   submittedAt: timestamp("submitted_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (table) => ({
+  userFormUnique: uniqueIndex("form_responses_user_form_unique").on(table.userId, table.formId),
+}));
 
 export const trainers = pgTable("trainers", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),

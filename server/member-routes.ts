@@ -1,5 +1,5 @@
 import type { Express } from "express";
-import { and, asc, desc, eq, gte, ilike, inArray, isNull, lte, or, sql, sum } from "drizzle-orm";
+import { and, asc, desc, eq, gte, ilike, inArray, isNull, lt, lte, or, sql, sum } from "drizzle-orm";
 import { z } from "zod";
 import {
   classOccurrences,
@@ -330,6 +330,263 @@ export function registerMemberRoutes(app: Express) {
     res.json(await db.select().from(membershipPlans).orderBy(asc(membershipPlans.displayName)));
   });
 
+  app.get("/api/portal/coach/classes/today", requireRole("coach", "admin"), async (req, res) => {
+    try {
+      const start = new Date();
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(start);
+      end.setDate(end.getDate() + 1);
+      const occurrences = await db.select().from(classOccurrences).where(and(
+        gte(classOccurrences.start, start),
+        lt(classOccurrences.start, end),
+        eq(classOccurrences.status, "active"),
+        req.session.userRole === "admin"
+          ? sql`true`
+          : or(eq(classOccurrences.trainerId, req.session.userId!), isNull(classOccurrences.trainerId)),
+      )).orderBy(asc(classOccurrences.start));
+
+      const classes = await Promise.all(occurrences.map(async (occurrence) => {
+        const rows = await db.select({ reservation: classReservations, member: users })
+          .from(classReservations)
+          .leftJoin(users, eq(classReservations.userId, users.id))
+          .where(and(
+            eq(classReservations.occurrenceId, occurrence.id),
+            inArray(classReservations.status, ["confirmed", "waitlisted"]),
+          ))
+          .orderBy(asc(classReservations.status), asc(classReservations.waitlistPosition));
+        const memberIds = rows.map((row) => row.member?.id).filter(Boolean) as string[];
+        const passes = memberIds.length
+          ? await db.select({ pass: discoveryPasses, entitlement: discoveryEntitlements })
+            .from(discoveryPasses)
+            .innerJoin(discoveryEntitlements, eq(discoveryEntitlements.discoveryPassId, discoveryPasses.id))
+            .where(inArray(discoveryPasses.userId, memberIds))
+          : [];
+        const visibleRows = rows.filter((row) => !row.member || req.session.userRole === "admin" || coachCanManageMember(row.member, req.session.userId));
+        const roster = visibleRows.map(({ reservation, member }) => {
+          const passEntitlement = member
+            ? passes.find((item) => item.pass.userId === member.id && item.entitlement.reservationId === reservation.id)
+            : undefined;
+          return {
+            ...reservation,
+            member: member ? {
+              id: member.id,
+              firstName: member.firstName,
+              lastName: member.lastName,
+              locale: member.locale,
+              assignedCoachId: member.assignedCoachId,
+            } : null,
+            program: passEntitlement ? "DISCOVERY_PASS" : "MEMBERSHIP",
+            discoveryCategory: passEntitlement?.entitlement.category || null,
+            discoveryStatus: passEntitlement?.entitlement.status || null,
+          };
+        });
+        const confirmed = roster.filter((reservation) => reservation.status === "confirmed");
+        return {
+          ...occurrence,
+          summary: {
+            reserved: confirmed.length,
+            present: confirmed.filter((reservation) => reservation.attendance === "PRESENT").length,
+            noShow: confirmed.filter((reservation) => reservation.attendance === "NO_SHOW").length,
+            lateCancel: confirmed.filter((reservation) => reservation.attendance === "LATE_CANCEL").length,
+            excused: confirmed.filter((reservation) => reservation.attendance === "EXCUSED").length,
+            waitlisted: roster.filter((reservation) => reservation.status === "waitlisted").length,
+            discovery: confirmed.filter((reservation) => reservation.program === "DISCOVERY_PASS").length,
+          },
+          roster,
+        };
+      }));
+      res.json(classes);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ code: "COACH_CLASSES_LOAD_FAILED" });
+    }
+  });
+
+  app.get("/api/portal/admin/discovery", requireRole("admin"), async (req, res) => {
+    try {
+      const filter = typeof req.query.filter === "string" ? req.query.filter : "all";
+      const rows = await db.select({ pass: discoveryPasses, user: users })
+        .from(discoveryPasses)
+        .innerJoin(users, eq(discoveryPasses.userId, users.id))
+        .orderBy(desc(discoveryPasses.createdAt));
+      const result = await Promise.all(rows.map(async ({ pass, user }) => ({
+        ...publicPass(pass, await db.select().from(discoveryEntitlements).where(eq(discoveryEntitlements.discoveryPassId, pass.id)).orderBy(asc(discoveryEntitlements.category))),
+        user: { id: user.id, firstName: user.firstName, lastName: user.lastName, email: user.email, phone: user.phone },
+      })));
+      const filtered = result.filter((pass) => {
+        if (filter === "active") return ["CLAIMED", "PARTIALLY_BOOKED", "PARTIALLY_ATTENDED"].includes(pass.displayState);
+        if (filter === "completed") return pass.displayState === "COMPLETED";
+        if (filter === "converted") return pass.displayState === "CONVERTED";
+        if (filter === "expired") return pass.displayState === "EXPIRED";
+        if (filter === "follow_up") return Boolean(pass.followUpState);
+        if (filter === "expiring") return pass.expirationTimestamp.getTime() > Date.now() && pass.expirationTimestamp.getTime() < Date.now() + 3 * 24 * 60 * 60 * 1000;
+        return true;
+      });
+      res.json(filtered);
+    } catch (error) {
+      res.status(500).json({ code: "DISCOVERY_LIST_FAILED" });
+    }
+  });
+
+  app.get("/api/portal/admin/member-report", requireRole("admin"), async (_req, res) => {
+    try {
+      const weekStart = new Date();
+      weekStart.setHours(0, 0, 0, 0);
+      weekStart.setDate(weekStart.getDate() - ((weekStart.getDay() + 6) % 7));
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekEnd.getDate() + 7);
+      const occurrences = await db.select().from(classOccurrences).where(and(
+        gte(classOccurrences.start, weekStart),
+        lt(classOccurrences.start, weekEnd),
+        eq(classOccurrences.status, "active"),
+      )).orderBy(asc(classOccurrences.start));
+      const occurrenceIds = occurrences.map((occurrence) => occurrence.id);
+      const reservations = occurrenceIds.length
+        ? await db.select().from(classReservations).where(inArray(classReservations.occurrenceId, occurrenceIds))
+        : [];
+      const discoveryReservationIds = reservations.length
+        ? new Set((await db.select({ reservationId: discoveryEntitlements.reservationId }).from(discoveryEntitlements)
+          .where(inArray(discoveryEntitlements.reservationId, reservations.map((reservation) => reservation.id))))
+          .map((row) => row.reservationId).filter(Boolean))
+        : new Set<string>();
+      const classRows = occurrences.map((occurrence) => {
+        const classReservationsForOccurrence = reservations.filter((reservation) => reservation.occurrenceId === occurrence.id);
+        const confirmed = classReservationsForOccurrence.filter((reservation) => reservation.status === "confirmed");
+        const waitlisted = classReservationsForOccurrence.filter((reservation) => reservation.status === "waitlisted");
+        const attended = confirmed.filter((reservation) => reservation.attendance === "PRESENT");
+        return {
+          id: occurrence.id,
+          title: occurrence.title,
+          start: occurrence.start,
+          end: occurrence.end,
+          capacity: occurrence.capacity,
+          reserved: confirmed.length,
+          attended: attended.length,
+          waitlisted: waitlisted.length,
+          discoveryVisits: confirmed.filter((reservation) => discoveryReservationIds.has(reservation.id)).length,
+          noShows: confirmed.filter((reservation) => reservation.attendance === "NO_SHOW").length,
+          reservationUtilization: occurrence.capacity ? Math.round((confirmed.length / occurrence.capacity) * 100) : 0,
+          attendanceUtilization: occurrence.capacity ? Math.round((attended.length / occurrence.capacity) * 100) : 0,
+        };
+      });
+      const [demand] = await db.select({ value: sum(membershipPlans.weeklySessionLimit) })
+        .from(memberships)
+        .innerJoin(membershipPlans, eq(memberships.planId, membershipPlans.id))
+        .where(inArray(memberships.status, ["active", "ACTIVE"]));
+      const passes = await db.select().from(discoveryPasses);
+      const attendedDiscovery = new Set((await db.select({ passId: discoveryEntitlements.discoveryPassId })
+        .from(discoveryEntitlements).where(eq(discoveryEntitlements.status, "ATTENDED"))).map((row) => row.passId));
+      const converted = passes.filter((pass) => Boolean(pass.convertedAt)).length;
+      res.json({
+        weekStart,
+        weekEnd,
+        totals: {
+          totalSeats: classRows.reduce((sumValue, row) => sumValue + row.capacity, 0),
+          reserved: classRows.reduce((sumValue, row) => sumValue + row.reserved, 0),
+          attended: classRows.reduce((sumValue, row) => sumValue + row.attended, 0),
+          waitlisted: classRows.reduce((sumValue, row) => sumValue + row.waitlisted, 0),
+          discoveryVisits: classRows.reduce((sumValue, row) => sumValue + row.discoveryVisits, 0),
+          noShows: classRows.reduce((sumValue, row) => sumValue + row.noShows, 0),
+          reservationUtilization: classRows.reduce((sumValue, row) => sumValue + row.capacity, 0)
+            ? Math.round((classRows.reduce((sumValue, row) => sumValue + row.reserved, 0) / classRows.reduce((sumValue, row) => sumValue + row.capacity, 0)) * 100)
+            : 0,
+          attendanceUtilization: classRows.reduce((sumValue, row) => sumValue + row.capacity, 0)
+            ? Math.round((classRows.reduce((sumValue, row) => sumValue + row.attended, 0) / classRows.reduce((sumValue, row) => sumValue + row.capacity, 0)) * 100)
+            : 0,
+          weeklyEntitlementDemand: Number(demand?.value || 0),
+          passesClaimed: passes.length,
+          discoveryCompleted: attendedDiscovery.size,
+          converted,
+          conversionRate: passes.length ? Math.round((converted / passes.length) * 100) : 0,
+        },
+        classes: classRows,
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ code: "REPORT_LOAD_FAILED" });
+    }
+  });
+
+  app.get("/api/portal/admin/members/:userId/program", requireRole("admin"), async (req, res) => {
+    const member = await storage.getUserById(req.params.userId);
+    if (!member) return res.status(404).json({ code: "MEMBER_NOT_FOUND" });
+    const [lifecycle] = await db.select().from(memberLifecycles).where(eq(memberLifecycles.userId, member.id));
+    const memberRows = await db.select({ membership: memberships, plan: membershipPlans })
+      .from(memberships).leftJoin(membershipPlans, eq(memberships.planId, membershipPlans.id))
+      .where(eq(memberships.userId, member.id)).orderBy(desc(memberships.createdAt));
+    const active = memberRows.find(({ membership }) => ["active", "ACTIVE"].includes(membership.status));
+    const pass = await getPass(member.id);
+    const formsForMember = await storage.getUserProfile(member.id);
+    res.json({
+      member: { id: member.id, firstName: member.firstName, lastName: member.lastName, email: member.email, phone: member.phone },
+      lifecycle: lifecycle || null,
+      memberships: memberRows.map(({ membership, plan }) => ({ ...membership, plan })),
+      activeMembership: active ? { ...active.membership, plan: active.plan } : null,
+      discoveryPass: pass,
+      forms: formsForMember?.formResponses || [],
+      goals: await db.select().from(memberGoals).where(eq(memberGoals.userId, member.id)),
+    });
+  });
+
+  app.patch("/api/portal/admin/members/:userId/program", requireRole("admin"), async (req, res) => {
+    try {
+      const data = z.object({
+        action: z.enum(["assign_plan", "pause", "cancel", "activate", "lifecycle"]),
+        planId: z.string().optional(),
+        lifecycle: z.enum(["PROSPECT", "DISCOVERY_PASS", "ACTIVE_MEMBER", "INACTIVE"]).optional(),
+        reason: z.string().trim().min(5).max(500),
+      }).strict().parse(req.body);
+      const member = await storage.getUserById(req.params.userId);
+      if (!member) return res.status(404).json({ code: "MEMBER_NOT_FOUND" });
+      if (data.action === "assign_plan") {
+        if (!data.planId) return res.status(400).json({ code: "PLAN_REQUIRED" });
+        const [plan] = await db.select().from(membershipPlans).where(eq(membershipPlans.id, data.planId));
+        if (!plan) return res.status(404).json({ code: "PLAN_NOT_FOUND" });
+        await storage.createMembership({
+          userId: member.id,
+          planId: plan.id,
+          type: plan.internalKey,
+          status: "active",
+          priceCents: plan.displayPriceCents || 0,
+          assignedBy: req.session.userId!,
+          source: "admin_program",
+        });
+      } else if (data.action === "lifecycle") {
+        if (!data.lifecycle) return res.status(400).json({ code: "LIFECYCLE_REQUIRED" });
+        await setLifecycle(member.id, data.lifecycle, req.session.userId!, data.reason, "admin_program");
+      } else {
+        const [active] = await db.select().from(memberships).where(and(
+          eq(memberships.userId, member.id),
+          data.action === "activate"
+            ? inArray(memberships.status, ["paused", "PAUSED", "cancelled", "CANCELLED"])
+            : inArray(memberships.status, ["active", "ACTIVE"]),
+        )).orderBy(desc(memberships.createdAt)).limit(1);
+        if (!active) return res.status(404).json({ code: "MEMBERSHIP_NOT_FOUND" });
+        const nextStatus = data.action === "pause" ? "paused" : data.action === "cancel" ? "cancelled" : "active";
+        await db.update(memberships).set({
+          status: nextStatus,
+          pausedAt: data.action === "pause" ? new Date() : null,
+          cancelledAt: data.action === "cancel" ? new Date() : data.action === "activate" ? null : undefined,
+          updatedAt: new Date(),
+        }).where(eq(memberships.id, active.id));
+        await setLifecycle(member.id, data.action === "activate" ? "ACTIVE_MEMBER" : "INACTIVE", req.session.userId!, data.reason, "admin_program");
+      }
+      await db.insert(memberAuditEvents).values({
+        actorId: req.session.userId!,
+        userId: member.id,
+        targetType: "member_program",
+        targetId: member.id,
+        action: `member_program_${data.action}`,
+        after: data,
+        reason: data.reason,
+      });
+      res.json({ ok: true });
+    } catch (error) {
+      if (error instanceof z.ZodError) return res.status(400).json({ code: "INVALID_REQUEST", errors: error.flatten() });
+      res.status(500).json({ code: "PROGRAM_UPDATE_FAILED" });
+    }
+  });
+
   app.post("/api/portal/admin/membership-plans", requireRole("admin"), async (req, res) => {
     try {
       const data = z.object({
@@ -341,6 +598,7 @@ export function registerMemberRoutes(app: Express) {
         bookingWindowHours: z.number().int().positive().max(8760).optional(),
         weekStartDay: z.number().int().min(0).max(6).optional(),
         timezone: z.string().min(1).max(80).optional(),
+        rolloverPolicy: z.string().min(1).max(40).optional(),
         waitlistAllowed: z.boolean().optional(),
         cancellationCutoffHours: z.number().int().nonnegative().max(168).optional(),
         lateCancelPolicy: z.string().min(1).max(40).optional(),
@@ -365,6 +623,9 @@ export function registerMemberRoutes(app: Express) {
         weeklySessionLimit: z.number().int().nonnegative().nullable().optional(),
         eligibleClassCategories: z.array(z.string().min(1)).optional(),
         bookingWindowHours: z.number().int().positive().max(8760).optional(),
+        weekStartDay: z.number().int().min(0).max(6).optional(),
+        timezone: z.string().min(1).max(80).optional(),
+        rolloverPolicy: z.string().min(1).max(40).optional(),
         waitlistAllowed: z.boolean().optional(),
         cancellationCutoffHours: z.number().int().nonnegative().max(168).optional(),
         lateCancelPolicy: z.string().min(1).max(40).optional(),

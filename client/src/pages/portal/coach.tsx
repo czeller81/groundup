@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { usePortalAuth } from "@/lib/portal-auth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -26,6 +27,34 @@ export default function PortalCoach() {
   const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
   const [newNote, setNewNote] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
+  const [quickViewMemberId, setQuickViewMemberId] = useState<string | null>(null);
+
+  const { data: todaysClasses = [], isLoading: todaysClassesLoading } = useQuery<any[]>({
+    queryKey: ["/api/portal/coach/classes/today"],
+    enabled: isAuthenticated && isStaff,
+  });
+
+  const selectedClass = todaysClasses.find((item) => item.id === selectedClassId) || todaysClasses[0];
+  const quickView = useQuery<any>({
+    queryKey: ["/api/portal/coach/members", quickViewMemberId, "program"],
+    queryFn: async () => (await fetch(`/api/portal/coach/members/${quickViewMemberId}/program`)).json(),
+    enabled: Boolean(quickViewMemberId) && isAuthenticated && isStaff,
+  });
+
+  const rosterAttendanceMutation = useMutation({
+    mutationFn: async ({ id, attendance }: { id: string; attendance: string }) => {
+      const existing = selectedClass?.roster?.find((reservation: any) => reservation.id === id);
+      const reason = existing?.attendance ? window.prompt(copy.attendanceCorrectionReason) : undefined;
+      if (existing?.attendance && !reason?.trim()) throw new Error(copy.attendanceCorrectionReason);
+      return (await apiRequest("PATCH", `/api/portal/admin/class-booking/reservations/${id}/attendance`, { attendance, reason })).json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/portal/coach/classes/today"] });
+      toast({ title: copy.attendanceUpdated });
+    },
+    onError: (error: Error) => toast({ title: copy.error, description: error.message, variant: "destructive" }),
+  });
 
   const { data: members = [], isLoading: membersLoading } = useQuery<any[]>({
     queryKey: ["/api/portal/coach/members"],
@@ -118,6 +147,48 @@ export default function PortalCoach() {
       </div>
 
       <main className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
+        <Card className="mb-6 border-[#5EEBFF]/20 bg-[#121826]" data-testid="coach-todays-classes">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base text-white">
+              <Calendar className="h-5 w-5 text-[#5EEBFF]" />{copy.todaysClasses}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-4 lg:grid-cols-[minmax(220px,0.75fr)_1.5fr]">
+            <div className="space-y-2">
+              {todaysClassesLoading ? <Loader2 className="mx-auto my-8 h-6 w-6 animate-spin text-[#5EEBFF]" /> : todaysClasses.length === 0 ? <p className="rounded-lg border border-white/5 bg-[#0B0F14] p-4 text-sm text-gray-400">{copy.noClassesToday}</p> : todaysClasses.map((item: any) => (
+                <button key={item.id} onClick={() => setSelectedClassId(item.id)} className={`min-h-16 w-full rounded-lg border p-3 text-left ${selectedClass?.id === item.id ? "border-[#5EEBFF]/50 bg-[#5EEBFF]/10" : "border-white/5 bg-[#0B0F14]"}`}>
+                  <p className="text-sm font-semibold text-white">{item.title}</p>
+                  <p className="mt-1 text-xs text-gray-400">{new Date(item.start).toLocaleTimeString(locale === "es" ? "es-US" : "en-US", { hour: "numeric", minute: "2-digit" })} · {item.summary.reserved} {copy.reservedLabel}</p>
+                </button>
+              ))}
+            </div>
+            {selectedClass && (
+              <div className="rounded-lg border border-white/5 bg-[#0B0F14] p-4">
+                <div className="flex flex-col gap-3 border-b border-white/5 pb-4 sm:flex-row sm:items-start sm:justify-between">
+                  <div><h3 className="font-bold text-white">{selectedClass.title}</h3><p className="text-sm text-gray-400">{new Date(selectedClass.start).toLocaleDateString(locale === "es" ? "es-US" : "en-US", { weekday: "long", month: "short", day: "numeric" })} · {new Date(selectedClass.start).toLocaleTimeString(locale === "es" ? "es-US" : "en-US", { hour: "numeric", minute: "2-digit" })}</p></div>
+                  <div className="grid grid-cols-3 gap-2 text-center text-[11px]"><span><strong className="block text-white">{selectedClass.summary.reserved}</strong>{copy.reservedLabel}</span><span><strong className="block text-emerald-300">{selectedClass.summary.present}</strong>{copy.presentLabel}</span><span><strong className="block text-amber-300">{selectedClass.summary.waitlisted}</strong>{copy.waitlistedLabel}</span></div>
+                </div>
+                <div className="mt-3 space-y-2">
+                  {selectedClass.roster.map((reservation: any) => (
+                    <div key={reservation.id} className="rounded-lg border border-white/5 bg-[#121826] p-3">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <button onClick={() => reservation.member?.id && setQuickViewMemberId(reservation.member.id)} className="min-w-0 text-left">
+                          <p className="truncate text-sm font-semibold text-white">{reservation.member ? `${reservation.member.firstName} ${reservation.member.lastName}` : `${reservation.visitorFirstName || ""} ${reservation.visitorLastName || ""}`}</p>
+                          <p className="text-xs text-gray-400">{reservation.program === "DISCOVERY_PASS" ? `${copy.discoveryPassTitle} · ${reservation.discoveryCategory}` : copy.member} · {reservation.status === "waitlisted" ? copy.waitlisted : copy.confirmed}</p>
+                        </button>
+                        {reservation.status === "confirmed" && (
+                          <div className="grid grid-cols-2 gap-1 sm:flex">
+                            {(["PRESENT", "NO_SHOW", "LATE_CANCEL", "EXCUSED"] as const).map((value) => <Button key={value} size="sm" disabled={rosterAttendanceMutation.isPending} onClick={() => rosterAttendanceMutation.mutate({ id: reservation.id, attendance: value })} className={`min-h-10 px-2 text-[11px] ${reservation.attendance === value ? "bg-[#5EEBFF] text-[#0B0F14]" : "border-white/10 bg-transparent text-gray-300 hover:bg-white/10"}`} variant={reservation.attendance === value ? "default" : "outline"}>{value === "PRESENT" ? copy.present : value === "NO_SHOW" ? copy.absent : value === "LATE_CANCEL" ? copy.late : copy.excused}</Button>)}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
         <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
           <div className="lg:col-span-1">
             <Card className="bg-[#121826] border-white/5">
@@ -276,6 +347,17 @@ export default function PortalCoach() {
           </div>
         </div>
       </main>
+      <Dialog open={Boolean(quickViewMemberId)} onOpenChange={(open) => !open && setQuickViewMemberId(null)}>
+        <DialogContent className="max-h-[85vh] overflow-y-auto border-white/10 bg-[#121826] text-white">
+          <DialogHeader><DialogTitle>{copy.memberProgramQuickView}</DialogTitle></DialogHeader>
+          {quickView.isLoading ? <Loader2 className="mx-auto my-8 h-6 w-6 animate-spin text-[#5EEBFF]" /> : quickView.data && <div className="space-y-4">
+            <div><h3 className="text-lg font-semibold">{quickView.data.member.firstName} {quickView.data.member.lastName}</h3><p className="text-sm text-gray-400">{quickView.data.lifecycle?.currentState || "PROSPECT"}</p></div>
+            <div><p className="text-xs uppercase tracking-wide text-gray-500">{copy.goals}</p>{quickView.data.goals?.length ? quickView.data.goals.map((goal: any) => <Badge key={goal.id} className="mr-2 mt-2 border-white/10 bg-white/5 text-gray-200">{goal.goal}</Badge>) : <p className="mt-1 text-sm text-gray-400">{copy.noGoals}</p>}</div>
+            <div><p className="text-xs uppercase tracking-wide text-gray-500">{copy.recentAttendance}</p>{quickView.data.recentAttendance?.length ? quickView.data.recentAttendance.map((item: any) => <p key={item.reservation.id} className="mt-1 text-sm text-gray-300">{item.occurrence.title} · {item.reservation.attendance}</p>) : <p className="mt-1 text-sm text-gray-400">{copy.noRecentAttendance}</p>}</div>
+            <div><p className="text-xs uppercase tracking-wide text-gray-500">{copy.discoveryPasses}</p><p className="mt-1 text-sm text-gray-300">{quickView.data.discoveryPass?.displayState || "—"}</p></div>
+          </div>}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
