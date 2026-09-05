@@ -12,6 +12,17 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+type MinorProfile = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  dateOfBirth: string;
+  emergencyContactName: string;
+  emergencyContactPhone: string;
+  emergencyContactRelationship: string;
+  consentRevokedAt: string | null;
+};
+
 type DayOfWeek = "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday" | "Sunday";
 const DAYS: DayOfWeek[] = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const DAY_SHORT: Record<DayOfWeek, { en: string; es: string }> = {
@@ -40,6 +51,7 @@ export default function PortalSchedule() {
   const [activeDay, setActiveDay] = useState<DayOfWeek>(todayDay);
   const [selectedMinorId, setSelectedMinorId] = useState("");
   const [minorDialogOpen, setMinorDialogOpen] = useState(false);
+  const [editingMinorId, setEditingMinorId] = useState<string | null>(null);
   const [minorForm, setMinorForm] = useState({
     firstName: "", lastName: "", dateOfBirth: "", emergencyContactName: "",
     emergencyContactPhone: "", emergencyContactRelationship: "", consentSignature: "", consentGiven: false,
@@ -54,7 +66,7 @@ export default function PortalSchedule() {
   const schedule = useQuery<LiveClass[]>({
     queryKey: [`/api/portal/classes?from=${encodeURIComponent(range.from)}&to=${encodeURIComponent(range.to)}`],
   });
-  const minors = useQuery<any[]>({ queryKey: ["/api/portal/minors"] });
+  const minors = useQuery<MinorProfile[]>({ queryKey: ["/api/portal/minors"] });
   const reserve = useMutation({
     mutationFn: async ({ occurrenceId, minorProfileId }: { occurrenceId: string; minorProfileId?: string }) => (
       await apiRequest("POST", "/api/portal/class-reservations", { occurrenceId, minorProfileId })
@@ -81,6 +93,40 @@ export default function PortalSchedule() {
       variant: "destructive",
     }),
   });
+  const updateMinor = useMutation({
+    mutationFn: async () => (await apiRequest("PATCH", `/api/portal/minors/${editingMinorId}`, {
+      firstName: minorForm.firstName,
+      lastName: minorForm.lastName,
+      dateOfBirth: minorForm.dateOfBirth,
+      emergencyContactName: minorForm.emergencyContactName,
+      emergencyContactPhone: minorForm.emergencyContactPhone,
+      emergencyContactRelationship: minorForm.emergencyContactRelationship,
+    })).json(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/portal/minors"] });
+      setMinorDialogOpen(false);
+      setEditingMinorId(null);
+      toast({ title: copy.minorUpdated });
+    },
+    onError: (error: Error) => toast({
+      title: copy.minorSaveError,
+      description: localizeApiError(error.message, locale, copy.minorSaveError),
+      variant: "destructive",
+    }),
+  });
+  const revokeConsent = useMutation({
+    mutationFn: async (minorId: string) => (await apiRequest("POST", `/api/portal/minors/${minorId}/revoke-consent`)).json(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/portal/minors"] });
+      setSelectedMinorId("");
+      toast({ title: copy.consentRevoked });
+    },
+    onError: (error: Error) => toast({
+      title: copy.consentRevokeError,
+      description: localizeApiError(error.message, locale, copy.consentRevokeError),
+      variant: "destructive",
+    }),
+  });
   const classes = schedule.data || [];
   const classesForDay = (day: DayOfWeek) => classes.filter((item) => dayForOccurrence(item.start) === day);
   const todayClasses = classesForDay(todayDay);
@@ -97,7 +143,10 @@ export default function PortalSchedule() {
     chooseMinor: "Selecciona quién asistirá",
     minorHelp: "Las clases para niñas requieren un perfil de menor con consentimiento de una tutora.",
     minorSaved: "Perfil de participante guardado",
+    minorUpdated: "Perfil de participante actualizado",
     minorSaveError: "No se pudo guardar el perfil",
+    consentRevoked: "Consentimiento revocado",
+    consentRevokeError: "No se pudo revocar el consentimiento",
     minorFirstName: "Nombre de la menor",
     minorLastName: "Apellido de la menor",
     dateOfBirth: "Fecha de nacimiento",
@@ -108,6 +157,10 @@ export default function PortalSchedule() {
     consent: "Confirmo que soy la tutora autorizada y doy consentimiento para participar.",
     cancel: "Cancelar",
     saveMinor: "Guardar participante",
+    editMinor: "Editar",
+    revokeConsent: "Revocar consentimiento",
+    consentRevokedStatus: "Consentimiento revocado",
+    revokeConfirm: "¿Revocar el consentimiento de esta participante? No podrá reservar nuevas clases.",
   } : {
     title: "ACADEMY SCHEDULE", subtitle: "Weekly program authorized by the academy calendar",
     today: "Today", classes: "classes", browse: "Browse by day", noClasses: "No classes scheduled.",
@@ -120,7 +173,10 @@ export default function PortalSchedule() {
     chooseMinor: "Select who will attend",
     minorHelp: "Girls’ classes require a minor profile with guardian consent.",
     minorSaved: "Participant profile saved",
+    minorUpdated: "Participant profile updated",
     minorSaveError: "Could not save participant profile",
+    consentRevoked: "Consent revoked",
+    consentRevokeError: "Could not revoke consent",
     minorFirstName: "Participant first name",
     minorLastName: "Participant last name",
     dateOfBirth: "Date of birth",
@@ -131,10 +187,35 @@ export default function PortalSchedule() {
     consent: "I confirm that I am the authorized guardian and consent to participation.",
     cancel: "Cancel",
     saveMinor: "Save participant",
+    editMinor: "Edit",
+    revokeConsent: "Revoke consent",
+    consentRevokedStatus: "Consent revoked",
+    revokeConfirm: "Revoke consent for this participant? They will not be able to book new classes.",
   };
+  const openNewMinorDialog = () => {
+    setEditingMinorId(null);
+    setMinorForm({ firstName: "", lastName: "", dateOfBirth: "", emergencyContactName: "", emergencyContactPhone: "", emergencyContactRelationship: "", consentSignature: "", consentGiven: false });
+    setMinorDialogOpen(true);
+  };
+  const openEditMinorDialog = (minor: MinorProfile) => {
+    setEditingMinorId(minor.id);
+    setMinorForm({
+      firstName: minor.firstName,
+      lastName: minor.lastName,
+      dateOfBirth: minor.dateOfBirth.slice(0, 10),
+      emergencyContactName: minor.emergencyContactName,
+      emergencyContactPhone: minor.emergencyContactPhone,
+      emergencyContactRelationship: minor.emergencyContactRelationship,
+      consentSignature: "",
+      consentGiven: true,
+    });
+    setMinorDialogOpen(true);
+  };
+  const selectedMinor = (minors.data || []).find((minor) => minor.id === selectedMinorId);
   const actionFor = (item: LiveClass) => {
     if (!item.bookable) return undefined;
     if (item.girlsClass && !selectedMinorId) return copy.chooseMinor;
+    if (item.girlsClass && selectedMinor?.consentRevokedAt) return undefined;
     if (!item.girlsClass && item.eligibility && !item.eligibility.eligible) return undefined;
     return item.bookingState === "waitlist" ? copy.waitlist : copy.book;
   };
@@ -173,13 +254,22 @@ export default function PortalSchedule() {
                         className="h-10 rounded-md border border-white/10 bg-[#0B0F14] px-3 text-sm text-white"
                       >
                         <option value="">{copy.chooseMinor}</option>
-                        {(minors.data || []).map((minor) => <option key={minor.id} value={minor.id}>{minor.firstName} {minor.lastName}</option>)}
+                        {(minors.data || []).map((minor) => <option key={minor.id} value={minor.id} disabled={Boolean(minor.consentRevokedAt)}>{minor.firstName} {minor.lastName}{minor.consentRevokedAt ? ` — ${copy.consentRevokedStatus}` : ""}</option>)}
                       </select>
                     </div>
-                    <Button variant="outline" className="border-[#B06CFF]/40 text-[#D6B5FF]" onClick={() => setMinorDialogOpen(true)}>
+                    <Button variant="outline" className="border-[#B06CFF]/40 text-[#D6B5FF]" onClick={openNewMinorDialog}>
                       <Plus className="mr-2 h-4 w-4" />{copy.addMinor}
                     </Button>
                   </div>
+                  {(minors.data || []).length > 0 && <div className="mt-4 space-y-2 border-t border-white/5 pt-3">
+                    {(minors.data || []).map((minor) => <div key={minor.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-[#0B0F14] px-3 py-2">
+                      <span className="text-sm text-gray-200">{minor.firstName} {minor.lastName}{minor.consentRevokedAt && <span className="ml-2 text-xs text-amber-300">{copy.consentRevokedStatus}</span>}</span>
+                      <div className="flex gap-2">
+                        <Button variant="ghost" size="sm" className="text-[#5EEBFF]" onClick={() => openEditMinorDialog(minor)}>{copy.editMinor}</Button>
+                        {!minor.consentRevokedAt && <Button variant="ghost" size="sm" className="text-amber-300" disabled={revokeConsent.isPending} onClick={() => window.confirm(copy.revokeConfirm) && revokeConsent.mutate(minor.id)}>{copy.revokeConsent}</Button>}
+                      </div>
+                    </div>)}
+                  </div>}
                 </section>
               )}
               <section className="mb-5 rounded-2xl border border-[#5EEBFF]/15 bg-[#121826] p-4">
@@ -224,7 +314,7 @@ export default function PortalSchedule() {
       <Dialog open={minorDialogOpen} onOpenChange={setMinorDialogOpen}>
         <DialogContent className="max-h-[90vh] overflow-y-auto border-white/10 bg-[#121826] text-white">
           <DialogHeader>
-            <DialogTitle>{copy.addMinor}</DialogTitle>
+            <DialogTitle>{editingMinorId ? copy.editMinor : copy.addMinor}</DialogTitle>
             <DialogDescription className="text-gray-400">{copy.minorHelp}</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 sm:grid-cols-2">
@@ -234,13 +324,13 @@ export default function PortalSchedule() {
             <div className="space-y-2"><Label htmlFor="minor-emergency-name">{copy.emergencyName}</Label><Input id="minor-emergency-name" value={minorForm.emergencyContactName} onChange={(event) => setMinorForm({ ...minorForm, emergencyContactName: event.target.value })} className="border-white/10 bg-[#0B0F14] text-white" /></div>
             <div className="space-y-2"><Label htmlFor="minor-emergency-phone">{copy.emergencyPhone}</Label><Input id="minor-emergency-phone" type="tel" value={minorForm.emergencyContactPhone} onChange={(event) => setMinorForm({ ...minorForm, emergencyContactPhone: event.target.value })} className="border-white/10 bg-[#0B0F14] text-white" /></div>
             <div className="space-y-2"><Label htmlFor="minor-emergency-relationship">{copy.emergencyRelationship}</Label><Input id="minor-emergency-relationship" value={minorForm.emergencyContactRelationship} onChange={(event) => setMinorForm({ ...minorForm, emergencyContactRelationship: event.target.value })} className="border-white/10 bg-[#0B0F14] text-white" /></div>
-            <div className="space-y-2 sm:col-span-2"><Label htmlFor="minor-signature">{copy.guardianSignature}</Label><Input id="minor-signature" value={minorForm.consentSignature} onChange={(event) => setMinorForm({ ...minorForm, consentSignature: event.target.value })} className="border-white/10 bg-[#0B0F14] text-white" /></div>
-            <label className="flex items-start gap-3 text-sm text-gray-300 sm:col-span-2"><input type="checkbox" checked={minorForm.consentGiven} onChange={(event) => setMinorForm({ ...minorForm, consentGiven: event.target.checked })} className="mt-1 h-4 w-4 accent-[#B06CFF]" />{copy.consent}</label>
+            {!editingMinorId && <><div className="space-y-2 sm:col-span-2"><Label htmlFor="minor-signature">{copy.guardianSignature}</Label><Input id="minor-signature" value={minorForm.consentSignature} onChange={(event) => setMinorForm({ ...minorForm, consentSignature: event.target.value })} className="border-white/10 bg-[#0B0F14] text-white" /></div>
+            <label className="flex items-start gap-3 text-sm text-gray-300 sm:col-span-2"><input type="checkbox" checked={minorForm.consentGiven} onChange={(event) => setMinorForm({ ...minorForm, consentGiven: event.target.checked })} className="mt-1 h-4 w-4 accent-[#B06CFF]" />{copy.consent}</label></>}
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setMinorDialogOpen(false)}>{copy.cancel}</Button>
-            <Button onClick={() => createMinor.mutate()} disabled={createMinor.isPending || !minorForm.consentGiven || !minorForm.firstName || !minorForm.lastName || !minorForm.dateOfBirth || !minorForm.emergencyContactName || !minorForm.emergencyContactPhone || !minorForm.emergencyContactRelationship || !minorForm.consentSignature} className="bg-[#B06CFF] text-white hover:bg-[#B06CFF]/90">
-              {createMinor.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}{copy.saveMinor}
+            <Button onClick={() => editingMinorId ? updateMinor.mutate() : createMinor.mutate()} disabled={createMinor.isPending || updateMinor.isPending || !minorForm.firstName || !minorForm.lastName || !minorForm.dateOfBirth || !minorForm.emergencyContactName || !minorForm.emergencyContactPhone || !minorForm.emergencyContactRelationship || (!editingMinorId && (!minorForm.consentGiven || !minorForm.consentSignature))} className="bg-[#B06CFF] text-white hover:bg-[#B06CFF]/90">
+              {(createMinor.isPending || updateMinor.isPending) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}{copy.saveMinor}
             </Button>
           </DialogFooter>
         </DialogContent>

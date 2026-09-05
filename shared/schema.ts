@@ -208,6 +208,7 @@ export const minorProfiles = pgTable("minor_profiles", {
   emergencyContactRelationship: text("emergency_contact_relationship").notNull(),
   consentSignature: text("consent_signature").notNull(),
   consentedAt: timestamp("consented_at").notNull(),
+  consentRevokedAt: timestamp("consent_revoked_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, (table) => ({

@@ -1143,6 +1143,7 @@ const API_ERROR_CODE_TRANSLATIONS: Record<string, { en: string; es: string }> = 
   DISCOVERY_EXPIRED: { en: "Your Discovery Pass has expired.", es: "Tu Discovery Pass venció." },
   DUPLICATE_RESERVATION: { en: "You already have a reservation for this class.", es: "Ya tienes una reserva para esta clase." },
   OVERLAPPING_RESERVATION: { en: "You already have another class during this time.", es: "Ya tienes otra clase en este horario." },
+  MINOR_CONSENT_REVOKED: { en: "Guardian consent for this participant has been revoked.", es: "El consentimiento de la tutora para esta participante fue revocado." },
   PLAN_REQUIRED: { en: "Choose a membership plan first.", es: "Primero elige un plan de membresía." },
   LIFECYCLE_REQUIRED: { en: "Choose a lifecycle state first.", es: "Primero elige un estado del ciclo de vida." },
   MEMBERSHIP_NOT_FOUND: { en: "No active membership was found.", es: "No se encontró una membresía activa." },

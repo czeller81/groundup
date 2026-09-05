@@ -272,6 +272,7 @@ export function registerMemberRoutes(app: Express) {
         emergencyContactRelationship: data.emergencyContactRelationship,
         consentSignature: data.consentSignature,
         consentedAt: now,
+        consentRevokedAt: null,
       });
       res.status(201).json(minorProfileResponse(profile));
     } catch (error) {
@@ -280,6 +281,99 @@ export function registerMemberRoutes(app: Express) {
       }
       console.error(error);
       res.status(500).json({ code: "MINOR_PROFILE_CREATE_FAILED", message: "Failed to save the participant profile." });
+    }
+  });
+
+  app.patch("/api/portal/minors/:id", requireAuth, async (req, res) => {
+    try {
+      const data = z.object({
+        firstName: z.string().trim().min(1).max(80).optional(),
+        lastName: z.string().trim().min(1).max(80).optional(),
+        dateOfBirth: z.coerce.date().optional(),
+        emergencyContactName: z.string().trim().min(1).max(120).optional(),
+        emergencyContactPhone: z.string().trim().min(7).max(30).optional(),
+        emergencyContactRelationship: z.string().trim().min(1).max(80).optional(),
+      }).strict().refine((value) => Object.keys(value).length > 0, "At least one participant field is required").parse(req.body);
+      const now = new Date();
+      if (data.dateOfBirth && (Number.isNaN(data.dateOfBirth.getTime()) || data.dateOfBirth > now || minorAgeAt(data.dateOfBirth, now) < 0 || minorAgeAt(data.dateOfBirth, now) >= 18)) {
+        return res.status(400).json({ code: "MINOR_AGE_INVALID", message: "Participant must be under 18 years old." });
+      }
+
+      const profile = await db.transaction(async (tx) => {
+        const [before] = await tx.select().from(minorProfiles).where(and(
+          eq(minorProfiles.id, req.params.id),
+          eq(minorProfiles.guardianUserId, req.session.userId!),
+        ));
+        if (!before) return null;
+        const [after] = await tx.update(minorProfiles).set({ ...data, updatedAt: now }).where(eq(minorProfiles.id, before.id)).returning();
+        await tx.insert(memberAuditEvents).values({
+          actorId: req.session.userId!,
+          userId: req.session.userId!,
+          targetType: "minor_profile",
+          targetId: before.id,
+          action: "minor_profile_updated",
+          before: {
+            firstName: before.firstName,
+            lastName: before.lastName,
+            dateOfBirth: before.dateOfBirth.toISOString(),
+            emergencyContactName: before.emergencyContactName,
+            emergencyContactPhone: before.emergencyContactPhone,
+            emergencyContactRelationship: before.emergencyContactRelationship,
+          },
+          after: {
+            firstName: after.firstName,
+            lastName: after.lastName,
+            dateOfBirth: after.dateOfBirth.toISOString(),
+            emergencyContactName: after.emergencyContactName,
+            emergencyContactPhone: after.emergencyContactPhone,
+            emergencyContactRelationship: after.emergencyContactRelationship,
+          },
+          reason: "Guardian corrected participant details",
+        });
+        return after;
+      });
+      if (!profile) return res.status(404).json({ code: "MINOR_PROFILE_NOT_FOUND" });
+      res.json(minorProfileResponse(profile));
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ code: "INVALID_MINOR_PROFILE", message: "Please provide valid participant and contact details.", errors: error.flatten() });
+      }
+      console.error(error);
+      res.status(500).json({ code: "MINOR_PROFILE_UPDATE_FAILED", message: "Failed to update the participant profile." });
+    }
+  });
+
+  app.post("/api/portal/minors/:id/revoke-consent", requireAuth, async (req, res) => {
+    try {
+      const profile = await db.transaction(async (tx) => {
+        const [before] = await tx.select().from(minorProfiles).where(and(
+          eq(minorProfiles.id, req.params.id),
+          eq(minorProfiles.guardianUserId, req.session.userId!),
+        ));
+        if (!before) return null;
+        if (before.consentRevokedAt) return before;
+        const now = new Date();
+        const [after] = await tx.update(minorProfiles).set({
+          consentRevokedAt: now,
+          updatedAt: now,
+        }).where(eq(minorProfiles.id, before.id)).returning();
+        await tx.insert(memberAuditEvents).values({
+          actorId: req.session.userId!,
+          userId: req.session.userId!,
+          targetType: "minor_profile",
+          targetId: before.id,
+          action: "minor_consent_revoked",
+          before: { consentRevokedAt: before.consentRevokedAt },
+          after: { consentRevokedAt: after.consentRevokedAt?.toISOString() || null },
+          reason: "Guardian revoked participant consent",
+        });
+        return after;
+      });
+      if (!profile) return res.status(404).json({ code: "MINOR_PROFILE_NOT_FOUND" });
+      res.json(minorProfileResponse(profile));
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ code: "MINOR_CONSENT_REVOKE_FAILED", message: "Failed to revoke participant consent." });
     }
   });
 

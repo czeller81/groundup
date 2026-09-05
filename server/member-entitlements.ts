@@ -32,6 +32,7 @@ export type BookingEligibilityCode =
   | "OVERLAPPING_RESERVATION"
   | "MINOR_PROFILE_REQUIRED"
   | "MINOR_CONSENT_REQUIRED"
+  | "MINOR_CONSENT_REVOKED"
   | "MINOR_AGE_RESTRICTED"
   | "GIRLS_CLASS_ONLY"
   | "MINOR_DUPLICATE_RESERVATION"
@@ -68,6 +69,7 @@ const messages: Record<BookingEligibilityCode, string> = {
   OVERLAPPING_RESERVATION: "You already have another class during this time.",
   MINOR_PROFILE_REQUIRED: "A guardian must select an approved minor profile for this girls' class.",
   MINOR_CONSENT_REQUIRED: "Guardian consent and emergency contact details are required before booking.",
+  MINOR_CONSENT_REVOKED: "Guardian consent for this participant has been revoked.",
   MINOR_AGE_RESTRICTED: "This class is reserved for participants under 18.",
   GIRLS_CLASS_ONLY: "This participant profile can only be used for a girls' class.",
   MINOR_DUPLICATE_RESERVATION: "This participant is already reserved for this class.",
@@ -320,6 +322,9 @@ export async function evaluateMinorBookingEligibilityWithExecutor(
   }
   if (!isGirlsClass(occurrence)) {
     return result("GIRLS_CLASS_ONLY", { source: "minor", minorProfileId: minorProfile.id });
+  }
+  if (minorProfile.consentRevokedAt) {
+    return result("MINOR_CONSENT_REVOKED", { source: "minor", minorProfileId: minorProfile.id });
   }
   if (!minorProfile.consentedAt || !minorProfile.consentSignature || !minorProfile.emergencyContactName || !minorProfile.emergencyContactPhone) {
     return result("MINOR_CONSENT_REQUIRED", { source: "minor", minorProfileId: minorProfile.id });
