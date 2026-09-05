@@ -8,3 +8,4 @@
 - [Rendered portal mobile QA](rendered-mobile-qa.md) — Chromium/CDP checks cover locale-width cases while excluding intentional local scrollers and hidden Radix controls.
 - [Portal form navigation](form-submission-navigation.md) — avoid refetching the active form query during submit success navigation.
 - [Legacy membership entitlements](legacy-membership-entitlements.md) — plan-linked memberships use weekly rules; historical unconfigured memberships retain legacy booking behavior.
+- [Autoscale startup readiness](autoscale-startup-readiness.md) — open the HTTP listener before non-critical database maintenance so promotion probes can succeed.

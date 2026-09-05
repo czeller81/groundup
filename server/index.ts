@@ -85,22 +85,6 @@ app.use((req, res, next) => {
 (async () => {
   const server = await registerRoutes(app);
 
-  if (process.env.DEMO_ADMIN_PASSWORD) {
-    try {
-      const synchronized = await storage.ensureAdminPassword(
-        "admin@groundupbjj.com",
-        process.env.DEMO_ADMIN_PASSWORD
-      );
-      if (synchronized) {
-        log("Demo admin password synchronized from secure configuration.");
-      } else {
-        console.warn("Demo admin password sync skipped: admin account was not found.");
-      }
-    } catch (error) {
-      console.error("Demo admin password sync failed:", error);
-    }
-  }
-
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = status >= 500
@@ -135,4 +119,22 @@ app.use((req, res, next) => {
   }, () => {
     log(`serving on port ${port}`);
   });
+
+  // Do not delay the HTTP listener for this non-critical maintenance sync.
+  // Autoscale promotion probes the app while it is starting, and the admin
+  // password can be synchronized safely after the service is accepting traffic.
+  if (process.env.DEMO_ADMIN_PASSWORD) {
+    void storage.ensureAdminPassword(
+      "admin@groundupbjj.com",
+      process.env.DEMO_ADMIN_PASSWORD
+    ).then((synchronized) => {
+      if (synchronized) {
+        log("Demo admin password synchronized from secure configuration.");
+      } else {
+        console.warn("Demo admin password sync skipped: admin account was not found.");
+      }
+    }).catch((error) => {
+      console.error("Demo admin password sync failed:", error);
+    });
+  }
 })();
