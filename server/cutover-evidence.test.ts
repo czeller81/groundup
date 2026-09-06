@@ -133,7 +133,7 @@ test("cutover evidence: Calendar boundary through booking lifecycle and recovery
     const publicA = publicBefore.body.occurrences.find((item: any) => item.id === classA.id);
     assert.ok(publicA);
     assert.equal(publicA.capacity, 2);
-    assert.equal(publicA.spotsRemaining, 2);
+    assert.equal("spotsRemaining" in publicA, false);
     assert.match(classDateLabel(publicA.start, "en"), /[A-Z][a-z]{2}/);
     assert.notEqual(classDateLabel(publicA.start, "en"), classDateLabel(publicA.start, "es"));
 
@@ -157,7 +157,7 @@ test("cutover evidence: Calendar boundary through booking lifecycle and recovery
 
     const publicAfterBooking = await api(`/api/classes?from=${encodeURIComponent(from.toISOString())}&to=${encodeURIComponent(to.toISOString())}`);
     const publicAfterA = publicAfterBooking.body.occurrences.find((item: any) => item.id === classA.id);
-    assert.equal(publicAfterA.spotsRemaining, 1);
+    assert.equal("spotsRemaining" in publicAfterA, false);
     const myClasses = await api("/api/portal/my-classes", {}, memberACookie);
     assert.equal(myClasses.status, 200);
     assert.ok(myClasses.body.some((item: any) => item.id === reservationA.reservation.id));
@@ -241,7 +241,7 @@ test("cutover evidence: Calendar boundary through booking lifecycle and recovery
     assert.equal(cancelledA.reservation.status, "cancelled");
     const publicAfterCancellation = await api(`/api/classes?from=${encodeURIComponent(from.toISOString())}&to=${encodeURIComponent(to.toISOString())}`);
     const publicAfterCancelA = publicAfterCancellation.body.occurrences.find((item: any) => item.id === classA.id);
-    assert.equal(publicAfterCancelA.spotsRemaining, 2);
+    assert.equal("spotsRemaining" in publicAfterCancelA, false);
     const myClassesAfterCancellation = await api("/api/portal/my-classes", {}, memberACookie);
     assert.equal(myClassesAfterCancellation.body.find((item: any) => item.id === reservationA.reservation.id).status, "cancelled");
 

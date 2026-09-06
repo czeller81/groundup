@@ -24,9 +24,6 @@ export function ClassCard({
   const unavailable = occurrence.bookingState === "not_available";
   const copy = {
     beginner: portalCopy.beginnerFriendly, full: portalCopy.classFull,
-    waiting: portalCopy.waitlistWaiting,
-    spot: portalCopy.spotLeft,
-    spots: portalCopy.spotsLeft,
     saving: portalCopy.saving,
     category: occurrence.canonicalCategory === "GIRLS_JIU_JITSU_SELF_DEFENSE"
       ? (activeLocale === "es" ? "Clase para niñas" : "Girls’ class")
@@ -64,14 +61,18 @@ export function ClassCard({
             {occurrence.instructorName && <span className="flex items-center gap-1.5"><UserRound className="h-3.5 w-3.5" />{occurrence.instructorName}</span>}
             {occurrence.location && <span className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5" />{occurrence.location}</span>}
           </div>
-           <p className={`mt-3 flex items-center gap-1.5 text-sm font-medium ${unavailable ? "text-amber-300" : waitlist ? "text-amber-300" : "text-emerald-300"}`}>
-            <Users className="h-4 w-4" />
-             {unavailable
-               ? (activeLocale === "es" ? "Próximamente disponible — consulta al equipo" : "Not yet available — contact the team")
-               : waitlist
-              ? `${copy.full} · ${occurrence.waitlistCount} ${copy.waiting}`
-              : `${occurrence.spotsRemaining} ${occurrence.spotsRemaining === 1 ? copy.spot : copy.spots}`}
-          </p>
+           {unavailable && (
+             <p className="mt-3 flex items-center gap-1.5 text-sm font-medium text-amber-300">
+               <Users className="h-4 w-4" />
+               {activeLocale === "es" ? "Próximamente disponible — consulta al equipo" : "Not yet available — contact the team"}
+             </p>
+           )}
+           {waitlist && !unavailable && (
+             <p className="mt-3 flex items-center gap-1.5 text-sm font-medium text-amber-300">
+               <Users className="h-4 w-4" />
+               {copy.full}
+             </p>
+           )}
         </div>
          {onAction && actionLabel && !unavailable && (
           <Button

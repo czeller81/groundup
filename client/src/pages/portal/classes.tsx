@@ -27,9 +27,9 @@ export default function PortalClasses() {
       queryClient.invalidateQueries({ queryKey: ["/api/portal/classes"] });
       queryClient.invalidateQueries({ queryKey: ["/api/portal/my-classes"] });
       toast({
-        title: reservation.status === "waitlisted" ? copy.waitlisted : copy.classBooked,
+        title: reservation.status === "waitlisted" ? copy.classFullNow : copy.classBooked,
         description: reservation.status === "waitlisted"
-          ? copy.waitlistEmail
+          ? copy.waitlistAdded
           : copy.spotConfirmed,
       });
     },

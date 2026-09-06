@@ -84,7 +84,15 @@ export default function PortalSchedule() {
     mutationFn: async ({ occurrenceId, minorProfileId }: { occurrenceId: string; minorProfileId?: string }) => (
       await apiRequest("POST", "/api/portal/class-reservations", { occurrenceId, minorProfileId })
     ).json(),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["/api/portal/classes"] }),
+    onSuccess: (reservation) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/portal/classes"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/portal/my-classes"] });
+      if (reservation.status === "waitlisted") {
+        toast({ title: copy.classFullNow, description: copy.waitlistAdded });
+      } else {
+        toast({ title: copy.classBooked, description: copy.spotConfirmed });
+      }
+    },
     onError: (error: Error) => toast({
       title: copy.couldNotBook,
       description: localizeApiError(error.message, locale, copy.couldNotBook),
@@ -168,7 +176,7 @@ export default function PortalSchedule() {
     today: "Hoy", classes: "clases", browse: "Ver por día", noClasses: "No hay clases programadas.",
     book: "Reservar", waitlist: "Unirse a lista de espera", notAvailable: "Consulta al equipo",
     notEligible: "Tu plan actual no incluye esta clase.", loading: "Cargando horario…",
-    error: "No se pudo cargar el horario.", couldNotBook: "No se pudo reservar la clase", type: "Tipos de clase", full: "Ver horario completo",
+     error: "No se pudo cargar el horario.", couldNotBook: "No se pudo reservar la clase", classBooked: "Clase reservada", classFullNow: "La clase ya está completamente llena.", waitlistAdded: "Te agregamos a la lista de espera. Te enviaremos un correo si se abre un lugar.", spotConfirmed: "Tu lugar está confirmado.", type: "Tipos de clase", full: "Ver horario completo",
     fullDescription: "Consulta todas las clases en el sitio público.",
     confirmed: "Confirmada", cancelled: "Cancelada",
     minorParticipant: "Participante menor",
@@ -216,7 +224,7 @@ export default function PortalSchedule() {
     today: "Today", classes: "classes", browse: "Browse by day", noClasses: "No classes scheduled.",
     book: "Reserve", waitlist: "Join waitlist", notAvailable: "Contact the team",
     notEligible: "Your current plan does not include this class.", loading: "Loading schedule…",
-    error: "The schedule could not be loaded.", couldNotBook: "Could not book class", type: "Class types", full: "View full schedule",
+     error: "The schedule could not be loaded.", couldNotBook: "Could not book class", classBooked: "Class booked", classFullNow: "Class is completely full now.", waitlistAdded: "You’ve been added to the waitlist. We’ll email you if a spot opens.", spotConfirmed: "Your spot is confirmed.", type: "Class types", full: "View full schedule",
     fullDescription: "See every class on the public website.",
     confirmed: "Confirmed", cancelled: "Cancelled",
     minorParticipant: "Minor participant",

@@ -9,9 +9,6 @@ export type LiveClass = {
   location: string | null;
   instructorName: string | null;
   capacity: number;
-  confirmedCount: number;
-  waitlistCount: number;
-  spotsRemaining: number;
   bookable: boolean;
   bookingState: "available" | "waitlist" | "not_available";
   firstVisitEligible: boolean;

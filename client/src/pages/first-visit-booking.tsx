@@ -23,7 +23,7 @@ export default function FirstVisitBooking() {
     contactButton: "Contactar a Ground Up", firstName: "Nombre", lastName: "Apellido", email: "Correo electrónico", phone: "Teléfono",
     experience: "Experiencia de entrenamiento (opcional)", experiencePlaceholder: "Nueva en jiu-jitsu, con algo de experiencia, etc.",
     error: "No se pudo reservar. Intenta de nuevo o contáctanos.", reserving: "Reservando…", waitlist: "Unirme a la lista de espera", confirm: "Confirmar mi primera visita",
-    confirmed: "Tu lugar está confirmado", waitlisted: "Estás en la lista de espera", confirmation: "Enviamos el estado de tu reserva a tu correo. Mantén este navegador para administrar la reserva.", back: "Volver al horario",
+     confirmed: "Tu lugar está confirmado", waitlisted: "Estás en la lista de espera", fullNow: "La clase ya está completamente llena.", waitlistConfirmation: "Te agregamos a la lista de espera y te enviaremos un correo si se abre un lugar.", confirmation: "Enviamos el estado de tu reserva a tu correo. Mantén este navegador para administrar la reserva.", back: "Volver al horario",
   } : {
     seoTitle: "Book Your Free First Visit | Ground Up",
     seoDescription: "Reserve a free first visit at Ground Up, a women-only training center in Oxnard. No account or credit card required.",
@@ -33,7 +33,7 @@ export default function FirstVisitBooking() {
     contactButton: "Contact Ground Up", firstName: "First name", lastName: "Last name", email: "Email", phone: "Phone",
     experience: "Training experience (optional)", experiencePlaceholder: "New to jiu-jitsu, some experience, etc.",
     error: "Could not reserve. Please try again or contact us.", reserving: "Reserving…", waitlist: "Join waitlist", confirm: "Confirm free first visit",
-    confirmed: "Your spot is confirmed", waitlisted: "You're on the waitlist", confirmation: "Your reservation status was sent to your email. Keep this browser to manage the reservation.", back: "Back to schedule",
+     confirmed: "Your spot is confirmed", waitlisted: "You're on the waitlist", fullNow: "Class is completely full now.", waitlistConfirmation: "You’ve been added to the waitlist. We’ll email you if a spot opens.", confirmation: "Your reservation status was sent to your email. Keep this browser to manage the reservation.", back: "Back to schedule",
   };
   const search = useSearch();
   const selectedId = useMemo(() => new URLSearchParams(search).get("occurrence"), [search]);
@@ -63,7 +63,8 @@ export default function FirstVisitBooking() {
         <div className="mx-auto max-w-xl rounded-3xl border border-emerald-500/20 bg-[#121826] p-8 text-center">
           <CheckCircle className="mx-auto mb-4 h-12 w-12 text-emerald-400" />
            <h1 className="text-3xl font-black">{confirmation.reservation.status === "waitlisted" ? copy.waitlisted : copy.confirmed}</h1>
-           <p className="mt-3 text-gray-400">{copy.confirmation}</p>
+            <p className="mt-3 text-gray-300">{confirmation.reservation.status === "waitlisted" ? copy.fullNow : copy.confirmed}</p>
+            <p className="mt-2 text-gray-400">{confirmation.reservation.status === "waitlisted" ? copy.waitlistConfirmation : copy.confirmation}</p>
            <Button asChild className="mt-6 bg-[#B06CFF]"><Link href={localizedPublicPath("/schedule", locale)}>{copy.back}</Link></Button>
         </div>
       </main>

@@ -58,9 +58,6 @@ function publicOccurrence(occurrence: Awaited<ReturnType<typeof storage.listClas
     location: occurrence.location,
     instructorName: occurrence.instructorName || occurrence.trainer?.name || null,
     capacity: occurrence.capacity,
-    confirmedCount: occurrence.confirmedCount,
-    waitlistCount: occurrence.waitlistCount,
-    spotsRemaining: Math.max(occurrence.capacity - occurrence.confirmedCount, 0),
     bookable: occurrence.bookingEnabled,
     bookingState: !occurrence.bookingEnabled ? "not_available" : occurrence.confirmedCount >= occurrence.capacity ? "waitlist" : "available",
     firstVisitEligible: occurrence.firstVisitEligible,
@@ -168,8 +165,6 @@ export function registerClassBookingRoutes(app: Express) {
         reservation: safeReservation(result.reservation),
         occurrence: publicOccurrence({
           ...result.occurrence,
-          confirmedCount: result.reservation.status === "confirmed" ? 1 : 0,
-          waitlistCount: result.reservation.status === "waitlisted" ? 1 : 0,
           trainer: null,
           classType: null,
           canonicalCategory: "LEGACY",
