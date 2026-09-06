@@ -122,34 +122,6 @@ async function postSignedWebhook(type, object, id) {
   if (!response.ok) throw new Error(`Webhook ${type} returned ${response.status}`);
 }
 
-async function activateBrowserFixture(page) {
-  await page.goto(`${BASE_URL}/portal/billing`, { waitUntil: "networkidle" });
-  const user = await page.evaluate(async () => (await fetch("/api/portal/me")).json());
-  const customers = await stripe.customers.list({ email, limit: 100 });
-  const customer = customers.data.find((item) => item.email === email);
-  if (!customer) throw new Error("Stripe customer was not created for browser Checkout");
-  const paymentMethod = await stripe.paymentMethods.create({
-    type: "card",
-    card: { token: "tok_visa" },
-  });
-  await stripe.paymentMethods.attach(paymentMethod.id, { customer: customer.id });
-  const subscription = await stripe.subscriptions.create({
-    customer: customer.id,
-    items: [{ price: "price_1UCWsVQWwmuPtHJCfbXIAODc" }],
-    default_payment_method: paymentMethod.id,
-    payment_behavior: "allow_incomplete",
-    metadata: {
-      ground_up_user_id: user.user.id,
-      ground_up_plan_key: "ground_up_2",
-    },
-  });
-  await postSignedWebhook(
-    "customer.subscription.created",
-    subscription,
-    `evt_browser_fixture_${Date.now()}`,
-  );
-}
-
 async function cleanup() {
   const customers = await stripe.customers.list({ limit: 100 });
   for (const customer of customers.data.filter((item) => (item.email || "").startsWith(prefix))) {
@@ -228,7 +200,6 @@ async function main() {
     locale: "en-US",
   });
   const page = await context.newPage();
-  let browserCheckoutBlocked = false;
   page.on("console", (message) => {
     if (message.type() === "error") console.error(`browser-console: ${message.text()}`);
   });
@@ -318,6 +289,8 @@ async function main() {
     if (await billingName.count()) await billingName.fill("Browser QA Member");
     const postalCode = page.locator('input[name="billingPostalCode"]').first();
     if (await postalCode.count()) await postalCode.fill("93001");
+    const phoneInput = page.locator('input[type="tel"]').first();
+    if (await phoneInput.count()) await phoneInput.fill("2015550123");
     const agentDisclosure = page.getByText("I am an AI agent acting on behalf of someone else", { exact: true });
     if (await agentDisclosure.count() && await agentDisclosure.isVisible().catch(() => false)) {
       await agentDisclosure.evaluate((element) => element.click());
@@ -326,17 +299,18 @@ async function main() {
     }
     const payButton = page.getByTestId("hosted-payment-submit-button");
     await payButton.click();
-    try {
-      await page.waitForURL(/\/portal\/billing/, { timeout: 60000 });
-    } catch {
-      await screenshot(page, "05-checkout-processing-blocked");
-      browserCheckoutBlocked = true;
-      await activateBrowserFixture(page);
-    }
+    await page.waitForURL(/\/portal\/billing\?checkout=success/, { timeout: 60000 });
     await waitForBillingState(page, "active", 60000);
     await page.reload({ waitUntil: "networkidle" });
+    const activeMembership = await page.evaluate(async () => (await fetch("/api/portal/billing")).json());
+    if (
+      activeMembership.activeMembership?.plan?.internalKey !== "ground_up_2"
+      || activeMembership.activeMembership?.billingState !== "active"
+      || !activeMembership.activeMembership?.currentPeriodEnd
+    ) {
+      throw new Error("Active Ground Up 2 membership did not include the expected active period.");
+    }
     await page.getByText("Ground Up 2", { exact: true }).first().waitFor();
-    await page.getByText("Active", { exact: true }).waitFor();
     await page.getByText("Manage billing", { exact: true }).waitFor();
     await screenshot(page, "05-active-membership");
 
@@ -378,9 +352,16 @@ async function main() {
     await waitForBillingState(page, "active");
     await page.getByRole("button", { name: "Cancel at period end" }).click();
     await page.getByText("Cancellation scheduled", { exact: true }).waitFor();
+    await waitForBillingState(page, "cancel_at_period_end");
     await page.reload({ waitUntil: "networkidle" });
-    await page.getByText("Ends at period end", { exact: true }).waitFor();
-    await page.getByText("Your access continues through the paid period.", { exact: true }).waitFor();
+    await page.waitForFunction(async () => {
+      const response = await fetch("/api/portal/billing");
+      if (!response.ok) return false;
+      const body = await response.json();
+      return body.activeMembership?.billingState === "cancel_at_period_end"
+        && body.activeMembership?.cancelAtPeriodEnd === true;
+    }, { timeout: 30000 });
+    await page.getByText("Ground Up 2", { exact: true }).first().waitFor();
     await screenshot(page, "09-cancel-at-period-end");
 
     await page.goto(`${BASE_URL}/es/portal/billing`, { waitUntil: "networkidle" });
@@ -404,18 +385,15 @@ async function main() {
     }
 
     console.log(JSON.stringify({
-      result: browserCheckoutBlocked ? "BLOCKED" : "PASS",
-      account: "synthetic browser fixture",
+      result: "PASS",
+      account: "synthetic browser account",
       screenshots: 14,
       viewport: "desktop + 320/375/390/430px",
-      checkout: browserCheckoutBlocked
-        ? "Stripe-hosted Checkout stayed in Processing; signed webhook fixture used for UI states"
-        : "Stripe-hosted test Checkout completed",
+      checkout: "Stripe-hosted test Checkout completed",
       webhookUi: "active, past_due, recovered, cancel_at_period_end",
       plans: ["ground_up_2", "ground_up_3", "ground_up_personal"],
       girlsProgram: "hidden without guardian/minor context",
     }));
-    if (browserCheckoutBlocked) process.exitCode = 2;
   } finally {
     await context.close();
     await browser.close();

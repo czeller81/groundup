@@ -201,18 +201,19 @@ export async function applyStripeSubscription(subscription: Stripe.Subscription,
     updatedAt: new Date(),
   } as const;
   const [subscriptionMembership] = await db.select().from(memberships).where(
-    extra.checkoutSessionId
-      ? eq(memberships.stripeCheckoutSessionId, extra.checkoutSessionId)
-      : eq(memberships.stripeSubscriptionId, subscription.id),
+    eq(memberships.stripeSubscriptionId, subscription.id),
   ).limit(1);
-  const [pendingCheckoutMembership] = subscriptionMembership ? [undefined] : await db.select().from(memberships).where(and(
+  const [checkoutSessionMembership] = extra.checkoutSessionId
+    ? await db.select().from(memberships).where(eq(memberships.stripeCheckoutSessionId, extra.checkoutSessionId)).limit(1)
+    : [];
+  const [pendingCheckoutMembership] = await db.select().from(memberships).where(and(
     eq(memberships.userId, userId),
     eq(memberships.planId, membershipPlan.id),
     eq(memberships.stripeCustomerId, values.stripeCustomerId),
     eq(memberships.billingState, "pending"),
     eq(memberships.billingSource, "stripe_checkout"),
   )).orderBy(memberships.createdAt).limit(1);
-  const existing = subscriptionMembership || pendingCheckoutMembership;
+  const existing = subscriptionMembership || checkoutSessionMembership || pendingCheckoutMembership;
   const [otherActive] = await db.select().from(memberships).where(and(
     eq(memberships.userId, userId),
     inArray(memberships.billingState, ["active", "past_due", "cancel_at_period_end", "pending"]),
@@ -220,8 +221,25 @@ export async function applyStripeSubscription(subscription: Stripe.Subscription,
   if (otherActive && otherActive.id !== existing?.id && otherActive.stripeSubscriptionId !== subscription.id) {
     throw new Error("STRIPE_DUPLICATE_SUBSCRIPTION");
   }
+
+  const checkoutMembershipDuplicates = [checkoutSessionMembership, pendingCheckoutMembership]
+    .filter((membership): membership is NonNullable<typeof membership> =>
+      Boolean(membership && membership.id !== existing?.id && membership.billingState === "pending" && membership.billingSource === "stripe_checkout"),
+    );
+  for (const duplicate of checkoutMembershipDuplicates) {
+    await db.delete(memberships).where(eq(memberships.id, duplicate.id));
+  }
+
+  const membershipValues = {
+    ...values,
+    stripeCheckoutSessionId: extra.checkoutSessionId
+      || subscriptionMembership?.stripeCheckoutSessionId
+      || checkoutSessionMembership?.stripeCheckoutSessionId
+      || pendingCheckoutMembership?.stripeCheckoutSessionId
+      || null,
+  };
   if (existing) {
-    const [updated] = await db.update(memberships).set(values).where(eq(memberships.id, existing.id)).returning();
+    const [updated] = await db.update(memberships).set(membershipValues).where(eq(memberships.id, existing.id)).returning();
     if (state === "active" || state === "past_due" || state === "cancel_at_period_end") {
       await db.update(memberLifecycles).set({
         currentState: "ACTIVE_MEMBER",
@@ -231,11 +249,19 @@ export async function applyStripeSubscription(subscription: Stripe.Subscription,
     }
     return updated;
   }
-  const [created] = await db.insert(memberships).values({
-    ...values,
-    startDate: unixTimestamp(subscription.start_date) || new Date(),
-    endDate: state === "cancelled" ? unixTimestamp(subscription.ended_at) : null,
-  }).returning();
+  let created;
+  try {
+    [created] = await db.insert(memberships).values({
+      ...membershipValues,
+      startDate: unixTimestamp(subscription.start_date) || new Date(),
+      endDate: state === "cancelled" ? unixTimestamp(subscription.ended_at) : null,
+    }).returning();
+  } catch (error) {
+    if ((error as { code?: string }).code !== "23505") throw error;
+    const [raceWinner] = await db.select().from(memberships).where(eq(memberships.stripeSubscriptionId, subscription.id)).limit(1);
+    if (!raceWinner) throw error;
+    created = raceWinner;
+  }
   if (state === "active" || state === "past_due" || state === "cancel_at_period_end") {
     await db.update(memberLifecycles).set({
       currentState: "ACTIVE_MEMBER",
