@@ -3,7 +3,7 @@ import { test } from "node:test";
 import type { Server } from "node:http";
 import express from "express";
 import Stripe from "stripe";
-import { asc, eq } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 import { db } from "./db";
 import { storage } from "./storage";
 import { membershipPlans, memberships, users } from "@shared/schema";
@@ -12,6 +12,8 @@ import {
   STRIPE_MEMBERSHIP_CATALOG,
   applyStripeSubscription,
   adminMembershipBillingState,
+  checkoutSessionIsExpired,
+  reconcilePendingStripeCheckouts,
   stripeBillingState,
 } from "./membership-billing";
 import { registerMemberRoutes } from "./member-routes";
@@ -56,6 +58,143 @@ test("admin billing states keep unresolved memberships distinct", () => {
   assert.equal(adminMembershipBillingState({ billingState: "past_due", status: "active" }), "past_due");
   assert.equal(adminMembershipBillingState({ billingState: "active", status: "active", cancelAtPeriodEnd: true }), "cancel_at_period_end");
   assert.equal(adminMembershipBillingState({ billingState: "cancelled", status: "cancelled" }), "cancelled");
+});
+
+test("expired Checkout sessions are terminal and no longer block a retry", async () => {
+  assert.notEqual(process.env.NODE_ENV, "production", "fixture evidence must never run in production");
+  const suffix = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  const user = await storage.createUser(`stripe-expired-${suffix}@example.invalid`, "GroundUp-QA-Password-2026", "Stripe", "Expired", "5550000198", "en");
+  try {
+    const [plan] = await db.select().from(membershipPlans).where(eq(membershipPlans.internalKey, "ground_up_3")).limit(1);
+    assert.ok(plan);
+    const [pending] = await db.insert(memberships).values({
+      userId: user.id,
+      planId: plan.id,
+      type: plan.internalKey,
+      status: "pending",
+      priceCents: plan.displayPriceCents || STRIPE_MEMBERSHIP_CATALOG.ground_up_3.amountCents,
+      source: "stripe_checkout",
+      billingSource: "stripe_checkout",
+      billingState: "pending",
+      stripeCustomerId: `cus_expired_${suffix}`,
+      stripeCheckoutSessionId: `cs_expired_${suffix}`,
+    }).returning();
+
+    const fakeStripe = {
+      checkout: {
+        sessions: {
+          retrieve: async (sessionId: string) => ({
+            id: sessionId,
+            mode: "subscription",
+            status: "expired",
+            expires_at: Math.floor(Date.now() / 1000) + 3600,
+            subscription: null,
+            metadata: {},
+          }),
+        },
+      },
+    } as unknown as Stripe;
+
+    await reconcilePendingStripeCheckouts(fakeStripe, user.id);
+    const [reconciled] = await db.select().from(memberships).where(eq(memberships.id, pending.id));
+    assert.equal(reconciled.billingState, "cancelled");
+    assert.equal(reconciled.status, "cancelled");
+    assert.ok(reconciled.cancelledAt);
+    assert.equal(await (async () => {
+      const available = await db.select().from(memberships).where(and(
+        eq(memberships.userId, user.id),
+        eq(memberships.billingState, "pending"),
+      ));
+      return available.length;
+    })(), 0);
+  } finally {
+    await db.delete(memberships).where(eq(memberships.userId, user.id));
+    await db.delete(users).where(eq(users.id, user.id));
+  }
+});
+
+test("completed Checkout sessions reconcile the existing pending membership", async () => {
+  assert.notEqual(process.env.NODE_ENV, "production", "fixture evidence must never run in production");
+  const suffix = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  const user = await storage.createUser(`stripe-complete-${suffix}@example.invalid`, "GroundUp-QA-Password-2026", "Stripe", "Complete", "5550000197", "en");
+  try {
+    const [plan] = await db.select().from(membershipPlans).where(eq(membershipPlans.internalKey, "ground_up_3")).limit(1);
+    assert.ok(plan);
+    const stripeCustomerId = `cus_complete_${suffix}`;
+    const checkoutSessionId = `cs_complete_${suffix}`;
+    const subscriptionId = `sub_complete_${suffix}`;
+    await db.update(users).set({ stripeCustomerId }).where(eq(users.id, user.id));
+    const [pending] = await db.insert(memberships).values({
+      userId: user.id,
+      planId: plan.id,
+      type: plan.internalKey,
+      status: "pending",
+      priceCents: plan.displayPriceCents || STRIPE_MEMBERSHIP_CATALOG.ground_up_3.amountCents,
+      source: "stripe_checkout",
+      billingSource: "stripe_checkout",
+      billingState: "pending",
+      stripeCustomerId,
+      stripeCheckoutSessionId: checkoutSessionId,
+    }).returning();
+    const timestamp = Math.floor(Date.now() / 1000);
+    const subscription = {
+      id: subscriptionId,
+      object: "subscription",
+      customer: stripeCustomerId,
+      metadata: {
+        ground_up_user_id: user.id,
+        ground_up_plan_key: plan.internalKey,
+      },
+      cancel_at_period_end: false,
+      status: "active",
+      start_date: timestamp,
+      canceled_at: null,
+      ended_at: null,
+      latest_invoice: null,
+      items: {
+        data: [{
+          current_period_start: timestamp,
+          current_period_end: timestamp + 30 * 24 * 60 * 60,
+        }],
+      },
+    } as unknown as Stripe.Subscription;
+    const fakeStripe = {
+      checkout: {
+        sessions: {
+          retrieve: async () => ({
+            id: checkoutSessionId,
+            mode: "subscription",
+            status: "complete",
+            expires_at: timestamp + 3600,
+            subscription: subscriptionId,
+            metadata: subscription.metadata,
+          }),
+        },
+      },
+      subscriptions: {
+        retrieve: async () => subscription,
+      },
+    } as unknown as Stripe;
+
+    await reconcilePendingStripeCheckouts(fakeStripe, user.id);
+    const [reconciled] = await db.select().from(memberships).where(eq(memberships.id, pending.id));
+    assert.equal(reconciled.billingState, "active");
+    assert.equal(reconciled.status, "active");
+    assert.equal(reconciled.stripeSubscriptionId, subscriptionId);
+    assert.equal(reconciled.stripeCheckoutSessionId, checkoutSessionId);
+    const allMemberships = await db.select().from(memberships).where(eq(memberships.userId, user.id));
+    assert.equal(allMemberships.length, 1);
+  } finally {
+    await db.delete(memberships).where(eq(memberships.userId, user.id));
+    await db.delete(users).where(eq(users.id, user.id));
+  }
+});
+
+test("Checkout session expiry uses Stripe status and expiry timestamp", () => {
+  const now = Date.now();
+  assert.equal(checkoutSessionIsExpired({ status: "expired", expires_at: Math.floor((now + 3600000) / 1000) }, now), true);
+  assert.equal(checkoutSessionIsExpired({ status: "open", expires_at: Math.floor((now - 1000) / 1000) }, now), true);
+  assert.equal(checkoutSessionIsExpired({ status: "open", expires_at: Math.floor((now + 3600000) / 1000) }, now), false);
 });
 
 test("member billing moves the same checkout membership from pending to active after Stripe reconciliation", async () => {

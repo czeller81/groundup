@@ -1,5 +1,5 @@
 import Stripe from "stripe";
-import { and, eq, gte, inArray, isNull, or } from "drizzle-orm";
+import { and, eq, gte, inArray, isNotNull, isNull, or } from "drizzle-orm";
 import { db } from "./db";
 import { forms, formResponses, memberLifecycles, memberships, membershipPlans, minorProfiles, users } from "@shared/schema";
 
@@ -122,6 +122,93 @@ export function unixTimestamp(value: number | null | undefined) {
   return value ? new Date(value * 1000) : null;
 }
 
+export function checkoutSessionIsExpired(
+  session: Pick<Stripe.Checkout.Session, "status" | "expires_at">,
+  now = Date.now(),
+) {
+  return session.status === "expired" || session.expires_at * 1000 <= now;
+}
+
+const MISSING_CHECKOUT_SESSION_GRACE_MS = 30 * 60 * 1000;
+
+function isMissingStripeResource(error: unknown) {
+  return error instanceof Stripe.errors.StripeError && error.code === "resource_missing";
+}
+
+async function cancelPendingCheckoutMembership(membershipId: string) {
+  await db.update(memberships).set({
+    status: "cancelled",
+    billingState: "cancelled",
+    cancelledAt: new Date(),
+    updatedAt: new Date(),
+  }).where(and(
+    eq(memberships.id, membershipId),
+    eq(memberships.billingState, "pending"),
+    eq(memberships.billingSource, "stripe_checkout"),
+  ));
+}
+
+export async function expirePendingCheckoutSession(sessionId: string) {
+  const [membership] = await db.select({ id: memberships.id }).from(memberships).where(and(
+    eq(memberships.stripeCheckoutSessionId, sessionId),
+    eq(memberships.billingState, "pending"),
+    eq(memberships.billingSource, "stripe_checkout"),
+  )).limit(1);
+  if (membership) {
+    await cancelPendingCheckoutMembership(membership.id);
+  }
+}
+
+export async function reconcilePendingStripeCheckouts(stripe: Stripe, userId: string) {
+  const pendingMemberships = await db.select().from(memberships).where(and(
+    eq(memberships.userId, userId),
+    eq(memberships.billingState, "pending"),
+    eq(memberships.billingSource, "stripe_checkout"),
+    isNotNull(memberships.stripeCheckoutSessionId),
+  ));
+
+  for (const membership of pendingMemberships) {
+    if (!membership.stripeCheckoutSessionId) continue;
+
+    let session: Stripe.Checkout.Session;
+    try {
+      session = await stripe.checkout.sessions.retrieve(membership.stripeCheckoutSessionId);
+    } catch (error) {
+      // A deleted or otherwise missing Checkout session cannot complete later.
+      // Network/API failures are left pending so a transient Stripe outage never
+      // cancels a member's checkout.
+      if (isMissingStripeResource(error) &&
+        membership.createdAt.getTime() <= Date.now() - MISSING_CHECKOUT_SESSION_GRACE_MS) {
+        await cancelPendingCheckoutMembership(membership.id);
+      }
+      continue;
+    }
+
+    if (session.status === "complete" && session.subscription) {
+      const subscriptionId = typeof session.subscription === "string"
+        ? session.subscription
+        : session.subscription.id;
+      let subscription = await stripe.subscriptions.retrieve(subscriptionId);
+      if (!subscription.metadata?.ground_up_user_id && Object.keys(session.metadata || {}).length) {
+        subscription = await stripe.subscriptions.update(subscription.id, {
+          metadata: session.metadata || {},
+        });
+      }
+      await applyStripeSubscription(subscription, {
+        checkoutSessionId: session.id,
+        latestInvoiceId: typeof subscription.latest_invoice === "string"
+          ? subscription.latest_invoice
+          : subscription.latest_invoice?.id,
+      });
+      continue;
+    }
+
+    if (checkoutSessionIsExpired(session)) {
+      await cancelPendingCheckoutMembership(membership.id);
+    }
+  }
+}
+
 export async function requiredFormsForCheckout(userId: string) {
   const required = await db.select({
     id: forms.id,
@@ -175,7 +262,10 @@ export async function getOrCreateStripeCustomer(stripe: Stripe, userId: string) 
   return customer;
 }
 
-export async function activeStripeMembershipForUser(userId: string) {
+export async function activeStripeMembershipForUser(userId: string, stripe?: Stripe) {
+  if (stripe) {
+    await reconcilePendingStripeCheckouts(stripe, userId);
+  }
   const pendingCutoff = new Date(Date.now() - 30 * 60 * 1000);
   const [membership] = await db.select().from(memberships).where(and(
     eq(memberships.userId, userId),

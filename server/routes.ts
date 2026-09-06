@@ -14,7 +14,7 @@ import { bookingBelongsToUser, coachCanManageMember, createPublicRateLimit, requ
 import { sendPasswordResetEmail, sendStaffNotificationEmail } from "./email";
 import { registerClassBookingRoutes } from "./class-booking-routes";
 import { registerMemberRoutes } from "./member-routes";
-import { applyStripeSubscription } from "./membership-billing";
+import { applyStripeSubscription, expirePendingCheckoutSession } from "./membership-billing";
 
 const PAGE_META: Record<string, { title: string; description: string; canonical: string }> = {
   "/": {
@@ -538,6 +538,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
               return res.status(400).json({ message: "Invalid payment reference" });
             }
             await storage.updateBookingStatus(bookingId, "paid", paymentIntent.id);
+          }
+          break;
+        }
+        case "checkout.session.expired": {
+          const session = event.data.object as Stripe.Checkout.Session;
+          if (session.mode === "subscription") {
+            await expirePendingCheckoutSession(session.id);
           }
           break;
         }

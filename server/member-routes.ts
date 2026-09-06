@@ -35,6 +35,7 @@ import {
   adminMembershipBillingState,
   getOrCreateStripeCustomer,
   isBillingPlanKey,
+  reconcilePendingStripeCheckouts,
   requiredFormsForCheckout,
 } from "./membership-billing";
 
@@ -184,6 +185,9 @@ export function registerMemberRoutes(app: Express) {
   app.get("/api/portal/billing", requireAuth, async (req, res) => {
     try {
       const userId = req.session.userId!;
+      if (stripe) {
+        await reconcilePendingStripeCheckouts(stripe, userId);
+      }
       const rows = await db.select({ membership: memberships, plan: membershipPlans })
         .from(memberships)
         .leftJoin(membershipPlans, eq(memberships.planId, membershipPlans.id))
@@ -258,7 +262,7 @@ export function registerMemberRoutes(app: Express) {
           forms: missingForms,
         });
       }
-      const existing = await activeStripeMembershipForUser(req.session.userId!);
+      const existing = await activeStripeMembershipForUser(req.session.userId!, stripe);
       if (existing) {
         return res.status(409).json({
           code: "ACTIVE_SUBSCRIPTION_EXISTS",
