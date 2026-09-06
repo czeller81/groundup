@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { usePortalAuth } from "@/lib/portal-auth";
 import { Loader2 } from "lucide-react";
 import { localizeApiError, useLocale } from "@/lib/locale";
+import { trackEvent } from "@/lib/analytics";
 
 export default function PortalLogin() {
   const [location, setLocation] = useLocation();
@@ -43,6 +44,7 @@ export default function PortalLogin() {
     setIsLoading(true);
     try {
       await login(loginData.email, loginData.password);
+      trackEvent("member_login_completed", { method: "password", locale });
       toast({ title: copy.welcomeToast, description: copy.loggedInSuccessfully });
        setLocation(locale === "es" || isSpanishRoute ? "/es/portal/dashboard" : "/portal/dashboard");
     } catch (error: any) {
@@ -76,6 +78,7 @@ export default function PortalLogin() {
         phone: signupData.phone || undefined,
         locale,
       });
+      trackEvent("member_signup_completed", { method: "password", locale });
       toast({ title: copy.accountCreated, description: copy.welcomeToGroundUp });
        setLocation(locale === "es" || isSpanishRoute ? "/es/portal/dashboard" : "/portal/dashboard");
     } catch (error: any) {

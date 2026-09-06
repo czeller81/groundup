@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { ClassCard } from "@/components/class-card";
 import type { ClassScheduleResponse } from "@/lib/class-booking";
 import SEO from "@/components/seo";
-import { track } from "@/lib/analytics";
+import { track, trackEvent } from "@/lib/analytics";
 import { localizeApiError, localizedPublicPath, useLocale } from "@/lib/locale";
 
 export default function FirstVisitBooking() {
@@ -55,6 +55,15 @@ export default function FirstVisitBooking() {
     onSuccess: (result) => {
       setConfirmation(result);
       localStorage.setItem(`groundup-class-${result.reservation.id}`, result.manageToken);
+      trackEvent("booking_completed", {
+        booking_type: "first_visit",
+        booking_status: result.reservation.status === "waitlisted" ? "waitlisted" : "confirmed",
+        class_category: selected?.canonicalCategory || "unknown",
+        locale,
+      });
+    },
+    onError: () => {
+      trackEvent("booking_failed", { booking_type: "first_visit", locale });
     },
   });
   if (confirmation) {
@@ -88,7 +97,7 @@ export default function FirstVisitBooking() {
         ) : (
           <>
             <ClassCard occurrence={selected} />
-              <form className="mt-5 rounded-2xl border border-white/10 bg-[#121826] p-4 sm:p-6" onSubmit={(event) => { event.preventDefault(); track("funnel_step", "training", { step: "reservation_submitted" }); reserve.mutate(); }}>
+              <form className="mt-5 rounded-2xl border border-white/10 bg-[#121826] p-4 sm:p-6" onSubmit={(event) => { event.preventDefault(); track("funnel_step", "training", { step: "reservation_submitted" }); trackEvent("booking_started", { booking_type: "first_visit", class_category: selected.canonicalCategory, class_state: selected.bookingState, locale }); reserve.mutate(); }}>
               <div className="grid gap-4 sm:grid-cols-2">
                 {(["firstName", "lastName", "email", "phone"] as const).map((field) => (
                   <div key={field}>

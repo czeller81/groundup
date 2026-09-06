@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { trackEvent } from "@/lib/analytics";
 
 type MinorProfile = {
   id: string;
@@ -84,7 +85,7 @@ export default function PortalSchedule() {
     mutationFn: async ({ occurrenceId, minorProfileId }: { occurrenceId: string; minorProfileId?: string }) => (
       await apiRequest("POST", "/api/portal/class-reservations", { occurrenceId, minorProfileId })
     ).json(),
-    onSuccess: (reservation) => {
+    onSuccess: (reservation, variables) => {
       queryClient.invalidateQueries({ queryKey: ["/api/portal/classes"] });
       queryClient.invalidateQueries({ queryKey: ["/api/portal/my-classes"] });
       if (reservation.status === "waitlisted") {
@@ -92,12 +93,20 @@ export default function PortalSchedule() {
       } else {
         toast({ title: copy.classBooked, description: copy.spotConfirmed });
       }
+      trackEvent("booking_completed", {
+        booking_type: variables.minorProfileId ? "guardian_minor" : "member",
+        booking_status: reservation.status === "waitlisted" ? "waitlisted" : "confirmed",
+        locale,
+      });
     },
-    onError: (error: Error) => toast({
-      title: copy.couldNotBook,
-      description: localizeApiError(error.message, locale, copy.couldNotBook),
-      variant: "destructive",
-    }),
+    onError: (error: Error) => {
+      trackEvent("booking_failed", { booking_type: "portal", locale });
+      toast({
+        title: copy.couldNotBook,
+        description: localizeApiError(error.message, locale, copy.couldNotBook),
+        variant: "destructive",
+      });
+    },
   });
   const createMinor = useMutation({
     mutationFn: async () => (await apiRequest("POST", "/api/portal/minors", minorForm)).json(),
@@ -107,6 +116,7 @@ export default function PortalSchedule() {
       setMinorDialogOpen(false);
       setMinorForm({ firstName: "", lastName: "", dateOfBirth: "", emergencyContactName: "", emergencyContactPhone: "", emergencyContactRelationship: "", consentSignature: "", consentGiven: false });
       toast({ title: copy.minorSaved });
+      trackEvent("minor_profile_created", { locale });
     },
     onError: (error: Error) => toast({
       title: copy.minorSaveError,
@@ -305,6 +315,12 @@ export default function PortalSchedule() {
       setMinorDialogOpen(true);
       return;
     }
+    trackEvent("booking_started", {
+      booking_type: item.girlsClass ? "guardian_minor" : "member",
+      class_category: item.canonicalCategory,
+      class_state: item.bookingState,
+      locale,
+    });
     reserve.mutate({ occurrenceId: item.id, minorProfileId: item.girlsClass ? selectedMinorId : undefined });
   };
 

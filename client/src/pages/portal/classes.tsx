@@ -10,6 +10,7 @@ import { localizeApiError, useLocale } from "@/lib/locale";
 import { localizedPortalPath } from "@/lib/portal-navigation";
 import { usePortalAuth } from "@/lib/portal-auth";
 import { Button } from "@/components/ui/button";
+import { trackEvent } from "@/lib/analytics";
 
 export default function PortalClasses() {
   const { toast } = useToast();
@@ -32,8 +33,16 @@ export default function PortalClasses() {
           ? copy.waitlistAdded
           : copy.spotConfirmed,
       });
+      trackEvent("booking_completed", {
+        booking_type: "member",
+        booking_status: reservation.status === "waitlisted" ? "waitlisted" : "confirmed",
+        locale,
+      });
     },
-    onError: (error: Error) => toast({ title: copy.couldNotBook, description: localizeApiError(error.message, locale, copy.couldNotBook), variant: "destructive" }),
+    onError: (error: Error) => {
+      trackEvent("booking_failed", { booking_type: "member", locale });
+      toast({ title: copy.couldNotBook, description: localizeApiError(error.message, locale, copy.couldNotBook), variant: "destructive" });
+    },
   });
   useEffect(() => {
     if (!authLoading && !isAuthenticated) setLocation(portalPath("/portal/login"));
@@ -73,7 +82,15 @@ export default function PortalClasses() {
               locale={locale}
               actionLabel={occurrence.bookingState === "waitlist" ? copy.joinWaitlist : copy.bookClass}
               busy={reserve.isPending && reserve.variables === occurrence.id}
-              onAction={() => reserve.mutate(occurrence.id)}
+               onAction={() => {
+                 trackEvent("booking_started", {
+                   booking_type: "member",
+                   class_category: occurrence.canonicalCategory,
+                   class_state: occurrence.bookingState,
+                   locale,
+                 });
+                 reserve.mutate(occurrence.id);
+               }}
             />
           ))}
         </div>

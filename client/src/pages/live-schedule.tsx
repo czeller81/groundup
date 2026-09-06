@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { AlertCircle, CalendarDays, Loader2 } from "lucide-react";
@@ -7,6 +8,7 @@ import type { ClassScheduleResponse } from "@/lib/class-booking";
 import SEO from "@/components/seo";
 import { localizedPublicPath, switchLocalePath, useLocale } from "@/lib/locale";
 import { localizedPortalEntryPath } from "@/lib/portal-navigation";
+import { trackEvent } from "@/lib/analytics";
 
 export default function LiveSchedule() {
   const { locale } = useLocale();
@@ -36,6 +38,31 @@ export default function LiveSchedule() {
   const { data, isLoading, error } = useQuery<ClassScheduleResponse>({
     queryKey: ["/api/classes"],
   });
+  useEffect(() => {
+    trackEvent("schedule_viewed", { locale, audience: "public" });
+  }, [locale]);
+
+  const startBooking = (occurrence: ClassScheduleResponse["occurrences"][number]) => {
+    const bookingType = occurrence.bookingState === "not_available"
+      ? "contact"
+      : occurrence.firstVisitEligible
+        ? "first_visit"
+        : "member";
+    trackEvent("booking_started", {
+      booking_type: bookingType,
+      class_category: occurrence.canonicalCategory,
+      class_state: occurrence.bookingState,
+      locale,
+    });
+    if (occurrence.bookingState === "not_available") {
+      window.location.href = localizedPublicPath("/contact#contact-form", locale);
+    } else {
+      window.location.href = occurrence.firstVisitEligible
+        ? localizedPublicPath("/contact#contact-form", locale)
+        : switchLocalePath("/portal/booking", locale);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#0B0F14] px-4 pb-20 pt-28 text-white">
       <SEO
@@ -66,7 +93,7 @@ export default function LiveSchedule() {
                 key={occurrence.id}
                 occurrence={occurrence}
                  actionLabel={occurrence.bookingState === "not_available" ? copy.girls : occurrence.firstVisitEligible ? (occurrence.bookingState === "waitlist" ? copy.waitlist : copy.firstVisit) : copy.member}
-                 onAction={occurrence.bookingState === "not_available" ? () => { window.location.href = localizedPublicPath("/contact#contact-form", locale); } : () => { window.location.href = occurrence.firstVisitEligible ? localizedPublicPath("/contact#contact-form", locale) : switchLocalePath("/portal/booking", locale); }}
+                  onAction={() => startBooking(occurrence)}
               />
             ))}
           </div>

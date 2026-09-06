@@ -10,6 +10,26 @@ export type AnalyticsEvent =
   | "reservation_succeeded"
   | "reservation_failed";
 
+export type ProjectAnalyticsEvent =
+  | "schedule_viewed"
+  | "booking_started"
+  | "booking_completed"
+  | "booking_failed"
+  | "member_login_completed"
+  | "member_signup_completed"
+  | "minor_profile_created"
+  | "consent_updated";
+
+type AnalyticsData = Record<string, string | number | boolean>;
+
+declare global {
+  interface Window {
+    umami?: {
+      track(name: string, data?: AnalyticsData): void;
+    };
+  }
+}
+
 export interface Attribution {
   utm_source?: string;
   utm_medium?: string;
@@ -62,6 +82,16 @@ export function captureAttribution(): Attribution {
   const merged = { ...existing, ...attribution };
   window.localStorage.setItem(ATTRIBUTION_KEY, JSON.stringify(merged));
   return merged;
+}
+
+export function trackEvent(name: ProjectAnalyticsEvent, data: AnalyticsData = {}): void {
+  if (typeof window === "undefined" || !hasAnalyticsConsent()) return;
+
+  try {
+    window.umami?.track(name, data);
+  } catch {
+    // Analytics must never interrupt the user journey.
+  }
 }
 
 function sessionId(): string {
