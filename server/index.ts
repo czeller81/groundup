@@ -10,6 +10,8 @@ import { storage } from "./storage";
 import Stripe from "stripe";
 import {
   PENDING_CHECKOUT_RECONCILIATION_LIMIT,
+  recordStripeCheckoutReconciliationFailure,
+  recordStripeCheckoutReconciliationPass,
   reconcileStalePendingStripeCheckouts,
   withStripeCheckoutReconciliationLease,
 } from "./membership-billing";
@@ -87,6 +89,7 @@ function startStripeCheckoutMaintenance() {
         log("Stripe checkout reconciliation skipped because another instance owns the lease.");
         return;
       }
+      recordStripeCheckoutReconciliationPass(summary);
       log([
         "Stripe checkout reconciliation completed",
         `scanned=${summary.scanned}`,
@@ -99,6 +102,7 @@ function startStripeCheckoutMaintenance() {
     } catch (error) {
       // Maintenance must never prevent the app from serving traffic. A failed
       // pass remains retryable on the next interval.
+      recordStripeCheckoutReconciliationFailure();
       console.error("Stripe checkout reconciliation failed:", error);
     } finally {
       running = false;

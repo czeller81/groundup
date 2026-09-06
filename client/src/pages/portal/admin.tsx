@@ -18,7 +18,7 @@ import {
   Search, Users, ArrowLeft, FileText, Calendar, Mail, Phone, Clock, 
   CheckCircle, XCircle, AlertCircle, ChevronRight, Loader2, DollarSign, 
   TrendingUp, UserPlus, Activity, StickyNote, ChevronLeft, Shield,
-  Award, Hash, AlertTriangle, Filter, BarChart3
+  Award, Hash, AlertTriangle, Filter, BarChart3, RefreshCw
 } from "lucide-react";
 import AdminPilotOps from "./admin-pilot-ops";
 
@@ -64,10 +64,30 @@ export default function PortalAdmin() {
     queryKey: ["/api/portal/admin/stripe/status"],
     enabled: isAuthenticated && isAdmin,
   });
-  const { data: billingMemberships = [], isLoading: billingMembershipsLoading } = useQuery<any[]>({
+  const { data: billingData, isLoading: billingMembershipsLoading } = useQuery<{
+    memberships: any[];
+    reconciliation: {
+      lastRunAt: string | null;
+      lastRunStatus: "not_run" | "healthy" | "failures" | "failed";
+      lastRunHadFailures: boolean;
+      recentPasses: number;
+      recentFailurePasses: number;
+      consecutiveFailurePasses: number;
+      lastSummary: {
+        scanned: number;
+        completed: number;
+        expired: number;
+        missing: number;
+        apiFailures: number;
+        processingFailures: number;
+      } | null;
+    };
+  }>({
     queryKey: ["/api/portal/admin/billing/memberships"],
     enabled: isAuthenticated && isAdmin,
   });
+  const billingMemberships = billingData?.memberships || [];
+  const reconciliationHealth = billingData?.reconciliation;
 
   const { data: trainingLeads = [], isLoading: trainingLeadsLoading } = useQuery<any[]>({
     queryKey: ["/api/portal/admin/trial-leads", "training"],
@@ -481,10 +501,57 @@ export default function PortalAdmin() {
             <CardContent>
               {billingMembershipsLoading ? (
                 <Loader2 className="h-5 w-5 animate-spin text-[#5EEBFF]" />
-              ) : billingMemberships.length === 0 ? (
-                <p className="text-sm text-gray-500">{locale === "es" ? "Todavía no hay membresías registradas." : "No memberships have been recorded yet."}</p>
               ) : (
                 <div className="space-y-4">
+                  <div className={`rounded-lg border p-3 ${reconciliationHealth?.lastRunHadFailures ? "border-amber-500/30 bg-amber-500/10" : "border-white/5 bg-[#0B0F14]"}`}>
+                    <div className="flex items-start gap-3">
+                      <RefreshCw className={`mt-0.5 h-4 w-4 flex-shrink-0 ${reconciliationHealth?.lastRunHadFailures ? "text-amber-300" : "text-[#5EEBFF]"}`} />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="text-sm font-medium text-white">
+                            {locale === "es" ? "Conciliación de checkout" : "Checkout reconciliation"}
+                          </p>
+                          {reconciliationHealth?.lastRunStatus === "healthy" && (
+                            <Badge className="border-emerald-500/30 bg-emerald-500/10 text-emerald-300">
+                              {locale === "es" ? "Saludable" : "Healthy"}
+                            </Badge>
+                          )}
+                          {reconciliationHealth?.lastRunHadFailures && (
+                            <Badge className="border-amber-500/30 bg-amber-500/10 text-amber-300">
+                              {locale === "es" ? "Requiere atención" : "Needs attention"}
+                            </Badge>
+                          )}
+                        </div>
+                        {!reconciliationHealth || reconciliationHealth.lastRunStatus === "not_run" ? (
+                          <p className="mt-1 text-xs text-gray-400">
+                            {locale === "es" ? "Todavía no hay una ejecución registrada." : "No reconciliation pass has been recorded yet."}
+                          </p>
+                        ) : (
+                          <>
+                            <p className="mt-1 text-xs text-gray-400">
+                              {locale === "es" ? "Última ejecución: " : "Last run: "}
+                              {reconciliationHealth.lastRunAt ? dateLabel(reconciliationHealth.lastRunAt, true) : "—"}
+                              {" · "}
+                              {locale === "es"
+                                ? `${reconciliationHealth.recentFailurePasses} de ${reconciliationHealth.recentPasses} recientes con fallas`
+                                : `${reconciliationHealth.recentFailurePasses} of ${reconciliationHealth.recentPasses} recent passes had failures`}
+                            </p>
+                            {reconciliationHealth.consecutiveFailurePasses > 1 && (
+                              <p className="mt-1 text-xs text-amber-200">
+                                {locale === "es"
+                                  ? `${reconciliationHealth.consecutiveFailurePasses} ejecuciones consecutivas requieren atención.`
+                                  : `${reconciliationHealth.consecutiveFailurePasses} consecutive passes need attention.`}
+                              </p>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  {billingMemberships.length === 0 ? (
+                    <p className="text-sm text-gray-500">{locale === "es" ? "Todavía no hay membresías registradas." : "No memberships have been recorded yet."}</p>
+                  ) : (
+                  <>
                   <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
                     {(["pending", "active", "past_due", "cancel_at_period_end"] as const).map((state) => (
                       <button
@@ -559,6 +626,8 @@ export default function PortalAdmin() {
                     </tbody>
                   </table>
                   </div>
+                  )}
+                  </>
                   )}
                 </div>
               )}

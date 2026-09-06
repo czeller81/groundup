@@ -146,6 +146,72 @@ export type StripeCheckoutReconciliationSummary = {
   processingFailures: number;
 };
 
+type StripeCheckoutReconciliationHealthRecord = {
+  completedAt: Date;
+  summary: StripeCheckoutReconciliationSummary | null;
+  failed: boolean;
+};
+
+export type StripeCheckoutReconciliationHealth = {
+  lastRunAt: string | null;
+  lastRunStatus: "not_run" | "healthy" | "failures" | "failed";
+  lastRunHadFailures: boolean;
+  recentPasses: number;
+  recentFailurePasses: number;
+  consecutiveFailurePasses: number;
+  lastSummary: StripeCheckoutReconciliationSummary | null;
+};
+
+const RECONCILIATION_HEALTH_HISTORY_LIMIT = 5;
+const reconciliationHealthHistory: StripeCheckoutReconciliationHealthRecord[] = [];
+
+function summaryHasFailures(summary: StripeCheckoutReconciliationSummary) {
+  return summary.apiFailures > 0 || summary.processingFailures > 0;
+}
+
+export function recordStripeCheckoutReconciliationPass(
+  summary: StripeCheckoutReconciliationSummary,
+  completedAt = new Date(),
+) {
+  reconciliationHealthHistory.push({
+    completedAt,
+    summary: { ...summary },
+    failed: summaryHasFailures(summary),
+  });
+  if (reconciliationHealthHistory.length > RECONCILIATION_HEALTH_HISTORY_LIMIT) {
+    reconciliationHealthHistory.shift();
+  }
+}
+
+export function recordStripeCheckoutReconciliationFailure(completedAt = new Date()) {
+  reconciliationHealthHistory.push({ completedAt, summary: null, failed: true });
+  if (reconciliationHealthHistory.length > RECONCILIATION_HEALTH_HISTORY_LIMIT) {
+    reconciliationHealthHistory.shift();
+  }
+}
+
+export function getStripeCheckoutReconciliationHealth(): StripeCheckoutReconciliationHealth {
+  const last = reconciliationHealthHistory[reconciliationHealthHistory.length - 1];
+  let consecutiveFailurePasses = 0;
+  for (let index = reconciliationHealthHistory.length - 1; index >= 0; index -= 1) {
+    if (!reconciliationHealthHistory[index].failed) break;
+    consecutiveFailurePasses += 1;
+  }
+  return {
+    lastRunAt: last?.completedAt.toISOString() || null,
+    lastRunStatus: !last
+      ? "not_run"
+      : last.failed
+        ? last.summary && summaryHasFailures(last.summary) ? "failures" : "failed"
+        : "healthy",
+    lastRunHadFailures: Boolean(last?.failed),
+    recentPasses: reconciliationHealthHistory.length,
+    recentFailurePasses: reconciliationHealthHistory.filter((record) => record.failed).length,
+    consecutiveFailurePasses,
+    lastSummary: last?.summary ? { ...last.summary } : null,
+  };
+}
+
 /**
  * Run one maintenance pass while holding a database-wide lease.
  *

@@ -32,6 +32,7 @@ import {
   activeStripeMembershipForUser,
   canSelectGirlsProgram,
   getBillingPlanConfig,
+  getStripeCheckoutReconciliationHealth,
   adminMembershipBillingState,
   getOrCreateStripeCustomer,
   isBillingPlanKey,
@@ -378,20 +379,23 @@ export function registerMemberRoutes(app: Express) {
       .orderBy(desc(memberships.updatedAt))
       .limit(100);
     const now = Date.now();
-    res.json(rows.map(({ membership, plan, user }) => {
-      const displayState = adminMembershipBillingState(membership);
-      const pendingAgeMinutes = displayState === "pending"
-        ? Math.max(0, Math.floor((now - membership.createdAt.getTime()) / 60000))
-        : null;
-      return {
-        ...membership,
-        plan,
-        displayState,
-        pendingAgeMinutes,
-        isStalePending: displayState === "pending" && pendingAgeMinutes !== null && pendingAgeMinutes >= 30,
-        member: { id: user.id, firstName: user.firstName, lastName: user.lastName, email: user.email },
-      };
-    }));
+    res.json({
+      memberships: rows.map(({ membership, plan, user }) => {
+        const displayState = adminMembershipBillingState(membership);
+        const pendingAgeMinutes = displayState === "pending"
+          ? Math.max(0, Math.floor((now - membership.createdAt.getTime()) / 60000))
+          : null;
+        return {
+          ...membership,
+          plan,
+          displayState,
+          pendingAgeMinutes,
+          isStalePending: displayState === "pending" && pendingAgeMinutes !== null && pendingAgeMinutes >= 30,
+          member: { id: user.id, firstName: user.firstName, lastName: user.lastName, email: user.email },
+        };
+      }),
+      reconciliation: getStripeCheckoutReconciliationHealth(),
+    });
   });
   app.get("/api/portal/member-program", requireAuth, async (req, res) => {
     try {
