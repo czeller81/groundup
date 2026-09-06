@@ -16,6 +16,7 @@ export const users = pgTable("users", {
   attendanceCount: integer("attendance_count").notNull().default(0),
   assignedCoachId: varchar("assigned_coach_id"),
   adminNotes: text("admin_notes"),
+  stripeCustomerId: text("stripe_customer_id"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -128,6 +129,8 @@ export const membershipPlans = pgTable("membership_plans", {
   privateSessionsPerMonth: integer("private_sessions_per_month").notNull().default(0),
   personalizedProgram: boolean("personalized_program").notNull().default(false),
   displayPriceCents: integer("display_price_cents"),
+  stripeProductId: text("stripe_product_id"),
+  stripePriceId: text("stripe_price_id"),
   effectiveStart: timestamp("effective_start"),
   effectiveEnd: timestamp("effective_end"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -145,11 +148,26 @@ export const memberships = pgTable("memberships", {
   priceCents: integer("price_cents").notNull().default(2000),
   assignedBy: varchar("assigned_by").references(() => users.id),
   source: text("source"),
+  billingSource: text("billing_source").notNull().default("manual"),
+  billingState: text("billing_state").notNull().default("manual"),
+  stripeCustomerId: text("stripe_customer_id"),
+  stripeProductId: text("stripe_product_id"),
+  stripePriceId: text("stripe_price_id"),
+  stripeSubscriptionId: text("stripe_subscription_id"),
+  stripeCheckoutSessionId: text("stripe_checkout_session_id"),
+  stripeLatestInvoiceId: text("stripe_latest_invoice_id"),
+  currentPeriodStart: timestamp("current_period_start"),
+  currentPeriodEnd: timestamp("current_period_end"),
+  cancelAtPeriodEnd: boolean("cancel_at_period_end").notNull().default(false),
+  billingFailureAt: timestamp("billing_failure_at"),
   pausedAt: timestamp("paused_at"),
   cancelledAt: timestamp("cancelled_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (table) => ({
+  stripeSubscriptionUnique: uniqueIndex("memberships_stripe_subscription_unique").on(table.stripeSubscriptionId),
+  stripeCheckoutSessionUnique: uniqueIndex("memberships_stripe_checkout_session_unique").on(table.stripeCheckoutSessionId),
+}));
 
 export const memberLifecycles = pgTable("member_lifecycles", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),

@@ -53,9 +53,9 @@ test("legacy role routes remain closed to anonymous and unauthorized sessions", 
   let called = false;
   requireRole("admin")({ session: { userId: "admin", userRole: "admin" } } as any, res, () => { called = true; });
   assert.equal(called, true);
-  assert.deepEqual(portalNavigationPaths("member"), ["/portal/dashboard", "/portal/schedule", "/portal/my-classes"]);
-  assert.deepEqual(portalNavigationPaths("coach"), ["/portal/dashboard", "/portal/schedule", "/portal/my-classes", "/portal/coach"]);
-  assert.deepEqual(portalNavigationPaths("admin"), ["/portal/dashboard", "/portal/schedule", "/portal/my-classes", "/portal/coach", "/portal/class-admin", "/portal/admin"]);
+  assert.deepEqual(portalNavigationPaths("member"), ["/portal/dashboard", "/portal/billing", "/portal/schedule", "/portal/my-classes"]);
+  assert.deepEqual(portalNavigationPaths("coach"), ["/portal/dashboard", "/portal/billing", "/portal/schedule", "/portal/my-classes", "/portal/coach"]);
+  assert.deepEqual(portalNavigationPaths("admin"), ["/portal/dashboard", "/portal/billing", "/portal/schedule", "/portal/my-classes", "/portal/coach", "/portal/class-admin", "/portal/admin"]);
 });
 
 test("one locale resolver gives explicit routes precedence and portal preferences persistence", () => {

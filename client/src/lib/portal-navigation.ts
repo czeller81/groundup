@@ -1,6 +1,7 @@
 export function portalNavigationPaths(role?: string | null) {
   return [
     "/portal/dashboard",
+    "/portal/billing",
     "/portal/schedule",
     "/portal/my-classes",
     ...(role === "coach" || role === "admin" ? ["/portal/coach"] : []),

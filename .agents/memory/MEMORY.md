@@ -9,3 +9,4 @@
 - [Portal form navigation](form-submission-navigation.md) — avoid refetching the active form query during submit success navigation.
 - [Legacy membership entitlements](legacy-membership-entitlements.md) — plan-linked memberships use weekly rules; historical unconfigured memberships retain legacy booking behavior.
 - [Autoscale startup readiness](autoscale-startup-readiness.md) — open the HTTP listener before non-critical database maintenance so promotion probes can succeed.
+- [Stripe membership webhook ordering](stripe-membership-webhook-ordering.md) — subscription-created can precede checkout completion; adopt the matching pending checkout record.

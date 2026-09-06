@@ -14,6 +14,7 @@ import { bookingBelongsToUser, coachCanManageMember, createPublicRateLimit, requ
 import { sendPasswordResetEmail, sendStaffNotificationEmail } from "./email";
 import { registerClassBookingRoutes } from "./class-booking-routes";
 import { registerMemberRoutes } from "./member-routes";
+import { applyStripeSubscription } from "./membership-billing";
 
 const PAGE_META: Record<string, { title: string; description: string; canonical: string }> = {
   "/": {
@@ -537,6 +538,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
               return res.status(400).json({ message: "Invalid payment reference" });
             }
             await storage.updateBookingStatus(bookingId, "paid", paymentIntent.id);
+          }
+          break;
+        }
+        case "checkout.session.completed": {
+          const session = event.data.object as Stripe.Checkout.Session;
+          if (session.mode !== "subscription" || !session.subscription) break;
+          const subscriptionId = typeof session.subscription === "string" ? session.subscription : session.subscription.id;
+          let subscription = await stripe.subscriptions.retrieve(subscriptionId);
+          if (!subscription.metadata?.ground_up_user_id && Object.keys(session.metadata || {}).length) {
+            subscription = await stripe.subscriptions.update(subscription.id, {
+              metadata: session.metadata || {},
+            });
+          }
+          await applyStripeSubscription(subscription, {
+            checkoutSessionId: session.id,
+            latestInvoiceId: typeof subscription.latest_invoice === "string" ? subscription.latest_invoice : subscription.latest_invoice?.id,
+          });
+          break;
+        }
+        case "customer.subscription.created":
+        case "customer.subscription.updated":
+        case "customer.subscription.deleted": {
+          await applyStripeSubscription(event.data.object as Stripe.Subscription);
+          break;
+        }
+        case "invoice.paid": {
+          const invoice = event.data.object as Stripe.Invoice;
+          const subscription = invoice.parent?.subscription_details?.subscription;
+          const subscriptionId = typeof subscription === "string" ? subscription : subscription?.id;
+          if (subscriptionId) {
+            const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+            await applyStripeSubscription(subscription, {
+              latestInvoiceId: invoice.id,
+            });
+          }
+          break;
+        }
+        case "invoice.payment_failed": {
+          const invoice = event.data.object as Stripe.Invoice;
+          const subscription = invoice.parent?.subscription_details?.subscription;
+          const subscriptionId = typeof subscription === "string" ? subscription : subscription?.id;
+          if (subscriptionId) {
+            const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+            await applyStripeSubscription(subscription, {
+              latestInvoiceId: invoice.id,
+              billingStateOverride: "past_due",
+              billingFailureAt: new Date(),
+            });
           }
           break;
         }

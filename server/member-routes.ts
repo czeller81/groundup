@@ -26,6 +26,21 @@ import { db } from "./db";
 import { storage } from "./storage";
 import { coachCanManageMember, requireAuth, requireRole } from "./route-security";
 import { evaluateBookingEligibility, evaluateMinorBookingEligibilityWithExecutor, getMembershipWeekStart, minorAgeAt } from "./member-entitlements";
+import Stripe from "stripe";
+import {
+  STRIPE_MEMBERSHIP_CATALOG,
+  activeStripeMembershipForUser,
+  canSelectGirlsProgram,
+  getBillingPlanConfig,
+  getOrCreateStripeCustomer,
+  isBillingPlanKey,
+  requiredFormsForCheckout,
+} from "./membership-billing";
+
+const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SECRET_KEY, {
+  apiVersion: "2025-08-27.basil",
+  typescript: true,
+}) : null;
 
 const discoveryDurationDays = 7;
 
@@ -165,6 +180,195 @@ async function issueDiscoveryPass(userId: string, actorId: string | null, reason
 }
 
 export function registerMemberRoutes(app: Express) {
+  app.get("/api/portal/billing", requireAuth, async (req, res) => {
+    try {
+      const userId = req.session.userId!;
+      const rows = await db.select({ membership: memberships, plan: membershipPlans })
+        .from(memberships)
+        .leftJoin(membershipPlans, eq(memberships.planId, membershipPlans.id))
+        .where(eq(memberships.userId, userId))
+        .orderBy(desc(memberships.createdAt));
+      const missingForms = await requiredFormsForCheckout(userId);
+      return res.json({
+        memberships: rows.map(({ membership, plan }) => ({ ...membership, plan })),
+        activeMembership: rows.find(({ membership }) => ["active", "ACTIVE"].includes(membership.status) && membership.billingState !== "cancelled") || null,
+        missingForms,
+        hasStripeCustomer: Boolean((await db.select({ stripeCustomerId: users.stripeCustomerId }).from(users).where(eq(users.id, userId)).limit(1))[0]?.stripeCustomerId),
+      });
+    } catch (error) {
+      console.error("Billing state error:", error);
+      return res.status(500).json({ code: "BILLING_LOAD_FAILED", message: "Unable to load billing." });
+    }
+  });
+
+  app.get("/api/portal/billing/plans", requireAuth, async (req, res) => {
+    try {
+      const includeGirls = await canSelectGirlsProgram(req.session.userId!);
+      const plans = await db.select().from(membershipPlans)
+        .where(eq(membershipPlans.active, true))
+        .orderBy(asc(membershipPlans.displayName));
+      res.json(plans
+        .filter((plan) => isBillingPlanKey(plan.internalKey))
+        .filter((plan) => plan.internalKey !== "girls_program" || includeGirls)
+        .map((plan) => ({
+          ...plan,
+          billingKey: plan.internalKey,
+          catalog: STRIPE_MEMBERSHIP_CATALOG[plan.internalKey as keyof typeof STRIPE_MEMBERSHIP_CATALOG],
+          checkoutReady: Boolean(plan.stripePriceId),
+        })));
+    } catch (error) {
+      console.error("Billing plans error:", error);
+      res.status(500).json({ code: "BILLING_PLANS_FAILED", message: "Unable to load membership plans." });
+    }
+  });
+
+  app.post("/api/portal/billing/checkout", requireAuth, async (req, res) => {
+    if (!stripe) return res.status(503).json({ code: "STRIPE_NOT_CONFIGURED", message: "Billing is not configured." });
+    try {
+      const data = z.object({
+        planKey: z.string().trim().refine(isBillingPlanKey, "Invalid membership plan"),
+        minorProfileId: z.string().uuid().optional(),
+      }).strict().parse(req.body);
+      const config = getBillingPlanConfig(data.planKey);
+      if (!config) return res.status(400).json({ code: "PLAN_NOT_FOUND", message: "Membership plan not found." });
+      if (config.audience === "guardian_minor") {
+        if (!data.minorProfileId) return res.status(400).json({ code: "MINOR_PROFILE_REQUIRED", message: "Select an approved participant before choosing the Girls Program." });
+        const [minor] = await db.select().from(minorProfiles).where(and(
+          eq(minorProfiles.id, data.minorProfileId),
+          eq(minorProfiles.guardianUserId, req.session.userId!),
+          isNull(minorProfiles.consentRevokedAt),
+        ));
+        if (!minor) return res.status(403).json({ code: "MINOR_NOT_ELIGIBLE", message: "That participant is not eligible for this plan." });
+      }
+      const missingForms = await requiredFormsForCheckout(req.session.userId!);
+      if (missingForms.length) {
+        return res.status(409).json({
+          code: "REQUIRED_FORMS_INCOMPLETE",
+          message: "Complete the required forms before starting membership checkout.",
+          forms: missingForms,
+        });
+      }
+      const existing = await activeStripeMembershipForUser(req.session.userId!);
+      if (existing) {
+        return res.status(409).json({
+          code: "ACTIVE_SUBSCRIPTION_EXISTS",
+          message: "You already have a membership checkout or subscription in progress.",
+          membershipId: existing.id,
+        });
+      }
+      const customer = await getOrCreateStripeCustomer(stripe, req.session.userId!);
+      const subscriptions = await stripe.subscriptions.list({ customer: customer.id, status: "all", limit: 100 });
+      const duplicate = subscriptions.data.find((subscription) =>
+        ["active", "trialing", "past_due", "unpaid", "incomplete"].includes(subscription.status) &&
+        !subscription.cancel_at_period_end,
+      );
+      if (duplicate) return res.status(409).json({ code: "ACTIVE_SUBSCRIPTION_EXISTS", message: "You already have an active Stripe subscription." });
+      const [plan] = await db.select().from(membershipPlans).where(and(
+        eq(membershipPlans.internalKey, data.planKey),
+        eq(membershipPlans.active, true),
+      )).limit(1);
+      if (!plan?.stripePriceId) {
+        return res.status(503).json({ code: "PLAN_NOT_READY", message: "This membership is not ready for checkout yet." });
+      }
+
+      const origin = `${req.protocol}://${req.get("host")}`;
+      const session = await stripe.checkout.sessions.create({
+        mode: "subscription",
+        customer: customer.id,
+        line_items: [{ price: plan.stripePriceId, quantity: 1 }],
+        success_url: `${origin}/portal/billing?checkout=success`,
+        cancel_url: `${origin}/portal/billing?checkout=cancelled`,
+        client_reference_id: req.session.userId!,
+        allow_promotion_codes: true,
+        metadata: {
+          ground_up_user_id: req.session.userId!,
+          ground_up_plan_key: data.planKey,
+          ...(data.minorProfileId ? { ground_up_minor_profile_id: data.minorProfileId } : {}),
+        },
+        subscription_data: {
+          metadata: {
+            ground_up_user_id: req.session.userId!,
+            ground_up_plan_key: data.planKey,
+            ...(data.minorProfileId ? { ground_up_minor_profile_id: data.minorProfileId } : {}),
+          },
+        },
+      });
+      if (!session.url) {
+        return res.status(503).json({ code: "PLAN_NOT_READY", message: "This membership is not ready for checkout yet." });
+      }
+      await db.insert(memberships).values({
+        userId: req.session.userId!,
+        planId: plan.id,
+        type: plan.internalKey,
+        status: "pending",
+        priceCents: plan.displayPriceCents || config.amountCents,
+        source: "stripe_checkout",
+        billingSource: "stripe_checkout",
+        billingState: "pending",
+        stripeCustomerId: customer.id,
+        stripeProductId: plan.stripeProductId,
+        stripePriceId: plan.stripePriceId,
+        stripeCheckoutSessionId: session.id,
+      });
+      return res.json({ checkoutUrl: session.url, sessionId: session.id });
+    } catch (error) {
+      if (error instanceof z.ZodError) return res.status(400).json({ code: "INVALID_REQUEST", message: "Choose a valid membership plan." });
+      console.error("Stripe checkout error:", error);
+      return res.status(500).json({ code: "CHECKOUT_FAILED", message: "Unable to start membership checkout." });
+    }
+  });
+
+  app.post("/api/portal/billing/portal", requireAuth, async (req, res) => {
+    if (!stripe) return res.status(503).json({ code: "STRIPE_NOT_CONFIGURED", message: "Billing is not configured." });
+    try {
+      const [user] = await db.select().from(users).where(eq(users.id, req.session.userId!));
+      if (!user?.stripeCustomerId) return res.status(404).json({ code: "CUSTOMER_NOT_FOUND", message: "No Stripe billing profile exists yet." });
+      const customer = await stripe.customers.retrieve(user.stripeCustomerId);
+      if (customer.deleted || customer.metadata?.ground_up_user_id !== user.id) {
+        return res.status(403).json({ code: "BILLING_OWNERSHIP_FAILED", message: "Billing profile ownership could not be verified." });
+      }
+      const origin = `${req.protocol}://${req.get("host")}`;
+      const portal = await stripe.billingPortal.sessions.create({
+        customer: customer.id,
+        return_url: `${origin}/portal/billing`,
+      });
+      res.json({ url: portal.url });
+    } catch (error) {
+      console.error("Customer portal error:", error);
+      res.status(500).json({ code: "PORTAL_SESSION_FAILED", message: "Unable to open billing settings." });
+    }
+  });
+
+  app.post("/api/portal/billing/cancel", requireAuth, async (req, res) => {
+    if (!stripe) return res.status(503).json({ code: "STRIPE_NOT_CONFIGURED", message: "Billing is not configured." });
+    try {
+      const [membership] = await db.select().from(memberships).where(and(
+        eq(memberships.userId, req.session.userId!),
+        inArray(memberships.billingState, ["active", "past_due"]),
+        isNull(memberships.cancelledAt),
+      )).orderBy(desc(memberships.createdAt)).limit(1);
+      if (!membership?.stripeSubscriptionId) return res.status(404).json({ code: "SUBSCRIPTION_NOT_FOUND", message: "No active subscription was found." });
+      const subscription = await stripe.subscriptions.update(membership.stripeSubscriptionId, { cancel_at_period_end: true });
+      res.json({ cancelAtPeriodEnd: subscription.cancel_at_period_end, status: subscription.status });
+    } catch (error) {
+      console.error("Subscription cancellation error:", error);
+      res.status(500).json({ code: "CANCELLATION_FAILED", message: "Unable to schedule cancellation." });
+    }
+  });
+
+  app.get("/api/portal/admin/billing/memberships", requireRole("admin"), async (_req, res) => {
+    const rows = await db.select({ membership: memberships, plan: membershipPlans, user: users })
+      .from(memberships)
+      .leftJoin(membershipPlans, eq(memberships.planId, membershipPlans.id))
+      .innerJoin(users, eq(memberships.userId, users.id))
+      .orderBy(desc(memberships.updatedAt))
+      .limit(100);
+    res.json(rows.map(({ membership, plan, user }) => ({
+      ...membership,
+      plan,
+      member: { id: user.id, firstName: user.firstName, lastName: user.lastName, email: user.email },
+    })));
+  });
   app.get("/api/portal/member-program", requireAuth, async (req, res) => {
     try {
       const userId = req.session.userId!;

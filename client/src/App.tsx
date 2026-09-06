@@ -21,6 +21,7 @@ import MyClasses from "@/pages/portal/my-classes";
 import ClassAdmin from "@/pages/portal/class-admin";
 import PortalAdminMembers from "@/pages/portal/admin";
 import PortalCoach from "@/pages/portal/coach";
+import PortalBilling from "@/pages/portal/billing";
 import LiveSchedule from "@/pages/live-schedule";
 import FirstVisitBooking from "@/pages/first-visit-booking";
 import WomensSelfDefense from "@/pages/womens-self-defense";
@@ -145,6 +146,12 @@ function Router() {
       </Route>
       <Route path="/portal/dashboard">
         <PortalLayout><PortalDashboard /></PortalLayout>
+      </Route>
+      <Route path="/es/portal/billing">
+        <PortalLayout><PortalBilling /></PortalLayout>
+      </Route>
+      <Route path="/portal/billing">
+        <PortalLayout><PortalBilling /></PortalLayout>
       </Route>
       <Route path="/es/portal/forms/:slug">
         <PortalLayout><PortalForm /></PortalLayout>

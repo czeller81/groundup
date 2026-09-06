@@ -17,6 +17,7 @@ export default function PortalNavbar() {
 
   const labels: Record<string, string> = {
     "/portal/dashboard": copy.dashboard,
+    "/portal/billing": locale === "es" ? "Facturación" : "Billing",
     "/portal/schedule": copy.schedule,
     "/portal/my-classes": copy.myClasses,
     "/portal/coach": copy.coachCenter,

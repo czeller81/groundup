@@ -63,6 +63,10 @@ export default function PortalAdmin() {
     queryKey: ["/api/portal/admin/stripe/status"],
     enabled: isAuthenticated && isAdmin,
   });
+  const { data: billingMemberships = [], isLoading: billingMembershipsLoading } = useQuery<any[]>({
+    queryKey: ["/api/portal/admin/billing/memberships"],
+    enabled: isAuthenticated && isAdmin,
+  });
 
   const { data: trainingLeads = [], isLoading: trainingLeadsLoading } = useQuery<any[]>({
     queryKey: ["/api/portal/admin/trial-leads", "training"],
@@ -432,6 +436,55 @@ export default function PortalAdmin() {
                   <span className="text-xs text-gray-400">
                     Publishable key: {stripeStatus.publishableKeyConfigured ? "configured" : "missing"} · Webhook secret: {stripeStatus.webhookConfigured ? "configured" : "required"}
                   </span>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+        {isAdmin && (
+          <Card className="mb-6 border-white/5 bg-[#121826]" data-testid="billing-memberships">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base text-white">
+                <DollarSign className="h-5 w-5 text-emerald-400" /> {locale === "es" ? "Membresías y facturación" : "Membership billing"}
+              </CardTitle>
+              <p className="text-xs text-gray-400">
+                {locale === "es" ? "Estado de suscripciones recibido desde Stripe." : "Subscription state received from Stripe webhooks."}
+              </p>
+            </CardHeader>
+            <CardContent>
+              {billingMembershipsLoading ? (
+                <Loader2 className="h-5 w-5 animate-spin text-[#5EEBFF]" />
+              ) : billingMemberships.length === 0 ? (
+                <p className="text-sm text-gray-500">{locale === "es" ? "Todavía no hay membresías registradas." : "No memberships have been recorded yet."}</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[620px] text-left text-sm">
+                    <thead className="border-b border-white/10 text-xs uppercase tracking-wide text-gray-500">
+                      <tr>
+                        <th className="pb-2 pr-4">{locale === "es" ? "Miembro" : "Member"}</th>
+                        <th className="pb-2 pr-4">{locale === "es" ? "Plan" : "Plan"}</th>
+                        <th className="pb-2 pr-4">{locale === "es" ? "Estado" : "State"}</th>
+                        <th className="pb-2">{locale === "es" ? "Período" : "Period"}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {billingMemberships.slice(0, 8).map((item) => (
+                        <tr key={item.id} className="border-b border-white/5 last:border-0">
+                          <td className="py-3 pr-4">
+                            <p className="font-medium text-white">{item.member.firstName} {item.member.lastName}</p>
+                            <p className="text-xs text-gray-500">{item.member.email}</p>
+                          </td>
+                          <td className="py-3 pr-4 text-gray-300">{item.plan?.displayName || item.type}</td>
+                          <td className="py-3 pr-4">
+                            <Badge className={item.billingState === "past_due" ? "border-amber-500/30 bg-amber-500/10 text-amber-300" : item.billingState === "active" || item.billingState === "cancel_at_period_end" ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300" : "border-white/10 bg-white/5 text-gray-300"}>
+                              {item.billingState || item.status}
+                            </Badge>
+                          </td>
+                          <td className="py-3 text-xs text-gray-400">{item.currentPeriodEnd ? dateLabel(item.currentPeriodEnd) : "—"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               )}
             </CardContent>
