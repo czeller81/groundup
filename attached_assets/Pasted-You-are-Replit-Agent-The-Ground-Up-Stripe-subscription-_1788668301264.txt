@@ -1,0 +1,492 @@
+You are Replit Agent.
+
+The Ground Up Stripe subscription system has passed all API-level, webhook, entitlement, security, and regression evidence.
+
+The ONLY remaining blocker is:
+
+REAL AUTHENTICATED BROWSER CHECKOUT REHEARSAL
++
+RENDERED MOBILE QA
+
+Do not redesign billing.
+Do not change Stripe products or prices.
+Do not modify subscription logic.
+Do not switch to live mode.
+Do not publish automatically.
+
+Your task is to make the existing workspace capable of executing the final authenticated browser rehearsal.
+
+---
+
+# 1. INSTALL / ENABLE BROWSER TEST CAPABILITY
+
+Determine the safest supported browser automation approach for this Replit workspace.
+
+Preferred options:
+
+Playwright + Chromium
+or
+an existing supported browser runtime already available to Replit.
+
+Do not install unnecessary browser stacks.
+
+Do not add Selenium unless there is a specific reason.
+
+If browser automation can be installed safely:
+
+set it up.
+
+If Replit's environment provides a native preview/browser capability instead:
+
+use that.
+
+---
+
+# 2. DO NOT CHANGE APPLICATION BEHAVIOR
+
+The application logic is already approved.
+
+Only make minimal test/runtime changes required to run browser-based verification.
+
+Do not alter:
+
+membership rules
+Stripe logic
+webhooks
+Google Calendar
+booking
+girls safety
+pricing
+
+unless the browser test reveals an actual defect.
+
+---
+
+# 3. CREATE AUTHENTICATED BROWSER FIXTURE
+
+Use a synthetic test account.
+
+Fixture should support:
+
+- account registration/login
+- required forms completion
+- membership selection
+- Stripe test Checkout
+- return to Ground Up
+- active membership verification
+
+Use isolated test data.
+
+Clean it afterward.
+
+---
+
+# 4. REAL BROWSER CHECKOUT — GROUND UP 2
+
+From the actual rendered portal:
+
+LOGIN
+
+→ membership page
+
+→ confirm forms gating
+
+→ complete forms
+
+→ select Ground Up 2 — $139/month
+
+→ open Stripe-hosted Checkout
+
+→ complete using Stripe test payment method
+
+→ return to Ground Up
+
+Verify visually:
+
+- membership processing state
+- webhook activation
+- active membership card
+- $139/month
+- Ground Up 2
+- next billing date
+- 2 sessions/week
+- Manage Billing
+
+Do not activate membership from redirect.
+
+---
+
+# 5. DUPLICATE PURCHASE — BROWSER
+
+While Ground Up 2 is active:
+
+return to Membership page.
+
+Attempt to buy another membership.
+
+Expected:
+
+clear member-facing block
+
+"You already have an active membership."
+
+No second subscription.
+
+No confusing dead-end UI.
+
+---
+
+# 6. CUSTOMER PORTAL — BROWSER
+
+Click:
+
+Manage Billing
+
+Verify Stripe Customer Portal opens.
+
+Verify visually:
+
+- correct customer
+- active membership/subscription
+- payment method area
+- billing history
+- cancellation controls
+
+Return to Ground Up successfully.
+
+---
+
+# 7. PAYMENT FAILURE UI
+
+Using existing test-mode mechanism or fixture state:
+
+render membership as PAST_DUE.
+
+Verify actual portal UI displays:
+
+friendly payment failure message
+
+Manage Billing CTA
+
+no raw Stripe enum/error
+
+English and Spanish.
+
+---
+
+# 8. CANCEL AT PERIOD END UI
+
+Render an active subscription with:
+
+cancelAtPeriodEnd = true
+
+Verify member sees:
+
+membership remains active until [date]
+
+not:
+
+cancelled immediately.
+
+---
+
+# 9. GROUND UP 3 BROWSER CHECK
+
+Use a fresh synthetic user if practical.
+
+Verify membership selection card:
+
+Ground Up 3
+$159/month
+3 sessions/week
+
+Checkout launches correctly.
+
+After activation:
+
+active membership UI is correct.
+
+Full Stripe payment repetition is optional if the same Checkout implementation is shared and already proven with Ground Up 2, but plan-specific mapping must be verified.
+
+---
+
+# 10. GROUND UP PERSONAL BROWSER CHECK
+
+Verify card:
+
+Ground Up Personal
+$250/month
+1 private coaching session per week
+
+No group-session language.
+
+After activation:
+
+portal must NOT display group-class entitlement.
+
+Do not show:
+"3 sessions/week"
+or any adult group-booking allowance.
+
+---
+
+# 11. GIRLS PROGRAM
+
+Verify ordinary adult member does NOT see Girls Program as a normal selectable plan.
+
+Do not weaken guardian/minor safety.
+
+If approved guardian/minor browser flow already exists:
+
+verify in correct context.
+
+Otherwise report:
+
+hidden until eligible guardian/minor context.
+
+---
+
+# 12. ENGLISH / SPANISH RENDERED QA
+
+Test actual rendered billing flow in:
+
+English
+Spanish
+
+Verify:
+
+membership cards
+forms blocker
+Checkout CTA
+processing
+active membership
+past due
+cancel at period end
+Manage Billing
+duplicate membership message
+
+No mixed-language components.
+
+---
+
+# 13. MOBILE RENDERED QA
+
+Run authenticated rendered checks at:
+
+320px
+375px
+390px
+430px
+
+Verify:
+
+membership cards
+prices
+CTA buttons
+status cards
+billing warnings
+Manage Billing
+forms blocker
+
+No:
+
+horizontal overflow
+cut-off prices
+overlapping buttons
+clipped Spanish text
+tiny tap targets
+
+---
+
+# 14. DESKTOP RENDERED QA
+
+Verify standard desktop viewport.
+
+Check:
+
+membership comparison
+billing card
+forms gate
+Customer Portal launch
+return flow
+
+---
+
+# 15. SCREENSHOTS / VISUAL EVIDENCE
+
+Capture browser screenshots or equivalent rendered evidence for:
+
+1. Forms incomplete
+2. Membership selection
+3. Ground Up 2 card
+4. Stripe Checkout
+5. Active membership
+6. Duplicate purchase blocker
+7. Past-due state
+8. Cancel-at-period-end state
+9. Spanish membership page
+10. Mobile membership page
+
+Do not expose test secrets.
+
+---
+
+# 16. ACTUAL DEFECT HANDLING
+
+If browser rehearsal reveals defects:
+
+fix only the specific defect.
+
+Then rerun affected test and regression suite.
+
+Document:
+
+defect
+root cause
+fix
+evidence
+
+Do not broaden scope.
+
+---
+
+# 17. SECURITY DURING BROWSER RUN
+
+Verify through browser/network inspection:
+
+- no secret key
+- no webhook secret
+- no arbitrary client price
+- only publishable Stripe config client-side
+- authenticated billing endpoints
+- another user cannot use current user's portal session
+
+---
+
+# 18. CLEANUP
+
+After browser rehearsal:
+
+cancel/remove synthetic Stripe test subscriptions/customers if safe
+
+remove synthetic Ground Up members/forms/memberships
+
+retain reusable Stripe test products/prices
+
+verify synthetic database counts return to zero.
+
+---
+
+# 19. REGRESSION
+
+Run:
+
+npm run check
+npm test
+npm run test:evidence
+npm run build
+npm run mobile:qa
+git diff --check
+
+Also run the new browser test suite.
+
+Report exact counts.
+
+---
+
+# 20. FINAL EVIDENCE TABLE
+
+Return:
+
+| Capability | Result |
+|---|---|
+| Rendered authenticated login | PASS/FAIL |
+| Rendered forms blocker | PASS/FAIL |
+| Rendered membership page | PASS/FAIL |
+| Stripe Checkout browser launch | PASS/FAIL |
+| Stripe test payment completion | PASS/FAIL |
+| Redirect processing state | PASS/FAIL |
+| Webhook activation reflected in UI | PASS/FAIL |
+| Active membership UI | PASS/FAIL |
+| Duplicate purchase UI | PASS/FAIL |
+| Customer Portal browser flow | PASS/FAIL |
+| Past-due UI | PASS/FAIL |
+| Cancel-at-period-end UI | PASS/FAIL |
+| Ground Up 3 mapping UI | PASS/FAIL |
+| Ground Up Personal private-only UI | PASS/FAIL |
+| Girls safety | PASS/FAIL |
+| English rendered | PASS/FAIL |
+| Spanish rendered | PASS/FAIL |
+| 320px | PASS/FAIL |
+| 375px | PASS/FAIL |
+| 390px | PASS/FAIL |
+| 430px | PASS/FAIL |
+| Secret exposure | PASS/FAIL |
+| Cleanup | PASS/FAIL |
+| Regression | PASS/FAIL |
+
+---
+
+# 21. FINAL REPORT
+
+Return:
+
+# GROUND UP FINAL BROWSER CHECKOUT REHEARSAL REPORT
+
+A. Browser Runtime
+
+B. Authenticated Fixture
+
+C. Forms Gate
+
+D. Membership Selection
+
+E. Stripe Checkout
+
+F. Webhook Activation
+
+G. Active Membership UX
+
+H. Duplicate Protection
+
+I. Customer Portal
+
+J. Payment Failure
+
+K. Cancellation
+
+L. Ground Up 3
+
+M. Ground Up Personal
+
+N. Girls Program Safety
+
+O. English / Spanish
+
+P. Mobile QA
+
+Q. Desktop QA
+
+R. Security
+
+S. Cleanup
+
+T. Regression
+
+U. Publish Recommendation
+
+---
+
+# 22. FINAL VERDICT
+
+End with exactly one:
+
+GROUND UP STRIPE PILOT READY — BROWSER REHEARSAL PASSED
+
+GROUND UP STRIPE PILOT READY — MANUAL DEVICE REVIEW ONLY
+
+GROUND UP STRIPE NOT READY — BROWSER CHECKOUT
+
+GROUND UP STRIPE NOT READY — MOBILE UI
+
+GROUND UP STRIPE NOT READY — MULTIPLE BLOCKERS
