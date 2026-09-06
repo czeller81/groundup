@@ -349,6 +349,116 @@ test("stale checkout maintenance is bounded, observable, and retry-safe", async 
   }
 });
 
+test("Stripe lookup timeouts leave items retryable and do not block later maintenance items", async () => {
+  assert.notEqual(process.env.NODE_ENV, "production", "fixture evidence must never run in production");
+  const suffix = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  const user = await storage.createUser(`stripe-timeout-${suffix}@example.invalid`, "GroundUp-QA-Password-2026", "Stripe", "Timeout", "5550000200", "en");
+  try {
+    const [plan] = await db.select().from(membershipPlans).where(eq(membershipPlans.internalKey, "ground_up_3")).limit(1);
+    assert.ok(plan);
+    const membershipValues = {
+      userId: user.id,
+      planId: plan.id,
+      type: plan.internalKey,
+      status: "pending",
+      priceCents: plan.displayPriceCents || STRIPE_MEMBERSHIP_CATALOG.ground_up_3.amountCents,
+      source: "stripe_checkout",
+      billingSource: "stripe_checkout",
+      billingState: "pending",
+      stripeCustomerId: `cus_timeout_${suffix}`,
+    } as const;
+    const [checkoutTimeout] = await db.insert(memberships).values({
+      ...membershipValues,
+      stripeCheckoutSessionId: `cs_timeout_checkout_${suffix}`,
+    }).returning();
+    const [subscriptionTimeout] = await db.insert(memberships).values({
+      ...membershipValues,
+      stripeCheckoutSessionId: `cs_timeout_subscription_${suffix}`,
+    }).returning();
+    const [laterItem] = await db.insert(memberships).values({
+      ...membershipValues,
+      stripeCheckoutSessionId: `cs_timeout_later_${suffix}`,
+    }).returning();
+    const staleCreatedAt = new Date(Date.now() - 60 * 60 * 1000);
+    await db.update(memberships).set({ createdAt: staleCreatedAt }).where(eq(memberships.id, checkoutTimeout.id));
+    await db.update(memberships).set({
+      createdAt: new Date(staleCreatedAt.getTime() + 1000),
+    }).where(eq(memberships.id, subscriptionTimeout.id));
+    await db.update(memberships).set({
+      createdAt: new Date(staleCreatedAt.getTime() + 2000),
+    }).where(eq(memberships.id, laterItem.id));
+
+    let allowRetries = false;
+    const observedTimeouts: number[] = [];
+    const fakeStripe = {
+      checkout: {
+        sessions: {
+          retrieve: async (sessionId: string, requestOptions?: { timeout?: number }) => {
+            observedTimeouts.push(requestOptions?.timeout || 0);
+            if (!allowRetries && sessionId.includes("checkout")) {
+              return new Promise(() => {});
+            }
+            if (!allowRetries && sessionId.includes("subscription")) {
+              return {
+                id: sessionId,
+                mode: "subscription",
+                status: "complete",
+                expires_at: Math.floor(Date.now() / 1000) + 3600,
+                subscription: `sub_timeout_${suffix}`,
+                metadata: {},
+              };
+            }
+            return {
+              id: sessionId,
+              mode: "subscription",
+              status: "expired",
+              expires_at: Math.floor(Date.now() / 1000) + 3600,
+              subscription: null,
+              metadata: {},
+            };
+          },
+        },
+      },
+      subscriptions: {
+        retrieve: async (_subscriptionId: string, requestOptions?: { timeout?: number }) => {
+          observedTimeouts.push(requestOptions?.timeout || 0);
+          return new Promise(() => {});
+        },
+      },
+    } as unknown as Stripe;
+
+    const startedAt = Date.now();
+    const summary = await reconcileStalePendingStripeCheckouts(fakeStripe, {
+      requestTimeoutMs: 20,
+    });
+    assert.ok(Date.now() - startedAt < 1000, "each Stripe lookup must have a bounded wait");
+    assert.equal(summary.scanned, 3);
+    assert.equal(summary.apiFailures, 2);
+    assert.equal(summary.expired, 1);
+    assert.deepEqual(observedTimeouts, [20, 20, 20, 20]);
+
+    const [checkoutTimeoutAfterFirstPass] = await db.select().from(memberships).where(eq(memberships.id, checkoutTimeout.id));
+    const [subscriptionTimeoutAfterFirstPass] = await db.select().from(memberships).where(eq(memberships.id, subscriptionTimeout.id));
+    const [laterItemAfterFirstPass] = await db.select().from(memberships).where(eq(memberships.id, laterItem.id));
+    assert.equal(checkoutTimeoutAfterFirstPass.billingState, "pending");
+    assert.equal(subscriptionTimeoutAfterFirstPass.billingState, "pending");
+    assert.equal(laterItemAfterFirstPass.billingState, "cancelled");
+
+    allowRetries = true;
+    const retrySummary = await reconcileStalePendingStripeCheckouts(fakeStripe, {
+      requestTimeoutMs: 20,
+    });
+    assert.equal(retrySummary.scanned, 2);
+    assert.equal(retrySummary.apiFailures, 0);
+    assert.equal(retrySummary.expired, 2);
+    const retryableMemberships = await db.select().from(memberships).where(eq(memberships.userId, user.id));
+    assert.equal(retryableMemberships.every((membership) => membership.billingState === "cancelled"), true);
+  } finally {
+    await db.delete(memberships).where(eq(memberships.userId, user.id));
+    await db.delete(users).where(eq(users.id, user.id));
+  }
+});
+
 test("member billing moves the same checkout membership from pending to active after Stripe reconciliation", async () => {
   assert.notEqual(process.env.NODE_ENV, "production", "fixture evidence must never run in production");
   const suffix = `${Date.now()}-${Math.random().toString(16).slice(2)}`;

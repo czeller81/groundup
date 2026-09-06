@@ -131,6 +131,7 @@ export function checkoutSessionIsExpired(
 
 export const PENDING_CHECKOUT_STALE_AFTER_MS = 30 * 60 * 1000;
 export const PENDING_CHECKOUT_RECONCILIATION_LIMIT = 100;
+export const STRIPE_RECONCILIATION_REQUEST_TIMEOUT_MS = 10_000;
 const MISSING_CHECKOUT_SESSION_GRACE_MS = PENDING_CHECKOUT_STALE_AFTER_MS;
 const CHECKOUT_RECONCILIATION_LEASE_MS = 30 * 60 * 1000;
 const CHECKOUT_RECONCILIATION_LOCK = `
@@ -139,6 +140,12 @@ const CHECKOUT_RECONCILIATION_LOCK = `
 
 type StripeCheckoutReconciliationLeaseOptions = {
   leaseMs?: number;
+};
+
+type StripeCheckoutReconciliationOptions = {
+  now?: number;
+  limit?: number;
+  requestTimeoutMs?: number;
 };
 
 export type StripeCheckoutReconciliationSummary = {
@@ -278,6 +285,32 @@ function isMissingStripeResource(error: unknown) {
   return error instanceof Stripe.errors.StripeError && error.code === "resource_missing";
 }
 
+function validateStripeReconciliationRequestTimeout(timeoutMs: number) {
+  if (!Number.isInteger(timeoutMs) || timeoutMs <= 0) {
+    throw new Error("STRIPE_RECONCILIATION_REQUEST_TIMEOUT_MS must be a positive integer");
+  }
+}
+
+function withStripeReconciliationRequestTimeout<T>(
+  request: (options: Stripe.RequestOptions) => Promise<T>,
+  timeoutMs: number,
+) {
+  let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timeoutHandle = setTimeout(() => {
+      reject(new Error("STRIPE_RECONCILIATION_REQUEST_TIMEOUT"));
+    }, timeoutMs);
+  });
+  const stripeRequest = Promise.resolve().then(() => request({
+    timeout: timeoutMs,
+    maxNetworkRetries: 0,
+  }));
+
+  return Promise.race([stripeRequest, timeout]).finally(() => {
+    if (timeoutHandle) clearTimeout(timeoutHandle);
+  });
+}
+
 async function cancelPendingCheckoutMembership(membershipId: string) {
   await db.update(memberships).set({
     status: "cancelled",
@@ -306,7 +339,9 @@ async function reconcilePendingCheckoutMemberships(
   stripe: Stripe,
   pendingMemberships: Array<typeof memberships.$inferSelect>,
   now = Date.now(),
+  requestTimeoutMs = STRIPE_RECONCILIATION_REQUEST_TIMEOUT_MS,
 ): Promise<StripeCheckoutReconciliationSummary> {
+  validateStripeReconciliationRequestTimeout(requestTimeoutMs);
   const summary: StripeCheckoutReconciliationSummary = {
     scanned: pendingMemberships.length,
     completed: 0,
@@ -320,7 +355,13 @@ async function reconcilePendingCheckoutMemberships(
 
     let session: Stripe.Checkout.Session;
     try {
-      session = await stripe.checkout.sessions.retrieve(membership.stripeCheckoutSessionId);
+      session = await withStripeReconciliationRequestTimeout(
+        (requestOptions) => stripe.checkout.sessions.retrieve(
+          membership.stripeCheckoutSessionId!,
+          requestOptions,
+        ),
+        requestTimeoutMs,
+      );
     } catch (error) {
       // A deleted or otherwise missing Checkout session cannot complete later.
       // Network/API failures are left pending so a transient Stripe outage never
@@ -341,11 +382,19 @@ async function reconcilePendingCheckoutMemberships(
         : session.subscription.id;
       let subscription: Stripe.Subscription;
       try {
-        subscription = await stripe.subscriptions.retrieve(subscriptionId);
+        subscription = await withStripeReconciliationRequestTimeout(
+          (requestOptions) => stripe.subscriptions.retrieve(subscriptionId, requestOptions),
+          requestTimeoutMs,
+        );
         if (!subscription.metadata?.ground_up_user_id && Object.keys(session.metadata || {}).length) {
-          subscription = await stripe.subscriptions.update(subscription.id, {
-            metadata: session.metadata || {},
-          });
+          subscription = await withStripeReconciliationRequestTimeout(
+            (requestOptions) => stripe.subscriptions.update(
+              subscription.id,
+              { metadata: session.metadata || {} },
+              requestOptions,
+            ),
+            requestTimeoutMs,
+          );
         }
       } catch {
         // Keep the membership pending when Stripe cannot finish a completed
@@ -377,7 +426,11 @@ async function reconcilePendingCheckoutMemberships(
   return summary;
 }
 
-export async function reconcilePendingStripeCheckouts(stripe: Stripe, userId: string) {
+export async function reconcilePendingStripeCheckouts(
+  stripe: Stripe,
+  userId: string,
+  options: Pick<StripeCheckoutReconciliationOptions, "requestTimeoutMs"> = {},
+) {
   const pendingMemberships = await db.select().from(memberships).where(and(
     eq(memberships.userId, userId),
     eq(memberships.billingState, "pending"),
@@ -385,15 +438,17 @@ export async function reconcilePendingStripeCheckouts(stripe: Stripe, userId: st
     isNotNull(memberships.stripeCheckoutSessionId),
   ));
 
-  return reconcilePendingCheckoutMemberships(stripe, pendingMemberships);
+  return reconcilePendingCheckoutMemberships(
+    stripe,
+    pendingMemberships,
+    Date.now(),
+    options.requestTimeoutMs ?? STRIPE_RECONCILIATION_REQUEST_TIMEOUT_MS,
+  );
 }
 
 export async function reconcileStalePendingStripeCheckouts(
   stripe: Stripe,
-  options: {
-    now?: number;
-    limit?: number;
-  } = {},
+  options: StripeCheckoutReconciliationOptions = {},
 ) {
   const now = options.now ?? Date.now();
   const limit = options.limit ?? PENDING_CHECKOUT_RECONCILIATION_LIMIT;
@@ -404,7 +459,12 @@ export async function reconcileStalePendingStripeCheckouts(
     lte(memberships.createdAt, new Date(now - PENDING_CHECKOUT_STALE_AFTER_MS)),
   )).orderBy(asc(memberships.createdAt)).limit(limit);
 
-  return reconcilePendingCheckoutMemberships(stripe, pendingMemberships, now);
+  return reconcilePendingCheckoutMemberships(
+    stripe,
+    pendingMemberships,
+    now,
+    options.requestTimeoutMs ?? STRIPE_RECONCILIATION_REQUEST_TIMEOUT_MS,
+  );
 }
 
 export async function requiredFormsForCheckout(userId: string) {
