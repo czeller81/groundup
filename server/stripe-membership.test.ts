@@ -16,8 +16,11 @@ import {
   reconcilePendingStripeCheckouts,
   reconcileStalePendingStripeCheckouts,
   stripeBillingState,
+  withStripeCheckoutReconciliationLease,
 } from "./membership-billing";
 import { registerMemberRoutes } from "./member-routes";
+
+const sleep = (durationMs: number) => new Promise<void>((resolve) => setTimeout(resolve, durationMs));
 
 test("approved membership catalog keeps exact Ground Up prices and entitlements", () => {
   assert.deepEqual(BILLING_PLAN_KEYS, [
@@ -198,6 +201,80 @@ test("Checkout session expiry uses Stripe status and expiry timestamp", () => {
   assert.equal(checkoutSessionIsExpired({ status: "open", expires_at: Math.floor((now + 3600000) / 1000) }, now), false);
 });
 
+test("Stripe checkout maintenance allows only one concurrent database lease owner", async () => {
+  assert.notEqual(process.env.NODE_ENV, "production", "lease evidence must never run against production data");
+  const originalNodeEnv = process.env.NODE_ENV;
+  process.env.NODE_ENV = "production";
+  try {
+    let passes = 0;
+    let firstPassStarted!: () => void;
+    const firstPassReady = new Promise<void>((resolve) => {
+      firstPassStarted = resolve;
+    });
+
+    const firstPass = withStripeCheckoutReconciliationLease(async () => {
+      passes++;
+      firstPassStarted();
+      await sleep(250);
+      return "first";
+    }, { leaseMs: 1000 });
+
+    await firstPassReady;
+    const secondPass = withStripeCheckoutReconciliationLease(async () => {
+      passes++;
+      return "second";
+    }, { leaseMs: 1000 });
+
+    assert.equal(await secondPass, undefined);
+    assert.equal(await firstPass, "first");
+    assert.equal(passes, 1);
+  } finally {
+    if (originalNodeEnv === undefined) {
+      delete process.env.NODE_ENV;
+    } else {
+      process.env.NODE_ENV = originalNodeEnv;
+    }
+  }
+});
+
+test("Stripe checkout maintenance can resume after an abandoned database lease expires", async () => {
+  assert.notEqual(process.env.NODE_ENV, "production", "lease evidence must never run against production data");
+  const originalNodeEnv = process.env.NODE_ENV;
+  process.env.NODE_ENV = "production";
+  let abandonedPass: Promise<string | undefined> | undefined;
+  let finishAbandonedPass!: () => void;
+  try {
+    let abandonedPassStarted!: () => void;
+    const abandonedPassReady = new Promise<void>((resolve) => {
+      abandonedPassStarted = resolve;
+    });
+    abandonedPass = withStripeCheckoutReconciliationLease(async () => {
+      abandonedPassStarted();
+      await new Promise<void>((resolve) => {
+        finishAbandonedPass = resolve;
+      });
+      return "abandoned";
+    }, { leaseMs: 100 });
+
+    await abandonedPassReady;
+    await sleep(250);
+
+    const resumedPass = await withStripeCheckoutReconciliationLease(async () => "resumed", { leaseMs: 1000 });
+    assert.equal(resumedPass, "resumed");
+
+    finishAbandonedPass();
+    assert.equal(await abandonedPass, "abandoned");
+  } finally {
+    if (finishAbandonedPass) finishAbandonedPass();
+    if (abandonedPass) await abandonedPass;
+    if (originalNodeEnv === undefined) {
+      delete process.env.NODE_ENV;
+    } else {
+      process.env.NODE_ENV = originalNodeEnv;
+    }
+  }
+});
+
 test("stale checkout maintenance is bounded, observable, and retry-safe", async () => {
   assert.notEqual(process.env.NODE_ENV, "production", "fixture evidence must never run in production");
   const suffix = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -231,7 +308,9 @@ test("stale checkout maintenance is bounded, observable, and retry-safe", async 
     }).returning();
     const staleCreatedAt = new Date(Date.now() - 60 * 60 * 1000);
     await db.update(memberships).set({ createdAt: staleCreatedAt }).where(eq(memberships.id, expired.id));
-    await db.update(memberships).set({ createdAt: staleCreatedAt }).where(eq(memberships.id, retryable.id));
+    await db.update(memberships).set({
+      createdAt: new Date(staleCreatedAt.getTime() + 1000),
+    }).where(eq(memberships.id, retryable.id));
 
     const fakeStripe = {
       checkout: {

@@ -137,6 +137,10 @@ const CHECKOUT_RECONCILIATION_LOCK = `
   hashtextextended('ground_up:stripe_checkout_reconciliation', 0)
 `;
 
+type StripeCheckoutReconciliationLeaseOptions = {
+  leaseMs?: number;
+};
+
 export type StripeCheckoutReconciliationSummary = {
   scanned: number;
   completed: number;
@@ -226,15 +230,25 @@ export function getStripeCheckoutReconciliationHealth(): StripeCheckoutReconcili
  */
 export async function withStripeCheckoutReconciliationLease<T>(
   work: () => Promise<T>,
+  options: StripeCheckoutReconciliationLeaseOptions = {},
 ): Promise<T | undefined> {
   if (process.env.NODE_ENV !== "production") {
     return work();
   }
 
+  const leaseMs = options.leaseMs ?? CHECKOUT_RECONCILIATION_LEASE_MS;
+  if (!Number.isInteger(leaseMs) || leaseMs <= 0) {
+    throw new Error("CHECKOUT_RECONCILIATION_LEASE_MS must be a positive integer");
+  }
+
   const client = await pool.connect();
+  const onClientError = () => {
+    // An idle-session timeout is the expected expiry path for an abandoned lease.
+  };
+  client.on("error", onClientError);
   let acquired = false;
   try {
-    await client.query(`SET idle_session_timeout = ${CHECKOUT_RECONCILIATION_LEASE_MS}`);
+    await client.query(`SET idle_session_timeout = ${leaseMs}`);
     const result = await client.query<{ acquired: boolean }>(
       `SELECT pg_try_advisory_lock(${CHECKOUT_RECONCILIATION_LOCK}) AS acquired`,
     );
@@ -250,6 +264,12 @@ export async function withStripeCheckoutReconciliationLease<T>(
         // PostgreSQL may already have closed an expired lease connection.
       }
     }
+    try {
+      await client.query("SET idle_session_timeout = 0");
+    } catch {
+      // PostgreSQL may already have closed an expired lease connection.
+    }
+    client.off("error", onClientError);
     client.release();
   }
 }
