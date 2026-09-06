@@ -293,6 +293,97 @@ test("member billing moves the same checkout membership from pending to active a
   }
 });
 
+test("member billing keeps the same active membership when Stripe reconciliation marks it past due", async () => {
+  assert.notEqual(process.env.NODE_ENV, "production", "fixture evidence must never run in production");
+  const suffix = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  const user = await storage.createUser(
+    `stripe-past-due-${suffix}@example.invalid`,
+    "GroundUp-QA-Password-2026",
+    "Stripe",
+    "Past Due",
+    "5550000200",
+    "en",
+  );
+  let server: Server | undefined;
+
+  try {
+    const stripeCustomerId = `cus_past_due_${suffix}`;
+    const stripeSubscriptionId = `sub_past_due_${suffix}`;
+    await db.update(users).set({ stripeCustomerId }).where(eq(users.id, user.id));
+    const [plan] = await db.select().from(membershipPlans).where(eq(membershipPlans.internalKey, "ground_up_3")).limit(1);
+    assert.ok(plan, "the approved Ground Up 3 plan is required for past-due evidence");
+
+    const app = express();
+    app.use((req, _res, next) => {
+      (req as any).session = { userId: user.id };
+      next();
+    });
+    registerMemberRoutes(app);
+    server = app.listen(0, "127.0.0.1");
+    await new Promise<void>((resolve, reject) => {
+      server!.once("listening", resolve);
+      server!.once("error", reject);
+    });
+    const address = server.address();
+    assert.ok(address && typeof address !== "string");
+    const billingUrl = `http://127.0.0.1:${address.port}/api/portal/billing`;
+    const timestamp = Math.floor(Date.now() / 1000);
+    const subscription = {
+      id: stripeSubscriptionId,
+      object: "subscription",
+      customer: stripeCustomerId,
+      metadata: {
+        ground_up_user_id: user.id,
+        ground_up_plan_key: plan.internalKey,
+      },
+      cancel_at_period_end: false,
+      status: "active",
+      start_date: timestamp,
+      canceled_at: null,
+      ended_at: null,
+      items: {
+        data: [{
+          current_period_start: timestamp,
+          current_period_end: timestamp + 30 * 24 * 60 * 60,
+        }],
+      },
+    } as unknown as Stripe.Subscription;
+
+    const activeMembership = await applyStripeSubscription(subscription);
+    const activeResponse = await fetch(billingUrl);
+    assert.equal(activeResponse.status, 200);
+    const activeBilling = await activeResponse.json();
+    assert.equal(activeBilling.pendingMembership, null);
+    assert.equal(activeBilling.activeMembership.id, activeMembership.id);
+    assert.equal(activeBilling.activeMembership.billingState, "active");
+    assert.equal(activeBilling.memberships.length, 1);
+
+    const pastDueMembership = await applyStripeSubscription(
+      { ...subscription, status: "past_due" },
+      { latestInvoiceId: `in_past_due_${suffix}`, billingFailureAt: new Date() },
+    );
+    assert.equal(pastDueMembership.id, activeMembership.id);
+
+    const pastDueResponse = await fetch(billingUrl);
+    assert.equal(pastDueResponse.status, 200);
+    const pastDueBilling = await pastDueResponse.json();
+    assert.equal(pastDueBilling.pendingMembership, null);
+    assert.equal(pastDueBilling.activeMembership.id, activeMembership.id);
+    assert.equal(pastDueBilling.activeMembership.billingState, "past_due");
+    assert.equal(pastDueBilling.activeMembership.status, "active");
+    assert.equal(pastDueBilling.activeMembership.stripeSubscriptionId, stripeSubscriptionId);
+    assert.equal(pastDueBilling.memberships.length, 1);
+    assert.equal(pastDueBilling.memberships[0].id, activeMembership.id);
+    assert.equal(pastDueBilling.memberships[0].billingState, "past_due");
+  } finally {
+    if (server?.listening) {
+      await new Promise<void>((resolve, reject) => server!.close((error) => error ? reject(error) : resolve()));
+    }
+    await db.delete(memberships).where(eq(memberships.userId, user.id));
+    await db.delete(users).where(eq(users.id, user.id));
+  }
+});
+
 test("development database has one Stripe mapping for each approved plan", async () => {
   const plans = await db.select({
     internalKey: membershipPlans.internalKey,
