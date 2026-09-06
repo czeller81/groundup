@@ -154,7 +154,7 @@ export async function activeStripeMembershipForUser(userId: string) {
   const pendingCutoff = new Date(Date.now() - 30 * 60 * 1000);
   const [membership] = await db.select().from(memberships).where(and(
     eq(memberships.userId, userId),
-    eq(memberships.billingSource, "stripe"),
+    inArray(memberships.billingSource, ["stripe", "stripe_checkout"]),
     or(
       inArray(memberships.billingState, ["active", "past_due", "cancel_at_period_end"]),
       and(eq(memberships.billingState, "pending"), gte(memberships.createdAt, pendingCutoff)),

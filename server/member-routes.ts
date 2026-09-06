@@ -189,9 +189,10 @@ export function registerMemberRoutes(app: Express) {
         .where(eq(memberships.userId, userId))
         .orderBy(desc(memberships.createdAt));
       const missingForms = await requiredFormsForCheckout(userId);
+      const membershipRows = rows.map(({ membership, plan }) => ({ ...membership, plan }));
       return res.json({
-        memberships: rows.map(({ membership, plan }) => ({ ...membership, plan })),
-        activeMembership: rows.find(({ membership }) => ["active", "ACTIVE"].includes(membership.status) && membership.billingState !== "cancelled") || null,
+        memberships: membershipRows,
+        activeMembership: membershipRows.find((membership) => ["active", "ACTIVE"].includes(membership.status) && membership.billingState !== "cancelled") || null,
         missingForms,
         hasStripeCustomer: Boolean((await db.select({ stripeCustomerId: users.stripeCustomerId }).from(users).where(eq(users.id, userId)).limit(1))[0]?.stripeCustomerId),
       });
