@@ -1,0 +1,1103 @@
+You are Replit Agent.
+
+Stripe Sandbox is now fully connected and verified.
+
+Current verified state:
+
+- Stripe test-mode connection: healthy
+- Admin Stripe status: connected
+- Webhook configured: true
+- Webhook endpoint:
+  https://www.groundupbjj.com/api/stripe/webhook
+- Correct signatures accepted
+- Invalid signatures rejected
+- Duplicate Stripe event IDs are idempotent
+- Existing private-booking Stripe functionality still passes
+- No secrets exposed in client bundle or logs
+
+We are now authorized to build the Ground Up recurring membership billing flow in STRIPE TEST MODE.
+
+Do NOT switch to live mode.
+Do NOT publish automatically.
+
+---
+
+# 1. BUSINESS FLOW
+
+The customer journey must be:
+
+REGISTER
+
+→ LOGIN
+
+→ COMPLETE REQUIRED PROFILE / FORMS
+
+→ CHOOSE MEMBERSHIP
+
+→ STRIPE CHECKOUT
+
+→ MONTHLY RECURRING SUBSCRIPTION
+
+→ VERIFIED STRIPE WEBHOOK
+
+→ GROUND UP MEMBERSHIP ACTIVATES
+
+→ BOOKING ENTITLEMENTS BECOME AVAILABLE
+
+A successful browser redirect must NOT be sufficient to activate membership.
+
+Stripe webhook state is authoritative for payment/subscription activation.
+
+---
+
+# 2. APPROVED PAID MEMBERSHIPS
+
+Create/support these STRIPE TEST MODE recurring memberships.
+
+## GROUND UP 2
+
+Price:
+$139/month
+
+Benefits:
+2 coached adult group sessions per week
+
+Eligible group categories:
+- Jiu-Jitsu / Self-Defense
+- Strength & Conditioning
+
+No rollover.
+
+Reservation required.
+
+---
+
+## GROUND UP 3
+
+Price:
+$159/month
+
+Benefits:
+3 coached adult group sessions per week
+
+Eligible group categories:
+- Jiu-Jitsu / Self-Defense
+- Strength & Conditioning
+
+No rollover.
+
+Reservation required.
+
+This should be the featured / best-value plan in the member UI.
+
+---
+
+## GROUND UP PERSONAL
+
+Price:
+$250/month
+
+Benefits:
+1 private coaching session per week
+
+Scheduled based on private-coaching availability.
+
+No group sessions included.
+
+Do NOT grant adult group-class entitlement.
+
+---
+
+## GIRLS PROGRAM
+
+Price:
+$119/month
+
+Benefits:
+2 Girls’ Jiu-Jitsu / Self-Defense classes per week
+
+Guardian/minor enrollment required.
+
+Do not expose this to ordinary adult-member checkout.
+
+Only integrate it where the guardian/minor workflow is eligible.
+
+---
+
+## DISCOVERY PASS
+
+Free.
+
+No Stripe product or subscription.
+
+---
+
+# 3. STRIPE PRODUCTS AND PRICES
+
+Create Stripe TEST MODE products/prices if they do not already exist.
+
+Use monthly recurring prices.
+
+Amounts:
+
+GROUND_UP_2
+13900 USD/month
+
+GROUND_UP_3
+15900 USD/month
+
+GROUND_UP_PERSONAL
+25000 USD/month
+
+GROUND_UP_GIRLS
+11900 USD/month
+
+Do not create Discovery Pass in Stripe.
+
+Before creating anything:
+
+search existing test-mode products/prices.
+
+Reuse exact matching approved products if they already exist.
+
+Do not create duplicates.
+
+---
+
+# 4. PLAN ↔ STRIPE MAPPING
+
+Each Ground Up plan must map to Stripe test-mode identifiers.
+
+Store centrally:
+
+groundUpPlanKey
+stripeProductId
+stripePriceId
+stripeMode
+
+Do not scatter Stripe price IDs through the codebase.
+
+Do not derive entitlements from price.
+
+Ground Up plan configuration remains authoritative for:
+
+weekly limits
+eligible categories
+booking windows
+waitlist
+cancellation rules
+
+Stripe remains authoritative for billing/subscription status.
+
+---
+
+# 5. FORMS GATE
+
+A customer must not purchase a paid membership until required onboarding forms are complete.
+
+Server-side enforcement required.
+
+If incomplete:
+
+membership checkout must be rejected.
+
+Return structured reason:
+
+REQUIRED_FORMS_INCOMPLETE
+
+Member-facing English:
+
+Complete your required forms before choosing a membership.
+
+Spanish:
+
+Complete tus formularios requeridos antes de elegir una membresía.
+
+Do not rely only on hidden buttons.
+
+---
+
+# 6. MEMBERSHIP SELECTION PAGE
+
+Build inside the authenticated member portal.
+
+Suggested:
+
+Your Ground Up
+→ Membership
+
+Show:
+
+GROUND UP 2
+$139/month
+2 sessions/week
+
+GROUND UP 3
+$159/month
+3 sessions/week
+MOST POPULAR / BEST VALUE
+
+GROUND UP PERSONAL
+$250/month
+1 private session/week
+
+Girls Program should only appear through the eligible guardian/minor context.
+
+Do not show it as an ordinary adult plan.
+
+---
+
+# 7. CHECKOUT SESSION
+
+Use Stripe Checkout in subscription mode.
+
+Client sends only:
+
+planKey
+
+Server resolves:
+
+authenticated user
++ planKey
+→ approved Stripe Price ID
+
+Never accept:
+
+amount
+currency
+arbitrary price ID
+
+from the browser as billing authority.
+
+---
+
+# 8. STRIPE CUSTOMER
+
+One Ground Up account should generally map to one Stripe Customer.
+
+If authenticated user has no Stripe customer:
+
+create one.
+
+Store:
+
+stripeCustomerId
+
+If one already exists:
+
+reuse it.
+
+Avoid duplicate customers.
+
+---
+
+# 9. CHECKOUT METADATA
+
+Attach only non-sensitive identifiers needed for reconciliation.
+
+Examples:
+
+groundUpUserId
+groundUpPlanKey
+
+For girls memberships later:
+
+guardianUserId
+minorProfileId
+
+Do NOT store:
+
+health info
+form answers
+medical information
+private notes
+
+in Stripe metadata.
+
+---
+
+# 10. CHECKOUT SUCCESS PAGE
+
+After successful Checkout redirect:
+
+do NOT immediately show ACTIVE unless webhook already confirmed.
+
+Show transitional state such as:
+
+Membership payment received.
+We're confirming your membership.
+
+Poll or reload membership state from server if needed.
+
+Webhook remains authoritative.
+
+---
+
+# 11. WEBHOOK EXPANSION
+
+Extend the existing verified Stripe webhook safely.
+
+Handle at minimum:
+
+checkout.session.completed
+
+customer.subscription.created
+
+customer.subscription.updated
+
+customer.subscription.deleted
+
+invoice.paid
+
+invoice.payment_failed
+
+Keep existing:
+
+payment_intent.succeeded
+
+Do not break legacy private-payment behavior.
+
+Preserve raw-body signature verification and idempotency.
+
+---
+
+# 12. SUBSCRIPTION STATE MODEL
+
+Map relevant Stripe subscription states into Ground Up billing state.
+
+Suggested internal billing states:
+
+PENDING
+ACTIVE
+PAST_DUE
+CANCEL_AT_PERIOD_END
+CANCELLED
+EXPIRED
+
+Do not expose raw Stripe enums directly to members.
+
+---
+
+# 13. MEMBERSHIP ACTIVATION
+
+When verified Stripe subscription is active:
+
+resolve Stripe Price ID
+→ Ground Up Plan
+
+Then:
+
+- create/update Ground Up membership assignment
+- set billingSource = STRIPE
+- store stripeCustomerId
+- store stripeSubscriptionId
+- store stripePriceId
+- set membership status ACTIVE
+- transition lifecycle to ACTIVE_MEMBER if appropriate
+- enable Ground Up booking entitlements
+
+Do not manually activate from Checkout success redirect.
+
+---
+
+# 14. GROUND UP 2 ENTITLEMENT
+
+After ACTIVE Stripe subscription:
+
+weeklySessionLimit = 2
+
+Eligible:
+
+adult Skill
+adult Strength
+
+No Girls class eligibility.
+
+---
+
+# 15. GROUND UP 3 ENTITLEMENT
+
+After ACTIVE Stripe subscription:
+
+weeklySessionLimit = 3
+
+Eligible:
+
+adult Skill
+adult Strength
+
+No Girls class eligibility.
+
+---
+
+# 16. GROUND UP PERSONAL ENTITLEMENT
+
+After ACTIVE Stripe subscription:
+
+group weeklySessionLimit = 0
+
+privateCoachingSessionsPerWeek = 1
+
+Do not allow:
+
+adult Jiu-Jitsu group booking
+adult Strength group booking
+
+unless another separately authorized membership exists.
+
+---
+
+# 17. GIRLS PROGRAM ENTITLEMENT
+
+Only activate where:
+
+guardian/minor workflow is eligible
+and
+approved girls plan relationship exists.
+
+2 girls sessions/week.
+
+Do not count guardian as attendee.
+
+Do not mix with adult plan entitlement.
+
+If girls safety workflow is not fully enabled yet:
+
+build the mapping but keep checkout hidden/disabled until eligible.
+
+---
+
+# 18. DUPLICATE SUBSCRIPTION PROTECTION
+
+Before creating Checkout:
+
+check whether the user already has an active Stripe-backed membership.
+
+If active:
+
+block duplicate purchase.
+
+Return:
+
+ACTIVE_MEMBERSHIP_EXISTS
+
+Member-facing:
+
+You already have an active membership.
+
+Route to:
+
+Manage Membership
+
+Do not allow accidental double subscriptions.
+
+---
+
+# 19. CUSTOMER PORTAL
+
+Implement Stripe Customer Portal access.
+
+Portal:
+
+Account
+→ Manage Membership / Billing
+
+Allow:
+
+- update payment method
+- view invoices/payment history
+- cancel subscription
+
+Use Stripe-hosted portal.
+
+Do not store raw card information.
+
+---
+
+# 20. CANCELLATION POLICY
+
+Initial behavior:
+
+cancel_at_period_end
+
+When member cancels:
+
+membership remains active until paid period ends.
+
+At Stripe period end / subscription termination:
+
+Ground Up membership becomes inactive.
+
+Future entitlement stops.
+
+Do not delete:
+
+attendance
+historical reservations
+ledger history
+past membership records
+
+---
+
+# 21. PAYMENT FAILURE
+
+On invoice.payment_failed:
+
+set billing state:
+
+PAST_DUE
+
+Do not immediately erase membership history.
+
+Member UI should show:
+
+We couldn't process your membership payment.
+
+Please update your payment method.
+
+Provide:
+
+Manage Billing
+
+Spanish parity required.
+
+Do not automatically cancel all existing bookings in this first implementation unless a separate approved policy exists.
+
+---
+
+# 22. INVOICE PAID
+
+On invoice.paid:
+
+confirm billing good-standing.
+
+If appropriate:
+
+return/retain ACTIVE status.
+
+Do not create duplicate membership assignments on every invoice payment.
+
+Update existing subscription-backed membership.
+
+---
+
+# 23. SUBSCRIPTION UPDATE
+
+Handle:
+
+plan changes
+cancellation-at-period-end
+status changes
+
+safely.
+
+For this first build:
+
+do not implement complicated self-service prorated upgrades/downgrades unless Stripe Customer Portal already handles them safely.
+
+If plan switching is unsupported:
+
+document it.
+
+---
+
+# 24. EXISTING MANUAL MEMBERSHIPS
+
+Do not force existing manual memberships into Stripe.
+
+Support:
+
+billingSource = MANUAL
+or
+billingSource = STRIPE
+
+Manual memberships continue working.
+
+Do not fabricate Stripe subscriptions for legacy members.
+
+---
+
+# 25. MEMBER DASHBOARD
+
+Active Stripe member should see:
+
+Plan:
+Ground Up 3
+
+Price:
+$159/month
+
+Status:
+Active
+
+Next billing date
+
+This week:
+2 of 3 sessions scheduled
+
+Manage Billing
+
+Do not expose:
+
+Stripe IDs
+raw subscription enum
+internal ledger details
+
+---
+
+# 26. MEMBER ACCOUNT BILLING VIEW
+
+Show:
+
+Membership
+Billing status
+Next billing date
+Manage Billing
+
+If PAST_DUE:
+
+show corrective action.
+
+If cancel_at_period_end:
+
+show:
+
+Your membership remains active until [date].
+
+---
+
+# 27. ADMIN MEMBER BILLING VIEW
+
+Admin should see:
+
+Plan
+Billing source
+Membership status
+Stripe linkage status
+Customer linked: yes/no
+Subscription linked: yes/no
+Next billing date
+Cancel-at-period-end status
+
+Do not expose card data.
+
+Do not expose secrets.
+
+---
+
+# 28. ADMIN PLAN STRIPE STATUS
+
+Admin Membership Plans should show:
+
+Stripe Test Mapping:
+Connected / Missing
+
+For:
+
+Ground Up 2
+Ground Up 3
+Ground Up Personal
+Girls Program
+
+Do not display full secret keys.
+
+Product/price IDs may be visible to admin if operationally useful.
+
+---
+
+# 29. ENGLISH / SPANISH
+
+Full parity for:
+
+membership selection
+forms blocker
+Checkout launch
+processing state
+active state
+past due
+cancellation
+Manage Billing
+duplicate subscription blocker
+success/error states
+
+No mixed-language member billing flow.
+
+---
+
+# 30. SECURITY REQUIREMENTS
+
+Mandatory:
+
+- Secret key server-only
+- Webhook secret server-only
+- Price resolved server-side
+- Client cannot choose arbitrary amount
+- Authenticated account required
+- Required forms enforced server-side
+- Webhook signature required
+- Webhook idempotency required
+- Browser redirect cannot activate membership
+- Stripe customer must be linked to authenticated user safely
+- Subscription ownership must be verified for billing-portal actions
+
+---
+
+# 31. TEST MODE ONLY
+
+Everything in this task remains Stripe Sandbox/Test Mode.
+
+Do NOT create live products/prices.
+
+Do NOT use live API keys.
+
+Do NOT publish automatically.
+
+---
+
+# 32. END-TO-END TEST — GROUND UP 2
+
+Create synthetic authenticated user.
+
+Prove:
+
+registration
+
+login
+
+forms incomplete
+
+checkout blocked
+
+forms complete
+
+Ground Up 2 selected
+
+Stripe test Checkout created
+
+subscription payment succeeds in test mode
+
+verified webhook arrives
+
+membership becomes ACTIVE
+
+billingSource = STRIPE
+
+weekly limit = 2
+
+booking 1 = allowed
+
+booking 2 = allowed
+
+booking 3 = WEEKLY_LIMIT_REACHED
+
+---
+
+# 33. END-TO-END TEST — GROUND UP 3
+
+Prove:
+
+purchase test subscription
+
+membership ACTIVE
+
+weekly limit = 3
+
+three eligible adult bookings allowed
+
+fourth rejected
+
+---
+
+# 34. END-TO-END TEST — PERSONAL
+
+Prove:
+
+$250/month test subscription
+
+membership ACTIVE
+
+private entitlement = 1/week
+
+adult group class booking rejected
+
+---
+
+# 35. DUPLICATE PURCHASE TEST
+
+Active Stripe-backed user attempts another checkout.
+
+Expected:
+
+blocked
+
+No duplicate Stripe subscription.
+
+---
+
+# 36. PAYMENT FAILURE TEST
+
+Simulate Stripe test-mode invoice failure.
+
+Verify:
+
+billing state PAST_DUE
+
+member-facing billing warning
+
+Manage Billing available
+
+Ground Up history preserved
+
+---
+
+# 37. CANCELLATION TEST
+
+Cancel at period end.
+
+Verify:
+
+membership remains active until period end.
+
+After simulated final cancellation/end:
+
+Ground Up membership becomes inactive.
+
+Future entitlement stops.
+
+Historical records remain.
+
+---
+
+# 38. CUSTOMER PORTAL TEST
+
+Authenticated member:
+
+creates Stripe Customer Portal session
+
+portal session belongs to their Stripe Customer
+
+another user cannot access it
+
+---
+
+# 39. WEBHOOK IDEMPOTENCY TEST
+
+Replay:
+
+checkout.session.completed
+
+subscription.updated
+
+invoice.paid
+
+same event IDs.
+
+Expected:
+
+no duplicate membership assignments
+
+no duplicate lifecycle changes
+
+no duplicate ledger corruption
+
+---
+
+# 40. REGRESSION
+
+Verify no regression to:
+
+Google Calendar schedule
+
+public classes
+
+Discovery Pass
+
+coach roster
+
+class booking
+
+waitlist
+
+girls safety rules
+
+legacy private Stripe booking
+
+---
+
+# 41. TESTS
+
+Run:
+
+npm run check
+npm test
+npm run test:evidence
+npm run build
+npm run mobile:qa
+git diff --check
+
+Add focused Stripe membership lifecycle tests.
+
+Report exact totals.
+
+---
+
+# 42. CLEAN TEST DATA
+
+Clean synthetic:
+
+users
+Stripe Customers if safe
+Stripe test subscriptions
+Ground Up test membership assignments
+test notifications
+test ledger records
+
+Do not remove shared fixtures used by existing tests.
+
+---
+
+# 43. DO NOT PUBLISH
+
+At completion:
+
+do not publish automatically.
+
+Return whether it is safe to republish for sandbox pilot.
+
+---
+
+# 44. FINAL REPORT
+
+Return:
+
+# GROUND UP STRIPE MEMBERSHIP BILLING REPORT
+
+A. Existing Stripe State
+
+B. Products / Prices Created or Reused
+
+C. Plan Mapping
+
+D. Membership Selection
+
+E. Required Forms Gate
+
+F. Checkout
+
+G. Stripe Customer Linking
+
+H. Webhook Subscription Handling
+
+I. Membership Activation
+
+J. Ground Up 2
+
+K. Ground Up 3
+
+L. Ground Up Personal
+
+M. Girls Program Readiness
+
+N. Duplicate Protection
+
+O. Payment Failure
+
+P. Cancellation
+
+Q. Customer Portal
+
+R. Member Billing UX
+
+S. Admin Billing UX
+
+T. English / Spanish
+
+U. Security
+
+V. End-to-End Evidence
+
+W. Regression
+
+X. Tests
+
+Y. Remaining Limitations
+
+Z. Publish Recommendation
+
+---
+
+# 45. EVIDENCE TABLE
+
+| Capability | Result |
+|---|---|
+| Stripe sandbox connection | PASS/FAIL |
+| Ground Up 2 product/price | PASS/FAIL |
+| Ground Up 3 product/price | PASS/FAIL |
+| Ground Up Personal product/price | PASS/FAIL |
+| Girls product/price | PASS/FAIL |
+| Forms blocker | PASS/FAIL |
+| Checkout session | PASS/FAIL |
+| Customer linking | PASS/FAIL |
+| Webhook signature | PASS/FAIL |
+| Webhook idempotency | PASS/FAIL |
+| Subscription activation | PASS/FAIL |
+| Ground Up 2 → 2/week | PASS/FAIL |
+| Ground Up 3 → 3/week | PASS/FAIL |
+| Personal → 1 private/week | PASS/FAIL |
+| Personal → no group booking | PASS/FAIL |
+| Duplicate purchase block | PASS/FAIL |
+| Payment failure | PASS/FAIL |
+| Cancel at period end | PASS/FAIL |
+| Customer Portal | PASS/FAIL |
+| English | PASS/FAIL |
+| Spanish | PASS/FAIL |
+| Legacy private booking regression | PASS/FAIL |
+| Calendar/booking regression | PASS/FAIL |
+
+---
+
+# 46. FINAL VERDICT
+
+End with exactly one:
+
+GROUND UP STRIPE MEMBERSHIPS READY — SANDBOX VERIFIED
+
+GROUND UP STRIPE MEMBERSHIPS READY — MANUAL SANDBOX CHECKOUT REQUIRED
+
+GROUND UP STRIPE MEMBERSHIPS NOT READY — PRODUCTS
+
+GROUND UP STRIPE MEMBERSHIPS NOT READY — CHECKOUT
+
+GROUND UP STRIPE MEMBERSHIPS NOT READY — SUBSCRIPTION LIFECYCLE
+
+GROUND UP STRIPE MEMBERSHIPS NOT READY — SECURITY
+
+GROUND UP STRIPE MEMBERSHIPS NOT READY — MULTIPLE BLOCKERS
+
+---
+
+# FINAL SYSTEM RULE
+
+Stripe answers:
+
+HAS THIS CUSTOMER PAID?
+IS THE MONTHLY SUBSCRIPTION ACTIVE?
+
+Ground Up answers:
+
+WHAT CAN THIS MEMBER BOOK?
+HOW MANY SESSIONS THIS WEEK?
+WHICH CLASS CATEGORIES ARE ELIGIBLE?
+
+Keep those responsibilities separate.
+
+The desired normal flow is:
+
+REGISTER
+→ FORMS
+→ MEMBERSHIP
+→ STRIPE
+→ ACTIVE
+→ BOOK
+
+with no manual activation required after successful verified payment.
