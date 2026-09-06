@@ -11,6 +11,7 @@ import Stripe from "stripe";
 import {
   PENDING_CHECKOUT_RECONCILIATION_LIMIT,
   reconcileStalePendingStripeCheckouts,
+  withStripeCheckoutReconciliationLease,
 } from "./membership-billing";
 
 const MemStore = MemoryStore(session);
@@ -77,9 +78,15 @@ function startStripeCheckoutMaintenance() {
     }
     running = true;
     try {
-      const summary = await reconcileStalePendingStripeCheckouts(stripe, {
-        limit: PENDING_CHECKOUT_RECONCILIATION_LIMIT,
-      });
+      const summary = await withStripeCheckoutReconciliationLease(() =>
+        reconcileStalePendingStripeCheckouts(stripe, {
+          limit: PENDING_CHECKOUT_RECONCILIATION_LIMIT,
+        }),
+      );
+      if (!summary) {
+        log("Stripe checkout reconciliation skipped because another instance owns the lease.");
+        return;
+      }
       log([
         "Stripe checkout reconciliation completed",
         `scanned=${summary.scanned}`,

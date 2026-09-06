@@ -1,0 +1,10 @@
+---
+name: Distributed maintenance leases
+description: How cross-instance maintenance coordination avoids duplicate work without permanent locks.
+---
+
+Use a PostgreSQL advisory lock on a dedicated pool connection for production-only maintenance coordination, and set an idle-session timeout so crashed or stalled owners are eventually released.
+
+**Why:** Advisory locks belong to the database session that acquired them, so pooled queries cannot safely unlock them unless acquisition and release share one dedicated connection. A stalled process otherwise has no natural lock expiry.
+
+**How to apply:** Keep development on the existing local guard, acquire and release the advisory lock on the same client, and treat a failed unlock as harmless because the database may already have expired the session.

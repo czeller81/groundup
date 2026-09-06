@@ -12,3 +12,4 @@
 - [Stripe membership webhook ordering](stripe-membership-webhook-ordering.md) — subscription-created can precede checkout completion; adopt the matching pending checkout record.
 - [Hosted Checkout automation boundary](hosted-checkout-automation.md) — headless agent disclosure can leave Stripe Checkout processing without emitting payment events; do not treat UI fallback as payment proof.
 - [Checkout session reconciliation](checkout-session-reconciliation.md) — reconcile pending memberships from Stripe session status and preserve them through transient lookup failures.
+- [Distributed maintenance leases](distributed-maintenance-leases.md) — session advisory locks need a dedicated client and database-enforced expiry for safe cross-instance coordination.

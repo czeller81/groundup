@@ -1,6 +1,6 @@
 import Stripe from "stripe";
 import { and, asc, eq, gte, inArray, isNotNull, isNull, lte, or } from "drizzle-orm";
-import { db } from "./db";
+import { db, pool } from "./db";
 import { forms, formResponses, memberLifecycles, memberships, membershipPlans, minorProfiles, users } from "@shared/schema";
 
 export const BILLING_PLAN_KEYS = [
@@ -132,6 +132,10 @@ export function checkoutSessionIsExpired(
 export const PENDING_CHECKOUT_STALE_AFTER_MS = 30 * 60 * 1000;
 export const PENDING_CHECKOUT_RECONCILIATION_LIMIT = 100;
 const MISSING_CHECKOUT_SESSION_GRACE_MS = PENDING_CHECKOUT_STALE_AFTER_MS;
+const CHECKOUT_RECONCILIATION_LEASE_MS = 30 * 60 * 1000;
+const CHECKOUT_RECONCILIATION_LOCK = `
+  hashtextextended('ground_up:stripe_checkout_reconciliation', 0)
+`;
 
 export type StripeCheckoutReconciliationSummary = {
   scanned: number;
@@ -141,6 +145,48 @@ export type StripeCheckoutReconciliationSummary = {
   apiFailures: number;
   processingFailures: number;
 };
+
+/**
+ * Run one maintenance pass while holding a database-wide lease.
+ *
+ * Advisory locks are held by a PostgreSQL session, so using a dedicated pool
+ * client is important: the lock and unlock must use the same connection. The
+ * idle-session timeout is the lease expiry. It releases the lock if the
+ * process dies or the pass stops making progress without relying on another
+ * application instance to clean up the lock.
+ *
+ * Development keeps the previous single-process behavior and avoids making
+ * local reconciliation depend on cross-instance coordination.
+ */
+export async function withStripeCheckoutReconciliationLease<T>(
+  work: () => Promise<T>,
+): Promise<T | undefined> {
+  if (process.env.NODE_ENV !== "production") {
+    return work();
+  }
+
+  const client = await pool.connect();
+  let acquired = false;
+  try {
+    await client.query(`SET idle_session_timeout = ${CHECKOUT_RECONCILIATION_LEASE_MS}`);
+    const result = await client.query<{ acquired: boolean }>(
+      `SELECT pg_try_advisory_lock(${CHECKOUT_RECONCILIATION_LOCK}) AS acquired`,
+    );
+    acquired = Boolean(result.rows[0]?.acquired);
+    if (!acquired) return undefined;
+
+    return await work();
+  } finally {
+    if (acquired) {
+      try {
+        await client.query(`SELECT pg_advisory_unlock(${CHECKOUT_RECONCILIATION_LOCK})`);
+      } catch {
+        // PostgreSQL may already have closed an expired lease connection.
+      }
+    }
+    client.release();
+  }
+}
 
 function isMissingStripeResource(error: unknown) {
   return error instanceof Stripe.errors.StripeError && error.code === "resource_missing";
