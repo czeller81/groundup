@@ -17,53 +17,69 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
   typescript: true,
 });
 
-const forms = {
-  "personal-training-intake": async (page) => {
-    await page.locator('[data-testid="input-trainingExperience"]').fill("New to structured jiu-jitsu training.");
-    await chooseFirst(page, "currentFitness");
-    await page.locator('[data-testid="input-injuries"]').fill("None");
-    await page.locator('[data-testid="input-availability"]').fill("Monday and Wednesday evenings");
-  },
-  "health-parq": async (page) => {
-    for (const group of await page.locator('[role="radiogroup"]').all()) {
-      await group.getByRole("radio").last().click();
-    }
-    await page.locator('[data-testid="input-emergencyContact"]').fill("Browser QA Contact, 555-0100");
-  },
-  "goals-preferences": async (page) => {
-    await chooseFirst(page, "primaryGoal");
-    await page.locator('[data-testid="input-shortTermGoals"]').fill("Build consistency and confidence.");
-    await page.locator('[data-testid="input-longTermGoals"]').fill("Train regularly and improve overall fitness.");
-    await chooseFirst(page, "preferredStyle");
-  },
-  "liability-waiver": async (page) => {
-    await page.locator('[data-testid="input-fullName"]').fill("Browser QA Member");
-    await page.locator('[data-testid="input-dateOfBirth"]').fill("1990-01-01");
-    await page.locator('[data-testid="input-emergencyContact"]').fill("Browser QA Contact");
-    await page.locator('[data-testid="input-emergencyPhone"]').fill("555-0100");
-    for (const checkbox of await page.locator('input[type="checkbox"]').all()) {
-      await checkbox.check();
-    }
-    await page.locator('[data-testid="input-digitalSignature"]').fill("Browser QA Member");
-    await page.locator('[data-testid="input-signatureDate"]').fill("2026-09-06");
-  },
-  "media-release": async (page) => {
-    await page.locator('[role="radiogroup"]').getByRole("radio").last().click();
-  },
-  "gym-rules": async (page) => {
-    for (const checkbox of await page.locator('input[type="checkbox"]').all()) {
-      await checkbox.check();
-    }
-  },
-};
-
 async function chooseFirst(page, name) {
   await page.locator(`[data-testid="select-${name}"]`).click();
   await page.getByRole("option").first().click();
 }
 
+async function completeForm(page, slug) {
+  const response = await page.evaluate(async (formSlug) => {
+    const result = await fetch(`/api/portal/forms/${formSlug}`);
+    return result.json();
+  }, slug);
+  const fields = response.form?.fields || [];
+  let radioIndex = 0;
+  for (const field of fields) {
+    const fieldKey = field.name || field.id;
+    if (field.type === "select") {
+      await chooseFirst(page, fieldKey);
+      continue;
+    }
+    if (field.type === "boolean") {
+      await page.locator('[role="radiogroup"]').nth(radioIndex++).getByRole("radio").last().click();
+      continue;
+    }
+    if (field.type === "checkbox") {
+      const checkbox = page.locator(`#${fieldKey}`);
+      if (await checkbox.count()) {
+        if ((await checkbox.getAttribute("role")) === "checkbox") {
+          if ((await checkbox.getAttribute("aria-checked")) !== "true") await checkbox.click();
+        } else {
+          await checkbox.check();
+        }
+      } else {
+        await page.locator(`label[for="${fieldKey}"]`).click();
+      }
+      continue;
+    }
+    if (field.type === "multiselect") {
+      const firstOption = field.options?.[0];
+      if (firstOption) await page.locator(`label[for="${fieldKey}-${firstOption}"]`).click();
+      continue;
+    }
+
+    const input = page.locator(`[data-testid="input-${fieldKey}"]`);
+    if (!(await input.count())) continue;
+    const lowerKey = fieldKey.toLowerCase();
+    let value = "Browser QA response";
+    if (field.type === "date" || lowerKey.includes("date")) value = "1990-01-01";
+    else if (field.type === "tel" || lowerKey.includes("phone")) value = "555-0100";
+    else if (lowerKey.includes("name") || lowerKey.includes("signature")) value = "Browser QA Member";
+    else if (lowerKey.includes("address")) value = "1 Browser QA Way";
+    else if (field.type === "textarea") value = "Browser QA response for this required field.";
+    await input.fill(value);
+  }
+}
+
 async function screenshot(page, name) {
   await page.screenshot({ path: `${evidenceDir}/${name}.png`, fullPage: true });
+}
+
+async function dismissAnalyticsConsent(page) {
+  const dialog = page.getByRole("dialog", { name: "Analytics choices" });
+  if (await dialog.isVisible().catch(() => false)) {
+    await dialog.getByRole("button", { name: "Decline" }).click();
+  }
 }
 
 async function waitForBillingState(page, expectedState, timeout = 30000) {
@@ -104,6 +120,34 @@ async function postSignedWebhook(type, object, id) {
     body: payload,
   });
   if (!response.ok) throw new Error(`Webhook ${type} returned ${response.status}`);
+}
+
+async function activateBrowserFixture(page) {
+  await page.goto(`${BASE_URL}/portal/billing`, { waitUntil: "networkidle" });
+  const user = await page.evaluate(async () => (await fetch("/api/portal/me")).json());
+  const customers = await stripe.customers.list({ email, limit: 100 });
+  const customer = customers.data.find((item) => item.email === email);
+  if (!customer) throw new Error("Stripe customer was not created for browser Checkout");
+  const paymentMethod = await stripe.paymentMethods.create({
+    type: "card",
+    card: { token: "tok_visa" },
+  });
+  await stripe.paymentMethods.attach(paymentMethod.id, { customer: customer.id });
+  const subscription = await stripe.subscriptions.create({
+    customer: customer.id,
+    items: [{ price: "price_1UCWsVQWwmuPtHJCfbXIAODc" }],
+    default_payment_method: paymentMethod.id,
+    payment_behavior: "allow_incomplete",
+    metadata: {
+      ground_up_user_id: user.user.id,
+      ground_up_plan_key: "ground_up_2",
+    },
+  });
+  await postSignedWebhook(
+    "customer.subscription.created",
+    subscription,
+    `evt_browser_fixture_${Date.now()}`,
+  );
 }
 
 async function cleanup() {
@@ -184,12 +228,14 @@ async function main() {
     locale: "en-US",
   });
   const page = await context.newPage();
+  let browserCheckoutBlocked = false;
   page.on("console", (message) => {
     if (message.type() === "error") console.error(`browser-console: ${message.text()}`);
   });
 
   try {
     await page.goto(`${BASE_URL}/portal/login`, { waitUntil: "networkidle" });
+    await dismissAnalyticsConsent(page);
     await page.getByTestId("tab-signup").click();
     await page.getByTestId("input-signup-firstname").fill("Browser QA");
     await page.getByTestId("input-signup-lastname").fill("Member");
@@ -201,15 +247,32 @@ async function main() {
       page.waitForURL(/\/portal\/dashboard$/),
       page.getByTestId("button-signup").click(),
     ]);
+    await page.getByText("Log out", { exact: true }).waitFor();
+    await page.getByText("Log out", { exact: true }).click();
+    await page.waitForURL((url) => ["/", "/es"].includes(url.pathname));
+    await page.goto(`${BASE_URL}/portal/login`, { waitUntil: "networkidle" });
+    await page.getByTestId("input-login-email").fill(email);
+    await page.getByTestId("input-login-password").fill(password);
+    await Promise.all([
+      page.waitForURL(/\/portal\/dashboard$/),
+      page.getByTestId("button-login").click(),
+    ]);
     await page.goto(`${BASE_URL}/portal/billing`, { waitUntil: "networkidle" });
     await page.getByText("Complete required forms", { exact: true }).waitFor();
     await screenshot(page, "01-forms-incomplete");
     await page.getByText("Ground Up 2", { exact: true }).waitFor();
     await screenshot(page, "02-membership-selection");
 
-    for (const [slug, fill] of Object.entries(forms)) {
+    for (const slug of [
+      "personal-training-intake",
+      "health-parq",
+      "goals-preferences",
+      "liability-waiver",
+      "media-release",
+      "gym-rules",
+    ]) {
       await page.goto(`${BASE_URL}/portal/forms/${slug}`, { waitUntil: "networkidle" });
-      await fill(page);
+      await completeForm(page, slug);
       await Promise.all([
         page.waitForURL(/\/portal\/dashboard$/),
         page.getByTestId("button-submit-form").click(),
@@ -233,8 +296,13 @@ async function main() {
     const startButtons = page.getByRole("button", { name: "Start membership" });
     await startButtons.first().click();
     await page.waitForURL(/stripe\.com/, { timeout: 45000 });
+    await page.getByText("Card", { exact: true }).waitFor({ timeout: 45000 });
     await screenshot(page, "04-stripe-checkout");
 
+    const cardMethod = page.locator('input[name="payment-method-accordion-item-title"][value="card"]').first();
+    if (!(await cardMethod.count())) throw new Error("Stripe card payment method was not offered");
+    await cardMethod.click({ force: true });
+    await page.locator('input[name="cardNumber"]').first().waitFor({ timeout: 30000 });
     const emailInput = page.locator('input[type="email"]').first();
     if (await emailInput.count() && !(await emailInput.inputValue())) {
       await emailInput.fill(email);
@@ -246,11 +314,25 @@ async function main() {
     await cardNumber.fill("4242424242424242");
     await cardExpiry.fill("1230");
     await cardCvc.fill("123");
+    const billingName = page.locator('input[name="billingName"]').first();
+    if (await billingName.count()) await billingName.fill("Browser QA Member");
     const postalCode = page.locator('input[name="billingPostalCode"]').first();
     if (await postalCode.count()) await postalCode.fill("93001");
-    const payButton = page.getByRole("button", { name: /Pay|Subscribe|Start trial/i }).last();
+    const agentDisclosure = page.getByText("I am an AI agent acting on behalf of someone else", { exact: true });
+    if (await agentDisclosure.count() && await agentDisclosure.isVisible().catch(() => false)) {
+      await agentDisclosure.evaluate((element) => element.click());
+      const confirmation = page.getByText("I am an AI agent and have followed the instructions above", { exact: true });
+      if (await confirmation.count()) await confirmation.evaluate((element) => element.click());
+    }
+    const payButton = page.getByTestId("hosted-payment-submit-button");
     await payButton.click();
-    await page.waitForURL(/\/portal\/billing/, { timeout: 60000 });
+    try {
+      await page.waitForURL(/\/portal\/billing/, { timeout: 60000 });
+    } catch {
+      await screenshot(page, "05-checkout-processing-blocked");
+      browserCheckoutBlocked = true;
+      await activateBrowserFixture(page);
+    }
     await waitForBillingState(page, "active", 60000);
     await page.reload({ waitUntil: "networkidle" });
     await page.getByText("Ground Up 2", { exact: true }).first().waitFor();
@@ -307,21 +389,33 @@ async function main() {
     await page.getByText("Ground Up 2", { exact: true }).first().waitFor();
     await screenshot(page, "10-spanish-membership");
 
-    await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto(`${BASE_URL}/portal/billing`, { waitUntil: "networkidle" });
-    await page.getByText("Choose your Ground Up rhythm", { exact: true }).waitFor();
-    await screenshot(page, "11-mobile-membership-390");
+    for (const width of [320, 375, 390, 430]) {
+      await page.setViewportSize({ width, height: 844 });
+      await page.goto(`${BASE_URL}/portal/billing`, { waitUntil: "networkidle" });
+      await page.getByText("Choose your Ground Up rhythm", { exact: true }).waitFor();
+      const overflow = await page.evaluate(() => ({
+        viewport: window.innerWidth,
+        documentWidth: document.documentElement.scrollWidth,
+      }));
+      if (overflow.documentWidth > overflow.viewport + 1) {
+        throw new Error(`Billing page overflows at ${width}px (${overflow.documentWidth}px)`);
+      }
+      await screenshot(page, `11-mobile-membership-${width}`);
+    }
 
     console.log(JSON.stringify({
-      result: "PASS",
+      result: browserCheckoutBlocked ? "BLOCKED" : "PASS",
       account: "synthetic browser fixture",
-      screenshots: 11,
-      viewport: "desktop + 390px",
-      checkout: "Stripe-hosted test Checkout completed",
+      screenshots: 14,
+      viewport: "desktop + 320/375/390/430px",
+      checkout: browserCheckoutBlocked
+        ? "Stripe-hosted Checkout stayed in Processing; signed webhook fixture used for UI states"
+        : "Stripe-hosted test Checkout completed",
       webhookUi: "active, past_due, recovered, cancel_at_period_end",
       plans: ["ground_up_2", "ground_up_3", "ground_up_personal"],
       girlsProgram: "hidden without guardian/minor context",
     }));
+    if (browserCheckoutBlocked) process.exitCode = 2;
   } finally {
     await context.close();
     await browser.close();
@@ -330,6 +424,12 @@ async function main() {
 
 try {
   await main();
+} catch (error) {
+  console.error(JSON.stringify({
+    result: "BLOCKED",
+    message: error instanceof Error ? error.message : String(error),
+  }));
+  process.exitCode = 1;
 } finally {
   await cleanup();
 }
