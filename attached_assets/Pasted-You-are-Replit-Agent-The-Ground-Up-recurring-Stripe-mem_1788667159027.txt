@@ -1,0 +1,450 @@
+You are Replit Agent.
+
+The Ground Up recurring Stripe membership system is implemented in Stripe test mode.
+
+This task is a FINAL AUTHENTICATED BROWSER REHEARSAL before sandbox pilot republish.
+
+Do not redesign the billing system.
+Do not create new products/prices.
+Do not switch to live mode.
+Do not publish automatically.
+
+The goal is to prove the real portal flow works end-to-end for an authenticated user.
+
+---
+
+# 1. TEST THE ACTUAL MEMBER JOURNEY
+
+Using a synthetic authenticated member:
+
+REGISTER / LOGIN
+
+→ REQUIRED FORMS INCOMPLETE
+
+→ MEMBERSHIP PAGE
+
+Expected:
+Checkout unavailable / blocked.
+
+Complete all required forms.
+
+Then:
+
+→ MEMBERSHIP PAGE
+
+Expected:
+Ground Up 2
+Ground Up 3
+Ground Up Personal
+
+Girls Program only if eligible guardian/minor context exists.
+
+---
+
+# 2. GROUND UP 2 REAL SANDBOX CHECKOUT
+
+From the actual portal UI:
+
+Choose:
+GROUND UP 2
+$139/month
+
+Launch Stripe Checkout.
+
+Use Stripe test payment method.
+
+Complete Checkout.
+
+Return to Ground Up.
+
+Verify:
+
+- user sees processing/confirmation state
+- membership is NOT activated from redirect alone
+- Stripe webhook is received
+- membership becomes ACTIVE
+- billingSource = STRIPE
+- plan = Ground Up 2
+- weekly entitlement = 2
+- next billing date appears
+- Manage Billing appears
+
+---
+
+# 3. BOOKING ENTITLEMENT PROOF
+
+For the activated Ground Up 2 member:
+
+Book eligible adult class 1
+
+Book eligible adult class 2
+
+Attempt eligible adult class 3 in same membership week
+
+Expected:
+
+WEEKLY_LIMIT_REACHED
+
+Member-facing English/Spanish message must be clean.
+
+---
+
+# 4. DUPLICATE PURCHASE PROTECTION
+
+With same active member:
+
+Return to Membership page.
+
+Attempt another paid membership purchase.
+
+Expected:
+
+blocked
+
+Message:
+
+You already have an active membership.
+
+No second Checkout Session should create a second active subscription.
+
+No duplicate Stripe subscription.
+
+---
+
+# 5. CUSTOMER PORTAL
+
+From Account / Manage Membership:
+
+Launch Stripe Customer Portal.
+
+Verify:
+
+- portal belongs to correct Stripe Customer
+- billing history visible
+- payment method management available
+- cancellation option available according to configured portal policy
+
+Return safely to Ground Up.
+
+---
+
+# 6. CANCELLATION AT PERIOD END
+
+In Stripe Customer Portal or approved test flow:
+
+Cancel membership at period end.
+
+Verify:
+
+Ground Up portal shows:
+
+Membership active until [date]
+
+cancelAtPeriodEnd = true
+
+Booking entitlement remains active until paid period end.
+
+Do not deactivate immediately.
+
+---
+
+# 7. PAYMENT FAILURE REHEARSAL
+
+Using Stripe test-mode mechanisms:
+
+simulate a failed recurring invoice / payment failure.
+
+Verify:
+
+billing state becomes PAST_DUE
+
+Member dashboard/account shows friendly warning.
+
+Manage Billing remains available.
+
+Existing:
+
+- attendance
+- bookings
+- membership history
+
+remain intact.
+
+Do not delete the membership record.
+
+---
+
+# 8. GROUND UP 3 REHEARSAL
+
+Create fresh synthetic user.
+
+Complete forms.
+
+Purchase:
+
+GROUND UP 3
+$159/month
+
+Verify:
+
+subscription active
+
+weekly entitlement = 3
+
+book 3 eligible adult classes
+
+4th rejected.
+
+---
+
+# 9. GROUND UP PERSONAL REHEARSAL
+
+Create fresh synthetic user.
+
+Purchase:
+
+GROUND UP PERSONAL
+$250/month
+
+Verify:
+
+subscription active
+
+private coaching entitlement = 1/week
+
+adult group class booking = NOT ELIGIBLE
+
+Do not accidentally grant Skill or Strength group access.
+
+---
+
+# 10. GIRLS PROGRAM SAFETY
+
+Do NOT expose Girls Program to normal adult members.
+
+If guardian/minor workflow is fully ready:
+
+test eligible guardian/minor checkout.
+
+Otherwise:
+
+verify Girls Program stays hidden/disabled.
+
+Report exact state.
+
+Do not weaken girls safety to make checkout pass.
+
+---
+
+# 11. ENGLISH / SPANISH
+
+Repeat key member billing screens in both languages:
+
+Membership selection
+
+Forms blocker
+
+Checkout processing
+
+Active membership
+
+Payment failure
+
+Cancel-at-period-end
+
+Manage Billing
+
+Duplicate membership blocker
+
+No mixed-language UI.
+
+---
+
+# 12. MOBILE AUTHENTICATED QA
+
+Test actual rendered authenticated flows at:
+
+320px
+375px
+390px
+430px
+
+Verify:
+
+- membership cards
+- checkout CTA
+- active membership card
+- billing warning
+- Manage Billing
+- no horizontal overflow
+- no clipped pricing
+- no overlapping buttons
+
+If no browser engine is available:
+
+state that clearly.
+
+Do not mark rendered mobile PASS from source checks alone.
+
+---
+
+# 13. SECURITY CHECK
+
+Confirm during browser rehearsal:
+
+- no Stripe secret appears client-side
+- no raw price amount accepted from browser
+- checkout uses server-approved plan mapping
+- another authenticated user cannot access first user’s billing portal/session
+- browser redirect alone does not activate membership
+- webhook event remains authoritative
+
+---
+
+# 14. CLEANUP
+
+After rehearsal:
+
+remove synthetic Ground Up users/memberships if safe
+
+cancel synthetic Stripe test subscriptions
+
+remove test customer data if appropriate
+
+do not remove reusable Stripe test products/prices
+
+do not delete shared fixtures used by automated tests
+
+---
+
+# 15. REGRESSION
+
+Run:
+
+npm run check
+npm test
+npm run test:evidence
+npm run build
+npm run mobile:qa
+git diff --check
+
+Verify no regression to:
+
+Google Calendar
+class booking
+waitlist
+Discovery Pass
+coach roster
+girls safety
+legacy private Stripe payment
+
+---
+
+# 16. FINAL EVIDENCE TABLE
+
+Return:
+
+| Capability | Result |
+|---|---|
+| Authenticated membership page | PASS/FAIL |
+| Forms block checkout | PASS/FAIL |
+| Ground Up 2 Checkout | PASS/FAIL |
+| Ground Up 2 webhook activation | PASS/FAIL |
+| Ground Up 2 → 2/week | PASS/FAIL |
+| Duplicate purchase blocked | PASS/FAIL |
+| Customer Portal ownership | PASS/FAIL |
+| Cancel at period end | PASS/FAIL |
+| Payment failure recovery | PASS/FAIL |
+| Ground Up 3 → 3/week | PASS/FAIL |
+| Ground Up Personal subscription | PASS/FAIL |
+| Personal → no group access | PASS/FAIL |
+| Girls safety preserved | PASS/FAIL |
+| English | PASS/FAIL |
+| Spanish | PASS/FAIL |
+| Authenticated mobile render | PASS/FAIL |
+| Secret exposure | PASS/FAIL |
+| Legacy payment regression | PASS/FAIL |
+| Calendar/booking regression | PASS/FAIL |
+
+---
+
+# 17. FINAL REPORT
+
+Return:
+
+# GROUND UP AUTHENTICATED STRIPE REHEARSAL REPORT
+
+A. Forms Gate
+
+B. Membership Selection
+
+C. Ground Up 2 Checkout
+
+D. Subscription Activation
+
+E. Weekly Booking Entitlement
+
+F. Duplicate Purchase Protection
+
+G. Customer Portal
+
+H. Cancellation
+
+I. Payment Failure
+
+J. Ground Up 3
+
+K. Ground Up Personal
+
+L. Girls Program Safety
+
+M. English / Spanish
+
+N. Mobile Authenticated QA
+
+O. Security
+
+P. Regression
+
+Q. Cleanup
+
+R. Exact Test Results
+
+S. Publish Recommendation
+
+---
+
+# 18. FINAL VERDICT
+
+End with exactly one:
+
+GROUND UP STRIPE PILOT READY — AUTHENTICATED REHEARSAL PASSED
+
+GROUND UP STRIPE PILOT READY — MANUAL MOBILE REVIEW ONLY
+
+GROUND UP STRIPE NOT READY — CHECKOUT REHEARSAL
+
+GROUND UP STRIPE NOT READY — BILLING LIFECYCLE
+
+GROUND UP STRIPE NOT READY — CUSTOMER PORTAL
+
+GROUND UP STRIPE NOT READY — MULTIPLE BLOCKERS
+
+---
+
+# FINAL RULE
+
+Do not treat automated tests as a substitute for the actual authenticated sandbox purchase flow.
+
+We need to prove:
+
+LOGIN
+→ FORMS
+→ MEMBERSHIP
+→ STRIPE CHECKOUT
+→ WEBHOOK
+→ ACTIVE MEMBERSHIP
+→ BOOKING ENTITLEMENT
+→ BILLING MANAGEMENT
+
+before republishing for pilot.
