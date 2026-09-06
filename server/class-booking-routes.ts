@@ -48,7 +48,13 @@ function dateRange(req: Request) {
   return { from, to };
 }
 
-function publicOccurrence(occurrence: Awaited<ReturnType<typeof storage.listClassOccurrences>>[number]) {
+type PublicOccurrenceSource = Omit<
+  Awaited<ReturnType<typeof storage.listClassOccurrences>>[number],
+  "confirmedCount" | "waitlistCount"
+> & Partial<Pick<Awaited<ReturnType<typeof storage.listClassOccurrences>>[number], "confirmedCount" | "waitlistCount">>;
+
+function publicOccurrence(occurrence: PublicOccurrenceSource) {
+  const confirmedCount = occurrence.confirmedCount || 0;
   return {
     id: occurrence.id,
     title: occurrence.title,
@@ -59,7 +65,7 @@ function publicOccurrence(occurrence: Awaited<ReturnType<typeof storage.listClas
     instructorName: occurrence.instructorName || occurrence.trainer?.name || null,
     capacity: occurrence.capacity,
     bookable: occurrence.bookingEnabled,
-    bookingState: !occurrence.bookingEnabled ? "not_available" : occurrence.confirmedCount >= occurrence.capacity ? "waitlist" : "available",
+    bookingState: !occurrence.bookingEnabled ? "not_available" : confirmedCount >= occurrence.capacity ? "waitlist" : "available",
     firstVisitEligible: occurrence.firstVisitEligible,
     audience: occurrence.audience,
     audienceGroup: occurrence.audienceGroup,
@@ -165,6 +171,7 @@ export function registerClassBookingRoutes(app: Express) {
         reservation: safeReservation(result.reservation),
         occurrence: publicOccurrence({
           ...result.occurrence,
+          confirmedCount: result.reservation.status === "waitlisted" ? result.occurrence.capacity : 1,
           trainer: null,
           classType: null,
           canonicalCategory: "LEGACY",
