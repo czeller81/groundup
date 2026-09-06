@@ -425,6 +425,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ============================================
   // STRIPE ROUTES
   // ============================================
+  app.get("/api/stripe/config", (_req, res) => {
+    res.json({
+      publishableKey: process.env.STRIPE_PUBLISHABLE_KEY || null,
+    });
+  });
+
+  app.get("/api/portal/admin/stripe/status", requireRole("admin"), async (_req, res) => {
+    const secretKey = process.env.STRIPE_SECRET_KEY;
+    const publishableKey = process.env.STRIPE_PUBLISHABLE_KEY;
+    const mode = secretKey?.startsWith("sk_test_")
+      ? "test"
+      : secretKey?.startsWith("sk_live_")
+        ? "live"
+        : secretKey
+          ? "unknown"
+          : "unconfigured";
+
+    if (!stripe || !secretKey) {
+      return res.json({
+        configured: false,
+        connected: false,
+        mode,
+        publishableKeyConfigured: Boolean(publishableKey),
+        webhookConfigured: Boolean(process.env.STRIPE_WEBHOOK_SECRET),
+      });
+    }
+
+    try {
+      const account = await stripe.accounts.retrieve();
+      return res.json({
+        configured: true,
+        connected: true,
+        mode,
+        publishableKeyConfigured: Boolean(publishableKey),
+        webhookConfigured: Boolean(process.env.STRIPE_WEBHOOK_SECRET),
+        account: {
+          id: account.id,
+          country: account.country,
+          defaultCurrency: account.default_currency,
+          chargesEnabled: account.charges_enabled,
+          payoutsEnabled: account.payouts_enabled,
+        },
+      });
+    } catch {
+      return res.status(502).json({
+        configured: true,
+        connected: false,
+        mode,
+        publishableKeyConfigured: Boolean(publishableKey),
+        webhookConfigured: Boolean(process.env.STRIPE_WEBHOOK_SECRET),
+      });
+    }
+  });
+
   app.post("/api/create-payment-intent", bookingRateLimit(), requireAuth, async (req, res) => {
     if (!stripe) {
       return res.status(500).json({ message: "Stripe is not configured" });

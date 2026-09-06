@@ -6,13 +6,16 @@ let stripePromise: Promise<Stripe | null>;
 
 export const getStripe = () => {
   if (!stripePromise) {
-    const publicKey = import.meta.env.VITE_STRIPE_PUBLIC_KEY;
-    
-    if (!publicKey) {
-      throw new Error('Missing required Stripe key: VITE_STRIPE_PUBLIC_KEY');
-    }
-    
-    stripePromise = loadStripe(publicKey);
+    const configuredKey = import.meta.env.VITE_STRIPE_PUBLIC_KEY as string | undefined;
+    stripePromise = configuredKey
+      ? loadStripe(configuredKey)
+      : fetch("/api/stripe/config")
+        .then(async (response) => {
+          if (!response.ok) throw new Error("Unable to load Stripe configuration");
+          const { publishableKey } = await response.json() as { publishableKey?: string | null };
+          if (!publishableKey) throw new Error("Stripe publishable key is not configured");
+          return loadStripe(publishableKey);
+        });
   }
   
   return stripePromise;

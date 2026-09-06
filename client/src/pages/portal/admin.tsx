@@ -22,6 +22,21 @@ import {
 } from "lucide-react";
 import AdminPilotOps from "./admin-pilot-ops";
 
+type StripeStatus = {
+  configured: boolean;
+  connected: boolean;
+  mode: "test" | "live" | "unknown" | "unconfigured";
+  publishableKeyConfigured: boolean;
+  webhookConfigured: boolean;
+  account?: {
+    id: string;
+    country: string | null;
+    defaultCurrency: string | null;
+    chargesEnabled: boolean;
+    payoutsEnabled: boolean;
+  };
+};
+
 export default function PortalAdmin() {
   const [, setLocation] = useLocation();
   const { user, isLoading: authLoading, isAuthenticated, isAdmin, isStaff } = usePortalAuth();
@@ -42,6 +57,10 @@ export default function PortalAdmin() {
 
   const { data: stats, isLoading: statsLoading } = useQuery<any>({
     queryKey: ["/api/portal/admin/stats"],
+    enabled: isAuthenticated && isAdmin,
+  });
+  const { data: stripeStatus, isLoading: stripeStatusLoading, isError: stripeStatusError } = useQuery<StripeStatus>({
+    queryKey: ["/api/portal/admin/stripe/status"],
     enabled: isAuthenticated && isAdmin,
   });
 
@@ -390,6 +409,34 @@ export default function PortalAdmin() {
 
       <main className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
         {isAdmin && <AdminPilotOps />}
+        {isAdmin && (
+          <Card className="mb-6 border-white/5 bg-[#121826]" data-testid="stripe-status">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base text-white">
+                <Shield className="h-5 w-5 text-[#5EEBFF]" /> Stripe
+              </CardTitle>
+              <p className="text-xs text-gray-400">Server-side connection status for billing readiness.</p>
+            </CardHeader>
+            <CardContent>
+              {stripeStatusLoading ? (
+                <Loader2 className="h-5 w-5 animate-spin text-[#5EEBFF]" />
+              ) : stripeStatusError || !stripeStatus ? (
+                <Badge className="border-red-500/30 bg-red-500/10 text-red-300">Status unavailable</Badge>
+              ) : (
+                <div className="flex flex-wrap items-center gap-3">
+                  <Badge className={stripeStatus.connected ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300" : "border-red-500/30 bg-red-500/10 text-red-300"}>
+                    {stripeStatus.connected
+                      ? `Connected — ${stripeStatus.mode === "test" ? "Test Mode" : stripeStatus.mode === "live" ? "Live Mode" : "Mode unknown"}`
+                      : "Not connected"}
+                  </Badge>
+                  <span className="text-xs text-gray-400">
+                    Publishable key: {stripeStatus.publishableKeyConfigured ? "configured" : "missing"} · Webhook secret: {stripeStatus.webhookConfigured ? "configured" : "required"}
+                  </span>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
         {/* Stats Cards */}
         <div className="grid grid-cols-1 min-[360px]:grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 mb-6">
           <Card className="bg-[#121826] border-white/5">
