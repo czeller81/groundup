@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
-import { AlertCircle, Check, CreditCard, ExternalLink, Loader2, ShieldCheck } from "lucide-react";
+import { AlertCircle, Check, Clock3, CreditCard, ExternalLink, Loader2, ShieldCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -72,6 +72,7 @@ export default function PortalBilling() {
   const { data: billing, isLoading: billingLoading } = useQuery<any>({
     queryKey: ["/api/portal/billing"],
     enabled: isAuthenticated,
+    refetchInterval: (query) => query.state.data?.pendingMembership ? 3000 : false,
   });
   const { data: plans = [], isLoading: plansLoading } = useQuery<BillingPlan[]>({
     queryKey: ["/api/portal/billing/plans"],
@@ -161,6 +162,8 @@ export default function PortalBilling() {
   if (!isAuthenticated) return null;
 
   const activeMembership = billing?.activeMembership;
+  const pendingMembership = billing?.pendingMembership;
+  const hasMembership = Boolean(activeMembership || pendingMembership);
   const missingForms = billing?.missingForms || [];
   const status = String(activeMembership?.billingState || activeMembership?.status || "");
   const statusLabel = {
@@ -183,6 +186,33 @@ export default function PortalBilling() {
             {spanish ? "Membresías mensuales flexibles, con acceso definido por tu plan." : "Flexible monthly memberships with access defined by your plan."}
           </p>
         </div>
+
+        {pendingMembership && !activeMembership && (
+          <Card className="mb-8 border-amber-400/30 bg-amber-500/10 text-white" data-testid="pending-membership">
+            <CardHeader className="flex flex-row items-start justify-between gap-4">
+              <div className="flex gap-3">
+                <Clock3 className="mt-1 h-5 w-5 flex-shrink-0 text-amber-300" />
+                <div>
+                  <CardDescription className="text-amber-200/80">{spanish ? "Confirmación de pago" : "Payment confirmation"}</CardDescription>
+                  <CardTitle className="mt-1 text-xl text-amber-100">{PLAN_COPY[pendingMembership.plan?.internalKey]?.[locale]?.name || pendingMembership.plan?.displayName || pendingMembership.type}</CardTitle>
+                </div>
+              </div>
+              <Badge className="border-amber-400/30 bg-amber-400/10 text-amber-200">{spanish ? "Pendiente" : "Pending"}</Badge>
+            </CardHeader>
+            <CardContent className="text-sm text-amber-100/80">
+              <p>
+                {spanish
+                  ? "Stripe todavía está procesando la confirmación de tu pago. Tu membresía aparecerá aquí en cuanto se confirme."
+                  : "Stripe is still processing your payment confirmation. Your membership will appear here as soon as it is confirmed."}
+              </p>
+              <p className="mt-2">
+                {spanish
+                  ? "Si sigue pendiente después de unos minutos, contacta a Ground Up antes de intentar pagar de nuevo."
+                  : "If it is still pending after a few minutes, contact Ground Up before trying to pay again."}
+              </p>
+            </CardContent>
+          </Card>
+        )}
 
         {activeMembership && (
           <Card className="mb-8 border-[#5EEBFF]/30 bg-[#121826] text-white">
@@ -216,7 +246,7 @@ export default function PortalBilling() {
           </Card>
         )}
 
-        {missingForms.length > 0 && !activeMembership && (
+        {missingForms.length > 0 && !hasMembership && (
           <Card className="mb-8 border-amber-500/30 bg-amber-500/10 text-white">
             <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex gap-3">
@@ -255,11 +285,17 @@ export default function PortalBilling() {
                   </div>
                   <Button
                     className="mt-auto w-full bg-[#5EEBFF] text-[#0B0F14] hover:bg-[#5EEBFF]/90"
-                    disabled={blocked || checkout.isPending || Boolean(activeMembership)}
+                    disabled={blocked || checkout.isPending || hasMembership}
                     onClick={() => checkout.mutate({ planKey: plan.internalKey, ...(isGirls && selectedMinorId ? { minorProfileId: selectedMinorId } : {}) })}
                   >
                     {checkout.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
-                    {missingForms.length ? (spanish ? "Completa tus formularios" : "Complete your forms") : activeMembership ? (spanish ? "Ya tienes una membresía" : "Membership already active") : (spanish ? "Comenzar membresía" : "Start membership")}
+                    {missingForms.length
+                      ? (spanish ? "Completa tus formularios" : "Complete your forms")
+                      : pendingMembership
+                        ? (spanish ? "Confirmación de pago pendiente" : "Payment confirmation pending")
+                        : activeMembership
+                          ? (spanish ? "Ya tienes una membresía" : "Membership already active")
+                          : (spanish ? "Comenzar membresía" : "Start membership")}
                   </Button>
                   {isGirls && !minors.filter((minor) => !minor.consentRevokedAt).length && <p className="mt-3 text-xs text-amber-300">{spanish ? "Agrega un perfil de participante aprobado para ver esta opción." : "Add an approved participant profile to use this option."}</p>}
                   {!plan.checkoutReady && <p className="mt-3 text-xs text-gray-500">{spanish ? "Disponible pronto." : "Checkout setup in progress."}</p>}
