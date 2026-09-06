@@ -14,6 +14,7 @@ import {
   adminMembershipBillingState,
   checkoutSessionIsExpired,
   reconcilePendingStripeCheckouts,
+  reconcileStalePendingStripeCheckouts,
   stripeBillingState,
 } from "./membership-billing";
 import { registerMemberRoutes } from "./member-routes";
@@ -195,6 +196,78 @@ test("Checkout session expiry uses Stripe status and expiry timestamp", () => {
   assert.equal(checkoutSessionIsExpired({ status: "expired", expires_at: Math.floor((now + 3600000) / 1000) }, now), true);
   assert.equal(checkoutSessionIsExpired({ status: "open", expires_at: Math.floor((now - 1000) / 1000) }, now), true);
   assert.equal(checkoutSessionIsExpired({ status: "open", expires_at: Math.floor((now + 3600000) / 1000) }, now), false);
+});
+
+test("stale checkout maintenance is bounded, observable, and retry-safe", async () => {
+  assert.notEqual(process.env.NODE_ENV, "production", "fixture evidence must never run in production");
+  const suffix = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  const user = await storage.createUser(`stripe-maintenance-${suffix}@example.invalid`, "GroundUp-QA-Password-2026", "Stripe", "Maintenance", "5550000196", "en");
+  try {
+    const [plan] = await db.select().from(membershipPlans).where(eq(membershipPlans.internalKey, "ground_up_3")).limit(1);
+    assert.ok(plan);
+    const [expired] = await db.insert(memberships).values({
+      userId: user.id,
+      planId: plan.id,
+      type: plan.internalKey,
+      status: "pending",
+      priceCents: plan.displayPriceCents || STRIPE_MEMBERSHIP_CATALOG.ground_up_3.amountCents,
+      source: "stripe_checkout",
+      billingSource: "stripe_checkout",
+      billingState: "pending",
+      stripeCustomerId: `cus_maintenance_${suffix}`,
+      stripeCheckoutSessionId: `cs_maintenance_expired_${suffix}`,
+    }).returning();
+    const [retryable] = await db.insert(memberships).values({
+      userId: user.id,
+      planId: plan.id,
+      type: plan.internalKey,
+      status: "pending",
+      priceCents: plan.displayPriceCents || STRIPE_MEMBERSHIP_CATALOG.ground_up_3.amountCents,
+      source: "stripe_checkout",
+      billingSource: "stripe_checkout",
+      billingState: "pending",
+      stripeCustomerId: `cus_maintenance_${suffix}`,
+      stripeCheckoutSessionId: `cs_maintenance_retryable_${suffix}`,
+    }).returning();
+    const staleCreatedAt = new Date(Date.now() - 60 * 60 * 1000);
+    await db.update(memberships).set({ createdAt: staleCreatedAt }).where(eq(memberships.id, expired.id));
+    await db.update(memberships).set({ createdAt: staleCreatedAt }).where(eq(memberships.id, retryable.id));
+
+    const fakeStripe = {
+      checkout: {
+        sessions: {
+          retrieve: async (sessionId: string) => {
+            if (sessionId.includes("retryable")) throw new Error("temporary Stripe outage");
+            return {
+              id: sessionId,
+              mode: "subscription",
+              status: "expired",
+              expires_at: Math.floor(Date.now() / 1000) + 3600,
+              subscription: null,
+              metadata: {},
+            };
+          },
+        },
+      },
+    } as unknown as Stripe;
+
+    const summary = await reconcileStalePendingStripeCheckouts(fakeStripe, { limit: 1 });
+    assert.equal(summary.scanned, 1);
+    assert.equal(summary.expired, 1);
+    assert.equal(summary.apiFailures, 0);
+
+    const retrySummary = await reconcileStalePendingStripeCheckouts(fakeStripe);
+    assert.equal(retrySummary.scanned, 1);
+    assert.equal(retrySummary.apiFailures, 1);
+
+    const [expiredAfter] = await db.select().from(memberships).where(eq(memberships.id, expired.id));
+    const [retryableAfter] = await db.select().from(memberships).where(eq(memberships.id, retryable.id));
+    assert.equal(expiredAfter.billingState, "cancelled");
+    assert.equal(retryableAfter.billingState, "pending");
+  } finally {
+    await db.delete(memberships).where(eq(memberships.userId, user.id));
+    await db.delete(users).where(eq(users.id, user.id));
+  }
 });
 
 test("member billing moves the same checkout membership from pending to active after Stripe reconciliation", async () => {

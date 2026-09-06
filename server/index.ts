@@ -7,11 +7,17 @@ import { createOriginProtection, createScannerProbeGuard } from "./route-securit
 import { applySecurityHeaders } from "./security-headers";
 import { createRequire } from "module";
 import { storage } from "./storage";
+import Stripe from "stripe";
+import {
+  PENDING_CHECKOUT_RECONCILIATION_LIMIT,
+  reconcileStalePendingStripeCheckouts,
+} from "./membership-billing";
 
 const MemStore = MemoryStore(session);
 const require = createRequire(import.meta.url);
 const PgSession = require("connect-pg-simple")(session);
 const databaseUrl = process.env.NEON_DATABASE_URL || process.env.DATABASE_URL;
+const STRIPE_CHECKOUT_RECONCILIATION_INTERVAL_MS = 15 * 60 * 1000;
 
 const app = express();
 app.disable("x-powered-by");
@@ -55,6 +61,49 @@ app.use(session({
   }
 }));
 app.use(createOriginProtection());
+
+function startStripeCheckoutMaintenance() {
+  if (!process.env.STRIPE_SECRET_KEY) return;
+
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+    apiVersion: "2025-08-27.basil",
+  });
+  let running = false;
+
+  const reconcile = async () => {
+    if (running) {
+      log("Stripe checkout reconciliation skipped because the previous pass is still running.");
+      return;
+    }
+    running = true;
+    try {
+      const summary = await reconcileStalePendingStripeCheckouts(stripe, {
+        limit: PENDING_CHECKOUT_RECONCILIATION_LIMIT,
+      });
+      log([
+        "Stripe checkout reconciliation completed",
+        `scanned=${summary.scanned}`,
+        `completed=${summary.completed}`,
+        `expired=${summary.expired}`,
+        `missing=${summary.missing}`,
+        `apiFailures=${summary.apiFailures}`,
+        `processingFailures=${summary.processingFailures}`,
+      ].join(" "));
+    } catch (error) {
+      // Maintenance must never prevent the app from serving traffic. A failed
+      // pass remains retryable on the next interval.
+      console.error("Stripe checkout reconciliation failed:", error);
+    } finally {
+      running = false;
+    }
+  };
+
+  void reconcile();
+  const timer = setInterval(() => {
+    void reconcile();
+  }, STRIPE_CHECKOUT_RECONCILIATION_INTERVAL_MS);
+  timer.unref();
+}
 
 app.use((req, res, next) => {
   const start = Date.now();
@@ -118,6 +167,7 @@ app.use((req, res, next) => {
     reusePort: true,
   }, () => {
     log(`serving on port ${port}`);
+    startStripeCheckoutMaintenance();
   });
 
   // Do not delay the HTTP listener for this non-critical maintenance sync.

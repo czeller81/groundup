@@ -1,5 +1,5 @@
 import Stripe from "stripe";
-import { and, eq, gte, inArray, isNotNull, isNull, or } from "drizzle-orm";
+import { and, asc, eq, gte, inArray, isNotNull, isNull, lte, or } from "drizzle-orm";
 import { db } from "./db";
 import { forms, formResponses, memberLifecycles, memberships, membershipPlans, minorProfiles, users } from "@shared/schema";
 
@@ -129,7 +129,18 @@ export function checkoutSessionIsExpired(
   return session.status === "expired" || session.expires_at * 1000 <= now;
 }
 
-const MISSING_CHECKOUT_SESSION_GRACE_MS = 30 * 60 * 1000;
+export const PENDING_CHECKOUT_STALE_AFTER_MS = 30 * 60 * 1000;
+export const PENDING_CHECKOUT_RECONCILIATION_LIMIT = 100;
+const MISSING_CHECKOUT_SESSION_GRACE_MS = PENDING_CHECKOUT_STALE_AFTER_MS;
+
+export type StripeCheckoutReconciliationSummary = {
+  scanned: number;
+  completed: number;
+  expired: number;
+  missing: number;
+  apiFailures: number;
+  processingFailures: number;
+};
 
 function isMissingStripeResource(error: unknown) {
   return error instanceof Stripe.errors.StripeError && error.code === "resource_missing";
@@ -159,14 +170,19 @@ export async function expirePendingCheckoutSession(sessionId: string) {
   }
 }
 
-export async function reconcilePendingStripeCheckouts(stripe: Stripe, userId: string) {
-  const pendingMemberships = await db.select().from(memberships).where(and(
-    eq(memberships.userId, userId),
-    eq(memberships.billingState, "pending"),
-    eq(memberships.billingSource, "stripe_checkout"),
-    isNotNull(memberships.stripeCheckoutSessionId),
-  ));
-
+async function reconcilePendingCheckoutMemberships(
+  stripe: Stripe,
+  pendingMemberships: Array<typeof memberships.$inferSelect>,
+  now = Date.now(),
+): Promise<StripeCheckoutReconciliationSummary> {
+  const summary: StripeCheckoutReconciliationSummary = {
+    scanned: pendingMemberships.length,
+    completed: 0,
+    expired: 0,
+    missing: 0,
+    apiFailures: 0,
+    processingFailures: 0,
+  };
   for (const membership of pendingMemberships) {
     if (!membership.stripeCheckoutSessionId) continue;
 
@@ -178,8 +194,11 @@ export async function reconcilePendingStripeCheckouts(stripe: Stripe, userId: st
       // Network/API failures are left pending so a transient Stripe outage never
       // cancels a member's checkout.
       if (isMissingStripeResource(error) &&
-        membership.createdAt.getTime() <= Date.now() - MISSING_CHECKOUT_SESSION_GRACE_MS) {
+        membership.createdAt.getTime() <= now - MISSING_CHECKOUT_SESSION_GRACE_MS) {
         await cancelPendingCheckoutMembership(membership.id);
+        summary.missing++;
+      } else {
+        summary.apiFailures++;
       }
       continue;
     }
@@ -188,25 +207,72 @@ export async function reconcilePendingStripeCheckouts(stripe: Stripe, userId: st
       const subscriptionId = typeof session.subscription === "string"
         ? session.subscription
         : session.subscription.id;
-      let subscription = await stripe.subscriptions.retrieve(subscriptionId);
-      if (!subscription.metadata?.ground_up_user_id && Object.keys(session.metadata || {}).length) {
-        subscription = await stripe.subscriptions.update(subscription.id, {
-          metadata: session.metadata || {},
-        });
+      let subscription: Stripe.Subscription;
+      try {
+        subscription = await stripe.subscriptions.retrieve(subscriptionId);
+        if (!subscription.metadata?.ground_up_user_id && Object.keys(session.metadata || {}).length) {
+          subscription = await stripe.subscriptions.update(subscription.id, {
+            metadata: session.metadata || {},
+          });
+        }
+      } catch {
+        // Keep the membership pending when Stripe cannot finish a completed
+        // session lookup. The next maintenance pass can safely retry it.
+        summary.apiFailures++;
+        continue;
       }
-      await applyStripeSubscription(subscription, {
-        checkoutSessionId: session.id,
-        latestInvoiceId: typeof subscription.latest_invoice === "string"
-          ? subscription.latest_invoice
-          : subscription.latest_invoice?.id,
-      });
+      try {
+        await applyStripeSubscription(subscription, {
+          checkoutSessionId: session.id,
+          latestInvoiceId: typeof subscription.latest_invoice === "string"
+            ? subscription.latest_invoice
+            : subscription.latest_invoice?.id,
+        });
+        summary.completed++;
+      } catch {
+        // A local processing error must not turn a still-reconcilable checkout
+        // into a cancellation. Keep it visible for a later retry/investigation.
+        summary.processingFailures++;
+      }
       continue;
     }
 
     if (checkoutSessionIsExpired(session)) {
       await cancelPendingCheckoutMembership(membership.id);
+      summary.expired++;
     }
   }
+  return summary;
+}
+
+export async function reconcilePendingStripeCheckouts(stripe: Stripe, userId: string) {
+  const pendingMemberships = await db.select().from(memberships).where(and(
+    eq(memberships.userId, userId),
+    eq(memberships.billingState, "pending"),
+    eq(memberships.billingSource, "stripe_checkout"),
+    isNotNull(memberships.stripeCheckoutSessionId),
+  ));
+
+  return reconcilePendingCheckoutMemberships(stripe, pendingMemberships);
+}
+
+export async function reconcileStalePendingStripeCheckouts(
+  stripe: Stripe,
+  options: {
+    now?: number;
+    limit?: number;
+  } = {},
+) {
+  const now = options.now ?? Date.now();
+  const limit = options.limit ?? PENDING_CHECKOUT_RECONCILIATION_LIMIT;
+  const pendingMemberships = await db.select().from(memberships).where(and(
+    eq(memberships.billingState, "pending"),
+    eq(memberships.billingSource, "stripe_checkout"),
+    isNotNull(memberships.stripeCheckoutSessionId),
+    lte(memberships.createdAt, new Date(now - PENDING_CHECKOUT_STALE_AFTER_MS)),
+  )).orderBy(asc(memberships.createdAt)).limit(limit);
+
+  return reconcilePendingCheckoutMemberships(stripe, pendingMemberships, now);
 }
 
 export async function requiredFormsForCheckout(userId: string) {
