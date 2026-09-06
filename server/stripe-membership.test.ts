@@ -7,6 +7,7 @@ import { membershipPlans } from "@shared/schema";
 import {
   BILLING_PLAN_KEYS,
   STRIPE_MEMBERSHIP_CATALOG,
+  adminMembershipBillingState,
   stripeBillingState,
 } from "./membership-billing";
 
@@ -42,6 +43,14 @@ test("Stripe subscription states map to membership billing states", () => {
   assert.equal(stripeBillingState({ ...base, status: "canceled" }), "cancelled");
   assert.equal(stripeBillingState({ ...base, status: "incomplete" }), "pending");
   assert.equal(stripeBillingState({ ...base, cancel_at_period_end: true }), "cancel_at_period_end");
+});
+
+test("admin billing states keep unresolved memberships distinct", () => {
+  assert.equal(adminMembershipBillingState({ billingState: "pending", status: "pending" }), "pending");
+  assert.equal(adminMembershipBillingState({ billingState: "active", status: "active" }), "active");
+  assert.equal(adminMembershipBillingState({ billingState: "past_due", status: "active" }), "past_due");
+  assert.equal(adminMembershipBillingState({ billingState: "active", status: "active", cancelAtPeriodEnd: true }), "cancel_at_period_end");
+  assert.equal(adminMembershipBillingState({ billingState: "cancelled", status: "cancelled" }), "cancelled");
 });
 
 test("development database has one Stripe mapping for each approved plan", async () => {

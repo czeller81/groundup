@@ -93,6 +93,31 @@ export function stripeBillingState(subscription: Stripe.Subscription) {
   }
 }
 
+export type AdminMembershipBillingState =
+  | "pending"
+  | "active"
+  | "past_due"
+  | "cancel_at_period_end"
+  | "cancelled"
+  | "manual";
+
+export function adminMembershipBillingState(membership: {
+  billingState?: string | null;
+  status?: string | null;
+  cancelAtPeriodEnd?: boolean | null;
+}): AdminMembershipBillingState {
+  if (membership.cancelAtPeriodEnd || membership.billingState === "cancel_at_period_end") {
+    return "cancel_at_period_end";
+  }
+  if (membership.billingState === "pending" || membership.status === "pending") return "pending";
+  if (membership.billingState === "past_due") return "past_due";
+  if (membership.billingState === "active" || membership.status === "active" || membership.status === "ACTIVE") {
+    return "active";
+  }
+  if (membership.billingState === "cancelled" || membership.status === "cancelled") return "cancelled";
+  return "manual";
+}
+
 export function unixTimestamp(value: number | null | undefined) {
   return value ? new Date(value * 1000) : null;
 }

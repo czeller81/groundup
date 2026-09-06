@@ -32,6 +32,7 @@ import {
   activeStripeMembershipForUser,
   canSelectGirlsProgram,
   getBillingPlanConfig,
+  adminMembershipBillingState,
   getOrCreateStripeCustomer,
   isBillingPlanKey,
   requiredFormsForCheckout,
@@ -372,11 +373,21 @@ export function registerMemberRoutes(app: Express) {
       .innerJoin(users, eq(memberships.userId, users.id))
       .orderBy(desc(memberships.updatedAt))
       .limit(100);
-    res.json(rows.map(({ membership, plan, user }) => ({
-      ...membership,
-      plan,
-      member: { id: user.id, firstName: user.firstName, lastName: user.lastName, email: user.email },
-    })));
+    const now = Date.now();
+    res.json(rows.map(({ membership, plan, user }) => {
+      const displayState = adminMembershipBillingState(membership);
+      const pendingAgeMinutes = displayState === "pending"
+        ? Math.max(0, Math.floor((now - membership.createdAt.getTime()) / 60000))
+        : null;
+      return {
+        ...membership,
+        plan,
+        displayState,
+        pendingAgeMinutes,
+        isStalePending: displayState === "pending" && pendingAgeMinutes !== null && pendingAgeMinutes >= 30,
+        member: { id: user.id, firstName: user.firstName, lastName: user.lastName, email: user.email },
+      };
+    }));
   });
   app.get("/api/portal/member-program", requireAuth, async (req, res) => {
     try {

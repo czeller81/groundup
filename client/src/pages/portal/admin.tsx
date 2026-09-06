@@ -53,6 +53,7 @@ export default function PortalAdmin() {
   const [inboxTab, setInboxTab] = useState<"training" | "adaptive" | "messages">("training");
   const [reportFunnel, setReportFunnel] = useState<"training" | "adaptive_capacity">("training");
   const [reportFilters, setReportFilters] = useState({ source: "", medium: "", campaign: "", landingPath: "" });
+  const [billingStateFilter, setBillingStateFilter] = useState<"all" | "pending" | "active" | "past_due" | "cancel_at_period_end">("all");
   const PAGE_SIZE = 15;
 
   const { data: stats, isLoading: statsLoading } = useQuery<any>({
@@ -132,6 +133,14 @@ export default function PortalAdmin() {
   const members = membersData?.users || [];
   const totalMembers = membersData?.total || 0;
   const totalPages = Math.ceil(totalMembers / PAGE_SIZE);
+  const filteredBillingMemberships = billingStateFilter === "all"
+    ? billingMemberships
+    : billingMemberships.filter((item) => item.displayState === billingStateFilter);
+  const billingStateCounts = billingMemberships.reduce((counts, item) => {
+    const state = item.displayState || "manual";
+    counts[state] = (counts[state] || 0) + 1;
+    return counts;
+  }, {} as Record<string, number>);
   const dateLabel = (value: string | Date, withTime = false) => new Date(value).toLocaleString(locale === "es" ? "es-US" : "en-US", withTime
     ? { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" }
     : { month: "short", day: "numeric", year: "numeric" });
@@ -303,6 +312,24 @@ export default function PortalAdmin() {
     }
   };
 
+  const billingStateLabel = (state: string) => ({
+    pending: locale === "es" ? "Pendiente" : "Pending",
+    active: locale === "es" ? "Activa" : "Active",
+    past_due: locale === "es" ? "Vencida" : "Past due",
+    cancel_at_period_end: locale === "es" ? "Cancela al final del período" : "Cancels at period end",
+    cancelled: locale === "es" ? "Cancelada" : "Cancelled",
+    manual: locale === "es" ? "Manual" : "Manual",
+  }[state] || state);
+
+  const billingStateBadgeClass = (state: string) => ({
+    pending: "border-amber-500/30 bg-amber-500/10 text-amber-300",
+    active: "border-emerald-500/30 bg-emerald-500/10 text-emerald-300",
+    past_due: "border-orange-500/30 bg-orange-500/10 text-orange-300",
+    cancel_at_period_end: "border-purple-500/30 bg-purple-500/10 text-purple-300",
+    cancelled: "border-red-500/30 bg-red-500/10 text-red-300",
+    manual: "border-white/10 bg-white/5 text-gray-300",
+  }[state] || "border-white/10 bg-white/5 text-gray-300");
+
   const notificationTitle = (title: string) => locale === "es" && title === "New Adaptive Capacity signup"
     ? copy.newAdaptiveSignup
     : title;
@@ -457,34 +484,82 @@ export default function PortalAdmin() {
               ) : billingMemberships.length === 0 ? (
                 <p className="text-sm text-gray-500">{locale === "es" ? "Todavía no hay membresías registradas." : "No memberships have been recorded yet."}</p>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full min-w-[620px] text-left text-sm">
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+                    {(["pending", "active", "past_due", "cancel_at_period_end"] as const).map((state) => (
+                      <button
+                        key={state}
+                        type="button"
+                        onClick={() => setBillingStateFilter(billingStateFilter === state ? "all" : state)}
+                        className={`rounded-lg border p-3 text-left transition-colors ${billingStateFilter === state ? "border-[#5EEBFF]/50 bg-[#5EEBFF]/10" : "border-white/5 bg-[#0B0F14] hover:border-white/20"}`}
+                      >
+                        <p className="text-lg font-semibold text-white">{billingStateCounts[state] || 0}</p>
+                        <p className="text-[11px] leading-tight text-gray-400">{billingStateLabel(state)}</p>
+                      </button>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => setBillingStateFilter("all")}
+                      className={`rounded-lg border p-3 text-left transition-colors ${billingStateFilter === "all" ? "border-white/30 bg-white/10" : "border-white/5 bg-[#0B0F14] hover:border-white/20"}`}
+                    >
+                      <p className="text-lg font-semibold text-white">{billingMemberships.length}</p>
+                      <p className="text-[11px] leading-tight text-gray-400">{locale === "es" ? "Todos" : "All records"}</p>
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    {locale === "es"
+                      ? "Los identificadores son referencias de soporte; no se muestran datos de pago."
+                      : "Identifiers are support references only; payment details are not shown."}
+                  </p>
+                  {filteredBillingMemberships.length === 0 ? (
+                    <p className="rounded-lg border border-white/5 bg-[#0B0F14] p-4 text-sm text-gray-500">
+                      {locale === "es" ? "No hay registros con este estado." : "No records match this state."}
+                    </p>
+                  ) : (
+                  <div className="overflow-x-auto">
+                  <table className="w-full min-w-[980px] text-left text-sm">
                     <thead className="border-b border-white/10 text-xs uppercase tracking-wide text-gray-500">
                       <tr>
                         <th className="pb-2 pr-4">{locale === "es" ? "Miembro" : "Member"}</th>
                         <th className="pb-2 pr-4">{locale === "es" ? "Plan" : "Plan"}</th>
                         <th className="pb-2 pr-4">{locale === "es" ? "Estado" : "State"}</th>
+                        <th className="pb-2 pr-4">{locale === "es" ? "Referencias Stripe" : "Stripe references"}</th>
                         <th className="pb-2">{locale === "es" ? "Período" : "Period"}</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {billingMemberships.slice(0, 8).map((item) => (
-                        <tr key={item.id} className="border-b border-white/5 last:border-0">
+                      {filteredBillingMemberships.map((item) => (
+                        <tr key={item.id} className={`border-b border-white/5 last:border-0 ${item.isStalePending ? "bg-amber-500/[0.04]" : ""}`}>
                           <td className="py-3 pr-4">
                             <p className="font-medium text-white">{item.member.firstName} {item.member.lastName}</p>
                             <p className="text-xs text-gray-500">{item.member.email}</p>
                           </td>
                           <td className="py-3 pr-4 text-gray-300">{item.plan?.displayName || item.type}</td>
                           <td className="py-3 pr-4">
-                            <Badge className={item.billingState === "past_due" ? "border-amber-500/30 bg-amber-500/10 text-amber-300" : item.billingState === "active" || item.billingState === "cancel_at_period_end" ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300" : "border-white/10 bg-white/5 text-gray-300"}>
-                              {item.billingState || item.status}
+                            <Badge className={billingStateBadgeClass(item.displayState || item.billingState || item.status)}>
+                              {billingStateLabel(item.displayState || item.billingState || item.status)}
                             </Badge>
+                            {item.isStalePending && (
+                              <p className="mt-1 text-xs text-amber-300">
+                                <AlertTriangle className="mr-1 inline h-3 w-3" />
+                                {locale === "es" ? `Pendiente ${item.pendingAgeMinutes} min` : `Pending ${item.pendingAgeMinutes} min`}
+                              </p>
+                            )}
+                          </td>
+                          <td className="py-3 pr-4">
+                            <div className="space-y-1 text-xs text-gray-400">
+                              <p><span className="text-gray-500">Checkout:</span> <span className="font-mono text-gray-300">{item.stripeCheckoutSessionId || "—"}</span></p>
+                              <p><span className="text-gray-500">Subscription:</span> <span className="font-mono text-gray-300">{item.stripeSubscriptionId || "—"}</span></p>
+                              <p><span className="text-gray-500">Invoice:</span> <span className="font-mono text-gray-300">{item.stripeLatestInvoiceId || "—"}</span></p>
+                            </div>
                           </td>
                           <td className="py-3 text-xs text-gray-400">{item.currentPeriodEnd ? dateLabel(item.currentPeriodEnd) : "—"}</td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
+                  </div>
+                  )}
                 </div>
               )}
             </CardContent>
