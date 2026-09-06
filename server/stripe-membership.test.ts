@@ -284,6 +284,41 @@ test("member billing moves the same checkout membership from pending to active a
     assert.equal(activeBilling.activeMembership.stripeSubscriptionId, stripeSubscriptionId);
     assert.equal(activeBilling.memberships.length, 1);
     assert.equal(activeBilling.memberships[0].id, pendingMembership.id);
+
+    const cancelledAt = timestamp + 60;
+    const cancelledMembership = await applyStripeSubscription({
+      id: stripeSubscriptionId,
+      object: "subscription",
+      customer: stripeCustomerId,
+      metadata: {
+        ground_up_user_id: user.id,
+        ground_up_plan_key: plan.internalKey,
+      },
+      cancel_at_period_end: false,
+      status: "canceled",
+      start_date: timestamp,
+      canceled_at: cancelledAt,
+      ended_at: cancelledAt,
+      latest_invoice: null,
+      items: {
+        data: [{
+          current_period_start: timestamp,
+          current_period_end: timestamp + 30 * 24 * 60 * 60,
+        }],
+      },
+    } as unknown as Stripe.Subscription);
+    assert.equal(cancelledMembership.id, pendingMembership.id);
+
+    const cancelledResponse = await fetch(billingUrl);
+    assert.equal(cancelledResponse.status, 200);
+    const cancelledBilling = await cancelledResponse.json();
+    assert.equal(cancelledBilling.activeMembership, null);
+    assert.equal(cancelledBilling.pendingMembership, null);
+    assert.equal(cancelledBilling.memberships.length, 1);
+    assert.equal(cancelledBilling.memberships[0].id, pendingMembership.id);
+    assert.equal(cancelledBilling.memberships[0].billingState, "cancelled");
+    assert.equal(cancelledBilling.memberships[0].status, "cancelled");
+    assert.ok(cancelledBilling.memberships[0].cancelledAt);
   } finally {
     if (server?.listening) {
       await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
