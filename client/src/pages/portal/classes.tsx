@@ -27,6 +27,7 @@ export default function PortalClasses() {
     onSuccess: (reservation) => {
       queryClient.invalidateQueries({ queryKey: ["/api/portal/classes"] });
       queryClient.invalidateQueries({ queryKey: ["/api/portal/my-classes"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/portal/member-program"] });
       toast({
         title: reservation.status === "waitlisted" ? copy.classFullNow : copy.classBooked,
         description: reservation.status === "waitlisted"

@@ -88,6 +88,7 @@ export default function PortalSchedule() {
     onSuccess: (reservation, variables) => {
       queryClient.invalidateQueries({ queryKey: ["/api/portal/classes"] });
       queryClient.invalidateQueries({ queryKey: ["/api/portal/my-classes"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/portal/member-program"] });
       if (reservation.status === "waitlisted") {
         toast({ title: copy.classFullNow, description: copy.waitlistAdded });
       } else {

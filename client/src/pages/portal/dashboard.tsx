@@ -372,6 +372,12 @@ export default function PortalDashboard() {
                 <>
                   <div className="rounded-lg border border-[#5EEBFF]/20 bg-[#5EEBFF]/10 p-3">
                     <p className="text-xs font-semibold uppercase tracking-wider text-[#5EEBFF]">{copy.discoveryPassTitle}</p>
+                    <p className="mt-1 text-sm font-semibold text-white">
+                      {copy.discoveryUsage(
+                        memberProgram.discoveryPass.entitlements.filter((entitlement: any) => ["BOOKED", "ATTENDED"].includes(entitlement.status)).length,
+                        memberProgram.discoveryPass.entitlements.length,
+                      )}
+                    </p>
                     <div className="mt-3 space-y-2 text-sm">
                       {memberProgram.discoveryPass.entitlements.map((entitlement: any) => (
                         <div key={entitlement.id} className="flex items-center justify-between gap-3">
