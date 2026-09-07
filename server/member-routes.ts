@@ -1,5 +1,5 @@
 import type { Express } from "express";
-import { and, asc, desc, eq, gte, ilike, inArray, isNull, lt, lte, or, sql, sum } from "drizzle-orm";
+import { and, asc, desc, eq, gte, ilike, inArray, isNotNull, isNull, lt, lte, or, sql, sum } from "drizzle-orm";
 import { z } from "zod";
 import {
   classOccurrences,
@@ -19,7 +19,6 @@ import {
   membershipPlans,
   minorConsentRenewalSchema,
   minorProfiles,
-  trialLeads,
   users,
 } from "@shared/schema";
 import { db } from "./db";
@@ -123,6 +122,10 @@ async function setLifecycle(userId: string, nextState: string, actorId: string |
   });
 }
 
+export function discoveryReservationCountsAsPriorUse(status: string, attendance: string | null | undefined) {
+  return status === "confirmed" || status === "waitlisted" || Boolean(attendance);
+}
+
 async function duplicateDiscoveryReason(userId: string) {
   const user = await storage.getUserById(userId);
   if (!user) return "USER_NOT_FOUND";
@@ -134,14 +137,17 @@ async function duplicateDiscoveryReason(userId: string) {
     : [];
   if (samePhone) return "ADMIN_REVIEW_REQUIRED";
   const [priorReservation] = await db.select({ id: classReservations.id }).from(classReservations)
-    .where(or(
-      eq(classReservations.userId, userId),
-      ilike(classReservations.visitorEmail, user.email),
+    .where(and(
+      or(
+        eq(classReservations.userId, userId),
+        ilike(classReservations.visitorEmail, user.email),
+      ),
+      or(
+        inArray(classReservations.status, ["confirmed", "waitlisted"]),
+        isNotNull(classReservations.attendance),
+      ),
     )).limit(1);
   if (priorReservation) return "ADMIN_REVIEW_REQUIRED";
-  const [priorLead] = await db.select({ id: trialLeads.id }).from(trialLeads)
-    .where(ilike(trialLeads.email, user.email)).limit(1);
-  if (priorLead) return "ADMIN_REVIEW_REQUIRED";
   return null;
 }
 
