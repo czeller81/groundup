@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
 import { AlertCircle, Check, Clock3, CreditCard, ExternalLink, Loader2, ShieldCheck } from "lucide-react";
@@ -83,10 +83,14 @@ export default function PortalBilling() {
     enabled: isAuthenticated && plans.some((plan) => plan.internalKey === "girls_program"),
   });
 
-  const [selectedMinorId] = useMemo(() => {
-    const approved = minors.filter((minor) => !minor.consentRevokedAt);
-    return approved.length ? [approved[0].id] : [""];
-  }, [minors]);
+  const approvedMinors = useMemo(() => minors.filter((minor) => !minor.consentRevokedAt), [minors]);
+  const [selectedMinorId, setSelectedMinorId] = useState("");
+
+  useEffect(() => {
+    if (!approvedMinors.some((minor) => minor.id === selectedMinorId)) {
+      setSelectedMinorId(approvedMinors[0]?.id || "");
+    }
+  }, [approvedMinors, selectedMinorId]);
 
   const checkout = useMutation({
     mutationFn: async ({ planKey, minorProfileId }: { planKey: string; minorProfileId?: string }) => {
@@ -263,14 +267,35 @@ export default function PortalBilling() {
           </Card>
         )}
 
+        {!approvedMinors.length && (
+          <Card className="mb-8 border-[#B06CFF]/30 bg-[#B06CFF]/10 text-white" data-testid="girls-program-guidance">
+            <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="font-semibold text-[#E1C7FF]">
+                  {spanish ? "¿Inscribes a una niña?" : "Signing up a girl?"}
+                </p>
+                <p className="mt-1 max-w-2xl text-sm text-[#E1C7FF]/80">
+                  {spanish
+                    ? "Primero agrega el perfil de la participante y el consentimiento de su tutora. Después podrás elegir Girls Program para ella."
+                    : "First add the participant profile and guardian consent. Then you can choose Girls Program for her."}
+                </p>
+              </div>
+              <Button asChild variant="outline" className="border-[#B06CFF]/50 text-white hover:bg-[#B06CFF]/20">
+                <Link href={portalPath("/portal/schedule")}>
+                  {spanish ? "Agregar participante" : "Add participant"}
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
           {plans.map((plan) => {
             const copy = PLAN_COPY[plan.internalKey]?.[locale] || { name: plan.displayName, description: "", entitlement: "" };
             const isGirls = plan.internalKey === "girls_program";
-            const approvedMinors = minors.filter((minor) => !minor.consentRevokedAt);
             const blocked = !plan.checkoutReady || missingForms.length > 0 || (isGirls && !approvedMinors.length);
             return (
-              <Card key={plan.id} className={`relative flex flex-col border-white/10 bg-[#121826] text-white ${plan.catalog.featured ? "border-[#B06CFF]/60 shadow-[0_0_28px_rgba(176,108,255,0.15)]" : ""}`}>
+              <Card key={plan.id} className={`relative flex flex-col border-white/10 bg-[#121826] text-white ${isGirls ? "border-[#B06CFF]/30" : ""} ${plan.catalog.featured ? "border-[#B06CFF]/60 shadow-[0_0_28px_rgba(176,108,255,0.15)]" : ""}`}>
                 {plan.catalog.featured && <Badge className="absolute right-4 top-4 bg-[#B06CFF] text-white">{spanish ? "Destacada" : "Featured"}</Badge>}
                 <CardHeader>
                   <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-[#5EEBFF]/10 text-[#5EEBFF]"><CreditCard className="h-5 w-5" /></div>
@@ -283,21 +308,42 @@ export default function PortalBilling() {
                     <div className="flex gap-2"><Check className="h-4 w-4 flex-shrink-0 text-[#5EEBFF]" />{copy.entitlement}</div>
                     <div className="flex gap-2"><ShieldCheck className="h-4 w-4 flex-shrink-0 text-[#B06CFF]" />{spanish ? "Procesado de forma segura por Stripe" : "Securely processed by Stripe"}</div>
                   </div>
-                  <Button
-                    className="mt-auto w-full bg-[#5EEBFF] text-[#0B0F14] hover:bg-[#5EEBFF]/90"
-                    disabled={blocked || checkout.isPending || hasMembership}
-                    onClick={() => checkout.mutate({ planKey: plan.internalKey, ...(isGirls && selectedMinorId ? { minorProfileId: selectedMinorId } : {}) })}
-                  >
-                    {checkout.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
-                    {missingForms.length
-                      ? (spanish ? "Completa tus formularios" : "Complete your forms")
-                      : pendingMembership
-                        ? (spanish ? "Confirmación de pago pendiente" : "Payment confirmation pending")
-                        : activeMembership
-                          ? (spanish ? "Ya tienes una membresía" : "Membership already active")
-                          : (spanish ? "Comenzar membresía" : "Start membership")}
-                  </Button>
-                  {isGirls && !minors.filter((minor) => !minor.consentRevokedAt).length && <p className="mt-3 text-xs text-amber-300">{spanish ? "Agrega un perfil de participante aprobado para ver esta opción." : "Add an approved participant profile to use this option."}</p>}
+                  {isGirls && !approvedMinors.length ? (
+                    <Button asChild className="mt-auto w-full bg-[#B06CFF] text-white hover:bg-[#B06CFF]/90">
+                      <Link href={portalPath("/portal/schedule")}>
+                        {spanish ? "Configurar participante" : "Set up participant"}
+                      </Link>
+                    </Button>
+                  ) : (
+                    <>
+                      {isGirls && approvedMinors.length > 1 && (
+                        <label className="mb-3 space-y-2 text-xs text-gray-400">
+                          <span className="block uppercase tracking-wide">{spanish ? "Participante" : "Participant"}</span>
+                          <select
+                            value={selectedMinorId}
+                            onChange={(event) => setSelectedMinorId(event.target.value)}
+                            className="min-h-10 w-full rounded-md border border-white/10 bg-[#0B0F14] px-3 text-sm text-white"
+                          >
+                            {approvedMinors.map((minor) => <option key={minor.id} value={minor.id}>{minor.firstName} {minor.lastName}</option>)}
+                          </select>
+                        </label>
+                      )}
+                      <Button
+                        className="mt-auto w-full bg-[#5EEBFF] text-[#0B0F14] hover:bg-[#5EEBFF]/90"
+                        disabled={blocked || checkout.isPending || hasMembership}
+                        onClick={() => checkout.mutate({ planKey: plan.internalKey, ...(isGirls && selectedMinorId ? { minorProfileId: selectedMinorId } : {}) })}
+                      >
+                        {checkout.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
+                        {missingForms.length
+                          ? (spanish ? "Completa tus formularios" : "Complete your forms")
+                          : pendingMembership
+                            ? (spanish ? "Confirmación de pago pendiente" : "Payment confirmation pending")
+                            : activeMembership
+                              ? (spanish ? "Ya tienes una membresía" : "Membership already active")
+                              : (spanish ? "Comenzar membresía" : "Start membership")}
+                      </Button>
+                    </>
+                  )}
                   {!plan.checkoutReady && <p className="mt-3 text-xs text-gray-500">{spanish ? "Disponible pronto." : "Checkout setup in progress."}</p>}
                 </CardContent>
               </Card>

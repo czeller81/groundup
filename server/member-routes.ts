@@ -29,7 +29,6 @@ import Stripe from "stripe";
 import {
   STRIPE_MEMBERSHIP_CATALOG,
   activeStripeMembershipForUser,
-  canSelectGirlsProgram,
   getBillingPlanConfig,
   getStripeCheckoutReconciliationHealth,
   adminMembershipBillingState,
@@ -224,13 +223,11 @@ export function registerMemberRoutes(app: Express) {
 
   app.get("/api/portal/billing/plans", requireAuth, async (req, res) => {
     try {
-      const includeGirls = await canSelectGirlsProgram(req.session.userId!);
       const plans = await db.select().from(membershipPlans)
         .where(eq(membershipPlans.active, true))
         .orderBy(asc(membershipPlans.displayName));
       res.json(plans
         .filter((plan) => isBillingPlanKey(plan.internalKey))
-        .filter((plan) => plan.internalKey !== "girls_program" || includeGirls)
         .map((plan) => ({
           ...plan,
           billingKey: plan.internalKey,
