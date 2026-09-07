@@ -49,7 +49,7 @@ export default function FirstVisitBooking() {
   const reserve = useMutation({
     mutationFn: async () => {
       if (!selected) throw new Error("Choose an available class.");
-      const response = await apiRequest("POST", "/api/classes/reservations", { occurrenceId: selected.id, ...details });
+       const response = await apiRequest("POST", "/api/classes/reservations", { occurrenceId: selected.id, ...details, locale });
       return response.json();
     },
     onSuccess: (result) => {

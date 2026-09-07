@@ -84,7 +84,7 @@ export default function AdaptiveCapacity() {
   const form = useForm<Values>({ resolver: zodResolver(schema), defaultValues: { aiComfort: "", consent: false } });
   const mutation = useMutation({
     mutationFn: (values: Values) => apiRequest("POST", "/api/trial-leads", {
-      ...values, program: "adaptive-capacity", phone: "not-provided",
+      ...values, program: "adaptive-capacity", phone: "not-provided", locale,
       source: "adaptive-capacity", consentedAt: new Date().toISOString(),
       attribution: getAttribution(),
     }),

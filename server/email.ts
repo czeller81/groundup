@@ -63,6 +63,106 @@ export async function sendStaffNotificationEmail(input: {
   }
 }
 
+export function leadAcknowledgementEmailContent(input: {
+  firstName: string;
+  program: string;
+  classTitle?: string | null;
+  locale: "en" | "es";
+}) {
+  const adaptive = input.program === "adaptive-capacity";
+  if (input.locale === "es") {
+    return {
+      subject: adaptive ? "Recibimos tu registro para Capacidad Adaptativa" : "Recibimos tu solicitud de Ground Up",
+      text: [
+        `Hola ${input.firstName},`,
+        "",
+        adaptive
+          ? "Recibimos tu registro para recibir noticias sobre Capacidad Adaptativa."
+          : `Recibimos tu solicitud${input.classTitle ? ` para ${input.classTitle}` : ""}.`,
+        "Nuestro equipo revisará tu información y te responderá dentro de 24 a 48 horas.",
+        "",
+        "Gracias,",
+        "Ground Up Jiu-Jitsu & Fitness",
+      ].join("\n"),
+    };
+  }
+  return {
+    subject: adaptive ? "We received your Adaptive Capacity signup" : "We received your Ground Up request",
+    text: [
+      `Hi ${input.firstName},`,
+      "",
+      adaptive
+        ? "We received your signup to hear more about Adaptive Capacity."
+        : `We received your request${input.classTitle ? ` for ${input.classTitle}` : ""}.`,
+      "Our team will review your information and get back to you within 24–48 hours.",
+      "",
+      "Thank you,",
+      "Ground Up Jiu-Jitsu & Fitness",
+    ].join("\n"),
+  };
+}
+
+export async function sendLeadAcknowledgementEmail(input: {
+  to: string;
+  firstName: string;
+  program: string;
+  classTitle?: string | null;
+  locale: "en" | "es";
+}) {
+  const copy = leadAcknowledgementEmailContent(input);
+  const response = await resend().proxy("resend", "/emails", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      from: "Ground Up <info@groundupbjj.com>",
+      to: [input.to],
+      subject: copy.subject,
+      text: copy.text,
+    }),
+  });
+  if (!response.ok) {
+    throw new Error(`Resend returned HTTP ${response.status}`);
+  }
+}
+
+export function contactAcknowledgementEmailContent(input: {
+  firstName: string;
+  subject: string;
+  locale: "en" | "es";
+}) {
+  return input.locale === "es"
+    ? {
+        subject: "Recibimos tu mensaje de Ground Up",
+        text: `Hola ${input.firstName},\n\nRecibimos tu mensaje sobre “${input.subject}”. Nuestro equipo te responderá dentro de 24 a 48 horas.\n\nGracias,\nGround Up Jiu-Jitsu & Fitness`,
+      }
+    : {
+        subject: "We received your Ground Up message",
+        text: `Hi ${input.firstName},\n\nWe received your message about “${input.subject}”. Our team will get back to you within 24–48 hours.\n\nThank you,\nGround Up Jiu-Jitsu & Fitness`,
+      };
+}
+
+export async function sendContactAcknowledgementEmail(input: {
+  to: string;
+  firstName: string;
+  subject: string;
+  locale: "en" | "es";
+}) {
+  const copy = contactAcknowledgementEmailContent(input);
+  const response = await resend().proxy("resend", "/emails", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      from: "Ground Up <info@groundupbjj.com>",
+      to: [input.to],
+      subject: copy.subject,
+      text: copy.text,
+    }),
+  });
+  if (!response.ok) {
+    throw new Error(`Resend returned HTTP ${response.status}`);
+  }
+}
+
 export async function sendClassLifecycleEmail(input: {
   to: string;
   firstName: string;

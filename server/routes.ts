@@ -11,7 +11,12 @@ import path from "path";
 import crypto from "node:crypto";
 import { parseRawJsonBody, verifyCalendlySignature, verifyStripeSignature } from "./webhook-security";
 import { bookingBelongsToUser, coachCanManageMember, createPublicRateLimit, requireAuth, requireRole } from "./route-security";
-import { sendPasswordResetEmail, sendStaffNotificationEmail } from "./email";
+import {
+  sendContactAcknowledgementEmail,
+  sendLeadAcknowledgementEmail,
+  sendPasswordResetEmail,
+  sendStaffNotificationEmail,
+} from "./email";
 import { registerClassBookingRoutes } from "./class-booking-routes";
 import { registerMemberRoutes } from "./member-routes";
 import { applyStripeSubscription, expirePendingCheckoutSession } from "./membership-billing";
@@ -620,6 +625,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid data", errors: parsed.error.errors });
       }
       const submission = await storage.createContactSubmission(parsed.data);
+      const locale = req.body.locale === "es" ? "es" : "en";
       try {
         const notificationMessage = `${submission.firstName} ${submission.lastName} sent a ${submission.subject.toLowerCase()} message.`;
         const emailText = [
@@ -648,12 +654,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         } catch (emailError) {
           console.error("Staff email failed for contact submission:", emailError);
-          return res.status(502).json({ message: "Message saved, but we couldn't send the notification email. Please try again." });
         }
       } catch (notificationError) {
         console.error("Staff notification failed for contact submission:", notificationError);
       }
-      res.json({ message: "Thank you for your message. We'll get back to you soon!" });
+      try {
+        await sendContactAcknowledgementEmail({
+          to: submission.email,
+          firstName: submission.firstName,
+          subject: submission.subject,
+          locale,
+        });
+      } catch (emailError) {
+        console.error("Client email failed for contact submission:", emailError);
+      }
+      res.json({
+        message: locale === "es"
+          ? "Recibimos tu mensaje. Nuestro equipo te responderá dentro de 24 a 48 horas."
+          : "We received your message. Our team will get back to you within 24–48 hours.",
+      });
     } catch (error) {
       res.status(500).json({ message: "Failed to send message" });
     }
@@ -675,11 +694,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         source: parsed.data.source || "training-book",
         consentedAt: parsed.data.consentedAt || new Date(),
       });
+      const locale = req.body.locale === "es" ? "es" : "en";
       try {
         const adaptive = lead.program === "adaptive-capacity";
         const notificationTitle = adaptive ? "New Adaptive Capacity signup" : "New training lead";
         const notificationMessage = `${lead.firstName} ${lead.lastName} joined the ${adaptive ? "Adaptive Capacity interest list" : "training trial"} list.`;
         const inboxPath = `/portal/admin?inbox=${adaptive ? "adaptive" : "training"}`;
+        const emailText = [
+          notificationMessage,
+          "",
+          `Name: ${lead.firstName} ${lead.lastName}`,
+          `Email: ${lead.email}`,
+          `Phone: ${lead.phone}`,
+          `Program: ${lead.program}`,
+          lead.classTitle ? `Class: ${lead.classTitle}` : null,
+          lead.classDay ? `Day: ${lead.classDay}` : null,
+          lead.classTime ? `Time: ${lead.classTime}` : null,
+          lead.childName ? `Child: ${lead.childName}${lead.childAge ? ` (${lead.childAge})` : ""}` : null,
+          lead.source ? `Source: ${lead.source}` : null,
+        ].filter(Boolean).join("\n");
         await storage.createStaffNotification({
           kind: adaptive ? "adaptive_lead" : "training_lead",
           title: notificationTitle,
@@ -689,8 +722,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         try {
           await sendStaffNotificationEmail({
             subject: `Ground Up: ${notificationTitle}`,
-            text: notificationMessage,
+            text: emailText,
             inboxPath,
+            replyTo: lead.email,
           });
         } catch (emailError) {
           console.error("Staff email failed for trial lead:", emailError);
@@ -698,7 +732,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } catch (notificationError) {
         console.error("Staff notification failed for trial lead:", notificationError);
       }
-      res.json({ message: lead.program === "adaptive-capacity" ? "You're on the interest list." : "Booking confirmed!" });
+      try {
+        await sendLeadAcknowledgementEmail({
+          to: lead.email,
+          firstName: lead.firstName,
+          program: lead.program,
+          classTitle: lead.classTitle,
+          locale,
+        });
+      } catch (emailError) {
+        console.error("Client email failed for trial lead:", emailError);
+      }
+      res.json({
+        message: locale === "es"
+          ? "Recibimos tu información. Nuestro equipo te responderá dentro de 24 a 48 horas."
+          : "We received your information. Our team will get back to you within 24–48 hours.",
+      });
     } catch (error) {
       console.error("Trial lead error:", error);
       res.status(500).json({ message: "Failed to save booking" });
