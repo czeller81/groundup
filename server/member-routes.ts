@@ -125,17 +125,19 @@ export function discoveryReservationCountsAsPriorUse(status: string, attendance:
   return status === "confirmed" || status === "waitlisted" || Boolean(attendance);
 }
 
-async function duplicateDiscoveryReason(userId: string) {
-  const user = await storage.getUserById(userId);
+type DiscoveryQueryExecutor = Pick<typeof db, "select">;
+
+async function duplicateDiscoveryReason(userId: string, executor: DiscoveryQueryExecutor = db) {
+  const [user] = await executor.select().from(users).where(eq(users.id, userId)).limit(1);
   if (!user) return "USER_NOT_FOUND";
-  const [existingPass] = await db.select({ id: discoveryPasses.id }).from(discoveryPasses)
+  const [existingPass] = await executor.select({ id: discoveryPasses.id }).from(discoveryPasses)
     .where(eq(discoveryPasses.userId, userId)).limit(1);
   if (existingPass) return "DISCOVERY_ALREADY_USED";
   const [samePhone] = user.phone
-    ? await db.select({ id: users.id }).from(users).where(and(eq(users.phone, user.phone), sql`${users.id} <> ${userId}`)).limit(1)
+    ? await executor.select({ id: users.id }).from(users).where(and(eq(users.phone, user.phone), sql`${users.id} <> ${userId}`)).limit(1)
     : [];
   if (samePhone) return "ADMIN_REVIEW_REQUIRED";
-  const [priorReservation] = await db.select({ id: classReservations.id }).from(classReservations)
+  const [priorReservation] = await executor.select({ id: classReservations.id }).from(classReservations)
     .where(and(
       or(
         eq(classReservations.userId, userId),
@@ -150,11 +152,11 @@ async function duplicateDiscoveryReason(userId: string) {
   return null;
 }
 
-async function missingRequiredBookingForms(userId: string) {
-  const requiredForms = await db.select({ id: forms.id }).from(forms)
+export async function missingRequiredBookingForms(userId: string, executor: DiscoveryQueryExecutor = db) {
+  const requiredForms = await executor.select({ id: forms.id }).from(forms)
     .where(eq(forms.requiredBeforeBooking, true));
   if (!requiredForms.length) return [];
-  const submittedForms = await db.select({ formId: formResponses.formId }).from(formResponses)
+  const submittedForms = await executor.select({ formId: formResponses.formId }).from(formResponses)
     .where(and(
       eq(formResponses.userId, userId),
       eq(formResponses.status, "submitted"),
@@ -164,41 +166,56 @@ async function missingRequiredBookingForms(userId: string) {
   return requiredForms.filter((form) => !submittedIds.has(form.id)).map((form) => form.id);
 }
 
-async function issueDiscoveryPass(userId: string, actorId: string | null, reason?: string, override = false) {
-  const duplicate = await duplicateDiscoveryReason(userId);
-  if (duplicate && !override) {
-    const error = new Error(duplicate);
-    (error as Error & { code?: string }).code = duplicate;
+export async function issueDiscoveryPass(userId: string, actorId: string | null, reason?: string, override = false) {
+  try {
+    return await db.transaction(async (tx) => {
+      const duplicate = await duplicateDiscoveryReason(userId, tx);
+      if (duplicate && !override) {
+        const error = new Error(duplicate);
+        (error as Error & { code?: string }).code = duplicate;
+        throw error;
+      }
+      if (!override && (await missingRequiredBookingForms(userId, tx)).length) {
+        const error = new Error("DISCOVERY_FORMS_INCOMPLETE");
+        (error as Error & { code?: string }).code = "DISCOVERY_FORMS_INCOMPLETE";
+        throw error;
+      }
+      const now = new Date();
+      const expiration = new Date(now.getTime() + discoveryDurationDays * 24 * 60 * 60 * 1000);
+      const [pass] = await tx.insert(discoveryPasses).values({
+        userId,
+        claimTimestamp: now,
+        activationTimestamp: now,
+        expirationTimestamp: expiration,
+        status: "CLAIMED",
+        duplicateCheck: { result: duplicate || "CLEAR", checkedAt: now.toISOString() },
+        adminOverrideReason: override ? reason : null,
+        createdBy: actorId,
+      }).returning();
+      await tx.insert(discoveryEntitlements).values([
+        { discoveryPassId: pass.id, category: "SKILL", status: "AVAILABLE" },
+        { discoveryPassId: pass.id, category: "STRENGTH", status: "AVAILABLE" },
+      ]);
+      await tx.insert(memberAuditEvents).values({
+        actorId,
+        userId,
+        targetType: "discovery_pass",
+        targetId: pass.id,
+        action: override ? "discovery_pass_override_issued" : "discovery_pass_claimed",
+        after: { expirationTimestamp: expiration.toISOString(), duplicate },
+        reason: reason || null,
+      });
+      return pass;
+    });
+  } catch (error) {
+    const databaseError = error as Error & { code?: string; constraint?: string };
+    if (databaseError.code === "23505" && databaseError.constraint === "discovery_passes_active_user_unique") {
+      const duplicateError = new Error("DISCOVERY_ALREADY_USED");
+      (duplicateError as Error & { code?: string }).code = "DISCOVERY_ALREADY_USED";
+      throw duplicateError;
+    }
     throw error;
   }
-  const now = new Date();
-  const expiration = new Date(now.getTime() + discoveryDurationDays * 24 * 60 * 60 * 1000);
-  return db.transaction(async (tx) => {
-    const [pass] = await tx.insert(discoveryPasses).values({
-      userId,
-      claimTimestamp: now,
-      activationTimestamp: now,
-      expirationTimestamp: expiration,
-      status: "CLAIMED",
-      duplicateCheck: { result: duplicate || "CLEAR", checkedAt: now.toISOString() },
-      adminOverrideReason: override ? reason : null,
-      createdBy: actorId,
-    }).returning();
-    await tx.insert(discoveryEntitlements).values([
-      { discoveryPassId: pass.id, category: "SKILL", status: "AVAILABLE" },
-      { discoveryPassId: pass.id, category: "STRENGTH", status: "AVAILABLE" },
-    ]);
-    await tx.insert(memberAuditEvents).values({
-      actorId,
-      userId,
-      targetType: "discovery_pass",
-      targetId: pass.id,
-      action: override ? "discovery_pass_override_issued" : "discovery_pass_claimed",
-      after: { expirationTimestamp: expiration.toISOString(), duplicate },
-      reason: reason || null,
-    });
-    return pass;
-  });
 }
 
 export function registerMemberRoutes(app: Express) {
@@ -792,12 +809,6 @@ export function registerMemberRoutes(app: Express) {
 
   app.post("/api/portal/discovery/claim", requireAuth, async (req, res) => {
     try {
-      if ((await missingRequiredBookingForms(req.session.userId!)).length) {
-        return res.status(409).json({
-          code: "DISCOVERY_FORMS_INCOMPLETE",
-          message: "Complete the required waivers before activating your Discovery Pass.",
-        });
-      }
       const pass = await issueDiscoveryPass(req.session.userId!, req.session.userId!);
       await setLifecycle(req.session.userId!, "DISCOVERY_PASS", req.session.userId!, "Discovery Pass claimed", "member_claim");
       res.status(201).json(await getPass(req.session.userId!));
@@ -805,6 +816,12 @@ export function registerMemberRoutes(app: Express) {
       const code = (error as Error & { code?: string }).code;
       if (code === "DISCOVERY_ALREADY_USED" || code === "ADMIN_REVIEW_REQUIRED") {
         return res.status(409).json({ code, message: code === "DISCOVERY_ALREADY_USED" ? "You have already used a Discovery Pass." : "An admin review is required before another pass can be issued." });
+      }
+      if (code === "DISCOVERY_FORMS_INCOMPLETE") {
+        return res.status(409).json({
+          code,
+          message: "Complete the required waivers before activating your Discovery Pass.",
+        });
       }
       console.error(error);
       res.status(500).json({ code: "DISCOVERY_CLAIM_FAILED", message: "Failed to claim your Discovery Pass." });
