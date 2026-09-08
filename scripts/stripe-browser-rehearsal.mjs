@@ -8,6 +8,24 @@ const BASE_URL = process.env.BROWSER_QA_BASE_URL || "http://127.0.0.1:5000";
 const CHROMIUM_PATH =
   process.env.BROWSER_EXECUTABLE_PATH ||
   "/nix/store/zi4f80l169xlmivz8vja8wlphq74qqk0-chromium-125.0.6422.141/bin/chromium";
+const FORMS_LOCALE = process.env.BROWSER_QA_FORMS_LOCALE === "en" ? "en" : "es";
+const formsFlow = FORMS_LOCALE === "es"
+  ? {
+      browserLocale: "es-US",
+      signupPath: "/es/portal/signup",
+      dashboardPath: "/es/portal/dashboard",
+      logoutLabel: "Cerrar sesión",
+      actionRequiredLabel: "Acción requerida",
+      submitLabel: "Enviar formulario",
+    }
+  : {
+      browserLocale: "en-US",
+      signupPath: "/portal/signup",
+      dashboardPath: "/portal/dashboard",
+      logoutLabel: "Log out",
+      actionRequiredLabel: "Action required",
+      submitLabel: "Submit form",
+    };
 const password = "GroundUp-Browser-QA-2026!";
 const prefix = `ground-up-browser-${Date.now()}-${crypto.randomBytes(3).toString("hex")}`;
 const email = `${prefix}@example.invalid`;
@@ -71,8 +89,16 @@ async function completeForm(page, slug) {
   }
 }
 
-async function submitEmbeddedRequiredForm(page, slug, title) {
-  await page.getByRole("heading", { name: title, exact: true }).waitFor();
+async function submitEmbeddedRequiredForm(page, slug, apiTitle) {
+  const formHeading = page.locator('[role="dialog"] h1').last();
+  await formHeading.waitFor();
+  const displayedTitle = (await formHeading.textContent())?.trim();
+  if (!displayedTitle) {
+    throw new Error(`Required form ${slug} did not render a heading`);
+  }
+  if (FORMS_LOCALE === "es" && displayedTitle === apiTitle) {
+    throw new Error(`Required form ${slug} rendered its untranslated API title`);
+  }
   await completeForm(page, slug);
   const submitResponse = page.waitForResponse((response) =>
     response.url().endsWith(`/api/portal/forms/${slug}/submit`)
@@ -211,7 +237,7 @@ async function main() {
   });
   const context = await browser.newContext({
     viewport: { width: 1440, height: 1000 },
-    locale: "en-US",
+    locale: formsFlow.browserLocale,
   });
   const page = await context.newPage();
   page.on("console", (message) => {
@@ -219,9 +245,8 @@ async function main() {
   });
 
   try {
-    await page.goto(`${BASE_URL}/portal/login`, { waitUntil: "networkidle" });
+    await page.goto(`${BASE_URL}${formsFlow.signupPath}`, { waitUntil: "networkidle" });
     await dismissAnalyticsConsent(page);
-    await page.getByTestId("tab-signup").click();
     await page.getByTestId("input-signup-firstname").fill("Browser QA");
     await page.getByTestId("input-signup-lastname").fill("Member");
     await page.getByTestId("input-signup-email").fill(email);
@@ -229,20 +254,26 @@ async function main() {
     await page.getByTestId("input-signup-password").fill(password);
     await page.getByTestId("input-signup-confirm").fill(password);
     await Promise.all([
-      page.waitForURL(/\/portal\/dashboard$/),
+      page.waitForURL((url) => url.pathname === formsFlow.dashboardPath),
       page.getByTestId("button-signup").click(),
     ]);
-    await page.getByText("Log out", { exact: true }).waitFor();
+    await page.getByText(formsFlow.logoutLabel, { exact: true }).waitFor();
     let documentRequests = 0;
     const countDocumentRequest = (request) => {
       if (request.resourceType() === "document") documentRequests += 1;
     };
     page.on("request", countDocumentRequest);
-    await page.goto(`${BASE_URL}/portal/dashboard`, { waitUntil: "networkidle" });
+    await page.goto(`${BASE_URL}${formsFlow.dashboardPath}`, { waitUntil: "networkidle" });
     const forcedFormDialog = page.locator('[role="dialog"]').filter({
       has: page.getByTestId("button-submit-form"),
     });
     await forcedFormDialog.waitFor({ state: "visible" });
+    await page.getByRole("heading", { name: formsFlow.actionRequiredLabel, exact: true }).waitFor();
+    await page.getByRole("button", { name: formsFlow.submitLabel, exact: true }).waitFor();
+    const renderedLocale = await page.locator("html").getAttribute("lang");
+    if (renderedLocale !== FORMS_LOCALE) {
+      throw new Error(`Required-form flow rendered locale ${renderedLocale}, expected ${FORMS_LOCALE}`);
+    }
     documentRequests = 0;
     const requiredForms = await page.evaluate(async () => {
       const response = await fetch("/api/portal/forms");
@@ -264,10 +295,7 @@ async function main() {
         throw new Error(`Required form ${slug} caused a full-page navigation`);
       }
       if (index < requiredForms.length - 1) {
-        await page.getByRole("heading", {
-          name: requiredForms[index + 1].title,
-          exact: true,
-        }).waitFor();
+        await page.locator('[role="dialog"] h1').last().waitFor();
       }
     }
 
@@ -287,6 +315,7 @@ async function main() {
         sequentialSubmissions: requiredForms.length,
         fullPageNavigationsDuringSubmissions: documentRequests,
         modalClosedAfterFinalSubmission: true,
+        locale: FORMS_LOCALE,
       }));
       return;
     }
@@ -436,6 +465,7 @@ async function main() {
       screenshots: 15,
       viewport: "desktop + 320/375/390/430px",
       requiredForms: "sequential embedded modal submissions without full-page navigation",
+      requiredFormsLocale: FORMS_LOCALE,
       checkout: "Stripe-hosted test Checkout completed",
       webhookUi: "active, past_due, recovered, cancel_at_period_end",
       plans: ["ground_up_2", "ground_up_3", "ground_up_personal"],

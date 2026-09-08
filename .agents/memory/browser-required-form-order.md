@@ -7,4 +7,4 @@ Browser coverage for the forced required-form modal must derive the incomplete f
 
 **Why:** Existing databases can retain forms in an order and with titles that differ from the current seed declaration, while the dashboard advances through the order it receives.
 
-**How to apply:** Use the forms API response as the source of truth for modal progression assertions, and keep the no-document-navigation check scoped to the submissions themselves.
+**How to apply:** Use the forms API response as the source of truth for modal progression assertions, and keep the no-document-navigation check scoped to the submissions themselves. In localized runs, use API data for slug/order only and assert each rendered form heading from the modal DOM rather than matching the API's English title.
