@@ -16,12 +16,23 @@ import { localizeApiError, localizeFormOption, localizeFormText, useLocale } fro
 import { trackEvent } from "@/lib/analytics";
 import { localizedPortalPath } from "@/lib/portal-navigation";
 import { Save, Send, Loader2, CheckCircle, Lock, RotateCcw } from "lucide-react";
+import { format } from "date-fns";
 
 type PortalFormProps = {
   formSlug?: string;
   embedded?: boolean;
   onSubmitted?: (slug: string) => void;
 };
+
+function shouldPrefillToday(field: any) {
+  if (field.type !== "date") return false;
+  if (field.autoFillToday === true) return true;
+
+  const key = String(field.name || field.id || "").toLowerCase();
+  const label = String(field.label || "").toLowerCase();
+  return key === "signaturedate"
+    || /signature\s*date|date\s+of\s+signature|signed\s+date/.test(label);
+}
 
 export default function PortalForm({ formSlug, embedded = false, onSubmitted }: PortalFormProps = {}) {
   const routeParams = useParams<{ slug: string }>();
@@ -45,10 +56,23 @@ export default function PortalForm({ formSlug, embedded = false, onSubmitted }: 
   const isSubmitted = existingResponse?.status === "submitted";
 
   useEffect(() => {
-    if (existingResponse?.answers) {
-      setAnswers(existingResponse.answers as Record<string, any>);
+    if (!form || !slug) return;
+
+    const nextAnswers: Record<string, any> = existingResponse?.answers
+      && typeof existingResponse.answers === "object"
+      ? { ...existingResponse.answers }
+      : {};
+    const today = format(new Date(), "yyyy-MM-dd");
+
+    for (const field of form.fields || []) {
+      const fieldKey = field.name || field.id;
+      if (fieldKey && shouldPrefillToday(field) && !nextAnswers[fieldKey]) {
+        nextAnswers[fieldKey] = today;
+      }
     }
-  }, [existingResponse]);
+
+    setAnswers(nextAnswers);
+  }, [existingResponse?.id, form?.id, slug]);
 
   const saveMutation = useMutation({
     mutationFn: async () => {
@@ -57,7 +81,9 @@ export default function PortalForm({ formSlug, embedded = false, onSubmitted }: 
     },
     onSuccess: () => {
       setLastSaved(new Date());
-      queryClient.invalidateQueries({ queryKey: ["/api/portal/forms"] });
+      // Keep the active form query stable while the user is editing. Refetching
+      // it here can briefly restore stale answers over a fresh select choice.
+      queryClient.invalidateQueries({ queryKey: ["/api/portal/forms"], refetchType: "none" });
     },
     onError: (error: any) => {
       toast({ title: copy.error, description: localizeApiError(error.message, locale, copy.failedToSaveForm), variant: "destructive" });
