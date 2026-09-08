@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import crypto from "node:crypto";
+import fs from "node:fs";
 import test from "node:test";
 import Stripe from "stripe";
 import { bookingBelongsToUser, canRetryWebhook, coachCanManageMember, createOriginProtection, createPublicRateLimit, createScannerProbeGuard, isInternalTestEmail, isPublicOccurrenceText, isScannerProbePath, requireAuth, requireRole } from "./route-security";
@@ -9,6 +10,7 @@ import { FORM_COPY, PORTAL_COPY, localizeFormOption, localizeFormText } from "..
 import { classDateLabel, classTimeLabel } from "../client/src/lib/class-booking";
 import { portalNavigationPaths } from "../client/src/lib/portal-navigation";
 import { localizeApiError, resolveLocale } from "../client/src/lib/locale";
+import { PUBLIC_NO_SCRIPT_DISCOVERY_ROUTES } from "../client/src/public-route-inventory";
 import { applyDocumentLocale, documentLocaleForPath } from "./document-locale";
 
 function responseRecorder() {
@@ -76,6 +78,29 @@ test("document locale follows the localized route on direct and portal paths", (
   assert.equal(documentLocaleForPath("/portal/login"), "en");
   assert.match(applyDocumentLocale('<html lang="en">', "/es/discovery-pass"), /<html lang="es">/);
   assert.match(applyDocumentLocale('<html lang="es">', "/discovery-pass"), /<html lang="en">/);
+});
+
+test("server fallback pages preserve localized Discovery Pass destinations", () => {
+  const routesSource = fs.readFileSync(new URL("./routes.ts", import.meta.url), "utf8");
+  const pageContentSource = routesSource.slice(
+    routesSource.indexOf("const PAGE_CONTENT"),
+    routesSource.indexOf("async function serveWithMeta"),
+  );
+  const entryFor = (routePath: string) => {
+    const escapedPath = routePath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const entry = pageContentSource.match(new RegExp(`  "${escapedPath}":[\\s\\S]*?(?=\\n  "/|\\n};)`));
+    assert.ok(entry, `Missing server fallback content for ${routePath}`);
+    return entry[0];
+  };
+
+  for (const route of PUBLIC_NO_SCRIPT_DISCOVERY_ROUTES) {
+    assert.match(entryFor(route.englishPath), new RegExp(`href="${route.englishDestination}"`));
+    assert.match(entryFor(route.spanishPath), new RegExp(`href="${route.spanishDestination}"`));
+  }
+
+  assert.match(entryFor("/es/girls"), /href="\/es\/contacto"/);
+  assert.doesNotMatch(entryFor("/es/girls"), /discovery-pass/);
+  assert.doesNotMatch(pageContentSource, /"\/es\/programas":/);
 });
 
 test("payment creation cannot use another member's booking", () => {

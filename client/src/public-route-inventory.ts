@@ -21,6 +21,21 @@ export const PUBLIC_ROUTE_INVENTORY = [
 ] as const;
 
 /**
+ * Public marketing pages whose server-rendered fallback contains a free-entry
+ * call to action. Keep both destinations explicit so locale drift is caught
+ * alongside the client route inventory.
+ */
+export const PUBLIC_NO_SCRIPT_DISCOVERY_ROUTES = [
+  { englishPath: "/", spanishPath: "/es", englishDestination: "/discovery-pass", spanishDestination: "/es/discovery-pass" },
+  { englishPath: "/schedule", spanishPath: "/es/horario", englishDestination: "/discovery-pass", spanishDestination: "/es/discovery-pass" },
+  { englishPath: "/pricing", spanishPath: "/es/pricing", englishDestination: "/discovery-pass", spanishDestination: "/es/discovery-pass" },
+  { englishPath: "/coaches", spanishPath: "/es/coaches", englishDestination: "/discovery-pass", spanishDestination: "/es/discovery-pass" },
+  { englishPath: "/personal-training", spanishPath: "/es/personal-training", englishDestination: "/discovery-pass", spanishDestination: "/es/discovery-pass" },
+  { englishPath: "/contact", spanishPath: "/es/contacto", englishDestination: "/discovery-pass", spanishDestination: "/es/discovery-pass" },
+  { englishPath: "/womens-self-defense", spanishPath: "/es/womens-self-defense", englishDestination: "/discovery-pass", spanishDestination: "/es/discovery-pass" },
+] as const;
+
+/**
  * Public URLs kept for backwards compatibility. They must not render a
  * second page implementation.
  */
