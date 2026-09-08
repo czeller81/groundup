@@ -20,6 +20,7 @@ import {
 import { registerClassBookingRoutes } from "./class-booking-routes";
 import { registerMemberRoutes } from "./member-routes";
 import { applyStripeSubscription, expirePendingCheckoutSession } from "./membership-billing";
+import { applyDocumentLocale } from "./document-locale";
 
 const PAGE_META: Record<string, { title: string; description: string; canonical: string }> = {
   "/": {
@@ -211,6 +212,7 @@ async function serveWithMeta(req: Request, res: Response, next: NextFunction) {
   try {
     const indexPath = path.resolve(import.meta.dirname, "public", "index.html");
     let html = await fs.promises.readFile(indexPath, "utf-8");
+    html = applyDocumentLocale(html, routePath);
 
     const title = meta.title.replace(/&/g, "&amp;");
     const desc = meta.description.replace(/"/g, "&quot;");

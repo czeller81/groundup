@@ -5,6 +5,7 @@ import { createServer as createViteServer, createLogger } from "vite";
 import { type Server } from "http";
 import viteConfig from "../vite.config";
 import { nanoid } from "nanoid";
+import { applyDocumentLocale } from "./document-locale";
 
 const viteLogger = createLogger();
 
@@ -51,15 +52,16 @@ export async function setupVite(app: Express, server: Server) {
         "client",
         "index.html",
       );
+      const requestPath = new URL(req.originalUrl, "http://localhost").pathname.replace(/\/+$/, "") || "/";
 
       // always reload the index.html file from disk incase it changes
       let template = await fs.promises.readFile(clientTemplate, "utf-8");
+      template = applyDocumentLocale(template, requestPath);
       template = template.replace(
         `src="/src/main.tsx"`,
         `src="/src/main.tsx?v=${nanoid()}"`,
       );
       const page = await vite.transformIndexHtml(url, template);
-       const requestPath = new URL(req.originalUrl, "http://localhost").pathname.replace(/\/+$/, "") || "/";
       const knownPublicPaths = new Set([
         "/", "/schedule", "/pricing", "/coaches", "/personal-training",
          "/contact", "/privacy", "/book", "/womens-self-defense", "/kids", "/girls", "/adaptive-capacity", "/discovery-pass",
@@ -92,11 +94,11 @@ export function serveStatic(app: Express) {
 
   // Keep SPA navigation working, but give crawlers and clients a real 404 status
   // for routes that are not part of the public or portal application.
-  app.use("*", (req, res) => {
+  app.use("*", async (req, res, next) => {
     if (req.path.startsWith("/api/")) {
       return res.status(404).json({ message: "Not found" });
     }
-     const requestPath = new URL(req.originalUrl, "http://localhost").pathname.replace(/\/+$/, "") || "/";
+    const requestPath = new URL(req.originalUrl, "http://localhost").pathname.replace(/\/+$/, "") || "/";
     const knownPublicPaths = new Set([
       "/", "/schedule", "/pricing", "/coaches", "/personal-training",
        "/contact", "/privacy", "/book", "/womens-self-defense", "/kids", "/girls", "/adaptive-capacity", "/discovery-pass",
@@ -108,6 +110,12 @@ export function serveStatic(app: Express) {
     if (!knownPublicPaths.has(requestPath) && !isPortalPath) {
       return res.status(404).type("text").send("Not found");
     }
-    res.status(200).sendFile(path.resolve(distPath, "index.html"));
+    try {
+      const indexPath = path.resolve(distPath, "index.html");
+      const html = applyDocumentLocale(await fs.promises.readFile(indexPath, "utf-8"), requestPath);
+      res.status(200).type("html").send(html);
+    } catch (error) {
+      next(error);
+    }
   });
 }

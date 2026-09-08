@@ -1,4 +1,4 @@
-import { createContext, createElement, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, createElement, useContext, useEffect, useLayoutEffect, useMemo, useState, type ReactNode } from "react";
 
 export type Locale = "en" | "es";
 
@@ -1210,6 +1210,8 @@ export function setLocale(locale: Locale) {
   window.dispatchEvent(new Event(LOCALE_EVENT));
 }
 
+const useIsomorphicLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
+
 type LocaleContextValue = {
   locale: Locale;
   copy: PortalCopy;
@@ -1254,7 +1256,7 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
 
   const locale = useMemo(() => resolveLocale(path, userLocale, storedLocale, readBrowserLocale()), [path, storedLocale, userLocale]);
 
-  useEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     document.documentElement.lang = locale;
   }, [locale]);
 

@@ -12,6 +12,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { classDateLabel, classTimeLabel } from "@/lib/class-booking";
 import { localizedPortalPath } from "@/lib/portal-navigation";
 import { trackEvent } from "@/lib/analytics";
+import { trackMetaDiscoveryPassActivation } from "@/lib/meta-pixel";
 import {
   FileText, Calendar, CheckCircle, XCircle, Clock, AlertCircle, X, Loader2, Eye,
   Shield, Camera, Book, Users, CreditCard, Dumbbell, ArrowRight, ExternalLink,
@@ -93,9 +94,10 @@ export default function PortalDashboard() {
 
   const claimDiscovery = useMutation({
     mutationFn: async () => (await apiRequest("POST", "/api/portal/discovery/claim", {})).json(),
-    onSuccess: () => {
+    onSuccess: (pass: { id?: string }) => {
       queryClient.invalidateQueries({ queryKey: ["/api/portal/member-program"] });
       trackEvent("discovery_pass_activated", { locale });
+      if (pass.id) trackMetaDiscoveryPassActivation(pass.id, locale);
       toast({ title: copy.discoveryPassTitle });
     },
     onError: (error: Error) => toast({

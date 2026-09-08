@@ -9,6 +9,7 @@ import { FORM_COPY, PORTAL_COPY, localizeFormOption, localizeFormText } from "..
 import { classDateLabel, classTimeLabel } from "../client/src/lib/class-booking";
 import { portalNavigationPaths } from "../client/src/lib/portal-navigation";
 import { localizeApiError, resolveLocale } from "../client/src/lib/locale";
+import { applyDocumentLocale, documentLocaleForPath } from "./document-locale";
 
 function responseRecorder() {
   const result: { statusCode: number; body?: unknown } = { statusCode: 200 };
@@ -66,6 +67,15 @@ test("one locale resolver gives explicit routes precedence and portal preference
   assert.equal(resolveLocale("/portal/dashboard", null, null, "es"), "es");
   assert.equal(resolveLocale("/portal/login?locale=en", "es", "es"), "en");
   assert.equal(localizeApiError("Invalid email or password", "es", "Error"), "El correo o la contraseña no son válidos.");
+});
+
+test("document locale follows the localized route on direct and portal paths", () => {
+  assert.equal(documentLocaleForPath("/discovery-pass"), "en");
+  assert.equal(documentLocaleForPath("/es/discovery-pass"), "es");
+  assert.equal(documentLocaleForPath("/es/portal/login"), "es");
+  assert.equal(documentLocaleForPath("/portal/login"), "en");
+  assert.match(applyDocumentLocale('<html lang="en">', "/es/discovery-pass"), /<html lang="es">/);
+  assert.match(applyDocumentLocale('<html lang="es">', "/discovery-pass"), /<html lang="en">/);
 });
 
 test("payment creation cannot use another member's booking", () => {
