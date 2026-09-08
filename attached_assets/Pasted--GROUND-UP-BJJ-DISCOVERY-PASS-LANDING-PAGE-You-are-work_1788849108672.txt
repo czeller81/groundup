@@ -1,0 +1,581 @@
+# GROUND UP BJJ — DISCOVERY PASS LANDING PAGE
+
+You are working inside the existing Ground Up BJJ website/application.
+
+Your task is to create and integrate a dedicated **Discovery Pass landing page** for a new paid advertising campaign.
+
+This is a production-facing marketing and onboarding page.
+
+## PRIMARY GOAL
+
+Create a high-converting Discovery Pass landing page that feels completely native to the existing Ground Up website.
+
+The page must preserve the site's current:
+
+* visual identity
+* typography
+* colors
+* spacing
+* navigation conventions
+* buttons
+* mobile behavior
+* layout patterns
+* tone of voice
+* existing components where possible
+
+Do **not** create a separate-looking microsite.
+
+Do **not** introduce a new visual design system.
+
+The finished page should look as though it has always been part of the Ground Up website.
+
+---
+
+# 1. FIRST AUDIT THE EXISTING SITE
+
+Before making changes, inspect the existing Ground Up public website and determine:
+
+* current design system
+* global styles
+* typography
+* colors
+* header/navigation
+* footer
+* button styles
+* card styles
+* responsive breakpoints
+* English/Spanish localization implementation
+* authentication/signup flow
+* member portal
+* Discovery Pass or trial-related logic already present
+* waiver workflow
+* class-booking workflow
+* analytics/event tracking already implemented
+
+Reuse existing components and patterns whenever possible.
+
+Do not duplicate functionality that already exists.
+
+---
+
+# 2. LANDING PAGE PURPOSE
+
+This page exists for one conversion:
+
+**Get a visitor to claim the free Ground Up Discovery Pass.**
+
+The advertising campaign will contain:
+
+1. English video ad
+2. Spanish video ad
+
+Both should lead into the appropriate language version of this page.
+
+The user journey is:
+
+AD
+→ DISCOVERY PASS LANDING PAGE
+→ CREATE ACCOUNT
+→ SIGN REQUIRED WAIVERS
+→ ACTIVATE DISCOVERY PASS
+→ BOOK CLASSES
+→ ATTEND CLASSES
+→ MEMBERSHIP CONVERSION
+
+The landing page should not overwhelm the user with the entire backend process.
+
+Its job is primarily to make the Discovery Pass easy to understand and compelling enough to claim.
+
+---
+
+# 3. DISCOVERY PASS OFFER
+
+The Discovery Pass should clearly communicate:
+
+**Free Discovery Pass**
+
+Includes:
+
+* 1 SKILL class
+* 1 STRENGTH class
+* 7 days to use the pass after activation
+
+Use the actual Ground Up terminology already used by the application.
+
+If production logic differs from these assumptions, do not silently change production behavior.
+
+Instead:
+
+1. inspect the existing implementation,
+2. report the discrepancy,
+3. preserve existing business rules unless explicitly authorized to change them.
+
+---
+
+# 4. ENGLISH LANDING PAGE
+
+Create an English version.
+
+Suggested hero structure:
+
+## Try Ground Up Free
+
+Experience Ground Up with a complimentary Discovery Pass.
+
+### Your Discovery Pass Includes
+
+* 1 SKILL class
+* 1 STRENGTH class
+* 7 days to experience Ground Up
+* No membership commitment required to get started
+
+Primary CTA:
+
+**GET MY FREE DISCOVERY PASS**
+
+Use wording that matches Ground Up's existing brand voice.
+
+Do not make the page feel overly promotional, gimmicky, or like a generic fitness landing page.
+
+Ground Up should feel:
+
+* welcoming
+* credible
+* beginner friendly
+* premium
+* community oriented
+* focused on coaching and learning
+
+---
+
+# 5. SPANISH LANDING PAGE
+
+Create a proper Spanish-localized version using the existing localization system.
+
+Do not create a separate hardcoded Spanish page if the application already supports localization.
+
+Suggested copy:
+
+## Prueba Ground Up Gratis
+
+Descubre Ground Up con un Discovery Pass gratuito.
+
+### Tu Discovery Pass Incluye
+
+* 1 clase de SKILL
+* 1 clase de STRENGTH
+* 7 días para disfrutar tu pase
+* No necesitas una membresía para comenzar
+
+Primary CTA:
+
+**OBTENER MI DISCOVERY PASS GRATIS**
+
+Use natural Spanish.
+
+Do not use awkward literal translations.
+
+Preserve established Ground Up product names such as SKILL, STRENGTH, and Discovery Pass if those names are intentionally part of the brand.
+
+---
+
+# 6. PAGE STRUCTURE
+
+Use the current Ground Up design language.
+
+Recommended structure:
+
+### A. Existing Site Header
+
+Keep the existing header/navigation unless there is a strong conversion reason to simplify it.
+
+Do not invent a visually different campaign header.
+
+### B. Hero
+
+Clearly communicate:
+
+* Discovery Pass is free
+* what is included
+* Ground Up positioning
+* primary CTA
+
+The CTA should be obvious immediately on desktop and mobile.
+
+### C. What You Get
+
+Simple visual explanation:
+
+**1 SKILL Class**
+
+**1 STRENGTH Class**
+
+**7 Days**
+
+Avoid excessive text.
+
+### D. What to Expect
+
+Briefly reduce anxiety for first-time visitors.
+
+Possible themes:
+
+* beginner friendly
+* welcoming environment
+* coached classes
+* no prior experience required if factually accurate
+* what happens during the first visit
+
+Only make claims supported by existing Ground Up content or operating rules.
+
+### E. How It Works
+
+Use a simple 3-step or 4-step explanation.
+
+For example:
+
+1. Claim your Discovery Pass
+2. Create your Ground Up account
+3. Complete your waivers
+4. Activate your pass and book your classes
+
+Keep this concise.
+
+Do not make the process look complicated.
+
+### F. Final CTA
+
+Repeat:
+
+**GET MY FREE DISCOVERY PASS**
+
+Spanish:
+
+**OBTENER MI DISCOVERY PASS GRATIS**
+
+### G. Existing Footer
+
+Reuse the existing site footer.
+
+---
+
+# 7. CTA BEHAVIOR
+
+The CTA must not send users to a generic homepage.
+
+It should enter the existing account/signup workflow specifically associated with the Discovery Pass.
+
+Determine the safest existing implementation.
+
+Expected behavior:
+
+Landing Page
+→ Discovery Pass Signup
+→ Account Creation/Login
+→ Waivers
+→ Pass Activation
+→ Booking
+
+If the account system needs to preserve campaign state through authentication, implement that cleanly.
+
+The system must know that the user entered through the Discovery Pass funnel.
+
+---
+
+# 8. LANGUAGE PRESERVATION
+
+This is important.
+
+If someone arrives from the Spanish advertisement, maintain Spanish throughout the experience whenever the application supports it.
+
+Preserve language through:
+
+* landing page
+* signup
+* account creation
+* waiver instructions
+* activation
+* booking
+* confirmation messaging
+
+Likewise, preserve English for English traffic.
+
+Do not unexpectedly switch Spanish prospects into English after registration.
+
+---
+
+# 9. ATTRIBUTION
+
+Preserve advertising attribution.
+
+At minimum support preservation of standard URL parameters such as:
+
+* utm_source
+* utm_medium
+* utm_campaign
+* utm_content
+* utm_term
+
+If the application already supports Meta click identifiers or other campaign metadata, preserve those using the existing architecture.
+
+Do not create invasive tracking.
+
+Do not expose tracking information to other users.
+
+Store attribution only where appropriate within the existing privacy/security model.
+
+---
+
+# 10. FUNNEL EVENTS
+
+Audit existing analytics before adding anything.
+
+Where supported, ensure these funnel milestones can be measured:
+
+* discovery_page_view
+* discovery_cta_click
+* discovery_account_created
+* discovery_waiver_completed
+* discovery_pass_activated
+* discovery_class_booked
+* discovery_first_attendance
+* discovery_second_attendance
+* discovery_membership_started
+
+Reuse existing event naming conventions if analytics already exists.
+
+Do not create duplicate competing analytics systems.
+
+The most important business conversion is:
+
+**Discovery Pass Activated**
+
+A stronger downstream signal is:
+
+**First Class Attended**
+
+---
+
+# 11. MOBILE FIRST
+
+Most paid social traffic will likely be mobile.
+
+Test thoroughly at realistic mobile sizes.
+
+Requirements:
+
+* no horizontal scrolling
+* no clipped text
+* readable typography
+* fast loading
+* CTA visible without excessive scrolling
+* buttons easy to tap
+* forms usable from a phone
+* localization does not break layouts
+* no modal or keyboard bugs
+* no excessive animation
+
+---
+
+# 12. PERFORMANCE
+
+Do not significantly increase page load time.
+
+Reuse optimized existing assets.
+
+Avoid:
+
+* unnecessary JavaScript
+* huge image files
+* autoplay background video
+* new heavyweight UI libraries
+* duplicate fonts
+* excessive client-side rendering
+
+---
+
+# 13. ACCESSIBILITY
+
+Preserve or improve current accessibility.
+
+Check:
+
+* semantic headings
+* focus states
+* keyboard access
+* labels
+* contrast
+* screen-reader meaning
+* alt text
+* responsive zoom
+
+---
+
+# 14. DO NOT CHANGE
+
+Do not modify unrelated production functionality.
+
+Do not redesign:
+
+* homepage
+* portal
+* booking engine
+* billing
+* memberships
+* class entitlements
+* authentication architecture
+* waiver legal language
+* unrelated navigation
+
+unless a narrowly scoped compatibility fix is necessary for this funnel.
+
+Do not change legal waiver content.
+
+---
+
+# 15. TEST THE COMPLETE FLOW
+
+After implementation, test both language paths.
+
+## English
+
+English landing page
+→ CTA
+→ signup/account
+→ waiver
+→ activation
+→ booking
+
+## Spanish
+
+Spanish landing page
+→ CTA
+→ signup/account
+→ waiver
+→ activation
+→ booking
+
+Verify:
+
+* correct offer
+* correct language
+* correct entitlement
+* correct 7-day behavior
+* correct redirects
+* no dead ends
+* no duplicate accounts
+* no pass duplication
+* no waiver bypass
+* no booking before required activation
+* no broken back-button behavior
+* no broken mobile behavior
+
+Use test accounts only.
+
+Do not create production customer records unless necessary and explicitly safe.
+
+---
+
+# 16. SEO / CAMPAIGN INDEXING
+
+Use sensible metadata.
+
+The page should have:
+
+* page title
+* meta description
+* Open Graph metadata where supported
+* canonical handling consistent with the rest of the site
+
+Do not allow English/Spanish localization to create obvious duplicate-content or canonicalization errors.
+
+---
+
+# 17. FINAL REPORT
+
+After completing the implementation, return:
+
+## A. Exact files changed
+
+## B. Route created
+
+English route:
+[exact route]
+
+Spanish/localized route:
+[exact route]
+
+## C. Components reused
+
+List existing components/styles reused.
+
+## D. Funnel integration
+
+Explain exactly how:
+
+Landing Page
+→ Account
+→ Waiver
+→ Activation
+→ Booking
+
+works technically.
+
+## E. Tracking
+
+List:
+
+* preserved attribution fields
+* existing analytics reused
+* new events added
+
+## F. Tests performed
+
+Desktop:
+PASS / FAIL
+
+Mobile:
+PASS / FAIL
+
+English:
+PASS / FAIL
+
+Spanish:
+PASS / FAIL
+
+Account creation:
+PASS / FAIL
+
+Waiver requirement:
+PASS / FAIL
+
+Discovery Pass activation:
+PASS / FAIL
+
+Class booking:
+PASS / FAIL
+
+## G. Screenshots
+
+Provide screenshots of:
+
+* English desktop
+* English mobile
+* Spanish desktop
+* Spanish mobile
+
+## H. Risks or unresolved issues
+
+List anything that should be reviewed before production.
+
+## I. Final verdict
+
+Return exactly one:
+
+`DISCOVERY_PASS_LANDING_PAGE_READY_FOR_REVIEW`
+
+or
+
+`DISCOVERY_PASS_LANDING_PAGE_BLOCKED`
+
+Do not deploy unrelated changes.
