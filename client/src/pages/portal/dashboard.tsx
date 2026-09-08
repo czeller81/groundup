@@ -12,7 +12,13 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { classDateLabel, classTimeLabel } from "@/lib/class-booking";
 import { localizedPortalPath } from "@/lib/portal-navigation";
 import { trackEvent } from "@/lib/analytics";
-import { trackMetaDiscoveryPassActivation } from "@/lib/meta-pixel";
+import {
+  getMetaDiscoveryVerification,
+  isMetaDiscoveryTestMode,
+  sendMetaDiscoveryTestEvent,
+  trackMetaDiscoveryPassActivation,
+  type MetaDiscoveryVerification,
+} from "@/lib/meta-pixel";
 import {
   FileText, Calendar, CheckCircle, XCircle, Clock, AlertCircle, X, Loader2, Eye,
   Shield, Camera, Book, Users, CreditCard, Dumbbell, ArrowRight, ExternalLink,
@@ -61,6 +67,9 @@ export default function PortalDashboard() {
   const { toast } = useToast();
   const [cancelDialog, setCancelDialog] = useState<{ open: boolean; booking: any | null }>({ open: false, booking: null });
   const [formViewDialog, setFormViewDialog] = useState<{ open: boolean; slug: string | null }>({ open: false, slug: null });
+  const [metaTestVerification, setMetaTestVerification] = useState<MetaDiscoveryVerification | null>(
+    () => getMetaDiscoveryVerification(),
+  );
 
   const { data: forms = [] } = useQuery<any[]>({
     queryKey: ["/api/portal/forms"],
@@ -142,6 +151,8 @@ export default function PortalDashboard() {
   }
 
   if (!isAuthenticated) return null;
+
+  const metaTestMode = isMetaDiscoveryTestMode();
 
   const upcomingBookings = bookings.filter((b: any) => isFuture(new Date(b.start)) && b.status !== "canceled");
   const pastBookings = bookings.filter((b: any) => isPast(new Date(b.start)) || b.status === "canceled");
@@ -306,6 +317,43 @@ export default function PortalDashboard() {
                   ))}
                   {minorReservations.length > 4 && <Button variant="outline" size="sm" className="mt-1 w-full border-white/10 text-gray-300 hover:bg-white/5" asChild><Link href={portalPath("/portal/schedule")}>{copy.viewSchedule}</Link></Button>}
                 </div>}
+            </CardContent>
+          </Card>
+        )}
+
+        {metaTestMode && (
+          <Card className="mb-4 border-amber-400/30 bg-amber-400/5">
+            <CardHeader className="pb-2 pt-4 px-4">
+              <CardTitle className="text-base text-amber-200">Meta test events</CardTitle>
+              <CardDescription className="text-xs text-amber-100/70">
+                Development-only check. Open this Pixel in Meta Events Manager → Test Events first.
+                This sends no activation request and uses no member data.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="px-4 pb-4">
+              <Button
+                size="sm"
+                className="bg-amber-300 text-[#0B0F14] hover:bg-amber-200"
+                onClick={() => setMetaTestVerification(sendMetaDiscoveryTestEvent(locale))}
+              >
+                Send synthetic activation
+              </Button>
+              {metaTestVerification && (
+                <div className="mt-3 space-y-1 text-xs text-amber-100/80">
+                  <p>Event: {metaTestVerification.eventName}</p>
+                  <p>Event ID: {metaTestVerification.eventId}</p>
+                  <p>Consent: {metaTestVerification.consent}</p>
+                  <p>
+                    Exactly once:{" "}
+                    {metaTestVerification.exactlyOnce === null
+                      ? "blocked without consent"
+                      : metaTestVerification.exactlyOnce
+                        ? "yes"
+                        : "no"}
+                  </p>
+                  <p>Payload: {metaTestVerification.payloadKeys.join(", ")} only</p>
+                </div>
+              )}
             </CardContent>
           </Card>
         )}

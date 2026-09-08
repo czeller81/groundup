@@ -3,8 +3,8 @@ name: Meta conversion verification
 description: Discovery Pass activation uses the existing consent-gated browser Pixel; live Meta receipt requires owner-side verification.
 ---
 
-The Discovery Pass conversion is intentionally browser-only until Meta test-event access or an approved CAPI connection is available. The canonical custom event is `DiscoveryPassActivated`, emitted after a successful backend activation and deduplicated with the persisted pass ID.
+The Discovery Pass conversion is browser-only. Production activation emits the canonical `DiscoveryPassActivated` event after backend success and deduplicates with the persisted pass ID. Development builds also provide an explicit `?meta_test_event=1` path for Meta Events Manager Test Events: it emits one synthetic-ID event, records a local verification, and sends only locale.
 
-**Why:** The Replit environment has no Meta CAPI credentials or test-event connection, so live receipt must not be claimed from local or synthetic browser tests.
+**Why:** The test path makes owner-side receipt checks repeatable without a CAPI credential, customer record, or activation mutation. It remains opt-in and development-only so it cannot silently become campaign traffic.
 
-**How to apply:** Preserve the consent gate, pass-ID event deduplication, and server-success trigger. Complete live verification in Meta Events Manager before changing campaign optimization.
+**How to apply:** Open the Pixel’s Meta Events Manager Test Events page, then use the development portal URL with the query flag. Confirm event name, synthetic ID, exactly-once result, consent state, and minimized payload before changing campaign optimization.
