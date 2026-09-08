@@ -146,6 +146,8 @@ function Router() {
       <Route path="/ln/login"><Redirect to="/portal/login" /></Route>
       <Route path="/es/portal/login" component={PortalLogin} />
       <Route path="/portal/login" component={PortalLogin} />
+      <Route path="/es/portal/signup" component={PortalLogin} />
+      <Route path="/portal/signup" component={PortalLogin} />
       <Route path="/es/portal/reset-password" component={PortalResetPassword} />
       <Route path="/portal/reset-password" component={PortalResetPassword} />
       <Route path="/es/portal/dashboard">

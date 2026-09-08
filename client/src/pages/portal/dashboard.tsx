@@ -12,6 +12,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { classDateLabel, classTimeLabel } from "@/lib/class-booking";
 import { localizedPortalPath } from "@/lib/portal-navigation";
 import { trackEvent } from "@/lib/analytics";
+import PortalForm from "@/pages/portal/form";
 import {
   getMetaDiscoveryVerification,
   isMetaDiscoveryTestMode,
@@ -67,6 +68,7 @@ export default function PortalDashboard() {
   const { toast } = useToast();
   const [cancelDialog, setCancelDialog] = useState<{ open: boolean; booking: any | null }>({ open: false, booking: null });
   const [formViewDialog, setFormViewDialog] = useState<{ open: boolean; slug: string | null }>({ open: false, slug: null });
+  const [requiredFormSlug, setRequiredFormSlug] = useState<string | null>(null);
   const [metaTestVerification, setMetaTestVerification] = useState<MetaDiscoveryVerification | null>(
     () => getMetaDiscoveryVerification(),
   );
@@ -142,6 +144,19 @@ export default function PortalDashboard() {
     }
   }, [authLoading, isAuthenticated, setLocation]);
 
+  const requiredForms = forms.filter((f: any) => f.isRequired);
+  const completedRequired = requiredForms.filter((f: any) => f.responseStatus === "submitted").length;
+  const allFormsComplete = requiredForms.length === 0 || completedRequired >= requiredForms.length;
+
+  useEffect(() => {
+    if (!isAuthenticated || authLoading || user?.role !== "member" || forms.length === 0) {
+      setRequiredFormSlug(null);
+      return;
+    }
+    const nextForm = requiredForms.find((form: any) => form.responseStatus !== "submitted");
+    setRequiredFormSlug((current) => current || nextForm?.slug || null);
+  }, [authLoading, forms, isAuthenticated, user?.role]);
+
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#0B0F14]">
@@ -160,9 +175,14 @@ export default function PortalDashboard() {
     .filter((item: any) => ["confirmed", "waitlisted"].includes(item.status) && isFuture(new Date(item.occurrence?.start)))
     .sort((a: any, b: any) => new Date(a.occurrence.start).getTime() - new Date(b.occurrence.start).getTime())[0];
 
-  const requiredForms = forms.filter((f: any) => f.isRequired);
-  const completedRequired = requiredForms.filter((f: any) => f.responseStatus === "submitted").length;
-  const allFormsComplete = completedRequired >= requiredForms.length && requiredForms.length > 0;
+  const handleRequiredFormSubmitted = (completedSlug: string) => {
+    const completedIndex = requiredForms.findIndex((form: any) => form.slug === completedSlug);
+    const nextForm = requiredForms
+      .slice(Math.max(0, completedIndex + 1))
+      .find((form: any) => form.responseStatus !== "submitted");
+    queryClient.invalidateQueries({ queryKey: ["/api/portal/forms"] });
+    setRequiredFormSlug(nextForm?.slug || null);
+  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -779,6 +799,32 @@ export default function PortalDashboard() {
               })
             )}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={!!requiredFormSlug}
+        onOpenChange={() => undefined}
+      >
+        <DialogContent
+          className="max-w-3xl border-[#5EEBFF]/30 bg-[#0B0F14] p-0 text-white"
+          onEscapeKeyDown={(event) => event.preventDefault()}
+          onPointerDownOutside={(event) => event.preventDefault()}
+        >
+          <DialogHeader className="border-b border-white/10 px-5 pb-4 pt-5 pr-12">
+            <DialogTitle className="text-left text-white">{copy.actionRequired}</DialogTitle>
+            <DialogDescription className="text-left text-gray-400">
+              {copy.completeRequiredForms}{" "}
+              {requiredForms.length > 0 && `(${copy.formsCount(completedRequired, requiredForms.length)})`}
+            </DialogDescription>
+          </DialogHeader>
+          {requiredFormSlug && (
+            <PortalForm
+              embedded
+              formSlug={requiredFormSlug}
+              onSubmitted={handleRequiredFormSubmitted}
+            />
+          )}
         </DialogContent>
       </Dialog>
     </div>

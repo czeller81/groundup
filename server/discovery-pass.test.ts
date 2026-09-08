@@ -75,3 +75,49 @@ test("Discovery Pass activation is waiver-gated, exact, seven days, and duplicat
     await db.delete(users).where(eq(users.id, user.id));
   }
 });
+
+test("Discovery Pass allows a shared phone when the other account has no prior use", async () => {
+  assert.notEqual(process.env.NODE_ENV, "production", "fixture activation tests must never run in production");
+  const suffix = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  const phone = `555${String(Date.now()).slice(-7)}`;
+  const existingUser = await storage.createUser(
+    `discovery-shared-existing-${suffix}@example.invalid`,
+    "GroundUp-QA-Password-2026",
+    "Existing",
+    "Account",
+    phone,
+    "en",
+  );
+  const newUser = await storage.createUser(
+    `discovery-shared-new-${suffix}@example.invalid`,
+    "GroundUp-QA-Password-2026",
+    "New",
+    "Account",
+    phone,
+    "en",
+  );
+  let passId: string | undefined;
+  try {
+    const requiredForms = await db.select({ id: forms.id }).from(forms).where(eq(forms.requiredBeforeBooking, true));
+    await db.insert(formResponses).values(requiredForms.map((form) => ({
+      userId: newUser.id,
+      formId: form.id,
+      answers: {},
+      status: "submitted",
+      submittedAt: new Date(),
+    })));
+
+    const pass = await issueDiscoveryPass(newUser.id, newUser.id);
+    passId = pass.id;
+    assert.equal(pass.userId, newUser.id);
+  } finally {
+    await db.delete(memberAuditEvents).where(eq(memberAuditEvents.userId, newUser.id));
+    await db.delete(formResponses).where(eq(formResponses.userId, newUser.id));
+    if (passId) {
+      await db.delete(discoveryEntitlements).where(eq(discoveryEntitlements.discoveryPassId, passId));
+      await db.delete(discoveryPasses).where(eq(discoveryPasses.id, passId));
+    }
+    await db.delete(users).where(eq(users.id, existingUser.id));
+    await db.delete(users).where(eq(users.id, newUser.id));
+  }
+});

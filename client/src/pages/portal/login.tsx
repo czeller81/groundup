@@ -17,7 +17,9 @@ export default function PortalLogin() {
   const { locale, copy } = useLocale();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const isSpanishRoute = location.split("?")[0] === "/es/portal/login";
+  const routePath = location.split("?")[0];
+  const isSpanishRoute = routePath === "/es/portal/login" || routePath === "/es/portal/signup";
+  const isSignupRoute = routePath === "/portal/signup" || routePath === "/es/portal/signup";
 
   const [loginData, setLoginData] = useState({ email: "", password: "" });
   const [signupData, setSignupData] = useState({
@@ -124,7 +126,7 @@ export default function PortalLogin() {
           <CardDescription className="text-gray-400">{copy.loginDescription}</CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="login" className="w-full">
+          <Tabs defaultValue={isSignupRoute ? "signup" : "login"} className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="login" data-testid="tab-login">{copy.loginTab}</TabsTrigger>
               <TabsTrigger value="signup" data-testid="tab-signup">{copy.signup}</TabsTrigger>

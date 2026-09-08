@@ -113,8 +113,8 @@ const DISCOVERY_COPY = {
   },
 } as const;
 
-function discoveryLoginHref(locale: "en" | "es") {
-  const destination = localizedPortalEntryPath("/portal/login", locale);
+function discoverySignupHref(locale: "en" | "es") {
+  const destination = localizedPortalEntryPath("/portal/signup", locale);
   const [pathname, query = ""] = destination.split("?");
   const params = new URLSearchParams(query);
   params.set("intent", "discovery-pass");
@@ -133,7 +133,7 @@ function discoveryLoginHref(locale: "en" | "es") {
 export default function DiscoveryPass() {
   const { locale } = useLocale();
   const copy = DISCOVERY_COPY[locale];
-  const ctaHref = discoveryLoginHref(locale);
+  const ctaHref = discoverySignupHref(locale);
   const canonical = locale === "es" ? "/es/discovery-pass" : "/discovery-pass";
 
   useEffect(() => {

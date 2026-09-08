@@ -15,10 +15,17 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { localizeApiError, localizeFormOption, localizeFormText, useLocale } from "@/lib/locale";
 import { trackEvent } from "@/lib/analytics";
 import { localizedPortalPath } from "@/lib/portal-navigation";
-import { ArrowLeft, Save, Send, Loader2, CheckCircle, Lock, RotateCcw } from "lucide-react";
+import { Save, Send, Loader2, CheckCircle, Lock, RotateCcw } from "lucide-react";
 
-export default function PortalForm() {
-  const { slug } = useParams<{ slug: string }>();
+type PortalFormProps = {
+  formSlug?: string;
+  embedded?: boolean;
+  onSubmitted?: (slug: string) => void;
+};
+
+export default function PortalForm({ formSlug, embedded = false, onSubmitted }: PortalFormProps = {}) {
+  const routeParams = useParams<{ slug: string }>();
+  const slug = formSlug || routeParams.slug;
   const [, setLocation] = useLocation();
   const { isAuthenticated, isLoading: authLoading } = usePortalAuth();
   const { locale, copy } = useLocale();
@@ -71,7 +78,11 @@ export default function PortalForm() {
       // Navigation immediately unmounts this page, and cancelling that
       // refetch can surface as an unhandled browser promise rejection.
       queryClient.invalidateQueries({ queryKey: ["/api/portal/forms"], refetchType: "none" });
-      setLocation(portalPath("/portal/dashboard"));
+      if (embedded && slug) {
+        onSubmitted?.(slug);
+      } else {
+        setLocation(portalPath("/portal/dashboard"));
+      }
     },
     onError: (error: any) => {
       setIsSubmitting(false);
@@ -298,7 +309,7 @@ export default function PortalForm() {
   const fields = form.fields as any[];
 
   return (
-    <div>
+    <div className={embedded ? "text-white" : undefined}>
       <div className="bg-[#121826]/50 border-b border-white/5 py-4 px-4 sm:px-6">
         <div className="max-w-3xl mx-auto">
             <h1 className="text-xl font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>{localizeFormText(locale, slug, "title", form.title)}</h1>

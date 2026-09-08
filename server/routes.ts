@@ -201,11 +201,11 @@ const PAGE_CONTENT: Record<string, string> = {
   "/discovery-pass": `<h1>Try Ground Up Free with a Discovery Pass</h1>
   <p>Get one SKILL class, one STRENGTH class, and seven days to experience Ground Up in Oxnard.</p>
   <p>Start with a secure member account, complete the required forms, activate your pass, and book your classes.</p>
-  <a href="/portal/login?intent=discovery-pass">Get my free Discovery Pass</a>`,
+  <a href="/portal/signup?intent=discovery-pass">Get my free Discovery Pass</a>`,
   "/es/discovery-pass": `<h1>Prueba Ground Up gratis con un Discovery Pass</h1>
   <p>Obtén una clase de SKILL, una clase de STRENGTH y siete días para conocer Ground Up en Oxnard.</p>
   <p>Comienza con una cuenta segura, completa los formularios requeridos, activa tu pase y reserva tus clases.</p>
-  <a href="/es/portal/login?intent=discovery-pass">Obtener mi Discovery Pass gratis</a>`,
+  <a href="/es/portal/signup?intent=discovery-pass">Obtener mi Discovery Pass gratis</a>`,
 };
 
 async function serveWithMeta(req: Request, res: Response, next: NextFunction) {

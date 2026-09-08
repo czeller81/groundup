@@ -136,7 +136,11 @@ async function duplicateDiscoveryReason(userId: string, executor: DiscoveryQuery
   const [samePhone] = user.phone
     ? await executor.select({ id: users.id }).from(users).where(and(eq(users.phone, user.phone), sql`${users.id} <> ${userId}`)).limit(1)
     : [];
-  if (samePhone) return "ADMIN_REVIEW_REQUIRED";
+  if (samePhone) {
+    const [samePhonePass] = await executor.select({ id: discoveryPasses.id }).from(discoveryPasses)
+      .where(eq(discoveryPasses.userId, samePhone.id)).limit(1);
+    if (samePhonePass) return "ADMIN_REVIEW_REQUIRED";
+  }
   const [priorReservation] = await executor.select({ id: classReservations.id }).from(classReservations)
     .where(and(
       or(

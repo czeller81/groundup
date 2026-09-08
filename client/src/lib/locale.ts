@@ -1173,6 +1173,7 @@ const API_ERROR_CODE_TRANSLATIONS: Record<string, { en: string; es: string }> = 
   DISCOVERY_STRENGTH_ALREADY_USED: { en: "Your Discovery strength visit has already been used.", es: "Tu visita Discovery de fuerza ya fue utilizada." },
   DISCOVERY_EXPIRED: { en: "Your Discovery Pass has expired.", es: "Tu Discovery Pass venció." },
   DISCOVERY_FORMS_INCOMPLETE: { en: "Complete the required waivers before activating your Discovery Pass.", es: "Completa las exenciones obligatorias antes de activar tu Discovery Pass." },
+  ADMIN_REVIEW_REQUIRED: { en: "This Discovery Pass request needs admin review.", es: "Esta solicitud de Discovery Pass necesita revisión administrativa." },
   REQUIRED_FORM_INCOMPLETE: { en: "Complete the required waivers before booking this class.", es: "Completa las exenciones obligatorias antes de reservar esta clase." },
   DUPLICATE_RESERVATION: { en: "You already have a reservation for this class.", es: "Ya tienes una reserva para esta clase." },
   OVERLAPPING_RESERVATION: { en: "You already have another class during this time.", es: "Ya tienes otra clase en este horario." },

@@ -8,6 +8,7 @@
 - [Rendered portal mobile QA](rendered-mobile-qa.md) — Chromium/CDP checks cover locale-width cases while excluding intentional local scrollers and hidden Radix controls.
 - [Portal form navigation](form-submission-navigation.md) — avoid refetching the active form query during submit success navigation.
 - [Legacy membership entitlements](legacy-membership-entitlements.md) — plan-linked memberships use weekly rules; historical unconfigured memberships retain legacy booking behavior.
+- [Discovery review boundary](discovery-review-boundary.md) — a shared phone alone is not duplicate evidence; preserve prior-use and pass uniqueness checks.
 - [Autoscale startup readiness](autoscale-startup-readiness.md) — open the HTTP listener before non-critical database maintenance so promotion probes can succeed.
 - [Stripe membership webhook ordering](stripe-membership-webhook-ordering.md) — subscription-created can precede checkout completion; adopt the matching pending checkout record.
 - [Hosted Checkout automation boundary](hosted-checkout-automation.md) — headless agent disclosure can leave Stripe Checkout processing without emitting payment events; do not treat UI fallback as payment proof.
