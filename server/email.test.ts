@@ -39,27 +39,30 @@ test("contact acknowledgement copy confirms the response window", () => {
   assert.match(spanish.text, /Nuestro equipo te responderá dentro de 24 a 48 horas/);
 });
 
-test("confirmed class emails include the member-facing academy address", () => {
-  const english = classLifecycleEmailContent({
-    classTitle: "SKILL",
-    starts: "Saturday, September 12 at 10:00 AM PDT",
-    status: "confirmed",
-    locale: "en",
-  });
-  const spanish = classLifecycleEmailContent({
-    classTitle: "SKILL",
-    starts: "sábado, 12 de septiembre a las 10:00 a. m. PDT",
-    status: "promoted",
-    locale: "es",
-  });
-  const waitlisted = classLifecycleEmailContent({
-    classTitle: "SKILL",
-    starts: "Saturday, September 12 at 10:00 AM PDT",
-    status: "waitlisted",
-    locale: "en",
-  });
+test("only confirmed class emails include the member-facing academy address", () => {
+  for (const locale of ["en", "es"] as const) {
+    for (const status of ["confirmed", "promoted"] as const) {
+      const email = classLifecycleEmailContent({
+        classTitle: "SKILL",
+        starts: locale === "es"
+          ? "sábado, 12 de septiembre a las 10:00 a. m. PDT"
+          : "Saturday, September 12 at 10:00 AM PDT",
+        status,
+        locale,
+      });
 
-  assert.match(english.body, new RegExp(GROUND_UP_ADDRESS));
-  assert.match(spanish.body, new RegExp(GROUND_UP_ADDRESS));
-  assert.doesNotMatch(waitlisted.body, new RegExp(GROUND_UP_ADDRESS));
+      assert.match(email.body, new RegExp(GROUND_UP_ADDRESS), `${locale} ${status} email should include the address`);
+    }
+
+    for (const status of ["waitlisted", "cancelled"] as const) {
+      const email = classLifecycleEmailContent({
+        classTitle: "SKILL",
+        starts: "Saturday, September 12 at 10:00 AM PDT",
+        status,
+        locale,
+      });
+
+      assert.doesNotMatch(email.body, new RegExp(GROUND_UP_ADDRESS), `${locale} ${status} email should not include the address`);
+    }
+  }
 });

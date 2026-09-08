@@ -4,6 +4,7 @@ export type Locale = "en" | "es";
 
 const LOCALE_KEY = "groundup-locale";
 const LOCALE_EVENT = "groundup-locale-change";
+export const GROUND_UP_ADDRESS = "2364 Sturgis Rd, Unit A, Oxnard, CA 93030";
 
 const PUBLIC_ROUTE_PAIRS: Record<string, string> = {
   "/": "/es",
@@ -267,7 +268,7 @@ export const PORTAL_COPY = {
      liveAvailability: "Live availability · Pacific time",
      bookingManaged: "Ground Up manages your reservation and waitlist status.",
      waitlistEmail: "We'll email you if a spot opens.",
-     spotConfirmed: "Your spot is confirmed. Ground Up is at 2364 Sturgis Rd, Unit A, Oxnard, CA 93030.",
+     spotConfirmed: `Your spot is confirmed. Ground Up is at ${GROUND_UP_ADDRESS}.`,
      waitlistWaiting: "waiting",
      spotLeft: "spot left",
      tryAgain: "Try again",
@@ -692,7 +693,7 @@ export const PORTAL_COPY = {
      liveAvailability: "Disponibilidad en vivo · Hora del Pacífico",
      bookingManaged: "Ground Up administra tus reservas y la lista de espera.",
      waitlistEmail: "Te enviaremos un correo si se abre un lugar.",
-     spotConfirmed: "Tu lugar está confirmado. Ground Up está en 2364 Sturgis Rd, Unit A, Oxnard, CA 93030.",
+     spotConfirmed: `Tu lugar está confirmado. Ground Up está en ${GROUND_UP_ADDRESS}.`,
      waitlistWaiting: "en espera",
      spotLeft: "lugar disponible",
      tryAgain: "Intentar de nuevo",
