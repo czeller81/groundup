@@ -1172,6 +1172,8 @@ const API_ERROR_CODE_TRANSLATIONS: Record<string, { en: string; es: string }> = 
   DISCOVERY_SKILL_ALREADY_USED: { en: "Your Discovery skill visit has already been used.", es: "Tu visita Discovery de habilidad ya fue utilizada." },
   DISCOVERY_STRENGTH_ALREADY_USED: { en: "Your Discovery strength visit has already been used.", es: "Tu visita Discovery de fuerza ya fue utilizada." },
   DISCOVERY_EXPIRED: { en: "Your Discovery Pass has expired.", es: "Tu Discovery Pass venció." },
+  DISCOVERY_FORMS_INCOMPLETE: { en: "Complete the required waivers before activating your Discovery Pass.", es: "Completa las exenciones obligatorias antes de activar tu Discovery Pass." },
+  REQUIRED_FORM_INCOMPLETE: { en: "Complete the required waivers before booking this class.", es: "Completa las exenciones obligatorias antes de reservar esta clase." },
   DUPLICATE_RESERVATION: { en: "You already have a reservation for this class.", es: "Ya tienes una reserva para esta clase." },
   OVERLAPPING_RESERVATION: { en: "You already have another class during this time.", es: "Ya tienes otra clase en este horario." },
   MINOR_CONSENT_REVOKED: { en: "Guardian consent for this participant has been revoked.", es: "El consentimiento de la tutora para esta participante fue revocado." },

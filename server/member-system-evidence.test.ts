@@ -14,6 +14,8 @@ import {
   discoveryEntitlements,
   discoveryPasses,
   entitlementLedger,
+  forms,
+  formResponses,
   memberAuditEvents,
   memberLifecycleEvents,
   memberLifecycles,
@@ -39,6 +41,10 @@ test("member system evidence: Discovery to membership with weekly limits, waitli
     const member = await storage.createUser(emails[0], "GroundUp-QA-Password-2026", "Member", "A", "5550000101", "en");
     const discoveryMember = await storage.createUser(emails[1], "GroundUp-QA-Password-2026", "Discovery", "B", "5550000102", "en");
     userIds.push(member.id, discoveryMember.id);
+    const bookingForms = await db.select({ id: forms.id, slug: forms.slug })
+      .from(forms)
+      .where(eq(forms.requiredBeforeBooking, true));
+    assert.deepEqual(new Set(bookingForms.map((form) => form.slug)), new Set(["liability-waiver", "gym-rules"]));
 
     const [plan] = await db.insert(membershipPlans).values({
       internalKey: `qa-plan-${suffix}`,
@@ -137,6 +143,29 @@ test("member system evidence: Discovery to membership with weekly limits, waitli
       { discoveryPassId: pass.id, category: "STRENGTH", status: "AVAILABLE" },
     ]);
 
+    await assert.rejects(
+      () => storage.reserveClassOccurrence({
+        occurrenceId: skill.id, userId: discoveryMember.id, firstName: "Discovery", lastName: "B", email: emails[1], phone: "5550000102",
+      }),
+      (error: any) => error.code === "REQUIRED_FORM_INCOMPLETE",
+    );
+    await db.insert(formResponses).values(bookingForms.flatMap((form) => [
+      {
+        userId: member.id,
+        formId: form.id,
+        answers: {},
+        status: "submitted",
+        submittedAt: new Date(),
+      },
+      {
+        userId: discoveryMember.id,
+        formId: form.id,
+        answers: {},
+        status: "submitted",
+        submittedAt: new Date(),
+      },
+    ]));
+
     const memberSkill = await storage.reserveClassOccurrence({
       occurrenceId: skill.id, userId: member.id, firstName: "Member", lastName: "A", email: emails[0], phone: "5550000101",
     });
@@ -171,6 +200,11 @@ test("member system evidence: Discovery to membership with weekly limits, waitli
 
     const weeklyLimit = await evaluateBookingEligibility(member, limitCheck);
     assert.equal(weeklyLimit.code, "WEEKLY_LIMIT_REACHED", "2x membership must stop a third weekly booking");
+    await db.update(discoveryPasses)
+      .set({ expirationTimestamp: new Date(Date.now() - 60 * 1000) })
+      .where(eq(discoveryPasses.id, pass.id));
+    const expiredDiscovery = await evaluateBookingEligibility(discoveryMember, limitCheck);
+    assert.equal(expiredDiscovery.code, "DISCOVERY_EXPIRED", "expired Discovery Passes must stop new bookings");
 
     const corrected = await storage.updateClassReservation(memberStrength.reservation.id, { attendance: "NO_SHOW" }, member.id, "Coach corrected mistaken present mark");
     assert.equal(corrected?.attendance, "NO_SHOW");
@@ -185,6 +219,7 @@ test("member system evidence: Discovery to membership with weekly limits, waitli
     if (passIds.length) await db.delete(discoveryEntitlements).where(inArray(discoveryEntitlements.discoveryPassId, passIds));
     if (occurrenceIds.length) await db.delete(classReservationEvents).where(inArray(classReservationEvents.occurrenceId, occurrenceIds));
     if (occurrenceIds.length) await db.delete(classReservations).where(inArray(classReservations.occurrenceId, occurrenceIds));
+    if (userIds.length) await db.delete(formResponses).where(inArray(formResponses.userId, userIds));
     if (passIds.length) await db.delete(discoveryPasses).where(inArray(discoveryPasses.id, passIds));
     if (userIds.length) await db.delete(memberAuditEvents).where(inArray(memberAuditEvents.userId, userIds));
     if (userIds.length) await db.delete(memberLifecycleEvents).where(inArray(memberLifecycleEvents.userId, userIds));

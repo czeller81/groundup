@@ -150,6 +150,20 @@ async function duplicateDiscoveryReason(userId: string) {
   return null;
 }
 
+async function missingRequiredBookingForms(userId: string) {
+  const requiredForms = await db.select({ id: forms.id }).from(forms)
+    .where(eq(forms.requiredBeforeBooking, true));
+  if (!requiredForms.length) return [];
+  const submittedForms = await db.select({ formId: formResponses.formId }).from(formResponses)
+    .where(and(
+      eq(formResponses.userId, userId),
+      eq(formResponses.status, "submitted"),
+      inArray(formResponses.formId, requiredForms.map((form) => form.id)),
+    ));
+  const submittedIds = new Set(submittedForms.map((response) => response.formId));
+  return requiredForms.filter((form) => !submittedIds.has(form.id)).map((form) => form.id);
+}
+
 async function issueDiscoveryPass(userId: string, actorId: string | null, reason?: string, override = false) {
   const duplicate = await duplicateDiscoveryReason(userId);
   if (duplicate && !override) {
@@ -778,6 +792,12 @@ export function registerMemberRoutes(app: Express) {
 
   app.post("/api/portal/discovery/claim", requireAuth, async (req, res) => {
     try {
+      if ((await missingRequiredBookingForms(req.session.userId!)).length) {
+        return res.status(409).json({
+          code: "DISCOVERY_FORMS_INCOMPLETE",
+          message: "Complete the required waivers before activating your Discovery Pass.",
+        });
+      }
       const pass = await issueDiscoveryPass(req.session.userId!, req.session.userId!);
       await setLifecycle(req.session.userId!, "DISCOVERY_PASS", req.session.userId!, "Discovery Pass claimed", "member_claim");
       res.status(201).json(await getPass(req.session.userId!));

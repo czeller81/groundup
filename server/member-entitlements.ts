@@ -6,6 +6,8 @@ import {
   discoveryEntitlements,
   discoveryPasses,
   entitlementLedger,
+  forms,
+  formResponses,
   memberships,
   membershipPlans,
   type MinorProfile,
@@ -28,6 +30,7 @@ export type BookingEligibilityCode =
   | "DISCOVERY_SKILL_ALREADY_USED"
   | "DISCOVERY_STRENGTH_ALREADY_USED"
   | "DISCOVERY_EXPIRED"
+  | "REQUIRED_FORM_INCOMPLETE"
   | "DUPLICATE_RESERVATION"
   | "OVERLAPPING_RESERVATION"
   | "MINOR_PROFILE_REQUIRED"
@@ -65,6 +68,7 @@ const messages: Record<BookingEligibilityCode, string> = {
   DISCOVERY_SKILL_ALREADY_USED: "Your Discovery skill entitlement has already been used.",
   DISCOVERY_STRENGTH_ALREADY_USED: "Your Discovery strength entitlement has already been used.",
   DISCOVERY_EXPIRED: "Your Discovery Pass has expired.",
+  REQUIRED_FORM_INCOMPLETE: "Complete the required forms before booking this class.",
   DUPLICATE_RESERVATION: "You already have a reservation for this class.",
   OVERLAPPING_RESERVATION: "You already have another class during this time.",
   MINOR_PROFILE_REQUIRED: "A guardian must select an approved minor profile for this girls' class.",
@@ -226,6 +230,21 @@ export async function evaluateBookingEligibilityWithExecutor(
     ? (await executor.select().from(classTypes).where(eq(classTypes.id, occurrence.classTypeId))).at(0) || null
     : null;
   const categories = normalizedClassCategories(classType);
+  const requiredBookingForms = await executor.select({ id: forms.id })
+    .from(forms)
+    .where(eq(forms.requiredBeforeBooking, true));
+  if (requiredBookingForms.length) {
+    const submittedForms = await executor.select({ formId: formResponses.formId })
+      .from(formResponses)
+      .where(and(
+        eq(formResponses.userId, user.id),
+        eq(formResponses.status, "submitted"),
+        inArray(formResponses.formId, requiredBookingForms.map((form) => form.id)),
+      ));
+    if (new Set(submittedForms.map((response) => response.formId)).size < requiredBookingForms.length) {
+      return result("REQUIRED_FORM_INCOMPLETE");
+    }
+  }
   const membership = await activeMembership(user.id, occurrence.start, executor);
   const discoveryRows = await discoveryForUser(user.id, occurrence.start, executor);
   const pass = discoveryRows[0]?.pass;

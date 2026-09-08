@@ -17,7 +17,7 @@ export default function PortalLogin() {
   const { locale, copy } = useLocale();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const isSpanishRoute = location === "/es/portal/login";
+  const isSpanishRoute = location.split("?")[0] === "/es/portal/login";
 
   const [loginData, setLoginData] = useState({ email: "", password: "" });
   const [signupData, setSignupData] = useState({

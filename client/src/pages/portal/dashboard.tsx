@@ -411,7 +411,7 @@ export default function PortalDashboard() {
               ) : (
                 <div className="text-center">
                   <p className="text-sm text-gray-400">{copy.noActiveMembership}</p>
-                  <Button onClick={() => claimDiscovery.mutate()} disabled={claimDiscovery.isPending} size="sm" className="mt-3 w-full bg-[#5EEBFF] text-[#0B0F14] hover:bg-[#5EEBFF]/90">
+                  <Button onClick={() => claimDiscovery.mutate()} disabled={claimDiscovery.isPending || !allFormsComplete} size="sm" className="mt-3 w-full bg-[#5EEBFF] text-[#0B0F14] hover:bg-[#5EEBFF]/90">
                     {claimDiscovery.isPending ? copy.loading : copy.claimDiscoveryPass}
                   </Button>
                 </div>

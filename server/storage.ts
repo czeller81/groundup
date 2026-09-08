@@ -372,6 +372,21 @@ export class DatabaseStorage implements IStorage {
   async submitFormResponse(userId: string, formId: string): Promise<FormResponse | undefined> {
     const existing = await this.getFormResponse(userId, formId);
     if (!existing) return undefined;
+    const form = await this.getForm(formId);
+    if (form) {
+      const answers = existing.answers && typeof existing.answers === "object" ? existing.answers as Record<string, unknown> : {};
+      const missing = (form.fields as Array<{ name?: string; id?: string; type?: string; required?: boolean }>).filter((field) => {
+        if (!field.required) return false;
+        const key = field.name || field.id;
+        const value = key ? answers[key] : undefined;
+        if (field.type === "checkbox") return value !== true;
+        if (field.type === "multiselect") return !Array.isArray(value) || value.length === 0;
+        return value === undefined || value === null || value === "";
+      });
+      if (missing.length) {
+        throw new Error(`Complete all required fields: ${missing.map((field) => field.name || field.id).filter(Boolean).join(", ")}`);
+      }
+    }
     
     const [updated] = await db
       .update(formResponses)
@@ -1767,6 +1782,7 @@ async function seedFormData() {
       title: "Personal Training Intake Form",
       description: "Basic information about your training background and goals",
       isRequired: true,
+      requiredBeforeBooking: false,
       retakeable: true,
       fields: [
         { name: "trainingExperience", label: "Previous Training Experience", type: "textarea", required: true },
@@ -1780,6 +1796,7 @@ async function seedFormData() {
       title: "Health & PAR-Q Assessment",
       description: "Physical Activity Readiness Questionnaire",
       isRequired: true,
+      requiredBeforeBooking: false,
       retakeable: false,
       fields: [
         { name: "heartCondition", label: "Has a doctor ever said you have a heart condition?", type: "boolean", required: true },
@@ -1795,6 +1812,7 @@ async function seedFormData() {
       title: "Goals & Preferences",
       description: "Help us understand your training goals",
       isRequired: true,
+      requiredBeforeBooking: false,
       retakeable: true,
       fields: [
         { name: "primaryGoal", label: "Primary Training Goal", type: "select", options: ["Self-Defense", "Competition", "Fitness", "Fun & Social", "Weight Loss"], required: true },
@@ -1808,6 +1826,7 @@ async function seedFormData() {
       title: "Martial Arts Liability Waiver",
       description: "Required waiver acknowledging the risks of martial arts training",
       isRequired: true,
+      requiredBeforeBooking: true,
       retakeable: false,
       fields: [
         { name: "fullName", label: "Full Name", type: "text", required: true },
@@ -1827,6 +1846,7 @@ async function seedFormData() {
       title: "Media Release Authorization",
       description: "Authorization for use of photos and videos",
       isRequired: true,
+      requiredBeforeBooking: false,
       retakeable: true,
       fields: [
         { name: "mediaConsent", label: "Do you allow Ground Up Jiu-Jitsu to use photos and videos of you for marketing, social media, and promotional purposes?", type: "boolean", required: true }
@@ -1837,6 +1857,7 @@ async function seedFormData() {
       title: "Gym Rules Agreement",
       description: "Acknowledgment of gym policies and code of conduct",
       isRequired: true,
+      requiredBeforeBooking: true,
       retakeable: false,
       fields: [
         { name: "followInstructions", label: "I will follow all instructor directions during class", type: "checkbox", required: true },
@@ -1866,6 +1887,10 @@ async function seedFormData() {
   for (const form of allForms) {
     if (!existingSlugs.has(form.slug)) {
       await storage.createForm(form);
+    } else if (form.requiredBeforeBooking !== undefined) {
+      await db.update(forms)
+        .set({ requiredBeforeBooking: form.requiredBeforeBooking })
+        .where(eq(forms.slug, form.slug));
     }
   }
 }
