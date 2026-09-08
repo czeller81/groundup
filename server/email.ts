@@ -1,6 +1,7 @@
 import { ReplitConnectors } from "@replit/connectors-sdk";
 
 const STAFF_EMAIL = "info@groundupbjj.com";
+export const GROUND_UP_ADDRESS = "2364 Sturgis Rd, Unit A, Oxnard, CA 93030";
 
 export function passwordResetEmailContent(locale: "en" | "es", resetUrl: string) {
   return locale === "es"
@@ -21,7 +22,7 @@ export function classLifecycleEmailContent(input: {
   waitlistPosition?: number | null;
   locale: "en" | "es";
 }) {
-  return (input.locale === "es"
+  const copy = (input.locale === "es"
     ? {
         confirmed: { subject: `Tu reserva está confirmada: ${input.classTitle}`, body: `Tu lugar está confirmado para el ${input.starts}.` },
         waitlisted: { subject: `Estás en la lista de espera: ${input.classTitle}`, body: `La clase está llena. Tu posición en la lista es ${input.waitlistPosition || "pendiente"} para el ${input.starts}. Te enviaremos un correo si se abre un lugar.` },
@@ -34,6 +35,17 @@ export function classLifecycleEmailContent(input: {
         cancelled: { subject: `Reservation cancelled for ${input.classTitle}`, body: `Your reservation for ${input.starts} has been cancelled.` },
         promoted: { subject: `A spot opened in ${input.classTitle}`, body: `You have been moved from the waitlist into the class on ${input.starts}. Your spot is now confirmed.` },
       })[input.status];
+
+  if (input.status === "confirmed" || input.status === "promoted") {
+    return {
+      ...copy,
+      body: input.locale === "es"
+        ? `${copy.body}\n\nDirección de Ground Up: ${GROUND_UP_ADDRESS}`
+        : `${copy.body}\n\nGround Up address: ${GROUND_UP_ADDRESS}`,
+    };
+  }
+
+  return copy;
 }
 
 function resend() {
