@@ -13,6 +13,7 @@
     "mobile:qa": "node scripts/mobile-responsive-audit.mjs",
     "check": "tsc && npm run check:public-routes",
     "check:public-routes": "node scripts/check-public-route-inventory.mjs",
+    "check:published-fallback": "node scripts/check-published-fallback-html.mjs",
     "db:push": "drizzle-kit push"
   },
   "dependencies": {
