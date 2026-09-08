@@ -11,6 +11,7 @@
 - [Browser required-form order](browser-required-form-order.md) — modal browser coverage must follow form order and titles returned by the authenticated forms API.
 - [Legacy membership entitlements](legacy-membership-entitlements.md) — plan-linked memberships use weekly rules; historical unconfigured memberships retain legacy booking behavior.
 - [Discovery review boundary](discovery-review-boundary.md) — a shared phone alone is not duplicate evidence; preserve prior-use and pass uniqueness checks.
+- [Discovery entitlement boundary](discovery-entitlement-boundary.md) — prospects need a valid pass or active membership; exceptions must adopt and audit the exact reservation.
 - [Autoscale startup readiness](autoscale-startup-readiness.md) — open the HTTP listener before non-critical database maintenance so promotion probes can succeed.
 - [Stripe membership webhook ordering](stripe-membership-webhook-ordering.md) — subscription-created can precede checkout completion; adopt the matching pending checkout record.
 - [Hosted Checkout automation boundary](hosted-checkout-automation.md) — headless agent disclosure can leave Stripe Checkout processing without emitting payment events; do not treat UI fallback as payment proof.

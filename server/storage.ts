@@ -1300,6 +1300,7 @@ export class DatabaseStorage implements IStorage {
         metadata: { previousStatus: current.status },
       });
 
+      let consumesCancellation = false;
       if (current.userId && current.status === "confirmed") {
         const [reservationLedger] = await tx.select().from(entitlementLedger).where(and(
           eq(entitlementLedger.reservationId, current.id),
@@ -1318,8 +1319,8 @@ export class DatabaseStorage implements IStorage {
           )).orderBy(desc(memberships.startDate)).limit(1);
         const cutoffHours = member?.plan?.cancellationCutoffHours ?? 4;
         const late = Boolean(occurrence && occurrence.start.getTime() - Date.now() < cutoffHours * 60 * 60 * 1000);
-        const consumes = late && (member?.plan?.lateCancelPolicy || "consume") === "consume";
-        if (reservationLedger && !consumes) {
+        consumesCancellation = late && (member?.plan?.lateCancelPolicy || "consume") === "consume";
+        if (reservationLedger && !consumesCancellation) {
           await tx.insert(entitlementLedger).values({
             userId: current.userId,
             membershipId: reservationLedger.membershipId,
@@ -1330,19 +1331,39 @@ export class DatabaseStorage implements IStorage {
             reason: late ? "late_cancel_released_override" : "reservation_cancelled",
           });
         }
+      }
+
+      if (current.userId && !consumesCancellation) {
         const [discoveryEntitlement] = await tx.select().from(discoveryEntitlements).where(and(
           eq(discoveryEntitlements.reservationId, current.id),
           eq(discoveryEntitlements.status, "BOOKED"),
         ));
-        if (discoveryEntitlement && !consumes) {
+        if (discoveryEntitlement) {
           const [pass] = await tx.select().from(discoveryPasses).where(eq(discoveryPasses.id, discoveryEntitlement.discoveryPassId));
-          if (pass && pass.expirationTimestamp > new Date()) {
+          const passCanRestore = pass
+            && !pass.convertedAt
+            && ["CLAIMED", "PARTIALLY_BOOKED", "PARTIALLY_ATTENDED"].includes(pass.status)
+            && pass.expirationTimestamp > new Date();
+          if (passCanRestore) {
             await tx.update(discoveryEntitlements).set({
               status: "AVAILABLE",
               reservationId: null,
               cancelledAt: new Date(),
               updatedAt: new Date(),
             }).where(eq(discoveryEntitlements.id, discoveryEntitlement.id));
+            const [remainingUsedEntitlement] = await tx.select({ id: discoveryEntitlements.id })
+              .from(discoveryEntitlements)
+              .where(and(
+                eq(discoveryEntitlements.discoveryPassId, pass.id),
+                inArray(discoveryEntitlements.status, ["BOOKED", "ATTENDED"]),
+              ))
+              .limit(1);
+            if (!remainingUsedEntitlement) {
+              await tx.update(discoveryPasses).set({
+                status: "CLAIMED",
+                updatedAt: new Date(),
+              }).where(eq(discoveryPasses.id, pass.id));
+            }
           }
         }
       }

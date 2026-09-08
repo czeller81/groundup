@@ -5,6 +5,7 @@ import { and, eq, inArray } from "drizzle-orm";
 import { db, pool } from "./db";
 import { storage } from "./storage";
 import { evaluateBookingEligibility } from "./member-entitlements";
+import { issueDiscoveryPass } from "./member-routes";
 import {
   calendarConnections,
   classOccurrences,
@@ -28,7 +29,7 @@ import {
 test("member system evidence: Discovery to membership with weekly limits, waitlist, attendance, and correction audit", async () => {
   assert.notEqual(process.env.NODE_ENV, "production", "fixture evidence must never run in production");
   const suffix = `${Date.now()}-${crypto.randomBytes(3).toString("hex")}`;
-  const emails = [`member-a-${suffix}@example.invalid`, `member-b-${suffix}@example.invalid`];
+  const emails = [`member-a-${suffix}@example.invalid`, `member-b-${suffix}@example.invalid`, `exception-${suffix}@example.invalid`];
   const userIds: string[] = [];
   const occurrenceIds: string[] = [];
   const passIds: string[] = [];
@@ -41,7 +42,8 @@ test("member system evidence: Discovery to membership with weekly limits, waitli
   try {
     const member = await storage.createUser(emails[0], "GroundUp-QA-Password-2026", "Member", "A", "5550000101", "en");
     const discoveryMember = await storage.createUser(emails[1], "GroundUp-QA-Password-2026", "Discovery", "B", "5550000102", "en");
-    userIds.push(member.id, discoveryMember.id);
+    const exceptionMember = await storage.createUser(emails[2], "GroundUp-QA-Password-2026", "Exception", "C", "5550000103", "en");
+    userIds.push(member.id, discoveryMember.id, exceptionMember.id);
     const bookingForms = await db.select({ id: forms.id, slug: forms.slug })
       .from(forms)
       .where(eq(forms.requiredBeforeBooking, true));
@@ -268,6 +270,103 @@ test("member system evidence: Discovery to membership with weekly limits, waitli
     const minorRoster = await storage.getOccurrenceReservations(limitCheck.id);
     assert.equal(minorRoster.confirmed[0].minorProfile?.firstName, "Minor");
     assert.equal(minorRoster.confirmed[0].minorProfile?.lastName, "Participant");
+
+    const [exceptionReservation] = await db.insert(classReservations).values({
+      occurrenceId: limitCheck.id,
+      userId: exceptionMember.id,
+      visitorFirstName: "Exception",
+      visitorLastName: "C",
+      visitorEmail: emails[2],
+      visitorPhone: "5550000103",
+      status: "waitlisted",
+      waitlistPosition: 1,
+    }).returning();
+    const exceptionPass = await issueDiscoveryPass(
+      exceptionMember.id,
+      member.id,
+      "Honor the confirmed class after the prospect booking eligibility defect.",
+      true,
+      exceptionReservation.id,
+    );
+    passIds.push(exceptionPass.id);
+    assert.equal(exceptionPass.status, "PARTIALLY_BOOKED");
+    assert.ok(exceptionPass.expirationTimestamp.getTime() >= limitCheck.end.getTime());
+    const exceptionEntitlements = await db.select().from(discoveryEntitlements)
+      .where(eq(discoveryEntitlements.discoveryPassId, exceptionPass.id));
+    assert.deepEqual(
+      exceptionEntitlements.map((entitlement) => [entitlement.category, entitlement.status, entitlement.reservationId]).sort(),
+      [["SKILL", "BOOKED", exceptionReservation.id], ["STRENGTH", "AVAILABLE", null]],
+    );
+    const exceptionAudit = await db.select().from(memberAuditEvents).where(and(
+      eq(memberAuditEvents.userId, exceptionMember.id),
+      eq(memberAuditEvents.targetId, exceptionPass.id),
+    ));
+    assert.ok(exceptionAudit.some((event) => event.action === "discovery_pass_reservation_exception_recorded"));
+    await storage.cancelClassReservation({
+      reservationId: exceptionReservation.id,
+      userId: exceptionMember.id,
+      reason: "Fixture verifies waitlist exception release",
+    });
+    const releasedExceptionEntitlements = await db.select().from(discoveryEntitlements)
+      .where(eq(discoveryEntitlements.discoveryPassId, exceptionPass.id));
+    assert.deepEqual(
+      releasedExceptionEntitlements.map((entitlement) => [entitlement.category, entitlement.status, entitlement.reservationId]).sort(),
+      [["SKILL", "AVAILABLE", null], ["STRENGTH", "AVAILABLE", null]],
+    );
+    const [releasedExceptionPass] = await db.select().from(discoveryPasses).where(eq(discoveryPasses.id, exceptionPass.id));
+    assert.equal(releasedExceptionPass.status, "CLAIMED");
+
+    await db.insert(formResponses).values(bookingForms.map((form) => ({
+      userId: exceptionMember.id,
+      formId: form.id,
+      answers: {},
+      status: "submitted",
+      submittedAt: new Date(),
+    })));
+    await storage.createMembership({
+      userId: exceptionMember.id,
+      planId: null,
+      type: "legacy-unconfigured",
+      status: "active",
+      priceCents: 0,
+      source: "fixture_evidence",
+    });
+    await db.update(discoveryEntitlements).set({
+      status: "BOOKED",
+      reservationId: exceptionReservation.id,
+    })
+      .where(and(
+        eq(discoveryEntitlements.discoveryPassId, exceptionPass.id),
+        eq(discoveryEntitlements.category, "SKILL"),
+      ));
+    const legacyMemberWithUsedPass = await evaluateBookingEligibility(exceptionMember, extra);
+    assert.equal(
+      legacyMemberWithUsedPass.code,
+      "ELIGIBLE",
+      "an active legacy member must not be blocked by a used Discovery entitlement",
+    );
+
+    await db.update(discoveryPasses).set({ status: "CANCELLED" }).where(eq(discoveryPasses.id, exceptionPass.id));
+    await db.update(classReservations).set({
+      status: "waitlisted",
+      waitlistPosition: 1,
+      cancelledAt: null,
+    }).where(eq(classReservations.id, exceptionReservation.id));
+    await storage.cancelClassReservation({
+      reservationId: exceptionReservation.id,
+      userId: exceptionMember.id,
+      reason: "Fixture verifies revoked pass remains revoked",
+    });
+    const [revokedPassAfterCancellation] = await db.select().from(discoveryPasses)
+      .where(eq(discoveryPasses.id, exceptionPass.id));
+    const [revokedEntitlementAfterCancellation] = await db.select().from(discoveryEntitlements)
+      .where(and(
+        eq(discoveryEntitlements.discoveryPassId, exceptionPass.id),
+        eq(discoveryEntitlements.category, "SKILL"),
+      ));
+    assert.equal(revokedPassAfterCancellation.status, "CANCELLED");
+    assert.equal(revokedEntitlementAfterCancellation.status, "BOOKED");
+    assert.equal(revokedEntitlementAfterCancellation.reservationId, exceptionReservation.id);
   } finally {
     if (occurrenceIds.length) await db.delete(entitlementLedger).where(inArray(entitlementLedger.occurrenceId, occurrenceIds));
     if (passIds.length) await db.delete(discoveryEntitlements).where(inArray(discoveryEntitlements.discoveryPassId, passIds));

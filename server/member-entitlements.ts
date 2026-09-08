@@ -258,7 +258,7 @@ export async function evaluateBookingEligibilityWithExecutor(
     return result(historicalPass.pass.expirationTimestamp < now ? "DISCOVERY_EXPIRED" : "MEMBERSHIP_INACTIVE");
   }
 
-  if (pass) {
+  if (pass && !membership) {
     const entitlement = discoveryRows.find((row) => row.entitlement?.category === discoveryClassCategory)?.entitlement;
     if (!discoveryClassCategory) {
       return result("PLAN_NOT_ELIGIBLE", { source: "discovery" });
@@ -274,14 +274,10 @@ export async function evaluateBookingEligibilityWithExecutor(
       discoveryEntitlementId: entitlement.id,
       waitlistAllowed: true,
     };
-    if (!membership) {
-      return await applyReservationChecks(user, occurrence, executor, result("ELIGIBLE", base));
-    }
-  } else if (discoveryRows.length === 0) {
-    if (!membership) return result("MEMBERSHIP_INACTIVE");
+    return await applyReservationChecks(user, occurrence, executor, result("ELIGIBLE", base));
   }
 
-  if (!membership) return result(pass ? "DISCOVERY_EXPIRED" : "MEMBERSHIP_INACTIVE");
+  if (!membership) return result(historicalPass ? "DISCOVERY_EXPIRED" : "MEMBERSHIP_INACTIVE");
   const plan = membership.plan;
   if (!plan) {
     return await applyReservationChecks(user, occurrence, executor, result("ELIGIBLE", {

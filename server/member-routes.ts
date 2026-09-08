@@ -24,7 +24,7 @@ import {
 import { db } from "./db";
 import { storage } from "./storage";
 import { coachCanManageMember, requireAuth, requireRole } from "./route-security";
-import { evaluateBookingEligibility, evaluateMinorBookingEligibilityWithExecutor, getMembershipWeekStart, minorAgeAt } from "./member-entitlements";
+import { discoveryCategory, evaluateBookingEligibility, evaluateMinorBookingEligibilityWithExecutor, getMembershipWeekStart, minorAgeAt } from "./member-entitlements";
 import Stripe from "stripe";
 import {
   STRIPE_MEMBERSHIP_CATALOG,
@@ -170,7 +170,13 @@ export async function missingRequiredBookingForms(userId: string, executor: Disc
   return requiredForms.filter((form) => !submittedIds.has(form.id)).map((form) => form.id);
 }
 
-export async function issueDiscoveryPass(userId: string, actorId: string | null, reason?: string, override = false) {
+export async function issueDiscoveryPass(
+  userId: string,
+  actorId: string | null,
+  reason?: string,
+  override = false,
+  exceptionReservationId?: string,
+) {
   try {
     return await db.transaction(async (tx) => {
       const duplicate = await duplicateDiscoveryReason(userId, tx);
@@ -185,28 +191,72 @@ export async function issueDiscoveryPass(userId: string, actorId: string | null,
         throw error;
       }
       const now = new Date();
-      const expiration = new Date(now.getTime() + discoveryDurationDays * 24 * 60 * 60 * 1000);
+      let exceptionReservation: typeof classReservations.$inferSelect | undefined;
+      let exceptionCategory: "SKILL" | "STRENGTH" | null = null;
+      let exceptionOccurrenceEnd: Date | undefined;
+      if (exceptionReservationId) {
+        if (!override || !reason?.trim()) {
+          const error = new Error("DISCOVERY_EXCEPTION_REASON_REQUIRED");
+          (error as Error & { code?: string }).code = "DISCOVERY_EXCEPTION_REASON_REQUIRED";
+          throw error;
+        }
+        const [row] = await tx.select({
+          reservation: classReservations,
+          occurrence: classOccurrences,
+          classType: classTypes,
+        }).from(classReservations)
+          .innerJoin(classOccurrences, eq(classReservations.occurrenceId, classOccurrences.id))
+          .leftJoin(classTypes, eq(classOccurrences.classTypeId, classTypes.id))
+          .where(and(
+            eq(classReservations.id, exceptionReservationId),
+            eq(classReservations.userId, userId),
+            inArray(classReservations.status, ["confirmed", "waitlisted"]),
+          ))
+          .limit(1);
+        exceptionCategory = row?.classType ? discoveryCategory(row.classType) : null;
+        if (!row || !exceptionCategory) {
+          const error = new Error("DISCOVERY_EXCEPTION_RESERVATION_INVALID");
+          (error as Error & { code?: string }).code = "DISCOVERY_EXCEPTION_RESERVATION_INVALID";
+          throw error;
+        }
+        exceptionReservation = row.reservation;
+        exceptionOccurrenceEnd = row.occurrence.end;
+      }
+      const standardExpiration = now.getTime() + discoveryDurationDays * 24 * 60 * 60 * 1000;
+      const expiration = new Date(Math.max(standardExpiration, exceptionOccurrenceEnd?.getTime() || 0));
       const [pass] = await tx.insert(discoveryPasses).values({
         userId,
         claimTimestamp: now,
         activationTimestamp: now,
         expirationTimestamp: expiration,
-        status: "CLAIMED",
+        status: exceptionReservation ? "PARTIALLY_BOOKED" : "CLAIMED",
         duplicateCheck: { result: duplicate || "CLEAR", checkedAt: now.toISOString() },
         adminOverrideReason: override ? reason : null,
         createdBy: actorId,
       }).returning();
-      await tx.insert(discoveryEntitlements).values([
-        { discoveryPassId: pass.id, category: "SKILL", status: "AVAILABLE" },
-        { discoveryPassId: pass.id, category: "STRENGTH", status: "AVAILABLE" },
-      ]);
+      await tx.insert(discoveryEntitlements).values((["SKILL", "STRENGTH"] as const).map((category) => ({
+        discoveryPassId: pass.id,
+        category,
+        status: exceptionReservation && category === exceptionCategory ? "BOOKED" : "AVAILABLE",
+        reservationId: exceptionReservation && category === exceptionCategory ? exceptionReservation.id : null,
+        bookedAt: exceptionReservation && category === exceptionCategory ? exceptionReservation.createdAt : null,
+      })));
       await tx.insert(memberAuditEvents).values({
         actorId,
         userId,
         targetType: "discovery_pass",
         targetId: pass.id,
-        action: override ? "discovery_pass_override_issued" : "discovery_pass_claimed",
-        after: { expirationTimestamp: expiration.toISOString(), duplicate },
+        action: exceptionReservation
+          ? "discovery_pass_reservation_exception_recorded"
+          : override
+            ? "discovery_pass_override_issued"
+            : "discovery_pass_claimed",
+        after: {
+          expirationTimestamp: expiration.toISOString(),
+          duplicate,
+          exceptionReservationId: exceptionReservation?.id || null,
+          exceptionCategory,
+        },
         reason: reason || null,
       });
       return pass;
@@ -1166,14 +1216,21 @@ export function registerMemberRoutes(app: Express) {
 
   app.post("/api/portal/admin/discovery/:userId/issue", requireRole("admin"), async (req, res) => {
     try {
-      const data = z.object({ reason: z.string().trim().min(5).max(500).optional(), override: z.boolean().default(false) }).strict().parse(req.body);
-      const pass = await issueDiscoveryPass(req.params.userId, req.session.userId!, data.reason, data.override);
+      const data = z.object({
+        reason: z.string().trim().min(5).max(500).optional(),
+        override: z.boolean().default(false),
+        reservationId: z.string().uuid().optional(),
+      }).strict().parse(req.body);
+      const pass = await issueDiscoveryPass(req.params.userId, req.session.userId!, data.reason, data.override, data.reservationId);
       await setLifecycle(req.params.userId, "DISCOVERY_PASS", req.session.userId!, data.reason || "Admin issued Discovery Pass", "admin_issue");
       res.status(201).json(await getPass(req.params.userId));
       void pass;
     } catch (error) {
       const code = (error as Error & { code?: string }).code;
       if (code === "DISCOVERY_ALREADY_USED" || code === "ADMIN_REVIEW_REQUIRED") return res.status(409).json({ code, message: "A Discovery Pass already exists or requires admin review." });
+      if (code === "DISCOVERY_EXCEPTION_REASON_REQUIRED" || code === "DISCOVERY_EXCEPTION_RESERVATION_INVALID") {
+        return res.status(400).json({ code, message: "Choose a valid reservation and provide a reason for the Discovery Pass exception." });
+      }
       if (error instanceof z.ZodError) return res.status(400).json({ code: "INVALID_REQUEST", errors: error.flatten() });
       res.status(500).json({ code: "DISCOVERY_ISSUE_FAILED" });
     }
