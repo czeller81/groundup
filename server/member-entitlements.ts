@@ -20,6 +20,12 @@ import { db } from "./db";
 export const DISCOVERY_CATEGORIES = ["SKILL", "STRENGTH"] as const;
 export type DiscoveryCategory = typeof DISCOVERY_CATEGORIES[number];
 
+export const MEMBER_BOOKING_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
+
+export function isWithinMemberBookingWindow(start: Date, now = new Date()) {
+  return start.getTime() <= now.getTime() + MEMBER_BOOKING_WINDOW_MS;
+}
+
 export type BookingEligibilityCode =
   | "ELIGIBLE"
   | "WEEKLY_LIMIT_REACHED"

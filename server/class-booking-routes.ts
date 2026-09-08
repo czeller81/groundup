@@ -10,7 +10,11 @@ import {
   ensureDefaultClassTypes,
   syncGoogleClassSchedule,
 } from "./class-booking-sync";
-import { evaluateBookingEligibility, isGirlsClass } from "./member-entitlements";
+import {
+  evaluateBookingEligibility,
+  isGirlsClass,
+  MEMBER_BOOKING_WINDOW_MS,
+} from "./member-entitlements";
 import { sendClassLifecycleEmail } from "./email";
 
 const reservationSchema = z.object({
@@ -46,6 +50,16 @@ function dateRange(req: Request) {
     throw new ClassBookingError("DATE_RANGE_TOO_LARGE", "Schedule range cannot exceed 120 days.");
   }
   return { from, to };
+}
+
+function memberDateRange(req: Request) {
+  const now = new Date();
+  const { from, to } = dateRange(req);
+  const maximumMemberDate = new Date(now.getTime() + MEMBER_BOOKING_WINDOW_MS);
+  return {
+    from,
+    to: to > maximumMemberDate ? maximumMemberDate : to,
+  };
 }
 
 type PublicOccurrenceSource = Omit<
@@ -207,7 +221,7 @@ export function registerClassBookingRoutes(app: Express) {
 
   app.get("/api/portal/classes", requireAuth, async (req, res) => {
     try {
-      const { from, to } = dateRange(req);
+      const { from, to } = memberDateRange(req);
       const occurrences = await storage.listClassOccurrences(from, to);
       const user = await storage.getUserById(req.session.userId!);
       res.json(await Promise.all(occurrences.map(async (occurrence) => ({

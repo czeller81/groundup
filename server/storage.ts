@@ -72,6 +72,7 @@ import {
   evaluateBookingEligibilityWithExecutor,
   evaluateMinorBookingEligibilityWithExecutor,
   getMembershipWeekStart,
+  isWithinMemberBookingWindow,
   type BookingEligibility,
 } from "./member-entitlements";
 
@@ -1089,6 +1090,13 @@ export class DatabaseStorage implements IStorage {
       }
       if (occurrence.start <= new Date()) {
         throw new ClassBookingError("OCCURRENCE_STARTED", "This class has already started.", 409);
+      }
+      if (input.userId && !isWithinMemberBookingWindow(occurrence.start)) {
+        throw new ClassBookingError(
+          "BOOKING_WINDOW_CLOSED",
+          "Classes become available seven days before they start.",
+          409,
+        );
       }
       if (!input.userId && !occurrence.firstVisitEligible) {
         throw new ClassBookingError("MEMBERSHIP_REQUIRED", "This class requires a member account.", 403);

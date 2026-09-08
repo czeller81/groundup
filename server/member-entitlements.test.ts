@@ -1,6 +1,16 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { discoveryCategory, getMembershipWeekStart } from "./member-entitlements";
+import {
+  discoveryCategory,
+  getMembershipWeekStart,
+  isWithinMemberBookingWindow,
+} from "./member-entitlements";
+
+test("member booking visibility is limited to the next seven days", () => {
+  const now = new Date("2026-09-08T12:00:00.000Z");
+  assert.equal(isWithinMemberBookingWindow(new Date("2026-09-15T12:00:00.000Z"), now), true);
+  assert.equal(isWithinMemberBookingWindow(new Date("2026-09-15T12:00:00.001Z"), now), false);
+});
 
 test("membership weeks use the configured Monday start in the configured timezone", () => {
   const weekStart = getMembershipWeekStart(

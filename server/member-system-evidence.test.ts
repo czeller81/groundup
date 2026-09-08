@@ -98,7 +98,7 @@ test("member system evidence: Discovery to membership with weekly limits, waitli
     classTypeSkillId = skillType.id;
     classTypeStrengthId = strengthType.id;
 
-    const base = new Date(Date.now() + 8 * 24 * 60 * 60 * 1000);
+    const base = new Date(Date.now() + 1 * 24 * 60 * 60 * 1000);
     base.setUTCHours(20, 0, 0, 0);
     const makeOccurrence = async (typeId: string, offsetDays: number, title: string, capacity: number) => {
       const start = new Date(base.getTime() + offsetDays * 24 * 60 * 60 * 1000);
@@ -129,6 +129,7 @@ test("member system evidence: Discovery to membership with weekly limits, waitli
     const strength = await makeOccurrence(classTypeStrengthId, 1, "QA Strength Class", 4);
     const extra = await makeOccurrence(classTypeSkillId, 2, "QA Extra Skill Class", 4);
     const limitCheck = await makeOccurrence(classTypeSkillId, 3, "QA Limit Check Class", 4);
+    const outsideMemberWindow = await makeOccurrence(classTypeSkillId, 8, "QA Future Skill Class", 4);
 
     await db.insert(formResponses).values(bookingForms.map((form) => ({
       userId: discoveryMember.id,
@@ -183,6 +184,19 @@ test("member system evidence: Discovery to membership with weekly limits, waitli
         submittedAt: new Date(),
       },
     ]));
+
+    await assert.rejects(
+      () => storage.reserveClassOccurrence({
+        occurrenceId: outsideMemberWindow.id,
+        userId: member.id,
+        firstName: "Member",
+        lastName: "A",
+        email: emails[0],
+        phone: "5550000101",
+      }),
+      (error: any) => error.code === "BOOKING_WINDOW_CLOSED",
+      "authenticated members cannot bypass the seven-day window with a direct reservation request",
+    );
 
     const memberSkill = await storage.reserveClassOccurrence({
       occurrenceId: skill.id, userId: member.id, firstName: "Member", lastName: "A", email: emails[0], phone: "5550000101",
