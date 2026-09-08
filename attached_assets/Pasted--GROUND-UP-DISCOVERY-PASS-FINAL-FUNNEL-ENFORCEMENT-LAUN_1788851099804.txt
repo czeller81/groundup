@@ -1,0 +1,587 @@
+# GROUND UP — DISCOVERY PASS FINAL FUNNEL ENFORCEMENT + LAUNCH QA
+
+The Discovery Pass campaign landing page has now been implemented.
+
+Current routes:
+
+English:
+`/discovery-pass`
+
+Spanish:
+`/es/discovery-pass`
+
+The implementation already preserves campaign attribution and Discovery intent through login/signup and the portal.
+
+Before this campaign can be handed to the advertising agent, complete a final bounded remediation and end-to-end launch validation.
+
+This work corresponds to follow-up task:
+
+**#75 — Verify the Discovery Pass campaign funnel before launch**
+
+Do not redesign the landing page.
+
+Do not modify unrelated site functionality.
+
+---
+
+# 1. CURRENT KNOWN CRITICAL ISSUE
+
+The existing endpoint:
+
+`/api/portal/discovery/claim`
+
+currently allows Discovery Pass activation without enforcing required waiver completion at the API/server level.
+
+This must be corrected.
+
+The intended business sequence is:
+
+LANDING PAGE
+→ CREATE ACCOUNT / LOGIN
+→ COMPLETE REQUIRED WAIVERS
+→ ACTIVATE DISCOVERY PASS
+→ BOOK CLASS
+
+The server must enforce this sequence.
+
+UI-only enforcement is insufficient.
+
+---
+
+# 2. FIRST AUDIT THE EXISTING WAIVER MODEL
+
+Before changing code, determine exactly how the existing application represents:
+
+* required member forms
+* waiver completion
+* form version
+* signed status
+* member identity
+* timestamps
+* required vs optional forms
+* whether multiple waivers must be completed
+* whether previously completed valid waivers satisfy the requirement
+
+Reuse the existing source of truth.
+
+Do not introduce a second waiver state system.
+
+Do not change waiver legal content.
+
+Do not invalidate legitimate previously signed waivers unless existing rules require it.
+
+---
+
+# 3. ENFORCE WAIVER COMPLETION SERVER-SIDE
+
+Update the Discovery Pass claim/activation path so the server verifies all required waiver conditions before activation.
+
+Expected behavior:
+
+## Valid member
+
+Required waivers complete
+→ activation allowed
+
+## Missing required waiver
+
+Required waiver incomplete
+→ activation denied
+
+Return an appropriate existing application/API error response.
+
+Do not issue Discovery Pass entitlements.
+
+Do not start the seven-day validity period.
+
+Do not partially mutate the member record.
+
+---
+
+# 4. FAIL CLOSED
+
+If waiver status cannot be safely determined because of:
+
+* database error
+* inconsistent record
+* unknown form state
+* missing required data
+
+the Discovery Pass must NOT activate.
+
+Do not assume completion.
+
+Do not silently bypass the requirement.
+
+---
+
+# 5. PRESERVE IDEMPOTENCY / DUPLICATE PROTECTION
+
+Audit the current duplicate claim logic.
+
+Verify:
+
+* repeated claim requests cannot create multiple Discovery Passes
+* browser refresh cannot duplicate entitlements
+* double-click cannot create duplicate entitlements
+* retry after network interruption is safe
+* concurrent requests do not create duplicate SKILL/STRENGTH credits
+
+Expected successful entitlement:
+
+* exactly 1 SKILL
+* exactly 1 STRENGTH
+
+Do not change existing eligibility restrictions unless needed for correctness.
+
+---
+
+# 6. SEVEN-DAY VALIDITY
+
+Verify the production rule precisely.
+
+The intended campaign rule is:
+
+**7 days beginning when the Discovery Pass is successfully activated.**
+
+Confirm:
+
+* activation timestamp
+* expiration timestamp
+* timezone handling
+* booking eligibility on expiration boundary
+* whether classes may occur after expiration if booked before expiration
+
+Do not invent a policy where existing business rules already define one.
+
+Report the exact implemented semantics.
+
+---
+
+# 7. CAMPAIGN ATTRIBUTION
+
+Verify these values survive the entire acquisition flow where applicable:
+
+* `intent=discovery-pass`
+* `utm_source`
+* `utm_medium`
+* `utm_campaign`
+* `utm_content`
+* `utm_term`
+* `fbclid`
+* `gclid`
+* `ttclid`
+
+Test:
+
+Landing page
+→ login/signup
+→ account creation
+→ dashboard
+→ waiver
+→ activation
+→ booking
+
+Do not expose these parameters publicly in inappropriate places.
+
+Do not store sensitive form or waiver information in advertising attribution.
+
+---
+
+# 8. ENGLISH END-TO-END TEST
+
+Using a designated test account, start from:
+
+`/discovery-pass`
+
+with representative campaign parameters.
+
+Example test attribution:
+
+`utm_source=meta`
+`utm_medium=paid_social`
+`utm_campaign=discovery_pass`
+`utm_content=english_video`
+
+Do not use real customer data.
+
+Verify:
+
+### Landing page
+
+* correct route
+* English
+* Ground Up styling
+* CTA
+* analytics page event
+* attribution capture
+
+### Signup
+
+Create a new test user.
+
+Verify:
+
+* Discovery intent survives
+* campaign attribution survives
+* `discovery_account_created` fires exactly as intended
+
+### Waiver bypass test
+
+Before signing required waiver(s), attempt Discovery activation directly at both:
+
+* UI level
+* API level where safely testable
+
+Expected:
+
+`DENIED`
+
+No entitlement should be created.
+
+### Waiver completion
+
+Complete required test waiver(s).
+
+Verify:
+
+`discovery_waiver_completed`
+
+### Pass activation
+
+Activate once.
+
+Expected:
+
+* exactly 1 SKILL
+* exactly 1 STRENGTH
+* seven-day validity
+* `discovery_pass_activated`
+
+### Duplicate activation
+
+Attempt again.
+
+Expected:
+
+`DENIED` or safe idempotent response.
+
+No duplicate entitlement.
+
+### Booking
+
+Book one valid Discovery class.
+
+Verify:
+
+* correct entitlement is consumed/reserved according to existing rules
+* other entitlement remains available
+* `discovery_class_booked`
+* correct cache/state refresh
+
+---
+
+# 9. SPANISH END-TO-END TEST
+
+Repeat from:
+
+`/es/discovery-pass`
+
+using:
+
+`utm_source=meta`
+`utm_medium=paid_social`
+`utm_campaign=discovery_pass`
+`utm_content=spanish_video`
+
+Verify:
+
+* Spanish landing page
+* localized login/signup
+* localized portal navigation where supported
+* waiver instructions
+* pass activation
+* class booking
+* language preservation
+
+Record every English fallback encountered.
+
+Distinguish:
+
+EXPECTED EXISTING FALLBACK
+
+from:
+
+LOCALIZATION BUG
+
+Do not block launch for an existing intentionally untranslated backend value unless it materially damages the user journey.
+
+---
+
+# 10. MOBILE QA
+
+Perform dedicated browser QA for both routes.
+
+At minimum test representative widths around:
+
+* 390px
+* 430px
+
+Verify:
+
+* hero content fits
+* CTA is easily tappable
+* no horizontal scroll
+* no clipped text
+* cards stack correctly
+* navbar works
+* Spanish strings do not overflow
+* signup forms work with mobile keyboard
+* waiver flow works
+* dashboard works
+* activation works
+* booking works
+* consent banner/dialog does not make the page unusable
+
+Capture screenshots for:
+
+* English mobile landing page
+* Spanish mobile landing page
+
+---
+
+# 11. ANALYTICS QA
+
+Existing campaign events:
+
+* `discovery_page_view`
+* `discovery_cta_click`
+* `discovery_account_created`
+* `discovery_waiver_completed`
+* `discovery_pass_activated`
+* `discovery_class_booked`
+
+Verify each event is:
+
+* generated at the correct stage
+* not duplicated unnecessarily
+* consent-aware
+* language agnostic unless language is intentionally included as metadata
+* attributable to the campaign where supported
+
+Do not mark the following as implemented unless actual production wiring exists:
+
+* `discovery_first_attendance`
+* `discovery_second_attendance`
+* `discovery_membership_started`
+
+Those may remain future milestones.
+
+---
+
+# 12. NEGATIVE TEST MATRIX
+
+Safely test:
+
+| Scenario                                       | Expected                            |
+| ---------------------------------------------- | ----------------------------------- |
+| Claim without account                          | DENIED                              |
+| Claim without required waiver                  | DENIED                              |
+| Claim after valid waiver                       | ALLOWED                             |
+| Claim twice                                    | DENIED / IDEMPOTENT                 |
+| Double-click claim                             | NO DUPLICATE                        |
+| Concurrent claim requests                      | NO DUPLICATE                        |
+| Book without active Discovery Pass             | DENIED                              |
+| Book wrong entitlement type                    | DENIED                              |
+| Use another member's pass                      | DENIED                              |
+| Reclaim after already receiving Discovery Pass | Existing eligibility rule enforced  |
+| Expired Discovery Pass                         | DENIED according to production rule |
+
+Do not weaken security controls to make tests pass.
+
+---
+
+# 13. AUTOMATED TESTS
+
+Add or extend automated tests covering, at minimum:
+
+* waiver-required claim
+* valid waiver claim
+* duplicate claim
+* exact entitlement count
+* expiration initialization
+* unauthorized user
+* malformed claim
+* existing Discovery Pass eligibility
+* attribution preservation where appropriate
+
+Run:
+
+* TypeScript/type checks
+* applicable unit tests
+* applicable integration tests
+* route inventory checks
+* production build
+* `git diff --check`
+
+Do not declare success if existing tests fail due to this change.
+
+---
+
+# 14. SCREENSHOTS / EVIDENCE
+
+Capture:
+
+* English desktop
+* Spanish desktop
+* English mobile
+* Spanish mobile
+* waiver-required state
+* activation-ready state
+* active Discovery Pass
+* SKILL/STRENGTH entitlement state
+* successful booking state
+
+Do not expose real customer information.
+
+---
+
+# 15. DO NOT CHANGE
+
+Do not alter:
+
+* Discovery Pass offer
+* SKILL/STRENGTH quantities
+* membership pricing
+* unrelated booking rules
+* unrelated authentication
+* waiver language
+* other campaigns
+* homepage
+* general portal design
+
+Only make the smallest changes required to enforce and validate this funnel.
+
+---
+
+# 16. FINAL REPORT
+
+Return:
+
+## A. Starting SHA
+
+Full SHA.
+
+## B. Ending SHA
+
+Full SHA.
+
+## C. Files changed
+
+Exact list.
+
+## D. Waiver Enforcement
+
+Describe precisely:
+
+* existing source of truth used
+* server-side check added
+* failure behavior
+* whether activation mutation occurs before or after validation
+
+## E. Discovery Pass Business Rule
+
+Confirm:
+
+SKILL:
+[number]
+
+STRENGTH:
+[number]
+
+Validity:
+[exact production rule]
+
+Start time:
+[exact]
+
+Expiration behavior:
+[exact]
+
+## F. English Funnel
+
+Landing:
+PASS / FAIL
+
+Signup:
+PASS / FAIL
+
+Attribution:
+PASS / FAIL
+
+Waiver enforcement:
+PASS / FAIL
+
+Activation:
+PASS / FAIL
+
+Duplicate protection:
+PASS / FAIL
+
+Booking:
+PASS / FAIL
+
+Mobile:
+PASS / FAIL
+
+## G. Spanish Funnel
+
+Landing:
+PASS / FAIL
+
+Signup:
+PASS / FAIL
+
+Attribution:
+PASS / FAIL
+
+Waiver enforcement:
+PASS / FAIL
+
+Activation:
+PASS / FAIL
+
+Duplicate protection:
+PASS / FAIL
+
+Booking:
+PASS / FAIL
+
+Mobile:
+PASS / FAIL
+
+## H. Analytics
+
+Report actual status for every Discovery event.
+
+## I. Automated Tests
+
+Exact test results.
+
+## J. Remaining Risks
+
+List all remaining launch blockers or `NONE`.
+
+---
+
+# 17. FINAL VERDICT
+
+Return exactly one:
+
+`DISCOVERY_PASS_FUNNEL_READY_FOR_AD_CAMPAIGN`
+
+or
+
+`DISCOVERY_PASS_FUNNEL_BLOCKED`
+
+Do not return READY while waiver enforcement, activation, booking, or mobile funnel validation remains unverified.
