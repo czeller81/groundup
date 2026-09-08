@@ -112,6 +112,16 @@ const PAGE_META: Record<string, { title: string; description: string; canonical:
     description: "A Ground Up learning experience for building clearer thinking, better decisions, and practical adaptability as work and life change.",
     canonical: "https://www.groundupbjj.com/adaptive-capacity",
   },
+  "/discovery-pass": {
+    title: "Free Discovery Pass | Ground Up BJJ Oxnard",
+    description: "Try Ground Up with a free seven-day Discovery Pass including one SKILL class and one STRENGTH class. Beginner-friendly coaching in Oxnard.",
+    canonical: "https://www.groundupbjj.com/discovery-pass",
+  },
+  "/es/discovery-pass": {
+    title: "Discovery Pass gratis | Ground Up BJJ Oxnard",
+    description: "Prueba Ground Up con un Discovery Pass gratis de siete días que incluye una clase de SKILL y una clase de STRENGTH. Coaching para principiantes en Oxnard.",
+    canonical: "https://www.groundupbjj.com/es/discovery-pass",
+  },
 };
 
 const HREFLANG_PAIRS: Record<string, { en?: string; es?: string; xDefault?: string }> = {
@@ -127,6 +137,8 @@ const HREFLANG_PAIRS: Record<string, { en?: string; es?: string; xDefault?: stri
   "/es/contacto": { en: "https://www.groundupbjj.com/contact", es: "https://www.groundupbjj.com/es/contacto" },
   "/privacy": { en: "https://www.groundupbjj.com/privacy", es: "https://www.groundupbjj.com/es/privacidad" },
   "/es/privacidad": { en: "https://www.groundupbjj.com/privacy", es: "https://www.groundupbjj.com/es/privacidad" },
+  "/discovery-pass": { en: "https://www.groundupbjj.com/discovery-pass", es: "https://www.groundupbjj.com/es/discovery-pass", xDefault: "https://www.groundupbjj.com/discovery-pass" },
+  "/es/discovery-pass": { en: "https://www.groundupbjj.com/discovery-pass", es: "https://www.groundupbjj.com/es/discovery-pass", xDefault: "https://www.groundupbjj.com/discovery-pass" },
 };
 
 const PAGE_CONTENT: Record<string, string> = {
@@ -180,6 +192,14 @@ const PAGE_CONTENT: Record<string, string> = {
   <p>Ground Up is developing a separate learning experience for people who want practical tools for clearer thinking, better decisions, and more adaptable work and life.</p>
   <p>Join the interest list to hear when the first cohort is ready. Details will be shared as they are confirmed.</p>
   <a href="/adaptive-capacity">Join the interest list</a>`,
+  "/discovery-pass": `<h1>Try Ground Up Free with a Discovery Pass</h1>
+  <p>Get one SKILL class, one STRENGTH class, and seven days to experience Ground Up in Oxnard.</p>
+  <p>Start with a secure member account, complete the required forms, activate your pass, and book your classes.</p>
+  <a href="/portal/login?intent=discovery-pass">Get my free Discovery Pass</a>`,
+  "/es/discovery-pass": `<h1>Prueba Ground Up gratis con un Discovery Pass</h1>
+  <p>Obtén una clase de SKILL, una clase de STRENGTH y siete días para conocer Ground Up en Oxnard.</p>
+  <p>Comienza con una cuenta segura, completa los formularios requeridos, activa tu pase y reserva tus clases.</p>
+  <a href="/es/portal/login?intent=discovery-pass">Obtener mi Discovery Pass gratis</a>`,
 };
 
 async function serveWithMeta(req: Request, res: Response, next: NextFunction) {

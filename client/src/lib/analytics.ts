@@ -18,7 +18,16 @@ export type ProjectAnalyticsEvent =
   | "member_login_completed"
   | "member_signup_completed"
   | "minor_profile_created"
-  | "consent_updated";
+  | "consent_updated"
+  | "discovery_page_view"
+  | "discovery_cta_click"
+  | "discovery_account_created"
+  | "discovery_waiver_completed"
+  | "discovery_pass_activated"
+  | "discovery_class_booked"
+  | "discovery_first_attendance"
+  | "discovery_second_attendance"
+  | "discovery_membership_started";
 
 type AnalyticsData = Record<string, string | number | boolean>;
 

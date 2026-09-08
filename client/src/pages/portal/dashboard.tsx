@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { classDateLabel, classTimeLabel } from "@/lib/class-booking";
 import { localizedPortalPath } from "@/lib/portal-navigation";
+import { trackEvent } from "@/lib/analytics";
 import {
   FileText, Calendar, CheckCircle, XCircle, Clock, AlertCircle, X, Loader2, Eye,
   Shield, Camera, Book, Users, CreditCard, Dumbbell, ArrowRight, ExternalLink,
@@ -94,6 +95,7 @@ export default function PortalDashboard() {
     mutationFn: async () => (await apiRequest("POST", "/api/portal/discovery/claim", {})).json(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/portal/member-program"] });
+      trackEvent("discovery_pass_activated", { locale });
       toast({ title: copy.discoveryPassTitle });
     },
     onError: (error: Error) => toast({

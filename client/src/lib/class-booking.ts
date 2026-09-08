@@ -22,6 +22,7 @@ export type LiveClass = {
     code: string;
     message: string;
     waitlistAllowed: boolean;
+    source?: "discovery" | "membership";
   } | null;
   classType: {
     id: string;

@@ -18,6 +18,7 @@ const PUBLIC_ROUTE_PAIRS: Record<string, string> = {
   "/girls": "/es/girls",
   "/kids": "/es/girls",
   "/adaptive-capacity": "/es/adaptive-capacity",
+  "/discovery-pass": "/es/discovery-pass",
 };
 
 export function localizedPublicPath(pathname: string, locale: Locale) {

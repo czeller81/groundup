@@ -26,6 +26,8 @@ const HREFLANG_PAIRS: Record<string, { en?: string; es?: string; xDefault?: stri
   "/es/contacto": { en: "/contact", es: "/es/contacto" },
   "/privacy": { en: "/privacy", es: "/es/privacidad" },
   "/es/privacidad": { en: "/privacy", es: "/es/privacidad" },
+  "/discovery-pass": { en: "/discovery-pass", es: "/es/discovery-pass", xDefault: "/discovery-pass" },
+  "/es/discovery-pass": { en: "/discovery-pass", es: "/es/discovery-pass", xDefault: "/discovery-pass" },
 };
 
 export default function SEO({

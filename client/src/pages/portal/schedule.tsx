@@ -82,7 +82,7 @@ export default function PortalSchedule() {
   const minors = useQuery<MinorProfile[]>({ queryKey: ["/api/portal/minors"] });
   const minorReservations = useQuery<MinorReservation[]>({ queryKey: ["/api/portal/minor-reservations"] });
   const reserve = useMutation({
-    mutationFn: async ({ occurrenceId, minorProfileId }: { occurrenceId: string; minorProfileId?: string }) => (
+    mutationFn: async ({ occurrenceId, minorProfileId }: { occurrenceId: string; minorProfileId?: string; discovery: boolean }) => (
       await apiRequest("POST", "/api/portal/class-reservations", { occurrenceId, minorProfileId })
     ).json(),
     onSuccess: (reservation, variables) => {
@@ -99,6 +99,9 @@ export default function PortalSchedule() {
         booking_status: reservation.status === "waitlisted" ? "waitlisted" : "confirmed",
         locale,
       });
+      if (reservation.status === "confirmed" && !variables.minorProfileId && variables.discovery) {
+        trackEvent("discovery_class_booked", { locale });
+      }
     },
     onError: (error: Error) => {
       trackEvent("booking_failed", { booking_type: "portal", locale });
@@ -322,7 +325,11 @@ export default function PortalSchedule() {
       class_state: item.bookingState,
       locale,
     });
-    reserve.mutate({ occurrenceId: item.id, minorProfileId: item.girlsClass ? selectedMinorId : undefined });
+    reserve.mutate({
+      occurrenceId: item.id,
+      minorProfileId: item.girlsClass ? selectedMinorId : undefined,
+      discovery: item.eligibility?.source === "discovery",
+    });
   };
 
   return (

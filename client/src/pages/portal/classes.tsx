@@ -23,8 +23,8 @@ export default function PortalClasses() {
     enabled: isAuthenticated,
   });
   const reserve = useMutation({
-    mutationFn: async (occurrenceId: string) => (await apiRequest("POST", "/api/portal/class-reservations", { occurrenceId })).json(),
-    onSuccess: (reservation) => {
+    mutationFn: async ({ occurrenceId }: { occurrenceId: string; discovery: boolean }) => (await apiRequest("POST", "/api/portal/class-reservations", { occurrenceId })).json(),
+    onSuccess: (reservation, variables) => {
       queryClient.invalidateQueries({ queryKey: ["/api/portal/classes"] });
       queryClient.invalidateQueries({ queryKey: ["/api/portal/my-classes"] });
       queryClient.invalidateQueries({ queryKey: ["/api/portal/member-program"] });
@@ -39,6 +39,9 @@ export default function PortalClasses() {
         booking_status: reservation.status === "waitlisted" ? "waitlisted" : "confirmed",
         locale,
       });
+      if (reservation.status === "confirmed" && variables.discovery) {
+        trackEvent("discovery_class_booked", { locale });
+      }
     },
     onError: (error: Error) => {
       trackEvent("booking_failed", { booking_type: "member", locale });
@@ -82,7 +85,7 @@ export default function PortalClasses() {
               occurrence={occurrence}
               locale={locale}
               actionLabel={occurrence.bookingState === "waitlist" ? copy.joinWaitlist : copy.bookClass}
-              busy={reserve.isPending && reserve.variables === occurrence.id}
+                 busy={reserve.isPending && reserve.variables?.occurrenceId === occurrence.id}
                onAction={() => {
                  trackEvent("booking_started", {
                    booking_type: "member",
@@ -90,7 +93,7 @@ export default function PortalClasses() {
                    class_state: occurrence.bookingState,
                    locale,
                  });
-                 reserve.mutate(occurrence.id);
+                 reserve.mutate({ occurrenceId: occurrence.id, discovery: occurrence.eligibility?.source === "discovery" });
                }}
             />
           ))}

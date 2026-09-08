@@ -28,10 +28,24 @@ export default function PortalLogin() {
     lastName: "",
     phone: "",
   });
+  const discoveryIntent = typeof window !== "undefined"
+    && new URLSearchParams(window.location.search).get("intent") === "discovery-pass";
+
+  const postAuthPath = () => {
+    const destination = locale === "es" || isSpanishRoute ? "/es/portal/dashboard" : "/portal/dashboard";
+    if (!discoveryIntent || typeof window === "undefined") return destination;
+    const params = new URLSearchParams({ intent: "discovery-pass" });
+    const current = new URLSearchParams(window.location.search);
+    for (const key of ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term", "fbclid", "gclid", "ttclid"]) {
+      const value = current.get(key);
+      if (value) params.set(key, value.slice(0, 200));
+    }
+    return `${destination}?${params.toString()}`;
+  };
 
   useEffect(() => {
     if (isAuthenticated) {
-      setLocation(locale === "es" || isSpanishRoute ? "/es/portal/dashboard" : "/portal/dashboard");
+      setLocation(postAuthPath());
     }
   }, [isAuthenticated, isSpanishRoute, locale, setLocation]);
 
@@ -46,7 +60,7 @@ export default function PortalLogin() {
       await login(loginData.email, loginData.password);
       trackEvent("member_login_completed", { method: "password", locale });
       toast({ title: copy.welcomeToast, description: copy.loggedInSuccessfully });
-       setLocation(locale === "es" || isSpanishRoute ? "/es/portal/dashboard" : "/portal/dashboard");
+      setLocation(postAuthPath());
     } catch (error: any) {
       toast({
         title: copy.loginFailed,
@@ -79,8 +93,11 @@ export default function PortalLogin() {
         locale,
       });
       trackEvent("member_signup_completed", { method: "password", locale });
+      if (discoveryIntent) {
+        trackEvent("discovery_account_created", { locale });
+      }
       toast({ title: copy.accountCreated, description: copy.welcomeToGroundUp });
-       setLocation(locale === "es" || isSpanishRoute ? "/es/portal/dashboard" : "/portal/dashboard");
+      setLocation(postAuthPath());
     } catch (error: any) {
       toast({
         title: copy.signupFailed,

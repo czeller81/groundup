@@ -32,6 +32,7 @@ import PortalNavbar from "@/components/layout/portal-navbar";
 import AdaptiveCapacity from "@/pages/adaptive-capacity";
 import AnalyticsConsent from "@/components/analytics-consent";
 import Privacy from "@/pages/privacy";
+import DiscoveryPass from "@/pages/discovery-pass";
 import MetaPixel from "@/components/meta-pixel";
 import { LocaleProvider } from "@/lib/locale";
 
@@ -93,6 +94,9 @@ function Router() {
       <Route path="/adaptive-capacity">
         <MainLayout><AdaptiveCapacity /></MainLayout>
       </Route>
+      <Route path="/discovery-pass">
+        <MainLayout><DiscoveryPass /></MainLayout>
+      </Route>
       <Route path="/es">
         <MainLayout><Home /></MainLayout>
       </Route>
@@ -131,6 +135,9 @@ function Router() {
       </Route>
       <Route path="/es/adaptive-capacity">
         <MainLayout><AdaptiveCapacity /></MainLayout>
+      </Route>
+      <Route path="/es/discovery-pass">
+        <MainLayout><DiscoveryPass /></MainLayout>
       </Route>
       <Route path="/admin">
         <MainLayout><Admin /></MainLayout>

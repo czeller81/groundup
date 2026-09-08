@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { usePortalAuth } from "@/lib/portal-auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { localizeApiError, localizeFormOption, localizeFormText, useLocale } from "@/lib/locale";
+import { trackEvent } from "@/lib/analytics";
 import { localizedPortalPath } from "@/lib/portal-navigation";
 import { ArrowLeft, Save, Send, Loader2, CheckCircle, Lock, RotateCcw } from "lucide-react";
 
@@ -63,6 +64,9 @@ export default function PortalForm() {
     },
     onSuccess: () => {
       toast({ title: copy.formSubmitted, description: copy.formSubmittedDescription });
+      if (slug === "liability-waiver" || slug === "gym-rules") {
+        trackEvent("discovery_waiver_completed", { locale, form: slug });
+      }
       // Mark the forms list stale without refetching the active form query.
       // Navigation immediately unmounts this page, and cancelling that
       // refetch can surface as an unhandled browser promise rejection.

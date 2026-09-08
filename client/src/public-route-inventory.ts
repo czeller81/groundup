@@ -17,6 +17,7 @@ export const PUBLIC_ROUTE_INVENTORY = [
   { id: "womens-self-defense", englishPath: "/womens-self-defense", spanishPath: "/es/womens-self-defense", englishComponent: "WomensSelfDefense", spanishComponent: "WomensSelfDefense" },
   { id: "girls", englishPath: "/girls", spanishPath: "/es/girls", englishComponent: "Girls", spanishComponent: "Girls" },
   { id: "adaptive-capacity", englishPath: "/adaptive-capacity", spanishPath: "/es/adaptive-capacity", englishComponent: "AdaptiveCapacity", spanishComponent: "AdaptiveCapacity" },
+  { id: "discovery-pass", englishPath: "/discovery-pass", spanishPath: "/es/discovery-pass", englishComponent: "DiscoveryPass", spanishComponent: "DiscoveryPass" },
 ] as const;
 
 /**
