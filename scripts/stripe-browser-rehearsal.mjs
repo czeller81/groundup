@@ -71,6 +71,20 @@ async function completeForm(page, slug) {
   }
 }
 
+async function submitEmbeddedRequiredForm(page, slug, title) {
+  await page.getByRole("heading", { name: title, exact: true }).waitFor();
+  await completeForm(page, slug);
+  const submitResponse = page.waitForResponse((response) =>
+    response.url().endsWith(`/api/portal/forms/${slug}/submit`)
+      && response.request().method() === "POST"
+      && response.status() === 200,
+  );
+  await Promise.all([
+    submitResponse,
+    page.getByTestId("button-submit-form").click(),
+  ]);
+}
+
 async function screenshot(page, name) {
   await page.screenshot({ path: `${evidenceDir}/${name}.png`, fullPage: true });
 }
@@ -219,36 +233,68 @@ async function main() {
       page.getByTestId("button-signup").click(),
     ]);
     await page.getByText("Log out", { exact: true }).waitFor();
-    await page.getByText("Log out", { exact: true }).click();
-    await page.waitForURL((url) => ["/", "/es"].includes(url.pathname));
-    await page.goto(`${BASE_URL}/portal/login`, { waitUntil: "networkidle" });
-    await page.getByTestId("input-login-email").fill(email);
-    await page.getByTestId("input-login-password").fill(password);
-    await Promise.all([
-      page.waitForURL(/\/portal\/dashboard$/),
-      page.getByTestId("button-login").click(),
-    ]);
+    let documentRequests = 0;
+    const countDocumentRequest = (request) => {
+      if (request.resourceType() === "document") documentRequests += 1;
+    };
+    page.on("request", countDocumentRequest);
+    await page.goto(`${BASE_URL}/portal/dashboard`, { waitUntil: "networkidle" });
+    const forcedFormDialog = page.locator('[role="dialog"]').filter({
+      has: page.getByTestId("button-submit-form"),
+    });
+    await forcedFormDialog.waitFor({ state: "visible" });
+    documentRequests = 0;
+    const requiredForms = await page.evaluate(async () => {
+      const response = await fetch("/api/portal/forms");
+      const forms = await response.json();
+      return forms
+        .filter((form) => form.isRequired && form.responseStatus !== "submitted")
+        .map((form) => ({ slug: form.slug, title: form.title }));
+    });
+    if (requiredForms.length < 2) {
+      throw new Error("Browser QA account did not have two incomplete required forms");
+    }
+    await screenshot(page, "01-required-form-modal");
+
+    for (let index = 0; index < requiredForms.length; index += 1) {
+      const { slug, title } = requiredForms[index];
+      const documentRequestsBeforeSubmit = documentRequests;
+      await submitEmbeddedRequiredForm(page, slug, title);
+      if (documentRequests !== documentRequestsBeforeSubmit) {
+        throw new Error(`Required form ${slug} caused a full-page navigation`);
+      }
+      if (index < requiredForms.length - 1) {
+        await page.getByRole("heading", {
+          name: requiredForms[index + 1].title,
+          exact: true,
+        }).waitFor();
+      }
+    }
+
+    await page.waitForFunction(() =>
+      !document.querySelector('[role="dialog"] [data-testid="button-submit-form"]'),
+    );
+    if (await forcedFormDialog.count()) {
+      throw new Error("Required-form modal remained open after the final submission");
+    }
+    page.off("request", countDocumentRequest);
+
+    if (process.env.BROWSER_QA_FORMS_ONLY === "1") {
+      console.log(JSON.stringify({
+        result: "PASS",
+        account: "synthetic browser account",
+        requiredForms: requiredForms.map((form) => form.slug),
+        sequentialSubmissions: requiredForms.length,
+        fullPageNavigationsDuringSubmissions: documentRequests,
+        modalClosedAfterFinalSubmission: true,
+      }));
+      return;
+    }
+
     await page.goto(`${BASE_URL}/portal/billing`, { waitUntil: "networkidle" });
-    await page.getByText("Complete required forms", { exact: true }).waitFor();
-    await screenshot(page, "01-forms-incomplete");
+    await screenshot(page, "02-forms-complete");
     await page.getByText("Ground Up 2", { exact: true }).waitFor();
     await screenshot(page, "02-membership-selection");
-
-    for (const slug of [
-      "personal-training-intake",
-      "health-parq",
-      "goals-preferences",
-      "liability-waiver",
-      "media-release",
-      "gym-rules",
-    ]) {
-      await page.goto(`${BASE_URL}/portal/forms/${slug}`, { waitUntil: "networkidle" });
-      await completeForm(page, slug);
-      await Promise.all([
-        page.waitForURL(/\/portal\/dashboard$/),
-        page.getByTestId("button-submit-form").click(),
-      ]);
-    }
 
     await page.goto(`${BASE_URL}/portal/billing`, { waitUntil: "networkidle" });
     await page.getByText("$139/mo", { exact: false }).waitFor();
@@ -387,8 +433,9 @@ async function main() {
     console.log(JSON.stringify({
       result: "PASS",
       account: "synthetic browser account",
-      screenshots: 14,
+      screenshots: 15,
       viewport: "desktop + 320/375/390/430px",
+      requiredForms: "sequential embedded modal submissions without full-page navigation",
       checkout: "Stripe-hosted test Checkout completed",
       webhookUi: "active, past_due, recovered, cancel_at_period_end",
       plans: ["ground_up_2", "ground_up_3", "ground_up_personal"],
