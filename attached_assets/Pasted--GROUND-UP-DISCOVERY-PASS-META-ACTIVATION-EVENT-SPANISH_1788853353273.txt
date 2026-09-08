@@ -1,0 +1,640 @@
+# GROUND UP DISCOVERY PASS — META ACTIVATION EVENT + SPANISH LANG REMEDIATION
+
+The Ground Up Discovery Pass advertising campaign has been built and validated by Malu and is currently **PAUSED for owner approval**.
+
+Current campaign state:
+
+* Campaign: `Ground Up — Discovery Pass`
+* English landing page: `/discovery-pass`
+* Spanish landing page: `/es/discovery-pass`
+* Campaign is paused
+* No spend has started
+* Creative assets are correct
+* Funnel routes are correct
+* Existing engineering funnel validation previously passed
+* Current Meta optimization is using link clicks because Meta does not yet have a verified `discovery_pass_activated` conversion event
+* Spanish page content is correct, but the rendered document currently reports `<html lang="en">`
+
+Your task is to complete the final engineering remediation required before the ad campaign can be activated.
+
+Do not redesign the Discovery Pass landing page.
+
+Do not change the Discovery Pass offer.
+
+Do not alter ad creative.
+
+Do not modify campaign targeting, budget, or ad configuration.
+
+Do not touch unrelated site functionality.
+
+---
+
+# 1. PRIMARY OBJECTIVES
+
+Complete exactly these two production fixes:
+
+## A. Meta conversion wiring
+
+Make the existing internal event:
+
+`discovery_pass_activated`
+
+available as a reliable Meta conversion signal using the safest existing tracking architecture.
+
+## B. Spanish document language
+
+Ensure:
+
+`/es/discovery-pass`
+
+renders with the correct Spanish document language:
+
+`<html lang="es">`
+
+and that English routes continue to render:
+
+`<html lang="en">`
+
+---
+
+# 2. FIRST AUDIT THE EXISTING TRACKING STACK
+
+Before changing code, inspect the current application and determine exactly what already exists for:
+
+* Meta Pixel
+* Facebook Pixel
+* Meta Conversions API
+* server-side conversion events
+* browser-side conversion events
+* Umami
+* consent management
+* analytics abstraction/helpers
+* event deduplication
+* click ID handling
+* `fbclid`
+* `_fbp`
+* `_fbc`
+* UTM preservation
+* member attribution persistence
+* environment variables related to Meta
+* any existing purchase/signup/lead conversion events
+
+Do not create a second analytics architecture if an existing one can be extended.
+
+Reuse existing infrastructure wherever possible.
+
+Return the findings in the final report.
+
+---
+
+# 3. EXISTING DISCOVERY EVENT
+
+The internal application already emits:
+
+`discovery_pass_activated`
+
+This event must remain the canonical internal milestone.
+
+Do not rename it unless there is a technical reason required by an existing convention.
+
+The activation occurs only after:
+
+* valid member account
+* required forms completed
+* Discovery Pass eligibility passes
+* server-side activation succeeds
+* entitlements are created
+
+Therefore this is the preferred paid-media conversion signal.
+
+---
+
+# 4. META EVENT DESIGN
+
+Map the verified activation milestone into Meta in the safest and most measurable way supported by the existing architecture.
+
+Preferred approaches, in order:
+
+1. Reuse an existing server-side Meta CAPI integration
+2. Reuse an existing browser Pixel integration with deduplication
+3. Add a minimal server-side CAPI implementation if no suitable existing integration exists
+4. Use browser-only Pixel only if server-side integration is not reasonably available
+
+Do not fabricate infrastructure.
+
+Do not claim CAPI is implemented unless it actually sends a successful event to Meta.
+
+---
+
+# 5. EVENT NAME
+
+Prefer a dedicated Meta custom event corresponding to:
+
+`discovery_pass_activated`
+
+If the existing Meta integration has a naming convention, follow it.
+
+Possible Meta event:
+
+`DiscoveryPassActivated`
+
+or the exact existing convention used by the project.
+
+Do not misuse a standard event such as:
+
+* Purchase
+* Lead
+* Subscribe
+* CompleteRegistration
+
+unless the project already has a deliberate business rule mapping Discovery activation to one of those standard events.
+
+If a standard event is already used, document the reasoning.
+
+---
+
+# 6. WHEN THE EVENT FIRES
+
+The Meta event must fire only after the server confirms successful Discovery Pass activation.
+
+It must NOT fire on:
+
+* landing page view
+* CTA click
+* signup
+* waiver completion
+* activation button click before API success
+* duplicate activation attempt
+* failed activation
+* form-incomplete response
+* unauthorized claim
+* already-used response
+
+The event represents:
+
+**successful Discovery Pass activation**
+
+and nothing earlier.
+
+---
+
+# 7. SERVER AUTHORITY
+
+Treat the successful backend claim transaction as the source of truth.
+
+The Meta conversion should be tied to the same business result that creates:
+
+* Discovery Pass
+* SKILL entitlement
+* STRENGTH entitlement
+* activation timestamp
+* audit event
+
+Do not allow the browser alone to declare a successful conversion if the backend transaction failed.
+
+---
+
+# 8. DEDUPLICATION
+
+The system must not send duplicate Meta conversions for the same activation.
+
+Audit whether an existing event ID strategy exists.
+
+If CAPI + Pixel are both used, use a shared deterministic or persisted `event_id` so Meta can deduplicate.
+
+If only one channel is used, still prevent duplicate submission due to:
+
+* page refresh
+* retries
+* double-click
+* navigation
+* client rerender
+* API retry
+* browser back/forward
+
+A single Discovery Pass activation should equal one Meta conversion.
+
+---
+
+# 9. PRIVACY
+
+Do not send waiver content to Meta.
+
+Do not send:
+
+* form answers
+* legal signatures
+* health information
+* free-text member responses
+* class notes
+* internal member IDs if avoidable
+* sensitive profile information
+
+Only send the minimum approved conversion data necessary.
+
+If the existing CAPI system supports hashed user matching fields, use only those already approved by the application's privacy/consent architecture.
+
+Do not expand data collection silently.
+
+---
+
+# 10. CONSENT
+
+The site currently uses consent-aware analytics.
+
+Respect the existing consent model.
+
+Determine how Meta tracking currently behaves under consent states.
+
+Do not bypass consent controls just to increase conversion visibility.
+
+Document whether the activation event is:
+
+* blocked without advertising consent
+* queued until consent
+* sent server-side under an existing lawful/approved configuration
+* not sent
+
+Preserve current Ground Up privacy behavior.
+
+---
+
+# 11. ATTRIBUTION FIELDS
+
+The Discovery funnel already preserves:
+
+* `utm_source`
+* `utm_medium`
+* `utm_campaign`
+* `utm_content`
+* `utm_term`
+* `fbclid`
+* `gclid`
+* `ttclid`
+
+For Meta conversion matching, reuse existing captured fields where supported.
+
+If available and already part of the application architecture, preserve/use:
+
+* `fbclid`
+* `_fbc`
+* `_fbp`
+
+Do not create unsafe storage patterns.
+
+Do not put sensitive data in URLs.
+
+---
+
+# 12. META TEST EVENT VERIFICATION
+
+If the existing environment has safe access to Meta's test-event or diagnostics capability, send a bounded synthetic/test conversion.
+
+Verify:
+
+* event is received
+* event name is correct
+* event time is correct
+* URL/source is appropriate
+* event ID is present if deduplication is used
+* no duplicate event appears
+* no sensitive parameters are transmitted
+
+Do not send production customer data.
+
+Use a synthetic/test activation only.
+
+If Meta credentials are not available in the Replit environment:
+
+* implement the code
+* run all local/integration validation possible
+* clearly report that live Meta receipt remains unverified
+* do not claim production confirmation
+
+---
+
+# 13. CUSTOM CONVERSION
+
+Audit the current Meta account configuration if accessible.
+
+Malu reported:
+
+* Pixel exists
+* zero custom conversions
+* no `discovery_pass_activated` conversion exists
+
+If the project has a supported connector or API path to safely create a custom conversion tied to the activation event, prepare it only if within current engineering scope.
+
+Do not make unauthorized Ads Manager changes from Replit.
+
+At minimum ensure the emitted event is suitable for Malu to configure as the campaign conversion later.
+
+Document the exact Meta event name Malu should select.
+
+---
+
+# 14. SPANISH LANG FIX
+
+Fix the current issue where:
+
+`/es/discovery-pass`
+
+serves Spanish content but the root document reports:
+
+`<html lang="en">`
+
+Expected:
+
+English routes:
+`<html lang="en">`
+
+Spanish routes:
+`<html lang="es">`
+
+Inspect the existing locale system and SEO component.
+
+Use the existing localization architecture.
+
+Do not hardcode a one-off DOM mutation if the project already has a proper route/locale source of truth.
+
+---
+
+# 15. LANG ATTRIBUTE SCOPE
+
+Verify the fix on:
+
+* `/discovery-pass`
+* `/es/discovery-pass`
+* relevant portal handoff route if the locale system controls it
+* direct navigation
+* client-side route transitions
+* refresh
+* development SPA fallback
+* production build
+
+Do not accidentally make every page Spanish after visiting a Spanish route.
+
+Do not leave stale lang state after navigating back to English.
+
+---
+
+# 16. HREFLANG / CANONICAL REGRESSION CHECK
+
+The project already contains canonical/hreflang support.
+
+Verify the lang fix does not break:
+
+* English canonical
+* Spanish canonical
+* `hreflang`
+* localized route mapping
+* SEO metadata
+* social metadata
+
+Do not introduce duplicate canonical URLs.
+
+---
+
+# 17. DISCOVERY PASS CONVERSION TEST
+
+Use a synthetic test account.
+
+Run:
+
+Landing
+→ signup
+→ waivers
+→ successful activation
+
+Confirm:
+
+* internal `discovery_pass_activated` fires
+* Meta event fires exactly once if Meta tracking is enabled/consented
+* duplicate claim does not fire a second Meta event
+* refresh does not resend
+* failed activation does not send
+* incomplete waiver does not send
+
+Clean up synthetic records after testing where safely supported.
+
+---
+
+# 18. NEGATIVE EVENT TESTING
+
+Test these cases:
+
+| Scenario                  | Internal Activation Event | Meta Activation Event |
+| ------------------------- | ------------------------: | --------------------: |
+| Page view                 |                        NO |                    NO |
+| CTA click                 |                        NO |                    NO |
+| Signup                    |                        NO |                    NO |
+| Waiver completion only    |                        NO |                    NO |
+| Claim with missing waiver |                        NO |                    NO |
+| Unauthorized claim        |                        NO |                    NO |
+| Duplicate claim           |              NO NEW EVENT |          NO NEW EVENT |
+| Successful activation     |                       YES |                   YES |
+| Refresh after activation  |              NO NEW EVENT |          NO NEW EVENT |
+
+Do not weaken application logic to satisfy analytics tests.
+
+---
+
+# 19. AUTOMATED TESTS
+
+Add or extend tests covering:
+
+* Meta activation emitted on successful claim
+* Meta activation not emitted on failed claim
+* duplicate activation does not emit duplicate conversion
+* consent behavior
+* event payload excludes sensitive data
+* correct locale lang attribute
+* English-to-Spanish navigation
+* Spanish-to-English navigation
+* SSR/fallback metadata if applicable
+
+Run:
+
+* `npm run check`
+* `npm test`
+* route inventory check
+* locale tests
+* analytics tests
+* production build
+* `git diff --check`
+* mobile QA if the lang fix touches shared rendering
+
+---
+
+# 20. DO NOT TOUCH
+
+Do not change:
+
+* Discovery Pass entitlements
+* 7-day rule
+* waiver business logic
+* class booking rules
+* landing-page design
+* ad creative
+* campaign settings
+* budget
+* targeting
+* unrelated analytics events
+* membership flows
+* unrelated SEO
+* unrelated admin UI
+
+Use the smallest production-safe patch.
+
+---
+
+# 21. FINAL REPORT
+
+Return:
+
+## A. Starting SHA
+
+[full SHA]
+
+## B. Ending SHA
+
+[full SHA]
+
+## C. Files changed
+
+Exact list.
+
+## D. Existing Meta architecture
+
+Report:
+
+* Pixel present: YES / NO
+* CAPI present: YES / NO
+* Browser tracking present: YES / NO
+* Consent integration: [exact]
+* Existing event dedupe: [exact]
+* Existing attribution storage: [exact]
+
+## E. Discovery Activation Event
+
+Internal event:
+`discovery_pass_activated`
+
+Meta event name:
+[exact]
+
+Transport:
+PIXEL / CAPI / PIXEL+CAPI / OTHER
+
+Trigger:
+[exact backend/client sequence]
+
+Event ID strategy:
+[exact]
+
+Duplicate protection:
+PASS / FAIL
+
+## F. Meta Verification
+
+Synthetic activation sent:
+YES / NO
+
+Meta received event:
+PASS / FAIL / NOT VERIFIABLE
+
+Duplicate test:
+PASS / FAIL / NOT VERIFIABLE
+
+Sensitive payload review:
+PASS / FAIL
+
+Consent behavior:
+PASS / FAIL
+
+## G. Spanish Lang
+
+`/discovery-pass`
+Expected: `lang=en`
+Result: PASS / FAIL
+
+`/es/discovery-pass`
+Expected: `lang=es`
+Result: PASS / FAIL
+
+Direct refresh:
+PASS / FAIL
+
+Client navigation:
+PASS / FAIL
+
+Canonical/hreflang:
+PASS / FAIL
+
+## H. Funnel regression
+
+Signup:
+PASS / FAIL
+
+Waiver:
+PASS / FAIL
+
+Activation:
+PASS / FAIL
+
+Duplicate protection:
+PASS / FAIL
+
+Booking:
+PASS / FAIL
+
+Attribution:
+PASS / FAIL
+
+## I. Tests
+
+List exact commands and results.
+
+## J. Remaining blockers
+
+List all remaining launch blockers or:
+
+`NONE`
+
+---
+
+# 22. HANDOFF TO MALU
+
+At the end, provide a concise read-back specifically for Malu containing:
+
+* production Meta event name
+* whether Pixel/CAPI is used
+* whether live Meta receipt was verified
+* exact English landing URL
+* exact Spanish landing URL
+* confirmation of `lang=en` and `lang=es`
+* whether Malu can now switch campaign optimization from LINK_CLICKS to the verified activation event
+
+Do not change the campaign from Replit.
+
+Malu owns the final Ads Manager configuration and launch canary.
+
+---
+
+# 23. FINAL VERDICT
+
+Return exactly one:
+
+`DISCOVERY_META_ACTIVATION_READY_FOR_MALU`
+
+or
+
+`DISCOVERY_META_ACTIVATION_BLOCKED`
+
+Do not return READY unless:
+
+* activation event wiring is complete
+* duplicate conversion is prevented
+* no sensitive payload is sent
+* locale lang attribute is fixed
+* existing Discovery funnel tests remain green
