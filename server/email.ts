@@ -22,6 +22,7 @@ export function classLifecycleEmailContent(input: {
   waitlistPosition?: number | null;
   locale: "en" | "es";
 }) {
+  const isJiuJitsuClass = /jiu[\s-]?jitsu/i.test(input.classTitle);
   const copy = (input.locale === "es"
     ? {
         confirmed: { subject: `Tu reserva está confirmada: ${input.classTitle}`, body: `Tu lugar está confirmado para el ${input.starts}.` },
@@ -37,11 +38,16 @@ export function classLifecycleEmailContent(input: {
       })[input.status];
 
   if (input.status === "confirmed" || input.status === "promoted") {
+    const minimumAttendanceReminder = !isJiuJitsuClass
+      ? ""
+      : input.locale === "es"
+        ? "\n\nRecordatorio: las clases de jiu-jitsu requieren al menos dos personas inscritas. Si hay menos de dos personas inscritas, tu reserva se moverá a la próxima clase programada de jiu-jitsu."
+        : "\n\nReminder: Jiu-Jitsu classes require at least two registered participants. If fewer than two people are registered, your reservation will move to the next scheduled Jiu-Jitsu class.";
     return {
       ...copy,
       body: input.locale === "es"
-        ? `${copy.body}\n\nDirección de Ground Up: ${GROUND_UP_ADDRESS}`
-        : `${copy.body}\n\nGround Up address: ${GROUND_UP_ADDRESS}`,
+        ? `${copy.body}\n\nDirección de Ground Up: ${GROUND_UP_ADDRESS}${minimumAttendanceReminder}`
+        : `${copy.body}\n\nGround Up address: ${GROUND_UP_ADDRESS}${minimumAttendanceReminder}`,
     };
   }
 

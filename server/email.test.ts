@@ -66,3 +66,37 @@ test("only confirmed class emails include the member-facing academy address", ()
     }
   }
 });
+
+test("confirmed Jiu-Jitsu emails explain the two-person minimum in both languages", () => {
+  const english = classLifecycleEmailContent({
+    classTitle: "Ground Up — Jiu-Jitsu / Self-Defense",
+    starts: "Wednesday, September 9 at 5:00 PM PDT",
+    status: "confirmed",
+    locale: "en",
+  });
+  const spanish = classLifecycleEmailContent({
+    classTitle: "Ground Up — Jiu-Jitsu / Self-Defense",
+    starts: "miércoles, 9 de septiembre a las 5:00 p. m. PDT",
+    status: "confirmed",
+    locale: "es",
+  });
+  const strength = classLifecycleEmailContent({
+    classTitle: "Ground Up — Strength & Conditioning",
+    starts: "Wednesday, September 9 at 6:00 PM PDT",
+    status: "confirmed",
+    locale: "en",
+  });
+  const waitlist = classLifecycleEmailContent({
+    classTitle: "Ground Up — Jiu-Jitsu / Self-Defense",
+    starts: "Wednesday, September 9 at 5:00 PM PDT",
+    status: "waitlisted",
+    locale: "en",
+  });
+
+  assert.match(english.body, /at least two registered participants/i);
+  assert.match(english.body, /next scheduled Jiu-Jitsu class/i);
+  assert.match(spanish.body, /al menos dos personas inscritas/i);
+  assert.match(spanish.body, /próxima clase programada de jiu-jitsu/i);
+  assert.doesNotMatch(strength.body, /at least two registered participants/i);
+  assert.doesNotMatch(waitlist.body, /at least two registered participants/i);
+});
