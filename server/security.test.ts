@@ -10,7 +10,7 @@ import { FORM_COPY, PORTAL_COPY, localizeFormOption, localizeFormText } from "..
 import { classDateLabel, classTimeLabel } from "../client/src/lib/class-booking";
 import { portalNavigationPaths } from "../client/src/lib/portal-navigation";
 import { localizeApiError, resolveLocale } from "../client/src/lib/locale";
-import { PUBLIC_NO_SCRIPT_DISCOVERY_ROUTES } from "../client/src/public-route-inventory";
+import { PUBLIC_NO_SCRIPT_DISCOVERY_ROUTES, PUBLIC_NO_SCRIPT_NON_DISCOVERY_ROUTES } from "../client/src/public-route-inventory";
 import { applyDocumentLocale, documentLocaleForPath } from "./document-locale";
 
 function responseRecorder() {
@@ -101,6 +101,37 @@ test("server fallback pages preserve localized Discovery Pass destinations", () 
   assert.match(entryFor("/es/girls"), /href="\/es\/contacto"/);
   assert.doesNotMatch(entryFor("/es/girls"), /discovery-pass/);
   assert.doesNotMatch(pageContentSource, /"\/es\/programas":/);
+});
+
+test("Spanish booking and Adaptive Capacity fallbacks stay outside Discovery Pass", () => {
+  const routesSource = fs.readFileSync(new URL("./routes.ts", import.meta.url), "utf8");
+  const pageContentSource = routesSource.slice(
+    routesSource.indexOf("const PAGE_CONTENT"),
+    routesSource.indexOf("async function serveWithMeta"),
+  );
+  const entryFor = (routePath: string) => {
+    const escapedPath = routePath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const entry = pageContentSource.match(new RegExp(`  "${escapedPath}":[\\s\\S]*?(?=\\n  "/|\\n};)`));
+    assert.ok(entry, `Missing server fallback content for ${routePath}`);
+    return entry[0];
+  };
+
+  for (const route of PUBLIC_NO_SCRIPT_NON_DISCOVERY_ROUTES) {
+    const entry = entryFor(route.path);
+    for (const destination of route.requiredLinks) {
+      assert.match(entry, new RegExp(`href="${destination.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"`));
+    }
+    assert.doesNotMatch(entry, /discovery-pass/);
+  }
+});
+
+test("Spanish booking and Adaptive Capacity fallbacks retain localized metadata", () => {
+  const routesSource = fs.readFileSync(new URL("./routes.ts", import.meta.url), "utf8");
+  assert.match(routesSource, /"\/es\/reservar": \{\s*title: "Reserva tu Primera Visita Gratis/);
+  assert.match(routesSource, /canonical: "https:\/\/www\.groundupbjj\.com\/es\/reservar"/);
+  assert.match(routesSource, /"\/es\/adaptive-capacity": \{\s*title: "Capacidad Adaptativa/);
+  assert.match(routesSource, /canonical: "https:\/\/www\.groundupbjj\.com\/es\/adaptive-capacity"/);
+  assert.match(routesSource, /"\/es\/adaptive-capacity": \{ en: "https:\/\/www\.groundupbjj\.com\/adaptive-capacity", es: "https:\/\/www\.groundupbjj\.com\/es\/adaptive-capacity" \}/);
 });
 
 test("payment creation cannot use another member's booking", () => {

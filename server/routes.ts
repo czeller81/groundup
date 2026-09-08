@@ -143,6 +143,11 @@ const PAGE_META: Record<string, { title: string; description: string; canonical:
     description: "A Ground Up learning experience for building clearer thinking, better decisions, and practical adaptability as work and life change.",
     canonical: "https://www.groundupbjj.com/adaptive-capacity",
   },
+  "/es/adaptive-capacity": {
+    title: "Capacidad Adaptativa — Desarrolla tu capacidad de adaptarte | Ground Up",
+    description: "Desarrolla la capacidad de adaptarte a lo que venga mediante aprendizaje práctico, reflexión y acción.",
+    canonical: "https://www.groundupbjj.com/es/adaptive-capacity",
+  },
   "/discovery-pass": {
     title: "Free Discovery Pass | Ground Up BJJ Oxnard",
     description: "Try Ground Up with a free seven-day Discovery Pass including one SKILL class and one STRENGTH class. Beginner-friendly coaching in Oxnard.",
@@ -179,6 +184,8 @@ const HREFLANG_PAIRS: Record<string, { en?: string; es?: string; xDefault?: stri
   "/es/girls": { en: "https://www.groundupbjj.com/girls", es: "https://www.groundupbjj.com/es/girls" },
   "/discovery-pass": { en: "https://www.groundupbjj.com/discovery-pass", es: "https://www.groundupbjj.com/es/discovery-pass", xDefault: "https://www.groundupbjj.com/discovery-pass" },
   "/es/discovery-pass": { en: "https://www.groundupbjj.com/discovery-pass", es: "https://www.groundupbjj.com/es/discovery-pass", xDefault: "https://www.groundupbjj.com/discovery-pass" },
+  "/adaptive-capacity": { en: "https://www.groundupbjj.com/adaptive-capacity", es: "https://www.groundupbjj.com/es/adaptive-capacity" },
+  "/es/adaptive-capacity": { en: "https://www.groundupbjj.com/adaptive-capacity", es: "https://www.groundupbjj.com/es/adaptive-capacity" },
 };
 
 const PAGE_CONTENT: Record<string, string> = {
@@ -240,6 +247,10 @@ const PAGE_CONTENT: Record<string, string> = {
   "/book": `<h1>Book Your Free First Visit — Ground Up, Oxnard</h1>
  <p>Reserve an available women-only class. No account, credit card, or previous experience is required.</p>
  <p>Girls/female-youth eligibility and guardian requirements are confirmed before booking.</p>`,
+  "/es/reservar": `<h1>Reserva tu Primera Visita Gratis — Ground Up, Oxnard</h1>
+ <p>Reserva una clase disponible solo para mujeres. No necesitas cuenta, tarjeta ni experiencia previa.</p>
+ <p>Consulta el <a href="/es/horario">horario de clases</a> para conocer las opciones disponibles. Si tienes preguntas, <a href="/es/contacto#contact-form">contacta a Ground Up</a>; la elegibilidad para niñas y jóvenes y los requisitos de tutoría se confirman antes de reservar.</p>
+ <a href="/es/contacto#contact-form">Consultar elegibilidad y disponibilidad</a>`,
   "/womens-self-defense": `<h1>Women's Self-Defense Program — 8 Weeks in Oxnard, CA</h1>
 <p>A structured 8-week Women's Self-Defense program at Ground Up Jiu-Jitsu in Oxnard, CA. Practical BJJ-based techniques for real situations.</p>
 <ul><li>Awareness &amp; prevention</li><li>Breaking grips &amp; escaping</li><li>Ground defense</li><li>Confident body language</li><li>Scenario practice</li></ul>
@@ -266,6 +277,11 @@ const PAGE_CONTENT: Record<string, string> = {
   <p>Ground Up is developing a separate learning experience for people who want practical tools for clearer thinking, better decisions, and more adaptable work and life.</p>
   <p>Join the interest list to hear when the first cohort is ready. Details will be shared as they are confirmed.</p>
   <a href="/adaptive-capacity">Join the interest list</a>`,
+  "/es/adaptive-capacity": `<h1>Capacidad Adaptativa — Desarrolla tu capacidad de adaptarte a lo que sigue</h1>
+  <p>Ground Up está desarrollando una experiencia de aprendizaje separada para quienes buscan herramientas prácticas para pensar con más claridad, tomar mejores decisiones y adaptarse mejor en el trabajo y la vida.</p>
+  <ul><li>Ver el cambio y la incertidumbre con más claridad</li><li>Practicar mejores decisiones</li><li>Desarrollar una capacidad duradera para adaptarte</li></ul>
+  <p>Los detalles de la primera cohorte se compartirán cuando estén confirmados.</p>
+  <a href="#interest-list">Únete a la lista de interés</a> <a href="/es">Explora el entrenamiento físico</a>`,
   "/discovery-pass": `<h1>Try Ground Up Free with a Discovery Pass</h1>
   <p>Get one SKILL class, one STRENGTH class, and seven days to experience Ground Up in Oxnard.</p>
   <p>Start with a secure member account, complete the required forms, activate your pass, and book your classes.</p>

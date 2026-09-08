@@ -36,6 +36,22 @@ export const PUBLIC_NO_SCRIPT_DISCOVERY_ROUTES = [
 ] as const;
 
 /**
+ * Public pages whose no-script paths intentionally stay outside the Discovery
+ * Pass funnel. Keep their important destinations explicit so booking,
+ * eligibility, and Adaptive Capacity links do not drift into free entry.
+ */
+export const PUBLIC_NO_SCRIPT_NON_DISCOVERY_ROUTES = [
+  {
+    path: "/es/reservar",
+    requiredLinks: ["/es/horario", "/es/contacto#contact-form"],
+  },
+  {
+    path: "/es/adaptive-capacity",
+    requiredLinks: ["#interest-list", "/es"],
+  },
+] as const;
+
+/**
  * Public URLs kept for backwards compatibility. They must not render a
  * second page implementation.
  */
