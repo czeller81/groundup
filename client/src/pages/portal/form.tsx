@@ -70,6 +70,7 @@ export default function PortalForm({ formSlug, embedded = false, onSubmitted }: 
       return res.json();
     },
     onSuccess: () => {
+      setIsSubmitting(false);
       toast({ title: copy.formSubmitted, description: copy.formSubmittedDescription });
       if (slug === "liability-waiver" || slug === "gym-rules") {
         trackEvent("discovery_waiver_completed", { locale, form: slug });
