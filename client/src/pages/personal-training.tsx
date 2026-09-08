@@ -70,7 +70,7 @@ export default function PersonalTraining() {
     freeTrial: "Book Your Free Trial", noCard: "No credit card required · Cancel anytime",
   };
   const bookPath = localizedPublicPath("/book", locale);
-  const contactFormPath = localizedPublicPath("/contact#contact-form", locale);
+  const discoveryPassPath = localizedPublicPath("/discovery-pass", locale);
   return (
     <div className="flex flex-col bg-[#0B0F14]">
       <SEO
@@ -193,7 +193,7 @@ export default function PersonalTraining() {
             size="lg"
             className="bg-[#FFB199] text-[#0B0F14] font-bold uppercase tracking-wider hover:bg-[#FFB199]/90 text-base px-10 h-14"
           >
-            <Link href={contactFormPath}>
+            <Link href={discoveryPassPath}>
               {copy.freeTrial}
               <ArrowRight className="ml-2 h-5 w-5" />
             </Link>

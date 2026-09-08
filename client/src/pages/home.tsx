@@ -237,7 +237,7 @@ export default function Home() {
   const { locale } = useLocale();
   const t = (value: string) => locale === "es" ? (HOME_COPY[value] || value) : value;
   const path = (value: string) => localizedPublicPath(value, locale);
-  const contactFormPath = path("/contact#contact-form");
+  const discoveryPassPath = path("/discovery-pass");
   const schedule = useQuery<ClassScheduleResponse>({ queryKey: ["/api/classes"] });
   const displayClasses = (schedule.data?.occurrences || []).slice(0, 6);
 
@@ -312,7 +312,7 @@ export default function Home() {
                 className="bg-[#FFB199] text-[#0B0F14] font-bold uppercase tracking-wider hover:bg-[#FFB199]/90 text-base px-8 h-14"
                 data-testid="hero-cta-book"
               >
-                <Link href={contactFormPath}>
+                <Link href={discoveryPassPath}>
                    {t("Book Your Free First Visit")}
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
@@ -442,7 +442,7 @@ export default function Home() {
             </div>
             <div className="block">
               <Button asChild size="lg" className="bg-[#FFB199] text-[#0B0F14] font-bold uppercase tracking-wider hover:bg-[#FFB199]/90 h-13 px-10">
-                <Link href={contactFormPath}>
+                <Link href={discoveryPassPath}>
                   {t("Book Your First Class — Free")}
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
@@ -512,7 +512,7 @@ export default function Home() {
                 </div>
                 <div className="flex flex-wrap gap-3">
                   <Button asChild className="bg-[#FFB199] text-[#0B0F14] font-bold uppercase tracking-wider hover:bg-[#FFB199]/90 w-fit">
-                     <Link href={contactFormPath}>
+                     <Link href={discoveryPassPath}>
                         {t("Book Your Free First Visit")} <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
                   </Button>
@@ -1017,7 +1017,7 @@ export default function Home() {
               size="lg"
               className="bg-[#FFB199] text-[#0B0F14] font-bold uppercase tracking-wider hover:bg-[#FFB199]/90 text-base px-10 h-14"
             >
-              <Link href={contactFormPath}>
+              <Link href={discoveryPassPath}>
                 {t("Book Your Free First Visit")}
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>

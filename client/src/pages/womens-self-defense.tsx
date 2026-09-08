@@ -61,7 +61,7 @@ const womenClasses = SCHEDULE.filter(c =>
 export default function WomensSelfDefense() {
   const { locale } = useLocale();
   if (locale === "es") return <SpanishWomensSelfDefense />;
-  const contactFormPath = localizedPublicPath("/contact#contact-form", locale);
+  const discoveryPassPath = localizedPublicPath("/discovery-pass", locale);
   return (
     <div className="flex flex-col bg-[#0B0F14]">
       <SEO
@@ -122,7 +122,7 @@ export default function WomensSelfDefense() {
                 className="h-14 px-8 text-base font-bold uppercase tracking-wider"
                 style={{ backgroundColor: "#FF6B8A", color: "#0B0F14" }}
               >
-                <Link href={contactFormPath}>
+                <Link href={discoveryPassPath}>
                   Book Your Free First Visit <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
@@ -244,7 +244,7 @@ export default function WomensSelfDefense() {
                 className="h-12 px-8 font-bold uppercase tracking-wider"
                 style={{ backgroundColor: "#FF6B8A", color: "#0B0F14" }}
               >
-                <Link href={contactFormPath}>
+                <Link href={discoveryPassPath}>
                   Book Your Free First Visit <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
@@ -298,7 +298,7 @@ export default function WomensSelfDefense() {
                       </span>
                     </div>
                   </div>
-                  <Link href={contactFormPath}>
+                  <Link href={discoveryPassPath}>
                     <Button size="sm" className="text-xs font-semibold uppercase tracking-wide flex-shrink-0 bg-[#FF6B8A]/10 text-[#FF6B8A] border border-[#FF6B8A]/20 hover:bg-[#FF6B8A]/20">
                       Book
                     </Button>
@@ -361,7 +361,7 @@ export default function WomensSelfDefense() {
             className="h-14 px-12 text-base font-bold uppercase tracking-wider"
             style={{ backgroundColor: "#FF6B8A", color: "#0B0F14" }}
           >
-            <Link href={contactFormPath}>
+            <Link href={discoveryPassPath}>
               Book Your Free First Visit <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
           </Button>
@@ -375,7 +375,7 @@ export default function WomensSelfDefense() {
 function SpanishWomensSelfDefense() {
   const schedulePath = localizedPublicPath("/schedule", "es");
   const contactPath = localizedPublicPath("/contact", "es");
-  const contactFormPath = localizedPublicPath("/contact#contact-form", "es");
+  const discoveryPassPath = localizedPublicPath("/discovery-pass", "es");
   const curriculum = [
     ["Conciencia y prevención", "Reconoce las amenazas antes de que escalen. La conciencia situacional es tu primera y más poderosa defensa."],
     ["Romper agarres y escapar", "Técnicas paso a paso para soltarte de agarres de muñeca, abrazos y estrangulamientos, sin importar la diferencia de tamaño."],
@@ -393,11 +393,11 @@ function SpanishWomensSelfDefense() {
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[#FF6B8A]/30 bg-[#FF6B8A]/10 text-[#FF6B8A] text-xs font-semibold uppercase tracking-wider mb-6"><Shield className="h-3.5 w-3.5" /> Programa para mujeres · Oxnard, CA</div>
           <h1 className="break-words text-4xl font-bold leading-[.9] mb-6 sm:text-5xl md:text-6xl lg:text-7xl" style={{ fontFamily: "var(--font-display)" }}><span className="text-white">8 SEMANAS PARA</span><br /><span className="text-[#FF6B8A]">DEFENDERTE</span><br /><span className="text-white">EN LA VIDA REAL</span></h1>
           <p className="text-lg text-gray-300 mb-8 leading-relaxed">Técnicas prácticas que realmente usarás. Un espacio acogedor solo para mujeres y una coach que se asegura de que salgas de cada clase sintiéndote capaz.</p>
-          <div className="flex flex-col sm:flex-row gap-4"><Button asChild size="lg" className="h-14 px-8 font-bold uppercase tracking-wider bg-[#FF6B8A] text-[#0B0F14]"><Link href={contactFormPath}>Reserva tu primera visita gratis <ArrowRight className="ml-2 h-5 w-5" /></Link></Button><Button asChild variant="outline" size="lg" className="h-14 border-white/20 text-white bg-transparent"><Link href={schedulePath}>Ver horarios</Link></Button></div>
+          <div className="flex flex-col sm:flex-row gap-4"><Button asChild size="lg" className="h-14 px-8 font-bold uppercase tracking-wider bg-[#FF6B8A] text-[#0B0F14]"><Link href={discoveryPassPath}>Reserva tu primera visita gratis <ArrowRight className="ml-2 h-5 w-5" /></Link></Button><Button asChild variant="outline" size="lg" className="h-14 border-white/20 text-white bg-transparent"><Link href={schedulePath}>Ver horarios</Link></Button></div>
         </div></div>
       </section>
       <Section className="py-24 bg-[#121826]"><div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8"><div className="text-center mb-14"><div className="inline-flex px-4 py-1.5 rounded-full border border-[#FF6B8A]/20 bg-[#FF6B8A]/5 text-[#FF6B8A] text-xs font-semibold uppercase tracking-wider mb-4">Plan de estudios</div><h2 className="text-4xl md:text-5xl font-bold text-white mb-4" style={{ fontFamily: "var(--font-display)" }}>LO QUE <span className="text-[#FF6B8A]">APRENDERÁS</span></h2><p className="text-gray-400 max-w-lg mx-auto text-sm">Cada técnica se elige porque funciona en situaciones reales, no para competir. Aprendes a protegerte, no a pelear.</p></div><div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">{curriculum.map(([title, desc], i) => { const icons = [Shield, Lock, Heart, Users, Shield, CheckCircle]; const Icon = icons[i]; return <motion.div key={title} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="p-6 rounded-2xl border border-white/5 bg-[#0B0F14]"><div className="w-10 h-10 rounded-lg flex items-center justify-center mb-4 bg-[#FF6B8A]/10"><Icon className="h-5 w-5 text-[#FF6B8A]" /></div><h3 className="text-white font-bold text-sm mb-2">{title}</h3><p className="text-gray-500 text-xs leading-relaxed">{desc}</p></motion.div>; })}</div></div></Section>
-       <Section className="py-24 bg-[#0B0F14]"><div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8"><div className="grid lg:grid-cols-2 gap-12 items-center"><div><div className="inline-flex px-4 py-1.5 rounded-full border border-[#B06CFF]/20 bg-[#B06CFF]/5 text-[#B06CFF] text-xs font-semibold uppercase tracking-wider mb-6">Estructura del programa</div><h2 className="text-4xl font-bold text-white mb-6" style={{ fontFamily: "var(--font-display)" }}>8 SEMANAS. <span className="text-[#B06CFF]">DISEÑADAS</span> PARA PRINCIPIANTES.</h2><p className="text-gray-400 leading-relaxed mb-8 text-sm">Cada clase se construye sobre la anterior. No solo memorizarás movimientos: entenderás por qué funcionan y ganarás confianza para usarlos.</p><div className="space-y-4 mb-8">{[["Duración", "8 semanas"], ["Clases por semana", "2 clases"], ["Clases totales", "16 sesiones"], ["Tamaño de clase", "Máximo 6 estudiantes"], ["Ubicación", "Oxnard, CA"], ["Qué usar", "Ropa deportiva cómoda"], ["Equipo", "Ninguno para tu primera clase"]].map(([label, value]) => <div key={label} className="flex items-center justify-between py-3 border-b border-white/5"><span className="text-gray-500 text-sm">{label}</span><span className="text-white font-semibold text-sm">{value}</span></div>)}</div><Button asChild size="lg" className="bg-[#FF6B8A] text-[#0B0F14] font-bold uppercase tracking-wider"><Link href={contactFormPath}>Reserva tu primera visita gratis <ArrowRight className="ml-2 h-4 w-4" /></Link></Button></div><img src={facilityFrame7} alt="Mujeres entrenando juntas" className="rounded-2xl w-full aspect-[4/3] object-cover border border-white/10" /></div></div></Section>
+       <Section className="py-24 bg-[#0B0F14]"><div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8"><div className="grid lg:grid-cols-2 gap-12 items-center"><div><div className="inline-flex px-4 py-1.5 rounded-full border border-[#B06CFF]/20 bg-[#B06CFF]/5 text-[#B06CFF] text-xs font-semibold uppercase tracking-wider mb-6">Estructura del programa</div><h2 className="text-4xl font-bold text-white mb-6" style={{ fontFamily: "var(--font-display)" }}>8 SEMANAS. <span className="text-[#B06CFF]">DISEÑADAS</span> PARA PRINCIPIANTES.</h2><p className="text-gray-400 leading-relaxed mb-8 text-sm">Cada clase se construye sobre la anterior. No solo memorizarás movimientos: entenderás por qué funcionan y ganarás confianza para usarlos.</p><div className="space-y-4 mb-8">{[["Duración", "8 semanas"], ["Clases por semana", "2 clases"], ["Clases totales", "16 sesiones"], ["Tamaño de clase", "Máximo 6 estudiantes"], ["Ubicación", "Oxnard, CA"], ["Qué usar", "Ropa deportiva cómoda"], ["Equipo", "Ninguno para tu primera clase"]].map(([label, value]) => <div key={label} className="flex items-center justify-between py-3 border-b border-white/5"><span className="text-gray-500 text-sm">{label}</span><span className="text-white font-semibold text-sm">{value}</span></div>)}</div><Button asChild size="lg" className="bg-[#FF6B8A] text-[#0B0F14] font-bold uppercase tracking-wider"><Link href={discoveryPassPath}>Reserva tu primera visita gratis <ArrowRight className="ml-2 h-4 w-4" /></Link></Button></div><img src={facilityFrame7} alt="Mujeres entrenando juntas" className="rounded-2xl w-full aspect-[4/3] object-cover border border-white/10" /></div></div></Section>
       <section className="py-20 px-4 bg-[#121826] border-y border-white/5"><div className="max-w-2xl mx-auto text-center"><h2 className="text-3xl font-bold text-white mb-4">¿Tienes preguntas?</h2><p className="text-gray-400 mb-7">La elegibilidad, el horario y la disponibilidad se confirman antes de reservar. Escríbenos y te ayudaremos a elegir el siguiente paso.</p><Button asChild variant="outline" className="border-white/15 text-white"><Link href={contactPath}>Contacta a Ground Up</Link></Button></div></section>
     </div>
   );

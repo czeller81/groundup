@@ -53,7 +53,7 @@ function FAQ({ question, answer }: { question: string; answer: string }) {
 export default function Pricing() {
   const { locale } = useLocale();
   if (locale === "es") return <SpanishPricing />;
-  const contactFormPath = localizedPublicPath("/contact#contact-form", "en");
+  const discoveryPassPath = localizedPublicPath("/discovery-pass", "en");
   return (
     <div className="flex flex-col bg-[#0B0F14] min-h-screen">
       <SEO
@@ -80,7 +80,7 @@ export default function Pricing() {
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center mb-8">
             <Button asChild size="lg" className="bg-[#FFB199] text-[#0B0F14] font-bold uppercase tracking-wider hover:bg-[#FFB199]/90 px-8">
-              <Link href={contactFormPath}>Book Your Free First Visit <ArrowRight className="ml-2 h-4 w-4" /></Link>
+              <Link href={discoveryPassPath}>Book Your Free First Visit <ArrowRight className="ml-2 h-4 w-4" /></Link>
             </Button>
             <Button asChild variant="ghost" size="lg" className="border border-white/10 text-gray-300 hover:text-white hover:bg-white/5 px-8 uppercase tracking-wider">
               <Link href="/schedule">View Schedule</Link>
@@ -118,7 +118,7 @@ export default function Pricing() {
                   <h3 className="text-white font-bold text-base mb-2">{card.title}</h3>
                   <p className="text-gray-400 text-sm leading-relaxed flex-1 mb-5">{card.desc}</p>
                   <Button asChild size="sm" variant="ghost" className="w-full border border-white/8 text-gray-300 hover:text-white hover:bg-white/5 text-xs font-semibold uppercase tracking-wider">
-                     <Link href={contactFormPath}>Book Your Free First Visit</Link>
+                     <Link href={discoveryPassPath}>Book Your Free First Visit</Link>
                   </Button>
                 </div>
               </Reveal>
@@ -164,7 +164,7 @@ export default function Pricing() {
                   <p className="text-gray-400 text-sm leading-relaxed flex-1 mb-4">{prog.desc}</p>
                   <p className="text-xs mb-5" style={{ color: prog.accent }}>{prog.note}</p>
                   <Button asChild size="sm" className="w-full font-bold text-[#0B0F14] hover:opacity-90 text-xs uppercase tracking-wider" style={{ backgroundColor: prog.accent }}>
-                     <Link href={contactFormPath}>Book Your Free First Visit</Link>
+                     <Link href={discoveryPassPath}>Book Your Free First Visit</Link>
                   </Button>
                 </div>
               </Reveal>
@@ -197,7 +197,7 @@ export default function Pricing() {
                 </div>
                 <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                   <Button asChild size="lg" className="bg-[#B06CFF] text-white font-bold uppercase tracking-wider hover:bg-[#B06CFF]/90">
-                     <Link href={contactFormPath}>Book Your Free First Visit <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                     <Link href={discoveryPassPath}>Book Your Free First Visit <ArrowRight className="ml-2 h-4 w-4" /></Link>
                   </Button>
                 </div>
               </div>
@@ -235,7 +235,7 @@ export default function Pricing() {
           <Reveal>
             <p className="text-gray-500 text-sm italic mb-6">No pressure. We'll help you find the best class for your goals.</p>
             <Button asChild size="lg" className="bg-[#FFB199] text-[#0B0F14] font-bold uppercase tracking-wider hover:bg-[#FFB199]/90 px-8">
-               <Link href={contactFormPath}>Book Your Free First Visit <ArrowRight className="ml-2 h-4 w-4" /></Link>
+               <Link href={discoveryPassPath}>Book Your Free First Visit <ArrowRight className="ml-2 h-4 w-4" /></Link>
             </Button>
           </Reveal>
         </div>
@@ -276,7 +276,7 @@ export default function Pricing() {
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Button asChild size="lg" className="bg-[#FFB199] text-[#0B0F14] font-bold uppercase tracking-wider hover:bg-[#FFB199]/90 px-8">
-               <Link href={contactFormPath}>Book Your Free First Visit <ArrowRight className="ml-2 h-4 w-4" /></Link>
+               <Link href={discoveryPassPath}>Book Your Free First Visit <ArrowRight className="ml-2 h-4 w-4" /></Link>
             </Button>
             <Button asChild variant="outline" size="lg" className="border-white/15 text-white hover:bg-white/5 px-8 uppercase tracking-wider">
               <Link href="/contact">Contact Us</Link>
@@ -291,8 +291,8 @@ export default function Pricing() {
 }
 
 function SpanishPricing() {
-  const contactFormPath = localizedPublicPath("/contact#contact-form", "es");
-  const bookPath = contactFormPath;
+  const discoveryPassPath = localizedPublicPath("/discovery-pass", "es");
+  const bookPath = discoveryPassPath;
   const schedulePath = localizedPublicPath("/schedule", "es");
   const contactPath = localizedPublicPath("/contact", "es");
   const faqs = [
@@ -321,8 +321,8 @@ function SpanishPricing() {
         <div className="relative z-10 max-w-3xl mx-auto text-center">
           <h1 className="break-words text-3xl sm:text-5xl md:text-6xl font-black text-white uppercase tracking-tight leading-none mb-5" style={{ fontFamily: "var(--font-display)" }}>Comienza tu entrenamiento<br />en <span className="text-[#5EEBFF]">Ground Up</span></h1>
           <p className="text-gray-300 text-base sm:text-lg max-w-xl mx-auto leading-relaxed mb-8">Un centro de entrenamiento solo para mujeres para jiu-jitsu brasileño, defensa personal práctica, fuerza, movimiento y coaching personal. Las principiantes son bienvenidas.</p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-             <Button asChild size="lg" className="bg-[#FFB199] text-[#0B0F14] font-bold uppercase tracking-wider"><Link href={contactFormPath}>Reserva tu primera visita gratis <ArrowRight className="ml-2 h-4 w-4" /></Link></Button>
+           <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Button asChild size="lg" className="bg-[#FFB199] text-[#0B0F14] font-bold uppercase tracking-wider"><Link href={discoveryPassPath}>Reserva tu primera visita gratis <ArrowRight className="ml-2 h-4 w-4" /></Link></Button>
             <Button asChild variant="ghost" size="lg" className="border border-white/10 text-gray-300"><Link href={schedulePath}>Ver horario</Link></Button>
           </div>
         </div>

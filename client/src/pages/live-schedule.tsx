@@ -58,7 +58,7 @@ export default function LiveSchedule() {
       window.location.href = localizedPublicPath("/contact#contact-form", locale);
     } else {
       window.location.href = occurrence.firstVisitEligible
-        ? localizedPublicPath("/contact#contact-form", locale)
+        ? localizedPublicPath("/discovery-pass", locale)
         : switchLocalePath("/portal/booking", locale);
     }
   };

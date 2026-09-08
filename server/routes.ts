@@ -153,26 +153,26 @@ const PAGE_CONTENT: Record<string, string> = {
  <p>Women of all experience levels can start here. No prior experience is required.</p>
  <ul><li>Women's BJJ</li><li>Women's Self-Defense</li><li>Strength &amp; Movement</li><li>Personal Training</li><li>Girls / Female Youth — eligibility confirmed before booking</li></ul>
  <p>Head Coach: Raymi Gonzalez — Purple Belt, 3rd Degree, Gracie Barra Lineage. 5+ years coaching experience in Oxnard, CA.</p>
- <a href="/book">Book Your Free First Visit</a> <a href="/schedule">View Class Schedule</a>`,
+ <a href="/discovery-pass">Book Your Free First Visit</a> <a href="/schedule">View Class Schedule</a>`,
   "/schedule": `<h1>Women-Only Class Schedule — Ground Up, Oxnard</h1>
  <p>See live availability for women-only Brazilian Jiu-Jitsu, self-defense, strength, and movement classes in Oxnard.</p>
- <a href="/book">Book Your Free First Visit</a>`,
+ <a href="/discovery-pass">Book Your Free First Visit</a>`,
   "/pricing": `<h1>Women-Only Training Programs — Ground Up, Oxnard</h1>
  <p>Beginner-friendly Brazilian Jiu-Jitsu, practical self-defense, strength, movement, and personal coaching for women.</p>
  <ul><li>Women's BJJ</li><li>Women's Self-Defense</li><li>Strength &amp; Movement</li><li>Personal Training</li><li>Girls / Female Youth — eligibility confirmed before booking</li></ul>
- <a href="/book">Book Your Free First Visit</a>`,
+ <a href="/discovery-pass">Book Your Free First Visit</a>`,
   "/coaches": `<h1>BJJ Instructor — Raymi Gonzalez | Ground Up Jiu-Jitsu, Oxnard CA</h1>
 <p>Meet Raymi Gonzalez, Purple Belt (3rd Degree) under the Gracie Barra lineage. 5+ years of coaching experience in Oxnard, CA.</p>
  <p>Specialties: Women's Self-Defense, Women's BJJ, Strength &amp; Movement, Personal Training.</p>
- <a href="/book">Book Your Free First Visit</a>`,
+ <a href="/discovery-pass">Book Your Free First Visit</a>`,
   "/personal-training": `<h1>Personal Training in Oxnard, CA — 1-on-1 BJJ &amp; Fitness Coaching</h1>
 <p>Private personal training sessions at Ground Up Jiu-Jitsu in Oxnard, CA. Custom coaching tailored to your goals. Your first session is free.</p>
 <ul><li>1-on-1 personalized sessions</li><li>Monday through Saturday, 8am–5pm</li><li>All fitness levels welcome</li><li>First session free</li></ul>
- <a href="/book">Book Your Free First Visit</a>`,
+ <a href="/discovery-pass">Book Your Free First Visit</a>`,
   "/contact": `<h1>Contact Ground Up Jiu-Jitsu &amp; Fitness — Oxnard, CA</h1>
  <p>Book your free first visit or get in touch with us. No experience needed to start your women-only training journey.</p>
 <p>Phone: (786) 757-1175 | Email: info@groundupbjj.com | Location: Oxnard, CA</p>
- <a href="/book">Book Your Free First Visit</a>`,
+ <a href="/discovery-pass">Book Your Free First Visit</a>`,
   "/privacy": `<h1>Privacy Policy | Ground Up BJJ</h1>
 <p>Ground Up BJJ / Ground Up explains how we collect, use, and protect information submitted through our website, forms, bookings, and marketing channels.</p>
 <p>Ground Up is located in Oxnard, California. Privacy questions can be sent to <a href="mailto:info@groundupbjj.com">info@groundupbjj.com</a>.</p>
@@ -185,7 +185,7 @@ const PAGE_CONTENT: Record<string, string> = {
 <p>A structured 8-week Women's Self-Defense program at Ground Up Jiu-Jitsu in Oxnard, CA. Practical BJJ-based techniques for real situations.</p>
 <ul><li>Awareness &amp; prevention</li><li>Breaking grips &amp; escaping</li><li>Ground defense</li><li>Confident body language</li><li>Scenario practice</li></ul>
 <p>Women-only class. Max 6 students. No experience needed. First class free.</p>
- <a href="/book">Book Your Free First Visit</a>`,
+ <a href="/discovery-pass">Book Your Free First Visit</a>`,
   "/kids": `<h1>Girls and Female Youth Training — Ground Up, Oxnard</h1>
  <p>Ground Up's youth path is for girls and female youth, not a generic mixed-gender kids academy.</p>
  <p>Eligibility, age range, guardian requirements, and mother-daughter options are confirmed before booking.</p>

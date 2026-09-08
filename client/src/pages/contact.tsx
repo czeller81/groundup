@@ -44,6 +44,7 @@ function Section({ children, className = "" }: { children: React.ReactNode; clas
 export default function Contact() {
   const { locale } = useLocale();
   const { toast } = useToast();
+  const discoveryPassPath = localizedPublicPath("/discovery-pass", locale);
   const copy = locale === "es" ? {
     seoTitle: "Contacta a Ground Up | Entrenamiento Solo para Mujeres en Oxnard",
     seoDescription: "¿Tienes preguntas sobre jiu-jitsu brasileño, defensa personal, fuerza, movimiento o elegibilidad para niñas? Contacta a Ground Up en Oxnard.",
@@ -324,7 +325,7 @@ export default function Contact() {
                   asChild
                   className="w-full bg-[#5EEBFF] text-[#0B0F14] font-bold uppercase tracking-wider hover:bg-[#5EEBFF]/90"
                 >
-                    <Link href={localizedPublicPath("/contact#contact-form", locale)}>
+                    <Link href={discoveryPassPath}>
                      {copy.contactButton}
                   </Link>
                 </Button>
