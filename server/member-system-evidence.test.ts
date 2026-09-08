@@ -128,6 +128,21 @@ test("member system evidence: Discovery to membership with weekly limits, waitli
     const extra = await makeOccurrence(classTypeSkillId, 2, "QA Extra Skill Class", 4);
     const limitCheck = await makeOccurrence(classTypeSkillId, 3, "QA Limit Check Class", 4);
 
+    await db.insert(formResponses).values(bookingForms.map((form) => ({
+      userId: discoveryMember.id,
+      formId: form.id,
+      answers: {},
+      status: "submitted",
+      submittedAt: new Date(),
+    })));
+    const prospectWithoutEntitlement = await evaluateBookingEligibility(discoveryMember, skill);
+    assert.equal(
+      prospectWithoutEntitlement.code,
+      "MEMBERSHIP_INACTIVE",
+      "a prospect without a Discovery Pass or active membership must not reserve a member class",
+    );
+    await db.delete(formResponses).where(eq(formResponses.userId, discoveryMember.id));
+
     const now = new Date();
     const [pass] = await db.insert(discoveryPasses).values({
       userId: discoveryMember.id,

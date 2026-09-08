@@ -278,10 +278,7 @@ export async function evaluateBookingEligibilityWithExecutor(
       return await applyReservationChecks(user, occurrence, executor, result("ELIGIBLE", base));
     }
   } else if (discoveryRows.length === 0) {
-    if (!membership && classType?.membershipRequired) return result("MEMBERSHIP_INACTIVE");
-    if (!membership) {
-      return await applyReservationChecks(user, occurrence, executor, result("ELIGIBLE", { waitlistAllowed: true }));
-    }
+    if (!membership) return result("MEMBERSHIP_INACTIVE");
   }
 
   if (!membership) return result(pass ? "DISCOVERY_EXPIRED" : "MEMBERSHIP_INACTIVE");
