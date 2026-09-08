@@ -16,7 +16,7 @@ export interface MetaDiscoveryVerification {
   exactlyOnce: boolean | null;
   payloadKeys: string[];
   payloadMinimized: boolean;
-  transport: "browser-pixel-test-events";
+  transport: "browser-pixel-test-events" | "server-conversions-api-test";
 }
 
 declare global {

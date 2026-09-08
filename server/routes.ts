@@ -21,6 +21,11 @@ import { registerClassBookingRoutes } from "./class-booking-routes";
 import { registerMemberRoutes } from "./member-routes";
 import { applyStripeSubscription, expirePendingCheckoutSession } from "./membership-billing";
 import { applyDocumentLocale } from "./document-locale";
+import {
+  deliverMetaDiscoveryTestEvent,
+  getMetaServerTestConfig,
+  metaServerTestConfigurationState,
+} from "./meta-conversions";
 
 const PAGE_META: Record<string, { title: string; description: string; canonical: string }> = {
   "/": {
@@ -291,6 +296,7 @@ const publicRateLimit = createPublicRateLimit;
 const authRateLimit = () => createPublicRateLimit(10, 15 * 60 * 1000);
 const bookingRateLimit = () => createPublicRateLimit(30, 15 * 60 * 1000);
 const staffMutationRateLimit = () => createPublicRateLimit(120, 15 * 60 * 1000);
+const metaServerTestRateLimit = () => createPublicRateLimit(1, 10 * 60 * 1000);
 
 export async function registerRoutes(app: Express): Promise<Server> {
   app.use("/api/portal/admin", staffMutationRateLimit());
@@ -793,6 +799,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Analytics event error:", error);
       res.status(500).json({ message: "Failed to record analytics event" });
     }
+  });
+
+  app.post("/api/portal/admin/meta/test-event", requireRole("admin"), metaServerTestRateLimit(), async (req, res) => {
+    const config = getMetaServerTestConfig();
+    const configurationState = metaServerTestConfigurationState(config);
+    if (configurationState === "disabled") {
+      return res.status(404).json({ message: "Not found" });
+    }
+    if (configurationState === "unconfigured") {
+      return res.status(503).json({ message: "Meta server test delivery is not configured" });
+    }
+
+    const parsed = z.object({
+      consent: z.literal("granted"),
+      locale: z.enum(["en", "es"]),
+    }).strict().safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({
+        message: "Explicit granted consent and a supported locale are required",
+      });
+    }
+
+    const delivery = await deliverMetaDiscoveryTestEvent({
+      config,
+      locale: parsed.data.locale,
+    });
+    if (!delivery.accepted) {
+      console.error(
+        "Meta server test event was not accepted:",
+        delivery.verification.eventsReceived,
+      );
+      return res.status(502).json({
+        message: "Meta server test event was not accepted",
+        verification: delivery.verification,
+      });
+    }
+
+    return res.json(delivery.verification);
   });
 
   app.get("/api/portal/admin/campaign-report", requireRole("admin", "coach"), async (req, res) => {
