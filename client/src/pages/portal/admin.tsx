@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -54,6 +54,7 @@ export default function PortalAdmin() {
   const [reportFunnel, setReportFunnel] = useState<"training" | "adaptive_capacity">("training");
   const [reportFilters, setReportFilters] = useState({ source: "", medium: "", campaign: "", landingPath: "" });
   const [billingStateFilter, setBillingStateFilter] = useState<"all" | "pending" | "active" | "past_due" | "cancel_at_period_end">("all");
+  const membersSectionRef = useRef<HTMLDivElement>(null);
   const PAGE_SIZE = 15;
 
   const { data: stats, isLoading: statsLoading } = useQuery<any>({
@@ -243,7 +244,7 @@ export default function PortalAdmin() {
     if (!authLoading && (!isAuthenticated || !isStaff)) {
       setLocation(portalPath("/portal/dashboard"));
     }
-  }, [authLoading, isAuthenticated, isAdmin, setLocation]);
+  }, [authLoading, isAuthenticated, isStaff, locale, setLocation]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -446,6 +447,11 @@ export default function PortalAdmin() {
   const formsCompleted = memberProfile?.formResponses?.filter((r: any) => r.status === "submitted").length || 0;
   const totalRequiredForms = stats?.totalRequiredForms || 0;
   const formsCompletion = totalRequiredForms > 0 ? Math.round((formsCompleted / totalRequiredForms) * 100) : 0;
+  const showIncompleteMembers = () => {
+    setIncompleteFormsOnly(true);
+    setCurrentPage(1);
+    requestAnimationFrame(() => membersSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
+  };
 
   return (
     <div>
@@ -705,9 +711,10 @@ export default function PortalAdmin() {
 
         {/* Forms Incomplete Alert */}
         {!statsLoading && stats?.membersNeedingForms > 0 && (
-          <div
-            className="mb-6 flex items-center justify-between gap-4 p-4 rounded-xl border border-orange-500/30 bg-orange-500/10 cursor-pointer hover:bg-orange-500/15 transition-colors"
-            onClick={() => { setIncompleteFormsOnly(true); setCurrentPage(1); }}
+          <button
+            type="button"
+            className="mb-6 flex w-full items-center justify-between gap-4 rounded-xl border border-orange-500/30 bg-orange-500/10 p-4 text-left transition-colors hover:bg-orange-500/15"
+            onClick={showIncompleteMembers}
           >
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-orange-500/20">
@@ -721,7 +728,7 @@ export default function PortalAdmin() {
               </div>
             </div>
             <span className="text-xs text-orange-400 underline underline-offset-2">{copy.viewAll}</span>
-          </div>
+          </button>
         )}
 
         <Card className="bg-[#121826] border-[#FFB199]/20 mb-6" data-testid="staff-notifications">
@@ -826,7 +833,7 @@ export default function PortalAdmin() {
         </Card>
 
         {/* Member Management */}
-        <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
+        <div ref={membersSectionRef} className="grid scroll-mt-6 lg:grid-cols-3 gap-4 sm:gap-6">
           <div className="min-w-0 lg:col-span-1">
             <Card className="min-w-0 bg-[#121826] border-white/5">
               <CardHeader className="pb-3">

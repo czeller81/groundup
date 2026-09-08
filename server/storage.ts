@@ -597,6 +597,7 @@ export class DatabaseStorage implements IStorage {
       .where(and(
         inArray(formResponses.formId, requiredFormIds),
         eq(formResponses.status, "submitted"),
+        eq(users.role, "member"),
         not(ilike(users.email, INTERNAL_TEST_EMAIL_PATTERN))
       ))
       .groupBy(formResponses.userId)
@@ -609,7 +610,10 @@ export class DatabaseStorage implements IStorage {
     if (requiredFormIds.length === 0) return [];
     const requiredFormsData = await db.select().from(forms).where(eq(forms.isRequired, true));
     const completedUserIds = await this.getCompletedUserIds(requiredFormIds);
-     const allUsers = await db.select().from(users).where(not(ilike(users.email, INTERNAL_TEST_EMAIL_PATTERN)));
+     const allUsers = await db.select().from(users).where(and(
+       eq(users.role, "member"),
+       not(ilike(users.email, INTERNAL_TEST_EMAIL_PATTERN)),
+     ));
     const result: Array<SafeUser & { missingForms: string[] }> = [];
     for (const user of allUsers) {
       if (completedUserIds.has(user.id)) continue;
@@ -705,6 +709,10 @@ export class DatabaseStorage implements IStorage {
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     
      const [totalUsersResult] = await db.select({ count: count() }).from(users).where(not(ilike(users.email, INTERNAL_TEST_EMAIL_PATTERN)));
+     const [memberUsersResult] = await db.select({ count: count() }).from(users).where(and(
+       eq(users.role, "member"),
+       not(ilike(users.email, INTERNAL_TEST_EMAIL_PATTERN)),
+     ));
     
      const [newUsersResult] = await db.select({ count: count() }).from(users).where(and(
        gte(users.createdAt, thirtyDaysAgo),
@@ -743,7 +751,7 @@ export class DatabaseStorage implements IStorage {
     
     const requiredFormIds = await this.getRequiredFormIds();
     const completedUserIds = await this.getCompletedUserIds(requiredFormIds);
-    const membersNeedingForms = totalUsersResult.count - completedUserIds.size;
+     const membersNeedingForms = memberUsersResult.count - completedUserIds.size;
 
     return {
       totalUsers: totalUsersResult.count,

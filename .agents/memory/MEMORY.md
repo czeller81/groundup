@@ -16,3 +16,4 @@
 - [Checkout session reconciliation](checkout-session-reconciliation.md) — reconcile pending memberships from Stripe session status and preserve them through transient lookup failures.
 - [Distributed maintenance leases](distributed-maintenance-leases.md) — session advisory locks need a dedicated client and database-enforced expiry for safe cross-instance coordination.
 - [Meta conversion verification](meta-conversion-verification.md) — browser Pixel activation is implemented; live Meta receipt still needs owner-side verification.
+- [Production data cleanup](production-data-cleanup.md) — reconcile published screenshots with production records before guarded transactional deletion.
