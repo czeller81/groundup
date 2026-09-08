@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { usePortalAuth } from "@/lib/portal-auth";
 import { localizeFormText, useLocale } from "@/lib/locale";
+import { classDateLabel, classTimeLabel, localizedClassTitle } from "@/lib/class-booking";
 import { localizedPortalPath } from "@/lib/portal-navigation";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -167,7 +168,7 @@ export default function PortalAdmin() {
     : { month: "short", day: "numeric", year: "numeric" });
   const timeLabel = (value: string | Date) => new Date(value).toLocaleTimeString(locale === "es" ? "es-US" : "en-US", { hour: "numeric", minute: "2-digit" });
 
-  const { data: memberProfile, isLoading: profileLoading } = useQuery<any>({
+  const { data: memberProfile, isLoading: profileLoading, isError: profileError, refetch: retryMemberProfile } = useQuery<any>({
     queryKey: ["/api/portal/admin/members", selectedMemberId],
     queryFn: async () => {
       const res = await fetch(`/api/portal/admin/members/${selectedMemberId}`);
@@ -968,6 +969,16 @@ export default function PortalAdmin() {
                   <Loader2 className="h-8 w-8 animate-spin text-[#B06CFF]" />
                 </CardContent>
               </Card>
+            ) : profileError ? (
+              <Card className="border-red-500/30 bg-[#121826]">
+                <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+                  <AlertCircle className="mb-3 h-10 w-10 text-red-400" />
+                  <p className="text-sm text-red-300">{copy.loadError}</p>
+                  <Button type="button" variant="outline" className="mt-4 border-white/15 text-white" onClick={() => retryMemberProfile()}>
+                    {copy.tryAgain}
+                  </Button>
+                </CardContent>
+              </Card>
             ) : memberProfile ? (
               <div className="space-y-4">
                 {/* Profile Header */}
@@ -1131,11 +1142,60 @@ export default function PortalAdmin() {
                   </TabsContent>
 
                   <TabsContent value="bookings">
+                    <div className="space-y-4">
                     <Card className="bg-[#121826] border-white/5">
                       <CardHeader className="pb-3">
                         <CardTitle className="text-white text-base flex items-center gap-2">
                           <Calendar className="h-5 w-5 text-[#B06CFF]" />
-                           {copy.bookingsPayments} ({memberProfile.bookings?.length || 0})
+                          {copy.classReservations} ({memberProfile.classReservations?.length || 0})
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        {!memberProfile.classReservations?.length ? (
+                          <p className="text-gray-400 text-sm text-center py-4">{copy.noClassReservations}</p>
+                        ) : (
+                          <div className="space-y-2">
+                            {memberProfile.classReservations.map((reservation: any) => {
+                              const participantName = reservation.minorProfile
+                                ? `${reservation.minorProfile.firstName} ${reservation.minorProfile.lastName}`
+                                : `${memberProfile.user.firstName} ${memberProfile.user.lastName}`;
+                              const statusLabel = reservation.status === "confirmed"
+                                ? copy.confirmed
+                                : reservation.status === "waitlisted"
+                                  ? copy.waitlisted
+                                  : reservation.status === "cancelled"
+                                    ? copy.cancelled
+                                    : reservation.status;
+                              return (
+                              <div key={reservation.id} className="flex flex-col items-start gap-2 rounded-lg border border-white/5 bg-[#0B0F14] p-3 sm:flex-row sm:items-center sm:justify-between">
+                                <div className="min-w-0">
+                                  <p className="text-sm font-medium text-white">{localizedClassTitle(reservation.occurrence, locale)}</p>
+                                  <p className="text-xs text-gray-400">
+                                    {classDateLabel(reservation.occurrence.start, locale)} · {classTimeLabel(reservation.occurrence.start, reservation.occurrence.end, locale)}
+                                  </p>
+                                  <p className="mt-1 text-xs text-gray-500">{copy.participant}: {participantName}</p>
+                                </div>
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <Badge className={
+                                    reservation.status === "confirmed" ? "bg-green-500/20 text-green-400 border-green-500/30" :
+                                    reservation.status === "cancelled" ? "bg-red-500/20 text-red-400 border-red-500/30" :
+                                    "bg-yellow-500/20 text-yellow-400 border-yellow-500/30"
+                                  }>
+                                    {statusLabel}
+                                  </Badge>
+                                  {reservation.attendance && <Badge variant="outline">{reservation.attendance}</Badge>}
+                                </div>
+                              </div>
+                            )})}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                    <Card className="bg-[#121826] border-white/5">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-white text-base flex items-center gap-2">
+                          <Clock className="h-5 w-5 text-[#5EEBFF]" />
+                          {copy.privateSessions} ({memberProfile.bookings?.length || 0})
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
@@ -1146,22 +1206,12 @@ export default function PortalAdmin() {
                             {memberProfile.bookings.map((booking: any) => (
                               <div key={booking.id} className="flex flex-col items-start gap-2 rounded-lg border border-white/5 bg-[#0B0F14] p-3 sm:flex-row sm:items-center sm:justify-between">
                                 <div className="min-w-0">
-                                  <p className="text-sm font-medium text-white">
-                                    {dateLabel(booking.start)}
-                                  </p>
-                                  <p className="text-xs text-gray-400">
-                                    {timeLabel(booking.start)} - {timeLabel(booking.end)} {copy.with} {booking.trainer?.name}
-                                  </p>
+                                  <p className="text-sm font-medium text-white">{dateLabel(booking.start)}</p>
+                                  <p className="text-xs text-gray-400">{timeLabel(booking.start)} - {timeLabel(booking.end)} {copy.with} {booking.trainer?.name}</p>
                                 </div>
                                 <div className="flex flex-wrap items-center gap-2">
                                   <span className="text-sm text-gray-300">${(booking.amountCents / 100).toFixed(2)}</span>
-                                  <Badge className={
-                                    booking.status === "paid" ? "bg-green-500/20 text-green-400 border-green-500/30" :
-                                    booking.status === "canceled" ? "bg-red-500/20 text-red-400 border-red-500/30" :
-                                    "bg-yellow-500/20 text-yellow-400 border-yellow-500/30"
-                                  }>
-                                    {booking.status}
-                                  </Badge>
+                                  <Badge>{booking.status}</Badge>
                                 </div>
                               </div>
                             ))}
@@ -1169,6 +1219,7 @@ export default function PortalAdmin() {
                         )}
                       </CardContent>
                     </Card>
+                    </div>
                   </TabsContent>
 
                   <TabsContent value="notes">

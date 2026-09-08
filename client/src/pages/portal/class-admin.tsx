@@ -86,9 +86,20 @@ export default function ClassAdmin() {
       </section>
       <section className="mt-8">
          <div className="mb-3 flex flex-wrap items-center justify-between gap-2"><h2 className="font-bold">{copy.synchronizedOccurrences}</h2><span className="text-sm text-gray-500">{occurrences.data?.length || 0} {copy.currentWindow}</span></div>
+        {occurrences.isLoading ? (
+          <p className="rounded-2xl border border-white/10 bg-[#121826] p-5 text-sm text-gray-400">{copy.loading}…</p>
+        ) : occurrences.isError ? (
+          <p className="rounded-2xl border border-red-500/30 bg-red-500/10 p-5 text-sm text-red-300">{copy.loadError}</p>
+        ) : (
         <div className="space-y-3">
+          {!occurrences.data?.length && (
+            <div className="rounded-2xl border border-white/10 bg-[#121826] p-5 text-center">
+              <p className="text-sm text-gray-400">{copy.noClasses}</p>
+              <p className="mt-1 text-xs text-gray-500">{copy.noClassesDescription}</p>
+            </div>
+          )}
           {(occurrences.data || []).map((occurrence) => (
-            <article key={occurrence.id} className="rounded-2xl border border-white/10 bg-[#121826] p-5">
+            <button type="button" key={occurrence.id} onClick={() => setRosterOccurrence(occurrence)} className="block w-full rounded-2xl border border-white/10 bg-[#121826] p-5 text-left transition-colors hover:border-[#5EEBFF]/40 hover:bg-[#151d2c] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5EEBFF]">
               <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
@@ -96,25 +107,34 @@ export default function ClassAdmin() {
                     <Badge className={occurrence.syncState === "unmapped" ? "bg-amber-500/15 text-amber-300" : "bg-emerald-500/15 text-emerald-300"}>{syncStateLabel(occurrence.syncState)}</Badge>
                     {occurrence.status !== "active" && <Badge variant="destructive">{occurrenceStatusLabel(occurrence.status)}</Badge>}
                   </div>
-                    <p className="mt-1 text-sm text-gray-400">{classDateLabel(occurrence.start, locale)} · {classTimeLabel(occurrence.start, occurrence.end, locale)} · {copy.capacity} {occurrence.capacity}</p>
+                    <p className="mt-1 text-sm text-gray-400">{classDateLabel(occurrence.start, locale)} · {classTimeLabel(occurrence.start, occurrence.end, locale)} · {copy.confirmed}: {occurrence.confirmedCount || 0} · {copy.waitlisted}: {occurrence.waitlistCount || 0} · {copy.capacity} {occurrence.capacity}</p>
                     <p className="mt-1 text-xs text-gray-500">{occurrence.audienceGroup || "ALL"} · {occurrence.canonicalCategory || "LEGACY"}{occurrence.strengthFocus ? ` · ${occurrence.strengthFocus}` : ""} · Google {occurrence.googleRecurringEventId || occurrence.googleEventId}</p>
                   {occurrence.syncError && <p className="mt-2 text-xs text-amber-300">{occurrence.syncError}</p>}
                 </div>
-                 <Button variant="outline" onClick={() => setRosterOccurrence(occurrence)} className="min-h-11 border-white/15 text-white"><Users className="mr-2 h-4 w-4" />{copy.roster}</Button>
+                 <span className="inline-flex min-h-11 items-center justify-center rounded-md border border-white/15 px-4 text-sm font-medium text-white"><Users className="mr-2 h-4 w-4" />{copy.roster}</span>
               </div>
-            </article>
+            </button>
           ))}
         </div>
+        )}
       </section>
       {rosterOccurrence && (
          <section className="mt-8 rounded-2xl border border-[#5EEBFF]/20 bg-[#121826] p-4 sm:p-6">
              <div className="flex items-start justify-between gap-3"><div><h2 className="font-bold"> {copy.roster} · {localizedClassTitle(rosterOccurrence, locale)}</h2><p className="text-sm text-gray-400">{classDateLabel(rosterOccurrence.start, locale)}</p></div><Button variant="ghost" className="min-h-11" onClick={() => setRosterOccurrence(null)}>{copy.close}</Button></div>
-          {(["confirmed", "waitlisted"] as const).map((group) => (
+          {roster.isLoading ? (
+            <p className="mt-5 text-sm text-gray-400">{copy.loading}…</p>
+          ) : roster.isError ? (
+            <p className="mt-5 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300">{copy.loadError}</p>
+          ) : (["confirmed", "waitlisted"] as const).map((group) => (
             <div key={group} className="mt-5">
                  <h3 className="mb-2 text-xs font-bold uppercase tracking-widest text-gray-500">{group === "confirmed" ? copy.confirmed : copy.waitlisted}</h3>
+              {!(roster.data?.[group] || []).length && <p className="border-t border-white/5 py-3 text-sm text-gray-500">{copy.noRosterReservations}</p>}
               {(roster.data?.[group] || []).map((reservation: any) => (
                 <div key={reservation.id} className="flex flex-col justify-between gap-3 border-t border-white/5 py-3 sm:flex-row sm:items-center">
-                  <div><p className="text-sm font-medium">{reservation.visitorFirstName} {reservation.visitorLastName}</p><p className="text-xs text-gray-500">{reservation.visitorEmail}</p></div>
+                  <div>
+                    <p className="text-sm font-medium">{reservation.minorProfile ? `${reservation.minorProfile.firstName} ${reservation.minorProfile.lastName}` : `${reservation.visitorFirstName} ${reservation.visitorLastName}`}</p>
+                    <p className="text-xs text-gray-500">{reservation.visitorEmail}</p>
+                  </div>
                     {group === "confirmed" && <Select value={reservation.attendance || ""} onValueChange={(value) => attendance.mutate({ id: reservation.id, value })}><SelectTrigger className="min-h-11 w-36 border-white/10 bg-black/20"><SelectValue placeholder={copy.attendance} /></SelectTrigger><SelectContent>{(["present", "absent", "late", "excused"] as const).map((value) => <SelectItem key={value} value={value}>{copy[value]}</SelectItem>)}</SelectContent></Select>}
                 </div>
               ))}

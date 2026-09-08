@@ -21,6 +21,7 @@ import {
   memberLifecycles,
   membershipPlans,
   memberships,
+  minorProfiles,
   users,
 } from "@shared/schema";
 
@@ -174,6 +175,19 @@ test("member system evidence: Discovery to membership with weekly limits, waitli
     });
     assert.equal(memberSkill.reservation.status, "confirmed");
     assert.equal(discoveryWaitlist.reservation.status, "waitlisted");
+    const initialRoster = await storage.getOccurrenceReservations(skill.id);
+    assert.deepEqual(initialRoster.confirmed.map((reservation) => reservation.id), [memberSkill.reservation.id]);
+    assert.deepEqual(initialRoster.waitlisted.map((reservation) => reservation.id), [discoveryWaitlist.reservation.id]);
+    const adminProfile = await storage.getUserProfile(member.id);
+    assert.equal(adminProfile?.classReservations.length, 1, "admin member profiles must include current class reservations");
+    assert.equal(adminProfile?.classReservations[0].occurrence.id, skill.id);
+    assert.equal(adminProfile?.classReservations[0].status, "confirmed");
+    const otherAdminProfile = await storage.getUserProfile(discoveryMember.id);
+    assert.deepEqual(
+      otherAdminProfile?.classReservations.map((reservation) => reservation.id),
+      [discoveryWaitlist.reservation.id],
+      "admin member profiles must not leak another member's reservations",
+    );
     const [availableSkill] = await db.select().from(discoveryEntitlements).where(and(
       eq(discoveryEntitlements.discoveryPassId, pass.id),
       eq(discoveryEntitlements.category, "SKILL"),
@@ -214,6 +228,31 @@ test("member system evidence: Discovery to membership with weekly limits, waitli
       eq(memberAuditEvents.targetId, memberStrength.reservation.id),
     ));
     assert.ok(audit.some((event) => event.reason === "Coach corrected mistaken present mark"));
+
+    const [minor] = await db.insert(minorProfiles).values({
+      guardianUserId: member.id,
+      firstName: "Minor",
+      lastName: "Participant",
+      dateOfBirth: new Date("2014-01-01T00:00:00Z"),
+      emergencyContactName: "Member A",
+      emergencyContactPhone: "5550000101",
+      emergencyContactRelationship: "Guardian",
+      consentSignature: "Member A",
+      consentedAt: new Date(),
+    }).returning();
+    await db.insert(classReservations).values({
+      occurrenceId: limitCheck.id,
+      userId: member.id,
+      minorProfileId: minor.id,
+      visitorFirstName: "Member",
+      visitorLastName: "A",
+      visitorEmail: emails[0],
+      visitorPhone: "5550000101",
+      status: "confirmed",
+    });
+    const minorRoster = await storage.getOccurrenceReservations(limitCheck.id);
+    assert.equal(minorRoster.confirmed[0].minorProfile?.firstName, "Minor");
+    assert.equal(minorRoster.confirmed[0].minorProfile?.lastName, "Participant");
   } finally {
     if (occurrenceIds.length) await db.delete(entitlementLedger).where(inArray(entitlementLedger.occurrenceId, occurrenceIds));
     if (passIds.length) await db.delete(discoveryEntitlements).where(inArray(discoveryEntitlements.discoveryPassId, passIds));
@@ -225,6 +264,7 @@ test("member system evidence: Discovery to membership with weekly limits, waitli
     if (userIds.length) await db.delete(memberLifecycleEvents).where(inArray(memberLifecycleEvents.userId, userIds));
     if (userIds.length) await db.delete(memberLifecycles).where(inArray(memberLifecycles.userId, userIds));
     if (userIds.length) await db.delete(memberships).where(inArray(memberships.userId, userIds));
+    if (userIds.length) await db.delete(minorProfiles).where(inArray(minorProfiles.guardianUserId, userIds));
     if (planId) await db.delete(membershipPlans).where(eq(membershipPlans.id, planId));
     if (occurrenceIds.length) await db.delete(classOccurrences).where(inArray(classOccurrences.id, occurrenceIds));
     if (classTypeSkillId) await db.delete(classTypes).where(inArray(classTypes.id, [classTypeSkillId, classTypeStrengthId]));

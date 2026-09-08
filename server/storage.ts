@@ -120,7 +120,7 @@ export interface IStorage {
   
   getAllUsers(search?: string, page?: number, limit?: number, incompleteFormsOnly?: boolean): Promise<{ users: (SafeUser & { missingFormsCount?: number })[]; total: number }>;
   getMembersNeedingForms(): Promise<Array<SafeUser & { missingForms: string[] }>>;
-  getUserProfile(userId: string): Promise<{ user: SafeUser; formResponses: (FormResponse & { form: Form })[]; bookings: BookingWithTrainer[]; memberships: Membership[]; sessionNotes: (SessionNote & { coach: SafeUser })[] } | undefined>;
+  getUserProfile(userId: string): Promise<{ user: SafeUser; formResponses: (FormResponse & { form: Form })[]; bookings: BookingWithTrainer[]; classReservations: Array<ClassReservation & { occurrence: ClassOccurrence; trainer: Trainer | null; classType: ClassType | null; minorProfile: MinorProfile | null }>; memberships: Membership[]; sessionNotes: (SessionNote & { coach: SafeUser })[] } | undefined>;
   updateAdminNotes(userId: string, notes: string): Promise<SafeUser | undefined>;
   
   getAdminStats(): Promise<{ totalUsers: number; newUsers30Days: number; activeMemberships: number; upcomingSessions7Days: number; monthlyRevenue: number; membersNeedingForms: number; totalRequiredForms: number }>;
@@ -166,14 +166,17 @@ export interface IStorage {
     experience?: string;
     manageTokenHash?: string;
   }): Promise<{ reservation: ClassReservation; occurrence: ClassOccurrence; promoted?: ClassReservation }>;
-  getUserClassReservations(userId: string): Promise<Array<ClassReservation & { occurrence: ClassOccurrence; trainer: Trainer | null; classType: ClassType | null }>>;
+  getUserClassReservations(userId: string): Promise<Array<ClassReservation & { occurrence: ClassOccurrence; trainer: Trainer | null; classType: ClassType | null; minorProfile: MinorProfile | null }>>;
   getGuardianMinorReservations(guardianUserId: string): Promise<Array<ClassReservation & {
     occurrence: ClassOccurrence;
     minorProfile: Pick<MinorProfile, "id" | "firstName" | "lastName" | "consentRevokedAt">;
   }>>;
   getClassReservation(id: string): Promise<(ClassReservation & { occurrence: ClassOccurrence }) | undefined>;
   cancelClassReservation(input: { reservationId: string; userId?: string; manageTokenHash?: string; reason?: string }): Promise<{ reservation: ClassReservation; promoted?: ClassReservation }>;
-  getOccurrenceReservations(occurrenceId: string): Promise<{ confirmed: ClassReservation[]; waitlisted: ClassReservation[] }>;
+  getOccurrenceReservations(occurrenceId: string): Promise<{
+    confirmed: Array<ClassReservation & { minorProfile: Pick<MinorProfile, "id" | "firstName" | "lastName"> | null }>;
+    waitlisted: Array<ClassReservation & { minorProfile: Pick<MinorProfile, "id" | "firstName" | "lastName"> | null }>;
+  }>;
   updateClassReservation(id: string, updates: Partial<Pick<ClassReservation, "status" | "attendance" | "cancellationReason">>, actorId?: string, reason?: string): Promise<ClassReservation | undefined>;
   recordClassReservationEvent(data: { reservationId?: string; occurrenceId?: string; event: string; metadata?: Record<string, unknown> }): Promise<void>;
   
@@ -687,15 +690,25 @@ export class DatabaseStorage implements IStorage {
     };
   }
 
-  async getUserProfile(userId: string): Promise<{ user: SafeUser; formResponses: (FormResponse & { form: Form })[]; bookings: BookingWithTrainer[]; memberships: Membership[]; sessionNotes: (SessionNote & { coach: SafeUser })[] } | undefined> {
+  async getUserProfile(userId: string): Promise<{ user: SafeUser; formResponses: (FormResponse & { form: Form })[]; bookings: BookingWithTrainer[]; classReservations: Array<ClassReservation & { occurrence: ClassOccurrence; trainer: Trainer | null; classType: ClassType | null; minorProfile: MinorProfile | null }>; memberships: Membership[]; sessionNotes: (SessionNote & { coach: SafeUser })[] } | undefined> {
     const user = await this.getUserById(userId);
     if (!user) return undefined;
     const { passwordHash: _, ...safeUser } = user;
-    const userFormResponses = await this.getUserFormResponses(userId);
-    const userBookings = await this.getUserBookings(userId);
-    const userMemberships = await this.getMemberships(userId);
-    const userSessionNotes = await this.getSessionNotes(userId);
-    return { user: safeUser, formResponses: userFormResponses, bookings: userBookings, memberships: userMemberships, sessionNotes: userSessionNotes };
+    const [userFormResponses, userBookings, userClassReservations, userMemberships, userSessionNotes] = await Promise.all([
+      this.getUserFormResponses(userId),
+      this.getUserBookings(userId),
+      this.getUserClassReservations(userId),
+      this.getMemberships(userId),
+      this.getSessionNotes(userId),
+    ]);
+    return {
+      user: safeUser,
+      formResponses: userFormResponses,
+      bookings: userBookings,
+      classReservations: userClassReservations,
+      memberships: userMemberships,
+      sessionNotes: userSessionNotes,
+    };
   }
 
   async updateAdminNotes(userId: string, notes: string): Promise<SafeUser | undefined> {
@@ -1424,13 +1437,28 @@ export class DatabaseStorage implements IStorage {
     });
   }
 
-  async getOccurrenceReservations(occurrenceId: string): Promise<{ confirmed: ClassReservation[]; waitlisted: ClassReservation[] }> {
-    const reservations = await db.select().from(classReservations)
+  async getOccurrenceReservations(occurrenceId: string): Promise<{
+    confirmed: Array<ClassReservation & { minorProfile: Pick<MinorProfile, "id" | "firstName" | "lastName"> | null }>;
+    waitlisted: Array<ClassReservation & { minorProfile: Pick<MinorProfile, "id" | "firstName" | "lastName"> | null }>;
+  }> {
+    const rows = await db.select({
+      reservation: classReservations,
+      minorProfile: {
+        id: minorProfiles.id,
+        firstName: minorProfiles.firstName,
+        lastName: minorProfiles.lastName,
+      },
+    }).from(classReservations)
+      .leftJoin(minorProfiles, eq(classReservations.minorProfileId, minorProfiles.id))
       .where(and(
         eq(classReservations.occurrenceId, occurrenceId),
         inArray(classReservations.status, ["confirmed", "waitlisted"]),
       ))
       .orderBy(asc(classReservations.waitlistPosition), asc(classReservations.createdAt));
+    const reservations = rows.map(({ reservation, minorProfile }) => ({
+      ...reservation,
+      minorProfile: minorProfile?.id ? minorProfile : null,
+    }));
     return {
       confirmed: reservations.filter((reservation) => reservation.status === "confirmed"),
       waitlisted: reservations.filter((reservation) => reservation.status === "waitlisted"),
