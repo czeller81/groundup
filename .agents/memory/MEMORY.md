@@ -13,3 +13,4 @@
 - [Hosted Checkout automation boundary](hosted-checkout-automation.md) — headless agent disclosure can leave Stripe Checkout processing without emitting payment events; do not treat UI fallback as payment proof.
 - [Checkout session reconciliation](checkout-session-reconciliation.md) — reconcile pending memberships from Stripe session status and preserve them through transient lookup failures.
 - [Distributed maintenance leases](distributed-maintenance-leases.md) — session advisory locks need a dedicated client and database-enforced expiry for safe cross-instance coordination.
+- [Meta conversion verification](meta-conversion-verification.md) — browser Pixel activation is implemented; live Meta receipt still needs owner-side verification.
