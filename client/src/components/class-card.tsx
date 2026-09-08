@@ -74,7 +74,7 @@ export function ClassCard({
              </p>
            )}
         </div>
-         {onAction && actionLabel && !unavailable && (
+         {onAction && actionLabel && (
           <Button
             onClick={onAction}
             disabled={busy}

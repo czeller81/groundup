@@ -6,6 +6,7 @@
 - [Demo credential hygiene](demo-credential-hygiene.md) — demo admin access must be synchronized from a secure secret, not trusted frontend defaults.
 - [Localized route link keys](localized-route-link-keys.md) — translated navigation may intentionally reuse one destination, so list keys must include label/index identity.
 - [Rendered portal mobile QA](rendered-mobile-qa.md) — Chromium/CDP checks cover locale-width cases while excluding intentional local scrollers and hidden Radix controls.
+- [Browser CTA smoke checks](browser-cta-smoke.md) — localized public CTA checks need system Chromium fallback, deterministic schedules, and final-route assertions.
 - [Portal form navigation](form-submission-navigation.md) — avoid refetching the active form query during submit success navigation.
 - [Browser required-form order](browser-required-form-order.md) — modal browser coverage must follow form order and titles returned by the authenticated forms API.
 - [Legacy membership entitlements](legacy-membership-entitlements.md) — plan-linked memberships use weekly rules; historical unconfigured memberships retain legacy booking behavior.

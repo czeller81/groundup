@@ -115,7 +115,7 @@ export default function Navbar() {
                   {locale === "es" ? publicCopy.english : publicCopy.spanish}
                 </Link>
               )}
-              <Link href={firstVisitPath}>
+              <Link href={firstVisitPath} data-testid="nav-free-visit-desktop">
                 <Button size="sm" className="bg-[#FFB199] font-semibold uppercase tracking-wider text-[#0B0F14] hover:bg-[#FFB199]/90">
                   {publicCopy.freeFirstVisit}
                 </Button>
@@ -176,7 +176,7 @@ export default function Navbar() {
                     {locale === "es" ? publicCopy.english : publicCopy.spanish}
                   </Link>
                 )}
-                <Link href={firstVisitPath} onClick={closeMenu} className="mt-2 block rounded-lg bg-[#FFB199] px-4 py-3 text-center text-sm font-bold uppercase tracking-wide text-[#0B0F14]">
+                <Link href={firstVisitPath} onClick={closeMenu} data-testid="nav-free-visit-mobile" className="mt-2 block rounded-lg bg-[#FFB199] px-4 py-3 text-center text-sm font-bold uppercase tracking-wide text-[#0B0F14]">
                   {publicCopy.freeFirstVisit}
                 </Link>
               </div>
