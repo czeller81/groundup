@@ -32,6 +32,11 @@ const cancelSchema = z.object({
   reason: z.string().trim().max(240).optional(),
 }).strict();
 
+const moveReservationSchema = z.object({
+  replacementOccurrenceId: z.string().uuid(),
+  reason: z.string().trim().min(10).max(240),
+}).strict();
+
 function hashManageToken(token: string) {
   return createHash("sha256").update(token).digest("hex");
 }
@@ -365,6 +370,7 @@ export function registerClassBookingRoutes(app: Express) {
       res.json({
         confirmed: roster.confirmed.map(safeReservation),
         waitlisted: roster.waitlisted.map(safeReservation),
+        cancelled: roster.cancelled.map(safeReservation),
       });
     } catch (error) {
       respondError(res, error, "Failed to load the class roster.");
@@ -393,6 +399,25 @@ export function registerClassBookingRoutes(app: Express) {
       res.json(safeReservation(reservation));
     } catch (error) {
       respondError(res, error, "Failed to update attendance.");
+    }
+  });
+
+  app.post("/api/portal/admin/class-booking/reservations/:id/move", requireRole("admin"), async (req, res) => {
+    try {
+      const data = moveReservationSchema.parse(req.body);
+      const result = await storage.moveClassReservation({
+        reservationId: req.params.id,
+        replacementOccurrenceId: data.replacementOccurrenceId,
+        actorId: req.session.userId!,
+        reason: data.reason,
+      });
+      void notifyReservation(result.reservation, result.occurrence);
+      res.status(201).json({
+        reservation: safeReservation(result.reservation),
+        discoveryExceptionApplied: result.discoveryExceptionApplied,
+      });
+    } catch (error) {
+      respondError(res, error, "Failed to move this reservation.");
     }
   });
 }

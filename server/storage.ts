@@ -190,9 +190,11 @@ export interface IStorage {
   }>>;
   getClassReservation(id: string): Promise<(ClassReservation & { occurrence: ClassOccurrence }) | undefined>;
   cancelClassReservation(input: { reservationId: string; userId?: string; manageTokenHash?: string; reason?: string }): Promise<{ reservation: ClassReservation; promoted?: ClassReservation }>;
+  moveClassReservation(input: { reservationId: string; replacementOccurrenceId: string; actorId: string; reason: string }): Promise<{ reservation: ClassReservation; occurrence: ClassOccurrence; discoveryExceptionApplied: boolean }>;
   getOccurrenceReservations(occurrenceId: string): Promise<{
-    confirmed: Array<ClassReservation & { minorProfile: Pick<MinorProfile, "id" | "firstName" | "lastName"> | null }>;
-    waitlisted: Array<ClassReservation & { minorProfile: Pick<MinorProfile, "id" | "firstName" | "lastName"> | null }>;
+    confirmed: Array<ClassReservation & { minorProfile: Pick<MinorProfile, "id" | "firstName" | "lastName"> | null; moveCompleted: boolean }>;
+    waitlisted: Array<ClassReservation & { minorProfile: Pick<MinorProfile, "id" | "firstName" | "lastName"> | null; moveCompleted: boolean }>;
+    cancelled: Array<ClassReservation & { minorProfile: Pick<MinorProfile, "id" | "firstName" | "lastName"> | null; moveCompleted: boolean }>;
   }>;
   updateClassReservation(id: string, updates: Partial<Pick<ClassReservation, "status" | "attendance" | "cancellationReason">>, actorId?: string, reason?: string): Promise<ClassReservation | undefined>;
   recordClassReservationEvent(data: { reservationId?: string; occurrenceId?: string; event: string; metadata?: Record<string, unknown> }): Promise<void>;
@@ -1569,9 +1571,221 @@ export class DatabaseStorage implements IStorage {
     });
   }
 
+  async moveClassReservation(input: {
+    reservationId: string;
+    replacementOccurrenceId: string;
+    actorId: string;
+    reason: string;
+  }): Promise<{ reservation: ClassReservation; occurrence: ClassOccurrence; discoveryExceptionApplied: boolean }> {
+    return db.transaction(async (tx) => {
+      await tx.execute(sql`select id from class_reservations where id = ${input.reservationId} for update`);
+      const [current] = await tx.select().from(classReservations).where(eq(classReservations.id, input.reservationId));
+      if (!current) throw new ClassBookingError("RESERVATION_NOT_FOUND", "Reservation not found.", 404);
+      if (!current.userId) {
+        throw new ClassBookingError("RESERVATION_HAS_NO_OWNER", "Only reservations linked to a member account can be moved.", 409);
+      }
+      if (current.status !== "cancelled") {
+        throw new ClassBookingError("RESERVATION_NOT_CANCELLED", "Cancel the original reservation before moving it.", 409);
+      }
+      if (current.occurrenceId === input.replacementOccurrenceId) {
+        throw new ClassBookingError("SAME_OCCURRENCE", "Choose a different class occurrence.", 409);
+      }
+      const [priorMove] = await tx.select({ id: classReservationEvents.id }).from(classReservationEvents).where(and(
+        eq(classReservationEvents.reservationId, current.id),
+        eq(classReservationEvents.event, "reservation_moved_from"),
+      )).limit(1);
+      if (priorMove) {
+        throw new ClassBookingError("RESERVATION_ALREADY_MOVED", "This cancelled reservation has already been moved.", 409);
+      }
+
+      const occurrenceIds = [current.occurrenceId, input.replacementOccurrenceId].sort();
+      await tx.execute(sql`select id from class_occurrences where id in (${sql.join(occurrenceIds.map((id) => sql`${id}`), sql`, `)}) order by id for update`);
+      const occurrenceRows = await tx.select().from(classOccurrences).where(inArray(classOccurrences.id, occurrenceIds));
+      const oldOccurrence = occurrenceRows.find((occurrence) => occurrence.id === current.occurrenceId);
+      const replacement = occurrenceRows.find((occurrence) => occurrence.id === input.replacementOccurrenceId);
+      if (!oldOccurrence || !replacement) {
+        throw new ClassBookingError("OCCURRENCE_NOT_FOUND", "The original or replacement class occurrence does not exist.", 404);
+      }
+      if (replacement.status !== "active" || !replacement.bookingEnabled || replacement.start <= new Date()) {
+        throw new ClassBookingError("OCCURRENCE_UNAVAILABLE", "The replacement class is not available for booking.", 409);
+      }
+
+      const typeIds = [oldOccurrence.classTypeId, replacement.classTypeId].filter((id): id is string => Boolean(id));
+      const typeRows = typeIds.length ? await tx.select().from(classTypes).where(inArray(classTypes.id, typeIds)) : [];
+      const oldType = typeRows.find((type) => type.id === oldOccurrence.classTypeId) || null;
+      const replacementType = typeRows.find((type) => type.id === replacement.classTypeId) || null;
+      if (
+        oldOccurrence.canonicalCategory === "LEGACY"
+        || replacement.canonicalCategory === "LEGACY"
+        || oldOccurrence.canonicalCategory !== replacement.canonicalCategory
+      ) {
+        throw new ClassBookingError("CLASS_CATEGORY_MISMATCH", "The replacement must be in the same class category.", 409);
+      }
+      const replacementDiscoveryCategory = discoveryCategory(replacementType);
+
+      const personCondition = current.minorProfileId
+        ? eq(classReservations.minorProfileId, current.minorProfileId)
+        : eq(classReservations.userId, current.userId);
+      const [duplicate] = await tx.select({ id: classReservations.id }).from(classReservations).where(and(
+        eq(classReservations.occurrenceId, replacement.id),
+        personCondition,
+        inArray(classReservations.status, ["confirmed", "waitlisted"]),
+      )).limit(1);
+      if (duplicate) throw new ClassBookingError("DUPLICATE_RESERVATION", "This member already has a reservation for the replacement class.", 409);
+      const [overlap] = await tx.select({ id: classReservations.id })
+        .from(classReservations)
+        .innerJoin(classOccurrences, eq(classReservations.occurrenceId, classOccurrences.id))
+        .where(and(
+          personCondition,
+          eq(classReservations.status, "confirmed"),
+          sql`${classOccurrences.start} < ${replacement.end}`,
+          sql`${classOccurrences.end} > ${replacement.start}`,
+        ))
+        .limit(1);
+      if (overlap) throw new ClassBookingError("OVERLAPPING_RESERVATION", "This member already has another class during the replacement time.", 409);
+
+      const [confirmedTotal] = await tx.select({ value: count() }).from(classReservations).where(and(
+        eq(classReservations.occurrenceId, replacement.id),
+        eq(classReservations.status, "confirmed"),
+      ));
+      const status = Number(confirmedTotal?.value || 0) >= replacement.capacity ? "waitlisted" : "confirmed";
+      let waitlistPosition: number | null = null;
+      if (status === "waitlisted") {
+        const [waitlistTotal] = await tx.select({ value: count() }).from(classReservations).where(and(
+          eq(classReservations.occurrenceId, replacement.id),
+          eq(classReservations.status, "waitlisted"),
+        ));
+        waitlistPosition = Number(waitlistTotal?.value || 0) + 1;
+      }
+
+      const [oldDiscoveryEntitlement] = !current.minorProfileId && replacementDiscoveryCategory
+        ? await tx.select({ entitlement: discoveryEntitlements, pass: discoveryPasses })
+          .from(discoveryEntitlements)
+          .innerJoin(discoveryPasses, eq(discoveryEntitlements.discoveryPassId, discoveryPasses.id))
+          .where(and(
+            eq(discoveryPasses.userId, current.userId),
+            eq(discoveryEntitlements.category, replacementDiscoveryCategory),
+            or(
+              eq(discoveryEntitlements.reservationId, current.id),
+              eq(discoveryEntitlements.status, "AVAILABLE"),
+            ),
+          ))
+          .orderBy(desc(discoveryEntitlements.updatedAt))
+          .limit(1)
+        : [];
+
+      let discoveryExceptionApplied = false;
+      let eligibility: BookingEligibility | undefined;
+      if (!oldDiscoveryEntitlement) {
+        const [user] = await tx.select().from(users).where(eq(users.id, current.userId));
+        if (!user) throw new ClassBookingError("USER_NOT_FOUND", "This member account could not be found.", 404);
+        eligibility = current.minorProfileId
+          ? await (async () => {
+              const [minor] = await tx.select().from(minorProfiles).where(and(
+                eq(minorProfiles.id, current.minorProfileId!),
+                eq(minorProfiles.guardianUserId, current.userId!),
+              ));
+              if (!minor) throw new ClassBookingError("MINOR_PROFILE_FORBIDDEN", "The participant no longer belongs to this account.", 403);
+              return evaluateMinorBookingEligibilityWithExecutor(minor, replacement, tx);
+            })()
+          : await evaluateBookingEligibilityWithExecutor(user, replacement, tx);
+        if (!eligibility.eligible) throw new ClassBookingError(eligibility.code, eligibility.message, 409);
+        if (status === "waitlisted" && !eligibility.waitlistAllowed) {
+          throw new ClassBookingError("WAITLIST_NOT_ALLOWED", "The replacement is full and this plan does not allow waitlisting.", 409);
+        }
+      } else {
+        const pass = oldDiscoveryEntitlement.pass;
+        if (pass.convertedAt || ["CANCELLED", "EXPIRED", "CONVERTED"].includes(pass.status)) {
+          throw new ClassBookingError("DISCOVERY_PASS_UNAVAILABLE", "The Discovery Pass can no longer be used for this move.", 409);
+        }
+        if (pass.expirationTimestamp < replacement.end) {
+          discoveryExceptionApplied = true;
+          await tx.update(discoveryPasses).set({
+            expirationTimestamp: replacement.end,
+            adminOverrideReason: input.reason,
+            updatedAt: new Date(),
+          }).where(eq(discoveryPasses.id, pass.id));
+        }
+      }
+
+      const [reservation] = await tx.insert(classReservations).values({
+        occurrenceId: replacement.id,
+        userId: current.userId,
+        minorProfileId: current.minorProfileId,
+        visitorFirstName: current.visitorFirstName,
+        visitorLastName: current.visitorLastName,
+        visitorEmail: current.visitorEmail,
+        visitorPhone: current.visitorPhone,
+        locale: current.locale,
+        experience: current.experience,
+        status,
+        waitlistPosition,
+      }).returning();
+
+      if (oldDiscoveryEntitlement) {
+        await tx.update(discoveryEntitlements).set({
+          status: status === "confirmed" ? "BOOKED" : "AVAILABLE",
+          reservationId: status === "confirmed" ? reservation.id : null,
+          bookedAt: status === "confirmed" ? new Date() : null,
+          cancelledAt: null,
+          updatedAt: new Date(),
+        }).where(eq(discoveryEntitlements.id, oldDiscoveryEntitlement.entitlement.id));
+        await tx.update(discoveryPasses).set({
+          status: status === "confirmed" ? "PARTIALLY_BOOKED" : "CLAIMED",
+          updatedAt: new Date(),
+        }).where(eq(discoveryPasses.id, oldDiscoveryEntitlement.pass.id));
+      } else if (status === "confirmed" && eligibility?.source === "discovery" && eligibility.discoveryEntitlementId) {
+        await tx.update(discoveryEntitlements).set({
+          status: "BOOKED",
+          reservationId: reservation.id,
+          bookedAt: new Date(),
+          cancelledAt: null,
+          updatedAt: new Date(),
+        }).where(eq(discoveryEntitlements.id, eligibility.discoveryEntitlementId));
+      } else if (status === "confirmed" && eligibility?.source === "membership" && eligibility.membershipId && eligibility.weekStart) {
+        await tx.insert(entitlementLedger).values({
+          userId: current.userId,
+          membershipId: eligibility.membershipId,
+          occurrenceId: replacement.id,
+          reservationId: reservation.id,
+          weekStart: eligibility.weekStart,
+          reserved: 1,
+          reason: "admin_reservation_move",
+        });
+      }
+
+      await tx.insert(classReservationEvents).values([
+        {
+          reservationId: current.id,
+          occurrenceId: oldOccurrence.id,
+          event: "reservation_moved_from",
+          metadata: { actorId: input.actorId, reason: input.reason, replacementReservationId: reservation.id, newOccurrenceId: replacement.id },
+        },
+        {
+          reservationId: reservation.id,
+          occurrenceId: replacement.id,
+          event: "reservation_moved_to",
+          metadata: { actorId: input.actorId, reason: input.reason, originalReservationId: current.id, oldOccurrenceId: oldOccurrence.id, discoveryExceptionApplied },
+        },
+      ]);
+      await tx.insert(memberAuditEvents).values({
+        actorId: input.actorId,
+        userId: current.userId,
+        targetType: "class_reservation",
+        targetId: reservation.id,
+        action: "class_reservation_moved",
+        before: { reservationId: current.id, occurrenceId: oldOccurrence.id, status: current.status },
+        after: { reservationId: reservation.id, occurrenceId: replacement.id, status, discoveryExceptionApplied },
+        reason: input.reason,
+      });
+      return { reservation, occurrence: replacement, discoveryExceptionApplied };
+    });
+  }
+
   async getOccurrenceReservations(occurrenceId: string): Promise<{
-    confirmed: Array<ClassReservation & { minorProfile: Pick<MinorProfile, "id" | "firstName" | "lastName"> | null }>;
-    waitlisted: Array<ClassReservation & { minorProfile: Pick<MinorProfile, "id" | "firstName" | "lastName"> | null }>;
+    confirmed: Array<ClassReservation & { minorProfile: Pick<MinorProfile, "id" | "firstName" | "lastName"> | null; moveCompleted: boolean }>;
+    waitlisted: Array<ClassReservation & { minorProfile: Pick<MinorProfile, "id" | "firstName" | "lastName"> | null; moveCompleted: boolean }>;
+    cancelled: Array<ClassReservation & { minorProfile: Pick<MinorProfile, "id" | "firstName" | "lastName"> | null; moveCompleted: boolean }>;
   }> {
     const rows = await db.select({
       reservation: classReservations,
@@ -1584,16 +1798,24 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(minorProfiles, eq(classReservations.minorProfileId, minorProfiles.id))
       .where(and(
         eq(classReservations.occurrenceId, occurrenceId),
-        inArray(classReservations.status, ["confirmed", "waitlisted"]),
+        inArray(classReservations.status, ["confirmed", "waitlisted", "cancelled"]),
       ))
       .orderBy(asc(classReservations.waitlistPosition), asc(classReservations.createdAt));
+    const movedReservationIds = rows.length
+      ? new Set((await db.select({ reservationId: classReservationEvents.reservationId }).from(classReservationEvents).where(and(
+          inArray(classReservationEvents.reservationId, rows.map(({ reservation }) => reservation.id)),
+          eq(classReservationEvents.event, "reservation_moved_from"),
+        ))).map(({ reservationId }) => reservationId))
+      : new Set<string | null>();
     const reservations = rows.map(({ reservation, minorProfile }) => ({
       ...reservation,
       minorProfile: minorProfile?.id ? minorProfile : null,
+      moveCompleted: movedReservationIds.has(reservation.id),
     }));
     return {
       confirmed: reservations.filter((reservation) => reservation.status === "confirmed"),
       waitlisted: reservations.filter((reservation) => reservation.status === "waitlisted"),
+      cancelled: reservations.filter((reservation) => reservation.status === "cancelled"),
     };
   }
 
@@ -1617,6 +1839,26 @@ export class DatabaseStorage implements IStorage {
           event: "occurrence_cancelled",
           metadata: { reason },
         })));
+        const confirmedReservationIds = cancelled
+          .filter((reservation) => reservation.status === "cancelled")
+          .map((reservation) => reservation.id);
+        if (confirmedReservationIds.length) {
+          const reservedLedgers = await tx.select().from(entitlementLedger).where(and(
+            inArray(entitlementLedger.reservationId, confirmedReservationIds),
+            eq(entitlementLedger.reserved, 1),
+          ));
+          if (reservedLedgers.length) {
+            await tx.insert(entitlementLedger).values(reservedLedgers.map((ledger) => ({
+              userId: ledger.userId,
+              membershipId: ledger.membershipId,
+              occurrenceId: ledger.occurrenceId,
+              reservationId: ledger.reservationId,
+              weekStart: ledger.weekStart,
+              released: 1,
+              reason: "occurrence_cancelled",
+            })));
+          }
+        }
       }
       return cancelled;
     });

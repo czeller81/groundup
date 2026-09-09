@@ -4,6 +4,7 @@ import { AlertCircle, CheckCircle, RefreshCw, Users } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { classDateLabel, classTimeLabel } from "@/lib/class-booking";
@@ -16,6 +17,9 @@ export default function ClassAdmin() {
   const { locale, copy } = useLocale();
   const [calendarId, setCalendarId] = useState("");
   const [rosterOccurrence, setRosterOccurrence] = useState<any>(null);
+  const [movingReservation, setMovingReservation] = useState<any>(null);
+  const [replacementOccurrenceId, setReplacementOccurrenceId] = useState("");
+  const [moveReason, setMoveReason] = useState("");
   const status = useQuery<any>({ queryKey: ["/api/portal/admin/class-booking/status"] });
   const calendars = useQuery<any[]>({ queryKey: ["/api/portal/admin/class-booking/calendars"] });
   const occurrences = useQuery<any[]>({ queryKey: ["/api/portal/admin/class-booking/occurrences"] });
@@ -43,6 +47,24 @@ export default function ClassAdmin() {
   const attendance = useMutation({
     mutationFn: async ({ id, value }: { id: string; value: string }) => (await apiRequest("PATCH", `/api/portal/admin/class-booking/reservations/${id}`, { attendance: value })).json(),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["/api/portal/admin/class-booking/occurrences", rosterOccurrence?.id, "roster"] }),
+  });
+  const moveReservation = useMutation({
+    mutationFn: async () => (await apiRequest("POST", `/api/portal/admin/class-booking/reservations/${movingReservation.id}/move`, {
+      replacementOccurrenceId,
+      reason: moveReason,
+    })).json(),
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/portal/admin/class-booking/occurrences"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/portal/admin/class-booking/occurrences", rosterOccurrence?.id, "roster"] });
+      toast({
+        title: copy.reservationMoved,
+        description: result.discoveryExceptionApplied ? copy.discoveryExceptionLimited : copy.replacementReservationCreated,
+      });
+      setMovingReservation(null);
+      setReplacementOccurrenceId("");
+      setMoveReason("");
+    },
+    onError: (error: Error) => toast({ title: copy.reservationMoveFailed, description: localizeApiError(error.message, locale, copy.reservationMoveFailed), variant: "destructive" }),
   });
   const connection = status.data?.connection;
   const syncStateLabel = (state: string) => ({
@@ -125,9 +147,9 @@ export default function ClassAdmin() {
             <p className="mt-5 text-sm text-gray-400">{copy.loading}…</p>
           ) : roster.isError ? (
             <p className="mt-5 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300">{copy.loadError}</p>
-          ) : (["confirmed", "waitlisted"] as const).map((group) => (
+          ) : (["confirmed", "waitlisted", "cancelled"] as const).map((group) => (
             <div key={group} className="mt-5">
-                 <h3 className="mb-2 text-xs font-bold uppercase tracking-widest text-gray-500">{group === "confirmed" ? copy.confirmed : copy.waitlisted}</h3>
+                  <h3 className="mb-2 text-xs font-bold uppercase tracking-widest text-gray-500">{group === "confirmed" ? copy.confirmed : group === "waitlisted" ? copy.waitlisted : copy.cancelled}</h3>
               {!(roster.data?.[group] || []).length && <p className="border-t border-white/5 py-3 text-sm text-gray-500">{copy.noRosterReservations}</p>}
               {(roster.data?.[group] || []).map((reservation: any) => (
                 <div key={reservation.id} className="flex flex-col justify-between gap-3 border-t border-white/5 py-3 sm:flex-row sm:items-center">
@@ -136,10 +158,42 @@ export default function ClassAdmin() {
                     <p className="text-xs text-gray-500">{reservation.visitorEmail}</p>
                   </div>
                     {group === "confirmed" && <Select value={reservation.attendance || ""} onValueChange={(value) => attendance.mutate({ id: reservation.id, value })}><SelectTrigger className="min-h-11 w-36 border-white/10 bg-black/20"><SelectValue placeholder={copy.attendance} /></SelectTrigger><SelectContent>{(["present", "absent", "late", "excused"] as const).map((value) => <SelectItem key={value} value={value}>{copy[value]}</SelectItem>)}</SelectContent></Select>}
+                    {group === "cancelled" && reservation.userId && !reservation.moveCompleted && <Button variant="outline" className="min-h-11 border-white/15" onClick={() => { setMovingReservation(reservation); setReplacementOccurrenceId(""); setMoveReason(""); }}>{copy.moveReservation}</Button>}
+                    {group === "cancelled" && reservation.moveCompleted && <Badge className="bg-emerald-500/15 text-emerald-300">{copy.reservationMoved}</Badge>}
                 </div>
               ))}
             </div>
           ))}
+        </section>
+      )}
+      {movingReservation && (
+        <section className="mt-6 rounded-2xl border border-[#B06CFF]/30 bg-[#121826] p-4 sm:p-6">
+          <div className="flex items-start justify-between gap-3">
+            <div><h2 className="font-bold">{copy.moveReservation}</h2><p className="mt-1 text-sm text-gray-400">{movingReservation.visitorFirstName} {movingReservation.visitorLastName}</p></div>
+            <Button variant="ghost" onClick={() => setMovingReservation(null)}>{copy.close}</Button>
+          </div>
+          <div className="mt-5 grid gap-4">
+            <div>
+              <Label>{copy.replacementOccurrence}</Label>
+              <Select value={replacementOccurrenceId} onValueChange={setReplacementOccurrenceId}>
+                <SelectTrigger className="mt-1 min-h-11 border-white/10 bg-black/20"><SelectValue placeholder={copy.chooseReplacementOccurrence} /></SelectTrigger>
+                <SelectContent>
+                  {(occurrences.data || []).filter((occurrence) =>
+                    occurrence.id !== rosterOccurrence?.id
+                    && occurrence.status === "active"
+                    && occurrence.bookingEnabled
+                    && occurrence.canonicalCategory === rosterOccurrence?.canonicalCategory
+                    && new Date(occurrence.start) > new Date()
+                  ).map((occurrence) => <SelectItem key={occurrence.id} value={occurrence.id}>{localizedClassTitle(occurrence, locale)} · {classDateLabel(occurrence.start, locale)} · {classTimeLabel(occurrence.start, occurrence.end, locale)}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="move-reason">{copy.moveReason}</Label>
+              <Textarea id="move-reason" value={moveReason} onChange={(event) => setMoveReason(event.target.value)} maxLength={240} className="mt-1 border-white/10 bg-black/20" placeholder={copy.moveReasonPlaceholder} />
+            </div>
+            <Button className="w-full bg-[#B06CFF] sm:w-auto" disabled={!replacementOccurrenceId || moveReason.trim().length < 10 || moveReservation.isPending} onClick={() => moveReservation.mutate()}>{moveReservation.isPending ? copy.loading : copy.confirmMove}</Button>
+          </div>
         </section>
       )}
     </main>

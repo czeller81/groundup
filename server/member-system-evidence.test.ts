@@ -36,6 +36,7 @@ test("member system evidence: Discovery to membership with weekly limits, waitli
   let planId = "";
   let classTypeSkillId = "";
   let classTypeStrengthId = "";
+  let classTypeGirlsId = "";
   const [connection] = await db.select().from(calendarConnections).limit(1);
   assert.ok(connection, "a Calendar connection is required for fixture occurrences");
 
@@ -60,7 +61,7 @@ test("member system evidence: Discovery to membership with weekly limits, waitli
       waitlistAllowed: true,
     }).returning();
     planId = plan.id;
-    await storage.createMembership({
+    const memberMembership = await storage.createMembership({
       userId: member.id,
       planId,
       type: plan.internalKey,
@@ -95,13 +96,35 @@ test("member system evidence: Discovery to membership with weekly limits, waitli
       active: true,
       bookingEnabled: true,
     });
+    const girlsType = await storage.createClassType({
+      name: `QA Girls ${suffix}`,
+      description: "Fixture",
+      category: "girls_skill",
+      canonicalCategory: "GIRLS_JIU_JITSU_SELF_DEFENSE",
+      strengthFocus: null,
+      audienceGroup: "FEMALE_YOUTH",
+      matchPattern: "girls",
+      defaultCapacity: 4,
+      beginnerFriendly: true,
+      firstVisitEligible: false,
+      defaultTrainerId: null,
+      membershipRequired: true,
+      active: true,
+      bookingEnabled: true,
+    });
     classTypeSkillId = skillType.id;
     classTypeStrengthId = strengthType.id;
+    classTypeGirlsId = girlsType.id;
 
     const base = new Date(Date.now() + 1 * 24 * 60 * 60 * 1000);
     base.setUTCHours(20, 0, 0, 0);
     const makeOccurrence = async (typeId: string, offsetDays: number, title: string, capacity: number) => {
       const start = new Date(base.getTime() + offsetDays * 24 * 60 * 60 * 1000);
+      const canonicalCategory = typeId === classTypeSkillId
+        ? "JIU_JITSU_SELF_DEFENSE"
+        : typeId === classTypeStrengthId
+        ? "STRENGTH_CONDITIONING"
+        : "GIRLS_JIU_JITSU_SELF_DEFENSE";
       const [occurrence] = await db.insert(classOccurrences).values({
         calendarConnectionId: connection.id,
         googleCalendarId: `qa-calendar-${suffix}`,
@@ -113,6 +136,8 @@ test("member system evidence: Discovery to membership with weekly limits, waitli
         location: "Ground Up fixture",
         instructorName: "Fixture Coach",
         classTypeId: typeId,
+        canonicalCategory,
+        audienceGroup: typeId === classTypeGirlsId ? "FEMALE_YOUTH" : "ADULT_WOMEN",
         status: "active",
         syncState: "synced",
         capacity,
@@ -130,6 +155,9 @@ test("member system evidence: Discovery to membership with weekly limits, waitli
     const extra = await makeOccurrence(classTypeSkillId, 2, "QA Extra Skill Class", 4);
     const limitCheck = await makeOccurrence(classTypeSkillId, 3, "QA Limit Check Class", 4);
     const outsideMemberWindow = await makeOccurrence(classTypeSkillId, 8, "QA Future Skill Class", 4);
+    const discoveryReplacement = await makeOccurrence(classTypeSkillId, 9, "QA Discovery Replacement", 4);
+    const minorOriginalOccurrence = await makeOccurrence(classTypeGirlsId, 4, "QA Girls Original", 4);
+    const minorReplacementOccurrence = await makeOccurrence(classTypeGirlsId, 5, "QA Girls Replacement", 4);
 
     await db.insert(formResponses).values(bookingForms.map((form) => ({
       userId: discoveryMember.id,
@@ -237,7 +265,7 @@ test("member system evidence: Discovery to membership with weekly limits, waitli
     const memberStrength = await storage.reserveClassOccurrence({
       occurrenceId: strength.id, userId: member.id, firstName: "Member", lastName: "A", email: emails[0], phone: "5550000101",
     });
-    await storage.reserveClassOccurrence({
+    const memberExtra = await storage.reserveClassOccurrence({
       occurrenceId: extra.id, userId: member.id, firstName: "Member", lastName: "A", email: emails[0], phone: "5550000101",
     });
     await storage.updateClassReservation(memberStrength.reservation.id, { attendance: "PRESENT" }, member.id, "Fixture attendance");
@@ -245,11 +273,73 @@ test("member system evidence: Discovery to membership with weekly limits, waitli
 
     const weeklyLimit = await evaluateBookingEligibility(member, limitCheck);
     assert.equal(weeklyLimit.code, "WEEKLY_LIMIT_REACHED", "2x membership must stop a third weekly booking");
+    const cancelledForSchedule = await storage.cancelOccurrenceReservations(extra.id, "Google Calendar removed the original class");
+    assert.equal(cancelledForSchedule.some((reservation) => reservation.id === memberExtra.reservation.id), true);
+    const movedMembership = await storage.moveClassReservation({
+      reservationId: memberExtra.reservation.id,
+      replacementOccurrenceId: limitCheck.id,
+      actorId: member.id,
+      reason: "Move the calendar-cancelled membership reservation.",
+    });
+    assert.equal(movedMembership.reservation.status, "confirmed");
+    const membershipUsage = await db.select().from(entitlementLedger).where(and(
+      eq(entitlementLedger.userId, member.id),
+      eq(entitlementLedger.membershipId, memberMembership.id),
+      inArray(entitlementLedger.reservationId, [memberExtra.reservation.id, movedMembership.reservation.id]),
+    ));
+    assert.equal(
+      membershipUsage.reduce((total, entry) => total + entry.reserved - entry.released, 0),
+      1,
+      "moving an occurrence-cancelled reservation must transfer rather than duplicate membership usage",
+    );
     await db.update(discoveryPasses)
       .set({ expirationTimestamp: new Date(Date.now() - 60 * 1000) })
       .where(eq(discoveryPasses.id, pass.id));
     const expiredDiscovery = await evaluateBookingEligibility(discoveryMember, limitCheck);
     assert.equal(expiredDiscovery.code, "DISCOVERY_EXPIRED", "expired Discovery Passes must stop new bookings");
+
+    const movedDiscovery = await storage.cancelClassReservation({
+      reservationId: promoted.promoted!.id,
+      userId: discoveryMember.id,
+      reason: "Original occurrence was cancelled",
+    });
+    assert.equal(movedDiscovery.reservation.status, "cancelled");
+    const moveReason = "Move the cancelled reservation to the matching replacement class.";
+    const moved = await storage.moveClassReservation({
+      reservationId: movedDiscovery.reservation.id,
+      replacementOccurrenceId: discoveryReplacement.id,
+      actorId: member.id,
+      reason: moveReason,
+    });
+    assert.equal(moved.reservation.status, "confirmed");
+    assert.equal(moved.discoveryExceptionApplied, true);
+    const [movedPass] = await db.select().from(discoveryPasses).where(eq(discoveryPasses.id, pass.id));
+    assert.equal(movedPass.expirationTimestamp.getTime(), discoveryReplacement.end.getTime(), "the exception must end with the replacement class");
+    const [movedEntitlement] = await db.select().from(discoveryEntitlements).where(and(
+      eq(discoveryEntitlements.discoveryPassId, pass.id),
+      eq(discoveryEntitlements.category, "SKILL"),
+    ));
+    assert.equal(movedEntitlement.reservationId, moved.reservation.id);
+    assert.equal(movedEntitlement.status, "BOOKED");
+    const moveAudit = await db.select().from(memberAuditEvents).where(and(
+      eq(memberAuditEvents.userId, discoveryMember.id),
+      eq(memberAuditEvents.targetId, moved.reservation.id),
+    ));
+    assert.ok(moveAudit.some((event) => event.action === "class_reservation_moved" && event.actorId === member.id && event.reason === moveReason));
+    await assert.rejects(
+      () => storage.moveClassReservation({
+        reservationId: movedDiscovery.reservation.id,
+        replacementOccurrenceId: extra.id,
+        actorId: member.id,
+        reason: "A repeated move must not create another reservation.",
+      }),
+      (error: any) => error.code === "RESERVATION_ALREADY_MOVED",
+    );
+    const movedFromEvents = await db.select().from(classReservationEvents).where(and(
+      eq(classReservationEvents.reservationId, movedDiscovery.reservation.id),
+      eq(classReservationEvents.event, "reservation_moved_from"),
+    ));
+    assert.equal(movedFromEvents.length, 1);
 
     const corrected = await storage.updateClassReservation(memberStrength.reservation.id, { attendance: "NO_SHOW" }, member.id, "Coach corrected mistaken present mark");
     assert.equal(corrected?.attendance, "NO_SHOW");
@@ -271,19 +361,30 @@ test("member system evidence: Discovery to membership with weekly limits, waitli
       consentSignature: "Member A",
       consentedAt: new Date(),
     }).returning();
-    await db.insert(classReservations).values({
-      occurrenceId: limitCheck.id,
+    const [minorReservation] = await db.insert(classReservations).values({
+      occurrenceId: minorOriginalOccurrence.id,
       userId: member.id,
       minorProfileId: minor.id,
       visitorFirstName: "Member",
       visitorLastName: "A",
       visitorEmail: emails[0],
       visitorPhone: "5550000101",
-      status: "confirmed",
+      status: "cancelled",
+      cancelledAt: new Date(),
+    }).returning();
+    const minorRoster = await storage.getOccurrenceReservations(minorOriginalOccurrence.id);
+    assert.equal(minorRoster.cancelled[0].minorProfile?.firstName, "Minor");
+    const movedMinor = await storage.moveClassReservation({
+      reservationId: minorReservation.id,
+      replacementOccurrenceId: minorReplacementOccurrence.id,
+      actorId: member.id,
+      reason: "Move the minor to the matching girls class.",
     });
-    const minorRoster = await storage.getOccurrenceReservations(limitCheck.id);
-    assert.equal(minorRoster.confirmed[0].minorProfile?.firstName, "Minor");
-    assert.equal(minorRoster.confirmed[0].minorProfile?.lastName, "Participant");
+    assert.equal(movedMinor.reservation.minorProfileId, minor.id);
+    assert.equal(movedMinor.reservation.status, "confirmed");
+    const movedMinorRoster = await storage.getOccurrenceReservations(minorReplacementOccurrence.id);
+    assert.equal(movedMinorRoster.confirmed[0].minorProfile?.firstName, "Minor");
+    assert.equal(movedMinorRoster.confirmed[0].minorProfile?.lastName, "Participant");
 
     const [exceptionReservation] = await db.insert(classReservations).values({
       occurrenceId: limitCheck.id,
@@ -395,7 +496,7 @@ test("member system evidence: Discovery to membership with weekly limits, waitli
     if (userIds.length) await db.delete(minorProfiles).where(inArray(minorProfiles.guardianUserId, userIds));
     if (planId) await db.delete(membershipPlans).where(eq(membershipPlans.id, planId));
     if (occurrenceIds.length) await db.delete(classOccurrences).where(inArray(classOccurrences.id, occurrenceIds));
-    if (classTypeSkillId) await db.delete(classTypes).where(inArray(classTypes.id, [classTypeSkillId, classTypeStrengthId]));
+    if (classTypeSkillId) await db.delete(classTypes).where(inArray(classTypes.id, [classTypeSkillId, classTypeStrengthId, classTypeGirlsId]));
     if (userIds.length) await db.delete(users).where(inArray(users.id, userIds));
     await pool.end();
   }
