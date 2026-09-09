@@ -1,0 +1,957 @@
+# GROUND UP BJJ — DISCOVERY PASS GUIDED ONBOARDING + DEDICATED FUNNEL REPORTING
+
+The Ground Up Discovery Pass campaign is live.
+
+Current evidence shows:
+
+- The Discovery Pass ads are delivering.
+- The public Discovery Pass landing page and signup route are reachable.
+- Recent users have successfully created member accounts.
+- The major observed drop-off is AFTER account creation:
+  - accounts created
+  - but required forms not completed
+  - pass not activated
+  - class not booked
+- The existing campaign reporting is still partly oriented around an older lead-form funnel and does not cleanly represent the Discovery Pass member-account journey.
+- Some internal campaign/session data has also indicated social traffic landing on `/` rather than the intended Discovery Pass route, so destination attribution and funnel reporting must be verified precisely.
+
+Your task is to improve the Discovery Pass post-signup experience and create a dedicated Discovery Pass funnel report.
+
+This is a production funnel optimization task.
+
+Do not redesign the entire portal.
+
+Do not change Discovery Pass legal requirements.
+
+Do not change class entitlement rules.
+
+Do not change campaign creative.
+
+Do not alter membership pricing.
+
+Do not modify unrelated member flows.
+
+Use the smallest production-safe changes necessary.
+
+---
+
+# 1. PRIMARY GOALS
+
+Complete these two objectives:
+
+## A. Guided Discovery Pass onboarding
+
+After a user creates an account through the Discovery Pass acquisition flow, make the next required action unmistakable.
+
+The intended guided journey is:
+
+DISCOVERY PASS LANDING PAGE
+→ CREATE ACCOUNT / LOGIN
+→ COMPLETE REQUIRED FORMS
+→ ACTIVATE DISCOVERY PASS
+→ BOOK FIRST CLASS
+
+The member should never have to infer what to do next from a generic portal dashboard.
+
+## B. Dedicated Discovery Pass funnel reporting
+
+Create a clean campaign/funnel view measuring the actual Discovery Pass member journey:
+
+Landing Page Viewed
+→ CTA Clicked
+→ Account Created
+→ Required Forms Started
+→ Required Forms Completed
+→ Discovery Pass Activated
+→ Class Booked
+
+Do not mix this with the legacy lead-form funnel.
+
+---
+
+# 2. FIRST AUDIT THE CURRENT FLOW
+
+Before making changes, inspect the existing code and production behavior for:
+
+- `/discovery-pass`
+- `/es/discovery-pass`
+- portal signup/login
+- `intent=discovery-pass`
+- post-signup redirect logic
+- dashboard
+- required forms
+- form submission state
+- Discovery Pass claim/activation
+- class booking
+- current analytics events
+- campaign attribution persistence
+- existing campaign reporting/dashboard
+- older lead-form reporting
+- consent handling
+- locale behavior
+
+Identify exactly what a new Discovery Pass user sees immediately after account creation.
+
+Do not assume.
+
+Report current behavior first.
+
+---
+
+# 3. DISCOVERY-SPECIFIC POST-SIGNUP STATE
+
+When a user enters through:
+
+`intent=discovery-pass`
+
+the portal must recognize that the user is in a Discovery Pass onboarding journey.
+
+Do not send them into a generic undirected member dashboard experience.
+
+Instead, surface a dedicated Discovery onboarding state.
+
+This may be implemented:
+
+- as a dedicated onboarding view
+- as a Discovery-specific dashboard state
+- or by adapting the current dashboard with a clearly dominant Discovery module
+
+Use the existing architecture.
+
+Do not create a parallel portal unless necessary.
+
+---
+
+# 4. REQUIRED ONBOARDING PROGRESS UI
+
+Create a simple, visually obvious progress indicator.
+
+Recommended:
+
+`Account ✓ → Forms → Activate Pass → Book Class`
+
+For Spanish:
+
+`Cuenta ✓ → Formularios → Activar Pase → Reservar Clase`
+
+Use the site’s existing design system.
+
+Do not create a different visual style.
+
+The current step should be visually obvious.
+
+Completed steps should be clearly marked.
+
+Future steps should remain visible but not compete with the current CTA.
+
+---
+
+# 5. STEP 1 — ACCOUNT CREATED
+
+Once account creation succeeds from the Discovery funnel:
+
+Show a clear success state:
+
+## English
+
+**Your account is ready.**
+
+**Next: complete the required forms to activate your free Discovery Pass.**
+
+Primary CTA:
+
+**COMPLETE MY FORMS**
+
+## Spanish
+
+**Tu cuenta está lista.**
+
+**Siguiente paso: completa los formularios requeridos para activar tu Discovery Pass gratuito.**
+
+Primary CTA:
+
+**COMPLETAR MIS FORMULARIOS**
+
+Do not leave the user wondering whether they already received the pass.
+
+Do not suggest the pass is active before activation succeeds.
+
+---
+
+# 6. STEP 2 — REQUIRED FORMS
+
+The existing required forms are:
+
+- `gym-rules`
+- `liability-waiver`
+
+Preserve existing legal wording and submission logic.
+
+Do not alter waiver content.
+
+Improve the presentation around the forms.
+
+The Discovery user should understand:
+
+**These forms are required to activate your free pass.**
+
+Avoid generic administrative wording where possible.
+
+Recommended intro:
+
+## English
+
+**Complete these forms to unlock your Discovery Pass.**
+
+You’re almost there. Once the required forms are completed, you can activate your free pass and book your classes.
+
+## Spanish
+
+**Completa estos formularios para activar tu Discovery Pass.**
+
+Ya casi terminas. Cuando completes los formularios requeridos, podrás activar tu pase gratuito y reservar tus clases.
+
+---
+
+# 7. FORMS START TRACKING
+
+Current reporting needs an explicit milestone between account creation and forms completed.
+
+Add a dedicated event for:
+
+`discovery_forms_started`
+
+Define it carefully.
+
+It should fire when a Discovery Pass user actually begins interacting with a required form, not merely when the forms page loads.
+
+Examples:
+
+- first field interaction
+- first form edit
+- first required-form open if that is the project’s established analytics convention
+
+Choose one consistent definition and document it.
+
+Do not generate duplicate starts on every keystroke.
+
+---
+
+# 8. FORMS COMPLETION TRACKING
+
+Preserve the existing:
+
+`discovery_waiver_completed`
+
+or equivalent current event.
+
+Verify whether the current event means:
+
+- one form completed
+or
+- all required forms completed
+
+This distinction matters.
+
+If the current event fires once per required form, preserve it but also create a clean aggregate milestone:
+
+`discovery_required_forms_completed`
+
+only when all required forms needed for Discovery activation are submitted.
+
+Do not silently change existing analytics semantics.
+
+Document exactly what each event means.
+
+---
+
+# 9. IMMEDIATE TRANSITION AFTER FORMS
+
+Once all required forms are complete:
+
+Do not make the user hunt for the activation control.
+
+Immediately surface:
+
+## English
+
+**Your forms are complete.**
+
+**Your free Discovery Pass is ready to activate.**
+
+Primary CTA:
+
+**ACTIVATE MY DISCOVERY PASS**
+
+## Spanish
+
+**Tus formularios están completos.**
+
+**Tu Discovery Pass gratuito está listo para activarse.**
+
+Primary CTA:
+
+**ACTIVAR MI DISCOVERY PASS**
+
+If safe within the existing UX architecture, take the user directly to the activation state after the last form submission.
+
+Do not auto-activate without an explicit member action unless existing business rules already do so.
+
+---
+
+# 10. STEP 3 — ACTIVATION
+
+The current production rules remain:
+
+- 1 SKILL entitlement
+- 1 STRENGTH entitlement
+- 7 × 24 hours validity
+- activation begins only after successful claim
+- required forms enforced server-side
+- duplicate claims prevented
+
+Do not change any of those rules.
+
+After activation succeeds:
+
+Show a high-clarity success state.
+
+## English
+
+**Your Discovery Pass is active.**
+
+You have:
+
+- 1 SKILL class
+- 1 STRENGTH class
+- 7 days to use your pass
+
+Primary CTA:
+
+**BOOK MY FIRST CLASS**
+
+## Spanish
+
+**Tu Discovery Pass está activo.**
+
+Tienes:
+
+- 1 clase de SKILL
+- 1 clase de STRENGTH
+- 7 días para utilizar tu pase
+
+Primary CTA:
+
+**RESERVAR MI PRIMERA CLASE**
+
+---
+
+# 11. STEP 4 — BOOKING
+
+After activation, route the user directly into an eligible booking experience.
+
+Do not drop them into a generic schedule without guidance if the portal already knows they are in Discovery onboarding.
+
+Where safe, emphasize eligible Discovery classes.
+
+Do not alter core booking eligibility.
+
+Do not hide normal schedule functionality from existing members.
+
+Discovery users should clearly understand:
+
+- which class types they can book
+- remaining entitlements
+- pass expiration
+
+---
+
+# 12. DISCOVERY DASHBOARD CARD
+
+If the user leaves and returns before finishing onboarding, the portal should resume them at the correct step.
+
+Create or update a prominent Discovery Pass status card.
+
+Possible states:
+
+## Account created, forms incomplete
+
+`Account ✓`
+`Forms — Incomplete`
+`Activation — Locked`
+`Booking — Locked`
+
+CTA:
+`Complete Required Forms`
+
+## Forms complete, not activated
+
+`Account ✓`
+`Forms ✓`
+`Activation — Ready`
+`Booking — Locked`
+
+CTA:
+`Activate Discovery Pass`
+
+## Pass active, no booking
+
+`Account ✓`
+`Forms ✓`
+`Discovery Pass ✓`
+`Booking — Ready`
+
+CTA:
+`Book Your First Class`
+
+## One entitlement used
+
+Show remaining entitlement clearly.
+
+Example:
+
+`SKILL ✓ Used`
+`STRENGTH — Available`
+
+CTA:
+`Book STRENGTH`
+
+Use current Ground Up design language.
+
+---
+
+# 13. LANGUAGE PRESERVATION
+
+Preserve English/Spanish throughout the Discovery onboarding.
+
+English acquisition should remain English.
+
+Spanish acquisition should remain Spanish.
+
+Verify:
+
+- dashboard Discovery copy
+- forms introduction
+- activation messages
+- booking CTA
+- progress indicator
+- error messages where localized equivalents exist
+
+Do not create hardcoded English-only Discovery onboarding.
+
+---
+
+# 14. VERIFY AD DESTINATIONS
+
+Audit current live campaign attribution inside the application.
+
+Confirm whether traffic from Meta is reaching:
+
+English:
+`/discovery-pass`
+
+Spanish:
+`/es/discovery-pass`
+
+or whether some traffic is arriving at `/`.
+
+Do not guess based only on aggregate referrer data.
+
+Use available stored campaign parameters / landing-path data.
+
+If the site-side data shows campaign traffic entering at `/`, determine whether:
+
+- the live ad URL is wrong
+- Meta redirect behavior is causing it
+- attribution recording captures a later page rather than first landing
+- internal reporting is misattributing route entry
+
+Do not alter ad objects from Replit.
+
+Report the exact finding for Malu/owner.
+
+---
+
+# 15. DEDICATED DISCOVERY FUNNEL EVENTS
+
+The Discovery reporting layer should include:
+
+- `discovery_page_view`
+- `discovery_cta_click`
+- `discovery_account_created`
+- `discovery_forms_started`
+- `discovery_required_forms_completed`
+- `discovery_pass_activated`
+- `discovery_class_booked`
+
+If current events differ, preserve existing ones and map them carefully.
+
+Do not delete historical analytics events.
+
+Do not rename production events without migration/backward-compatibility consideration.
+
+---
+
+# 16. FUNNEL REPORT
+
+Create a dedicated Discovery Pass campaign report.
+
+This report must NOT depend on the old lead-form funnel.
+
+Display at minimum:
+
+| Stage | Count | Conversion From Previous | Overall Conversion |
+|---|---:|---:|---:|
+| Landing page viewed | n | — | 100% |
+| CTA clicked | n | % | % |
+| Account created | n | % | % |
+| Forms started | n | % | % |
+| Forms completed | n | % | % |
+| Pass activated | n | % | % |
+| Class booked | n | % | % |
+
+Use a defined date range.
+
+Default:
+
+last 30 days
+
+If campaign launch date is known and shorter than 30 days, provide a campaign-life filter.
+
+---
+
+# 17. LANGUAGE SEGMENTATION
+
+The report should allow breakdown by:
+
+- English
+- Spanish
+- Combined
+
+Use:
+
+- landing route
+- locale
+- `utm_content`
+- or established campaign metadata
+
+Choose the most reliable source.
+
+Do not infer language from user demographic data.
+
+---
+
+# 18. ATTRIBUTION SEGMENTATION
+
+Where stored and reliable, include:
+
+- `utm_source`
+- `utm_medium`
+- `utm_campaign`
+- `utm_content`
+
+At minimum support:
+
+`meta / paid_social / discovery_pass / english_video`
+
+and
+
+`meta / paid_social / discovery_pass / spanish_video`
+
+Do not expose PII.
+
+---
+
+# 19. CONSENTED VS TOTAL TRAFFIC
+
+The existing reporting contains consent-aware analytics, and that can make totals look inconsistent.
+
+The new Discovery report must clearly distinguish:
+
+- total application/database-observed funnel events
+- consent-gated analytics events
+- ad-platform metrics if imported/entered separately
+
+Do not combine unlike denominators without labeling them.
+
+For example:
+
+**Application funnel**
+Account created: 3
+
+**Consented analytics**
+Tracked sessions: 44
+
+These are different data populations.
+
+Make that obvious.
+
+---
+
+# 20. NO LEGACY LEAD-FORM CONTAMINATION
+
+The Discovery Pass report should not treat these as required campaign milestones:
+
+- generic lead form start
+- lead form submission
+- lead success
+
+unless the Discovery campaign explicitly uses those forms.
+
+Do not show “0 lead forms” as if it means Discovery signup is broken.
+
+If the old report remains in the system, label it clearly as:
+
+`Legacy Lead Funnel`
+
+and the new one as:
+
+`Discovery Pass Funnel`
+
+---
+
+# 21. POST-SIGNUP DROP-OFF DIAGNOSTICS
+
+Add simple diagnostics to the report.
+
+Examples:
+
+- account created but no forms started
+- forms started but not completed
+- forms completed but pass not activated
+- pass activated but no class booked
+
+Show counts.
+
+Do not send automated outreach in this task.
+
+This is reporting only.
+
+---
+
+# 22. RECENT USER FUNNEL STATE
+
+If consistent with privacy and existing admin tooling, allow authorized staff to see a non-public list of recent Discovery funnel users with:
+
+- account created timestamp
+- language
+- acquisition source
+- current funnel stage
+- forms completion state
+- activation state
+- booking state
+
+Do not expose waiver answers.
+
+Do not expose sensitive legal form content.
+
+Do not add this if it conflicts with current admin privacy design.
+
+---
+
+# 23. PUBLISHED ANALYTICS
+
+Audit the current hosted analytics configuration.
+
+The recent analysis found that hosted analytics appeared to have no collected event data even though tracking code exists.
+
+Determine:
+
+- whether analytics is enabled in the published deployment
+- whether required environment/config values are present
+- whether consent prevents collection
+- whether the app was published after analytics enablement
+- whether the current service endpoint is working
+
+Do not claim analytics is fixed unless verified in the published environment.
+
+If a republish is required, clearly state that.
+
+Do not create a second analytics vendor just to solve this.
+
+---
+
+# 24. UX FRICTION REVIEW
+
+While implementing the guided flow, inspect these specific friction points:
+
+- account creation terminology
+- whether users understand account creation is free
+- whether they think signup equals membership purchase
+- consent dialog interference
+- number of clicks between signup and forms
+- whether forms are visually obvious
+- whether activation CTA is obvious after forms
+- whether booking CTA is obvious after activation
+- mobile keyboard/form usability
+- Spanish copy length / overflow
+
+Make only targeted improvements.
+
+Do not turn this into a general redesign.
+
+---
+
+# 25. MOBILE-FIRST QA
+
+Test the full guided flow on:
+
+- 390px
+- 430px
+
+Also smoke test around:
+
+- 320px
+- 375px
+
+Verify:
+
+- progress indicator fits
+- CTA is visible and tappable
+- forms are usable
+- no horizontal overflow
+- Spanish strings fit
+- success states render
+- activation CTA is obvious
+- booking CTA is obvious
+
+---
+
+# 26. AUTOMATED TESTS
+
+Add or extend tests covering:
+
+- Discovery intent survives signup
+- account creation routes to Discovery onboarding
+- forms-incomplete state
+- forms-start event
+- all-required-forms-complete state
+- activation-ready state
+- successful activation state
+- booking-ready state
+- returning user resumes correct step
+- English/Spanish localization
+- funnel event definitions
+- funnel report calculations
+- legacy lead-form events excluded from Discovery report
+- attribution segmentation
+- consent-aware reporting labels
+
+Run:
+
+- `npm run check`
+- `npm test`
+- production build
+- route inventory
+- locale checks
+- analytics/report tests
+- mobile QA
+- `git diff --check`
+
+---
+
+# 27. DO NOT CHANGE
+
+Do not modify:
+
+- waiver legal language
+- Discovery eligibility
+- 1 SKILL entitlement
+- 1 STRENGTH entitlement
+- 7-day validity
+- duplicate activation logic
+- booking lifecycle
+- membership pricing
+- ad creative
+- Meta campaign settings
+- unrelated portal modules
+- unrelated admin workflows
+
+---
+
+# 28. PRODUCTION SAFETY
+
+Use synthetic test accounts only.
+
+Do not mutate real customer records.
+
+Do not create fake production bookings unless necessary for a bounded synthetic test and removable afterward.
+
+Clean up synthetic artifacts.
+
+Do not publish unrelated changes.
+
+---
+
+# 29. REQUIRED SCREENSHOTS
+
+Capture:
+
+## English
+
+- account-created / forms-next-step screen
+- forms-complete / activation-ready state
+- activated / booking-ready state
+- mobile Discovery onboarding
+
+## Spanish
+
+Same four states where practical.
+
+## Reporting
+
+- Discovery Pass funnel report
+- English/Spanish segmentation
+- drop-off diagnostics
+
+Do not expose real member information.
+
+---
+
+# 30. FINAL REPORT
+
+Return:
+
+## A. Starting SHA
+
+[full SHA]
+
+## B. Ending SHA
+
+[full SHA]
+
+## C. Files changed
+
+Exact list.
+
+## D. Current funnel before changes
+
+Describe the actual pre-change post-signup journey.
+
+## E. New guided onboarding
+
+Describe:
+
+Account
+→ Forms
+→ Activation
+→ Booking
+
+with exact routes/components.
+
+## F. Analytics events
+
+List:
+
+Existing preserved events
+New events
+Exact semantics of each
+
+## G. Discovery funnel report
+
+Confirm:
+
+Landing
+CTA
+Account
+Forms started
+Forms completed
+Activated
+Booked
+
+and explain data source for each.
+
+## H. Attribution
+
+Report whether live campaign traffic is truly landing on:
+
+`/discovery-pass`
+`/es/discovery-pass`
+
+or `/`
+
+and explain how verified.
+
+## I. Hosted analytics
+
+Enabled:
+YES / NO
+
+Receiving published events:
+YES / NO / NOT VERIFIABLE
+
+Republish required:
+YES / NO
+
+## J. English funnel
+
+Account created:
+PASS / FAIL
+
+Forms next-step clarity:
+PASS / FAIL
+
+Forms completion:
+PASS / FAIL
+
+Activation:
+PASS / FAIL
+
+Booking CTA:
+PASS / FAIL
+
+Mobile:
+PASS / FAIL
+
+## K. Spanish funnel
+
+Same matrix.
+
+## L. Reporting
+
+Dedicated Discovery report:
+PASS / FAIL
+
+Legacy lead-form separation:
+PASS / FAIL
+
+Language segmentation:
+PASS / FAIL
+
+Attribution segmentation:
+PASS / FAIL
+
+Drop-off diagnostics:
+PASS / FAIL
+
+## M. Tests
+
+Exact commands and results.
+
+## N. Remaining risks
+
+List launch-impacting issues or:
+
+`NONE`
+
+---
+
+# 31. FINAL VERDICT
+
+Return exactly one:
+
+`DISCOVERY_PASS_GUIDED_FUNNEL_READY`
+
+or
+
+`DISCOVERY_PASS_GUIDED_FUNNEL_BLOCKED`
+
+Do not return READY unless:
+
+- Discovery users receive a clear post-signup next step
+- required forms are obvious
+- activation is obvious after forms
+- booking is obvious after activation
+- English and Spanish pass
+- dedicated Discovery reporting is working
+- legacy lead-form metrics are not being misrepresented as Discovery conversion failures
