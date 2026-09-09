@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { eq } from "drizzle-orm";
 import { db } from "./db";
-import { discoveryEntitlements, discoveryPasses, formResponses, forms, memberAuditEvents, users } from "@shared/schema";
+import { discoveryEntitlements, discoveryPasses, formResponses, forms, insertAnalyticsEventSchema, memberAuditEvents, users } from "@shared/schema";
 import { storage } from "./storage";
 import { discoveryReservationCountsAsPriorUse, issueDiscoveryPass, missingRequiredBookingForms } from "./member-routes";
 
@@ -11,6 +11,25 @@ test("Discovery Pass treats prior interest and cancelled unused reservations as 
   assert.equal(discoveryReservationCountsAsPriorUse("cancelled", "NO_SHOW"), true);
   assert.equal(discoveryReservationCountsAsPriorUse("confirmed", null), true);
   assert.equal(discoveryReservationCountsAsPriorUse("waitlisted", null), true);
+});
+
+test("Discovery funnel event contract preserves consented attribution fields", () => {
+  const event = insertAnalyticsEventSchema.parse({
+    event: "discovery_required_forms_completed",
+    funnel: "training",
+    sessionId: "qa-discovery-session",
+    path: "/discovery-pass",
+    properties: {
+      funnel_kind: "discovery_pass",
+      locale: "es",
+      utm_source: "meta",
+      utm_campaign: "discovery-september",
+      landing_path: "/discovery-pass",
+    },
+  });
+  assert.equal(event.event, "discovery_required_forms_completed");
+  assert.equal(event.properties.funnel_kind, "discovery_pass");
+  assert.equal(event.properties.utm_source, "meta");
 });
 
 test("Discovery Pass activation is waiver-gated, exact, seven days, and duplicate-safe", async () => {

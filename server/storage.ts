@@ -24,6 +24,7 @@ import {
   classOccurrences,
   classReservations,
   classReservationEvents,
+  analyticsEvents,
   type Trainer, 
   type InsertTrainer,
   type Booking,
@@ -222,6 +223,16 @@ export interface IStorage {
     filters: Record<string, string>;
     totals: { pageViews: number; funnelSteps: number; formStarts: number; submissions: number; successfulLeads: number; totalLeads: number; consentedSessions: number };
     breakdown: Array<{ source: string; medium: string; campaign: string; landingPath: string; pageViews: number; funnelSteps: number; formStarts: number; submissions: number; successfulLeads: number; totalLeads: number; consentedSessions: number }>;
+  }>;
+  getDiscoveryFunnelReport(filters?: { days?: number; locale?: "en" | "es" }): Promise<{
+    range: { from: string; to: string; days: number };
+    stages: Record<string, number>;
+    conversion: Record<string, { fromPrevious: number | null; overall: number | null }>;
+    diagnostics: Record<string, number>;
+    consented: { sessions: number; stages: Record<string, number> };
+    byLocale: Record<string, { stages: Record<string, number>; consentedSessions: number }>;
+    byAttribution: Array<{ source: string; medium: string; campaign: string; landingPath: string; consentedSessions: number; stages: Record<string, number> }>;
+    sources: Record<string, string>;
   }>;
   createStaffNotification(data: { kind: string; title: string; message: string; href: string }): Promise<import("@shared/schema").StaffNotification>;
   getStaffNotifications(): Promise<import("@shared/schema").StaffNotification[]>;
@@ -2139,6 +2150,181 @@ export class DatabaseStorage implements IStorage {
       consentedSessions: total.consentedSessions + row.consentedSessions,
     }), { pageViews: 0, funnelSteps: 0, formStarts: 0, submissions: 0, successfulLeads: 0, totalLeads: 0, consentedSessions: 0 });
     return { funnel: filters.funnel, filters: Object.fromEntries(Object.entries(filters).filter(([, v]) => v)), totals, breakdown };
+  }
+
+  async getDiscoveryFunnelReport(filters: { days?: number; locale?: "en" | "es" } = {}) {
+    const days = Math.min(90, Math.max(1, filters.days || 30));
+    const to = new Date();
+    const from = new Date(to.getTime() - days * 24 * 60 * 60 * 1000);
+    const recentUsers = await db.select({
+      id: users.id,
+      locale: users.locale,
+    }).from(users).where(and(
+      eq(users.role, "member"),
+      gte(users.createdAt, from),
+      not(ilike(users.email, INTERNAL_TEST_EMAIL_PATTERN)),
+      filters.locale ? eq(users.locale, filters.locale) : sql`true`,
+    ));
+    const userIds = recentUsers.map((user) => user.id);
+    const requiredForms = await db.select({ id: forms.id }).from(forms).where(eq(forms.requiredBeforeBooking, true));
+    const requiredFormIds = requiredForms.map((form) => form.id);
+    const responses = userIds.length
+      ? await db.select({ userId: formResponses.userId, formId: formResponses.formId, status: formResponses.status })
+        .from(formResponses).where(inArray(formResponses.userId, userIds))
+      : [];
+    const submittedByUser = new Map<string, Set<string>>();
+    const startedUsers = new Set<string>();
+    for (const response of responses) {
+      if (response.status === "draft" || response.status === "submitted") startedUsers.add(response.userId);
+      if (response.status === "submitted") {
+        const submitted = submittedByUser.get(response.userId) || new Set<string>();
+        submitted.add(response.formId);
+        submittedByUser.set(response.userId, submitted);
+      }
+    }
+    const formsCompleteUsers = new Set(userIds.filter((id) =>
+      requiredFormIds.length > 0 && requiredFormIds.every((formId) => submittedByUser.get(id)?.has(formId)),
+    ));
+    const passes = userIds.length
+      ? await db.select({ userId: discoveryPasses.userId, activationTimestamp: discoveryPasses.activationTimestamp })
+        .from(discoveryPasses).where(inArray(discoveryPasses.userId, userIds))
+      : [];
+    const activatedUsers = new Set(passes.filter((pass) => pass.activationTimestamp).map((pass) => pass.userId));
+    const reservations = userIds.length
+      ? await db.select({ userId: classReservations.userId })
+        .from(classReservations).where(inArray(classReservations.userId, userIds))
+      : [];
+    const bookedUsers = new Set(reservations.map((reservation) => reservation.userId).filter(Boolean) as string[]);
+    const eventRows = await db.select().from(analyticsEvents).where(and(
+      eq(analyticsEvents.funnel, "training"),
+      gte(analyticsEvents.createdAt, from),
+    ));
+    const consentedSteps = new Map<string, Set<string>>();
+    const consentedSessions = new Set<string>();
+    for (const event of eventRows) {
+      const properties = event.properties && typeof event.properties === "object"
+        ? event.properties as Record<string, unknown>
+        : {};
+      if (properties.funnel_kind !== "discovery_pass") continue;
+      if (filters.locale && properties.locale !== filters.locale) continue;
+      const stage = event.event.replace(/^discovery_/, "");
+      consentedSessions.add(event.sessionId);
+      const sessions = consentedSteps.get(stage) || new Set<string>();
+      sessions.add(event.sessionId);
+      consentedSteps.set(stage, sessions);
+    }
+    const stages = {
+      landingPageViewed: consentedSteps.get("page_view")?.size || 0,
+      ctaClicked: consentedSteps.get("cta_click")?.size || 0,
+      accountCreated: recentUsers.length,
+      formsStarted: consentedSteps.get("forms_started")?.size || startedUsers.size,
+      formsCompleted: formsCompleteUsers.size,
+      passActivated: activatedUsers.size,
+      classBooked: bookedUsers.size,
+    };
+    const safeRate = (value: number, denominator: number) => denominator > 0 ? Math.round((value / denominator) * 100) : null;
+    const stageValues = Object.values(stages);
+    const conversion = Object.fromEntries(Object.entries(stages).map(([key, value], index) => [
+      key,
+      { fromPrevious: index === 0 ? null : safeRate(value, stageValues[index - 1]), overall: safeRate(value, stageValues[0]) },
+    ]));
+    const diagnostics = {
+      accountCreatedNoFormsStarted: recentUsers.filter((user) => !startedUsers.has(user.id)).length,
+      formsStartedNotCompleted: Array.from(startedUsers).filter((id) => !formsCompleteUsers.has(id)).length,
+      formsCompletedNotActivated: Array.from(formsCompleteUsers).filter((id) => !activatedUsers.has(id)).length,
+      passActivatedNotBooked: Array.from(activatedUsers).filter((id) => !bookedUsers.has(id)).length,
+    };
+    const byLocale = Object.fromEntries((["en", "es"] as const).map((locale) => {
+      const localeUsers = recentUsers.filter((user) => user.locale === locale);
+      const localeIds = new Set(localeUsers.map((user) => user.id));
+      const localeSessions = new Set<string>();
+      const localeSteps = new Map<string, Set<string>>();
+      for (const event of eventRows) {
+        const properties = event.properties && typeof event.properties === "object"
+          ? event.properties as Record<string, unknown>
+          : {};
+        if (properties.funnel_kind !== "discovery_pass" || properties.locale !== locale) continue;
+        localeSessions.add(event.sessionId);
+        const stage = event.event.replace(/^discovery_/, "");
+        const sessions = localeSteps.get(stage) || new Set<string>();
+        sessions.add(event.sessionId);
+        localeSteps.set(stage, sessions);
+      }
+      return [locale, {
+        stages: {
+          landingPageViewed: localeSteps.get("page_view")?.size || 0,
+          ctaClicked: localeSteps.get("cta_click")?.size || 0,
+          accountCreated: localeUsers.length,
+          formsStarted: localeSteps.get("forms_started")?.size || Array.from(startedUsers).filter((id) => localeIds.has(id)).length,
+          formsCompleted: Array.from(formsCompleteUsers).filter((id) => localeIds.has(id)).length,
+          passActivated: Array.from(activatedUsers).filter((id) => localeIds.has(id)).length,
+          classBooked: Array.from(bookedUsers).filter((id) => localeIds.has(id)).length,
+        },
+        consentedSessions: localeSessions.size,
+      }];
+    }));
+    const attributionGroups = new Map<string, {
+      source: string;
+      medium: string;
+      campaign: string;
+      landingPath: string;
+      sessions: Set<string>;
+      stages: Map<string, Set<string>>;
+    }>();
+    for (const event of eventRows) {
+      const properties = event.properties && typeof event.properties === "object"
+        ? event.properties as Record<string, unknown>
+        : {};
+      if (properties.funnel_kind !== "discovery_pass") continue;
+      if (filters.locale && properties.locale !== filters.locale) continue;
+      const groupValues = {
+        source: String(properties.utm_source || "(none)"),
+        medium: String(properties.utm_medium || "(none)"),
+        campaign: String(properties.utm_campaign || "(none)"),
+        landingPath: String(properties.landing_path || event.path || "(unknown)"),
+      };
+      const key = JSON.stringify(groupValues);
+      const group = attributionGroups.get(key) || {
+        ...groupValues,
+        sessions: new Set<string>(),
+        stages: new Map<string, Set<string>>(),
+      };
+      group.sessions.add(event.sessionId);
+      const stage = event.event.replace(/^discovery_/, "");
+      const sessions = group.stages.get(stage) || new Set<string>();
+      sessions.add(event.sessionId);
+      group.stages.set(stage, sessions);
+      attributionGroups.set(key, group);
+    }
+    const byAttribution = Array.from(attributionGroups.values()).map((group) => ({
+      source: group.source,
+      medium: group.medium,
+      campaign: group.campaign,
+      landingPath: group.landingPath,
+      consentedSessions: group.sessions.size,
+      stages: Object.fromEntries(Array.from(group.stages.entries()).map(([stage, sessions]) => [stage, sessions.size])),
+    })).sort((a, b) => b.consentedSessions - a.consentedSessions);
+    return {
+      range: { from: from.toISOString(), to: to.toISOString(), days },
+      stages,
+      conversion,
+      diagnostics,
+      consented: {
+        sessions: consentedSessions.size,
+        stages: Object.fromEntries(Array.from(consentedSteps.entries()).map(([stage, sessions]) => [stage, sessions.size])),
+      },
+      byLocale,
+      byAttribution,
+      sources: {
+        landingPageViewed: "consented application analytics",
+        ctaClicked: "consented application analytics",
+        accountCreated: "member accounts created in the application",
+        formsStarted: "consented analytics, with saved form drafts as fallback",
+        formsCompleted: "submitted required forms in the application",
+        passActivated: "activated Discovery Pass records in the application",
+        classBooked: "class reservation records in the application",
+      },
+    };
   }
 
   async createStaffNotification(data: { kind: string; title: string; message: string; href: string }) {

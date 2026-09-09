@@ -8,7 +8,15 @@ export type AnalyticsEvent =
   | "lead_form_succeeded"
   | "lead_form_failed"
   | "reservation_succeeded"
-  | "reservation_failed";
+  | "reservation_failed"
+  | "discovery_page_view"
+  | "discovery_cta_click"
+  | "discovery_account_created"
+  | "discovery_waiver_completed"
+  | "discovery_forms_started"
+  | "discovery_required_forms_completed"
+  | "discovery_pass_activated"
+  | "discovery_class_booked";
 
 export type ProjectAnalyticsEvent =
   | "schedule_viewed"
@@ -23,6 +31,8 @@ export type ProjectAnalyticsEvent =
   | "discovery_cta_click"
   | "discovery_account_created"
   | "discovery_waiver_completed"
+  | "discovery_forms_started"
+  | "discovery_required_forms_completed"
   | "discovery_pass_activated"
   | "discovery_class_booked"
   | "discovery_first_attendance"

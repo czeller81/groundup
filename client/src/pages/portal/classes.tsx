@@ -10,7 +10,7 @@ import { localizeApiError, useLocale } from "@/lib/locale";
 import { localizedPortalPath } from "@/lib/portal-navigation";
 import { usePortalAuth } from "@/lib/portal-auth";
 import { Button } from "@/components/ui/button";
-import { trackEvent } from "@/lib/analytics";
+import { track, trackEvent } from "@/lib/analytics";
 
 export default function PortalClasses() {
   const { toast } = useToast();
@@ -41,6 +41,7 @@ export default function PortalClasses() {
       });
       if (reservation.status === "confirmed" && variables.discovery) {
         trackEvent("discovery_class_booked", { locale });
+        track("discovery_class_booked", "training", { funnel_kind: "discovery_pass", locale });
       }
     },
     onError: (error: Error) => {

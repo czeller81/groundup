@@ -625,7 +625,25 @@ export const analyticsEvents = pgTable("analytics_events", {
 });
 
 export const insertAnalyticsEventSchema = createInsertSchema(analyticsEvents).omit({ id: true, createdAt: true }).extend({
-  event: z.enum(["page_view", "cta_click", "funnel_step", "lead_form_started", "lead_form_submitted", "lead_form_succeeded", "lead_form_failed", "reservation_succeeded", "reservation_failed"]),
+  event: z.enum([
+    "page_view",
+    "cta_click",
+    "funnel_step",
+    "lead_form_started",
+    "lead_form_submitted",
+    "lead_form_succeeded",
+    "lead_form_failed",
+    "reservation_succeeded",
+    "reservation_failed",
+    "discovery_page_view",
+    "discovery_cta_click",
+    "discovery_account_created",
+    "discovery_waiver_completed",
+    "discovery_forms_started",
+    "discovery_required_forms_completed",
+    "discovery_pass_activated",
+    "discovery_class_booked",
+  ]),
   funnel: z.enum(["training", "adaptive_capacity"]),
   sessionId: z.string().trim().min(1).max(100),
   path: z.string().trim().max(300),

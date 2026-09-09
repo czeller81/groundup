@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useLocation, Link } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,7 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { usePortalAuth } from "@/lib/portal-auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { localizeApiError, localizeFormOption, localizeFormText, useLocale } from "@/lib/locale";
-import { trackEvent } from "@/lib/analytics";
+import { track, trackEvent } from "@/lib/analytics";
 import { localizedPortalPath } from "@/lib/portal-navigation";
 import { Save, Send, Loader2, CheckCircle, Lock, RotateCcw } from "lucide-react";
 import { format } from "date-fns";
@@ -45,6 +45,10 @@ export default function PortalForm({ formSlug, embedded = false, onSubmitted }: 
   const [answers, setAnswers] = useState<Record<string, any>>({});
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const discoveryMode = typeof window !== "undefined"
+    && (new URLSearchParams(window.location.search).get("intent") === "discovery-pass"
+      || window.localStorage.getItem("groundup-discovery-onboarding") === "1");
+  const trackedFormStart = useRef(false);
 
   const { data, isLoading } = useQuery<{ form: any; response: any }>({
     queryKey: ["/api/portal/forms", slug],
@@ -100,6 +104,9 @@ export default function PortalForm({ formSlug, embedded = false, onSubmitted }: 
       toast({ title: copy.formSubmitted, description: copy.formSubmittedDescription });
       if (slug === "liability-waiver" || slug === "gym-rules") {
         trackEvent("discovery_waiver_completed", { locale, form: slug });
+        if (discoveryMode) {
+          track("discovery_waiver_completed", "training", { funnel_kind: "discovery_pass", form: slug });
+        }
       }
       // Mark the forms list stale without refetching the active form query.
       // Navigation immediately unmounts this page, and cancelling that
@@ -197,6 +204,13 @@ export default function PortalForm({ formSlug, embedded = false, onSubmitted }: 
     if (isSubmitting || submitMutation.isPending) return;
     setIsSubmitting(true);
     submitMutation.mutate();
+  };
+
+  const handleFormInteraction = () => {
+    if (!discoveryMode || trackedFormStart.current || isSubmitted || !form?.requiredBeforeBooking) return;
+    trackedFormStart.current = true;
+    track("discovery_forms_started", "training", { funnel_kind: "discovery_pass", form: slug });
+    trackEvent("discovery_forms_started", { locale, form: slug });
   };
 
   const renderField = (field: any) => {
@@ -336,11 +350,23 @@ export default function PortalForm({ formSlug, embedded = false, onSubmitted }: 
   const fields = form.fields as any[];
 
   return (
-    <div className={embedded ? "text-white" : undefined}>
+    <div className={embedded ? "text-white" : undefined} onFocusCapture={handleFormInteraction}>
       <div className="bg-[#121826]/50 border-b border-white/5 py-4 px-4 sm:px-6">
         <div className="max-w-3xl mx-auto">
             <h1 className="text-xl font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>{localizeFormText(locale, slug, "title", form.title)}</h1>
             {form.description && <p className="text-sm text-gray-400">{localizeFormText(locale, slug, "description", form.description)}</p>}
+            {discoveryMode && form.requiredBeforeBooking && (
+              <div className="mt-3 rounded-lg border border-[#5EEBFF]/20 bg-[#5EEBFF]/10 p-3 text-sm text-gray-200">
+                <p className="font-semibold text-[#5EEBFF]">
+                  {locale === "es" ? "Completa este formulario para activar tu Discovery Pass." : "Complete this form to activate your Discovery Pass."}
+                </p>
+                <p className="mt-1 text-xs text-gray-300">
+                  {locale === "es"
+                    ? "Ya casi terminas. Cuando completes los formularios requeridos, podrás activar tu pase gratuito y reservar tus clases."
+                    : "You’re almost there. Once the required forms are complete, you can activate your free pass and book your classes."}
+                </p>
+              </div>
+            )}
         </div>
       </div>
 

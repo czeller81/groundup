@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { trackEvent } from "@/lib/analytics";
+import { track, trackEvent } from "@/lib/analytics";
 
 type MinorProfile = {
   id: string;
@@ -101,6 +101,7 @@ export default function PortalSchedule() {
       });
       if (reservation.status === "confirmed" && !variables.minorProfileId && variables.discovery) {
         trackEvent("discovery_class_booked", { locale });
+        track("discovery_class_booked", "training", { funnel_kind: "discovery_pass", locale });
       }
     },
     onError: (error: Error) => {

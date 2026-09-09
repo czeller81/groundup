@@ -941,6 +941,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/portal/admin/discovery-funnel", requireRole("admin", "coach"), async (req, res) => {
+    try {
+      const days = typeof req.query.days === "string" ? Number(req.query.days) : undefined;
+      const locale = req.query.locale === "en" || req.query.locale === "es" ? req.query.locale : undefined;
+      res.json(await storage.getDiscoveryFunnelReport({ days, locale }));
+    } catch (error) {
+      console.error("Discovery funnel report error:", error);
+      res.status(500).json({ message: "Failed to build Discovery Pass funnel report" });
+    }
+  });
+
   app.get("/api/portal/notifications", requireRole("admin", "coach"), async (_req, res) => {
     try {
       res.json(await storage.getStaffNotifications());

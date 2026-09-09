@@ -9,7 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { usePortalAuth } from "@/lib/portal-auth";
 import { Loader2 } from "lucide-react";
 import { localizeApiError, useLocale } from "@/lib/locale";
-import { trackEvent } from "@/lib/analytics";
+import { track, trackEvent } from "@/lib/analytics";
 
 export default function PortalLogin() {
   const [location, setLocation] = useLocation();
@@ -61,6 +61,9 @@ export default function PortalLogin() {
     try {
       await login(loginData.email, loginData.password);
       trackEvent("member_login_completed", { method: "password", locale });
+      if (discoveryIntent) {
+        window.localStorage.setItem("groundup-discovery-onboarding", "1");
+      }
       toast({ title: copy.welcomeToast, description: copy.loggedInSuccessfully });
       setLocation(postAuthPath());
     } catch (error: any) {
@@ -96,7 +99,9 @@ export default function PortalLogin() {
       });
       trackEvent("member_signup_completed", { method: "password", locale });
       if (discoveryIntent) {
+        window.localStorage.setItem("groundup-discovery-onboarding", "1");
         trackEvent("discovery_account_created", { locale });
+        track("discovery_account_created", "training", { funnel_kind: "discovery_pass", locale });
       }
       toast({ title: copy.accountCreated, description: copy.welcomeToGroundUp });
       setLocation(postAuthPath());

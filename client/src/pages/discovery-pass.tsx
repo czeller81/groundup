@@ -3,7 +3,7 @@ import { Link } from "wouter";
 import { ArrowRight, CalendarDays, CheckCircle2, Clock3, Dumbbell, ShieldCheck, Sparkles, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SEO from "@/components/seo";
-import { captureAttribution, trackEvent } from "@/lib/analytics";
+import { captureAttribution, track, trackEvent } from "@/lib/analytics";
 import { localizedPortalEntryPath } from "@/lib/portal-navigation";
 import { useLocale } from "@/lib/locale";
 import discoveryHeroImg from "@assets/womens-team-1.jpg";
@@ -139,10 +139,12 @@ export default function DiscoveryPass() {
   useEffect(() => {
     captureAttribution();
     trackEvent("discovery_page_view", { locale });
+    track("discovery_page_view", "training", { funnel_kind: "discovery_pass", locale });
   }, [locale]);
 
   const handleCta = () => {
     trackEvent("discovery_cta_click", { locale });
+    track("discovery_cta_click", "training", { funnel_kind: "discovery_pass", locale });
   };
 
   return (

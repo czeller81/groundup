@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { classDateLabel, classTimeLabel } from "@/lib/class-booking";
 import { localizedPortalPath } from "@/lib/portal-navigation";
-import { trackEvent } from "@/lib/analytics";
+import { track, trackEvent } from "@/lib/analytics";
 import PortalForm from "@/pages/portal/form";
 import {
   getMetaDiscoveryVerification,
@@ -61,7 +61,7 @@ function getMembershipInfo(type: string, copy: ReturnType<typeof useLocale>["cop
 }
 
 export default function PortalDashboard() {
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
   const { user, isLoading: authLoading, isAuthenticated } = usePortalAuth();
   const { locale, copy } = useLocale();
   const portalPath = (path: string) => localizedPortalPath(path, locale);
@@ -72,6 +72,10 @@ export default function PortalDashboard() {
   const [metaTestVerification, setMetaTestVerification] = useState<MetaDiscoveryVerification | null>(
     () => getMetaDiscoveryVerification(),
   );
+  const discoveryIntent = typeof window !== "undefined"
+    && (new URLSearchParams(location.split("?")[1] || "").get("intent") === "discovery-pass"
+      || window.localStorage.getItem("groundup-discovery-onboarding") === "1");
+  const trackedFormsComplete = useRef(false);
 
   const { data: forms = [] } = useQuery<any[]>({
     queryKey: ["/api/portal/forms"],
@@ -108,6 +112,7 @@ export default function PortalDashboard() {
     onSuccess: (pass: { id?: string }) => {
       queryClient.invalidateQueries({ queryKey: ["/api/portal/member-program"] });
       trackEvent("discovery_pass_activated", { locale });
+      track("discovery_pass_activated", "training", { funnel_kind: "discovery_pass", locale });
       if (pass.id) trackMetaDiscoveryPassActivation(pass.id, locale);
       toast({ title: copy.discoveryPassTitle });
     },
@@ -147,6 +152,8 @@ export default function PortalDashboard() {
   const requiredForms = forms.filter((f: any) => f.isRequired);
   const completedRequired = requiredForms.filter((f: any) => f.responseStatus === "submitted").length;
   const allFormsComplete = requiredForms.length === 0 || completedRequired >= requiredForms.length;
+  const discoveryOnboarding = discoveryIntent && user?.role === "member";
+  const discoveryPassActive = Boolean(memberProgram?.discoveryPass);
 
   useEffect(() => {
     if (!isAuthenticated || authLoading || user?.role !== "member" || forms.length === 0) {
@@ -156,6 +163,13 @@ export default function PortalDashboard() {
     const nextForm = requiredForms.find((form: any) => form.responseStatus !== "submitted");
     setRequiredFormSlug((current) => current || nextForm?.slug || null);
   }, [authLoading, forms, isAuthenticated, user?.role]);
+
+  useEffect(() => {
+    if (!discoveryOnboarding || !allFormsComplete || trackedFormsComplete.current) return;
+    trackedFormsComplete.current = true;
+    track("discovery_required_forms_completed", "training", { funnel_kind: "discovery_pass", locale });
+    trackEvent("discovery_required_forms_completed", { locale });
+  }, [allFormsComplete, discoveryOnboarding, locale]);
 
   if (authLoading) {
     return (
@@ -184,6 +198,8 @@ export default function PortalDashboard() {
     setRequiredFormSlug(nextForm?.slug || null);
   };
 
+  const discoveryStep = !allFormsComplete ? 1 : !discoveryPassActive ? 2 : nextClassReservation ? 4 : 3;
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "submitted":
@@ -211,6 +227,63 @@ export default function PortalDashboard() {
   return (
     <div className="min-h-screen bg-[#0B0F14] flex flex-col">
       <main className="flex-grow w-full max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6">
+
+        {discoveryOnboarding && (
+          <Card className="mb-4 border-[#5EEBFF]/30 bg-gradient-to-br from-[#5EEBFF]/10 via-[#121826] to-[#B06CFF]/10" data-testid="discovery-onboarding-card">
+            <CardHeader className="pb-3 px-4 pt-4">
+              <CardTitle className="flex items-center gap-2 text-base text-white">
+                <Dumbbell className="h-5 w-5 text-[#5EEBFF]" />
+                {copy.discoveryOnboardingTitle}
+              </CardTitle>
+              <div className="grid grid-cols-4 gap-1 pt-3">
+                {([
+                  [copy.discoveryStepAccount, 0],
+                  [copy.discoveryStepForms, 1],
+                  [copy.discoveryStepActivate, 2],
+                  [copy.discoveryStepBook, 3],
+                ] as const).map(([label, index]) => {
+                  const complete = index < discoveryStep;
+                  const current = index === discoveryStep - 1;
+                  return (
+                    <div key={label as string} className="min-w-0">
+                      <div className={`h-1.5 rounded-full ${complete ? "bg-[#5EEBFF]" : "bg-white/10"}`} />
+                      <p className={`mt-1 truncate text-[10px] font-semibold ${current ? "text-[#5EEBFF]" : complete ? "text-gray-300" : "text-gray-500"}`}>{label as string}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardHeader>
+            <CardContent className="px-4 pb-4">
+              {!allFormsComplete ? (
+                <>
+                  <p className="text-lg font-bold text-white">{copy.discoveryAccountReady}</p>
+                  <p className="mt-1 max-w-2xl text-sm text-gray-300">{copy.discoveryFormsNextStep}</p>
+                  <Button asChild className="mt-4 min-h-11 bg-[#FFB199] font-bold text-[#0B0F14] hover:bg-[#FFCDB9]">
+                    <Link href={`${portalPath(`/portal/forms/${requiredForms.find((f: any) => f.responseStatus !== "submitted")?.slug || ""}`)}?intent=discovery-pass`}>
+                      {copy.discoveryCompleteForms}<ArrowRight className="ml-2 h-4 w-4" />
+                    </Link>
+                  </Button>
+                </>
+              ) : !discoveryPassActive ? (
+                <>
+                  <p className="text-lg font-bold text-white">{copy.discoveryFormsComplete}</p>
+                  <p className="mt-1 max-w-2xl text-sm text-gray-300">{copy.discoveryActivationReady}</p>
+                  <Button onClick={() => claimDiscovery.mutate()} disabled={claimDiscovery.isPending} className="mt-4 min-h-11 bg-[#5EEBFF] font-bold text-[#0B0F14] hover:bg-[#8af1ff]">
+                    {claimDiscovery.isPending ? copy.loading : copy.discoveryActivate}<ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <p className="text-lg font-bold text-white">{copy.discoveryActive}</p>
+                  <p className="mt-1 max-w-2xl text-sm text-gray-300">{copy.discoveryActiveBody}</p>
+                  <Button asChild className="mt-4 min-h-11 bg-[#5EEBFF] font-bold text-[#0B0F14] hover:bg-[#8af1ff]">
+                    <Link href={portalPath("/portal/schedule")}>{copy.discoveryBookFirstClass}<ArrowRight className="ml-2 h-4 w-4" /></Link>
+                  </Button>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Welcome + Status Row */}
         <div className="flex items-center justify-between mb-4">

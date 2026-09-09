@@ -19,7 +19,7 @@ import {
   Search, Users, ArrowLeft, FileText, Calendar, Mail, Phone, Clock, 
   CheckCircle, XCircle, AlertCircle, ChevronRight, Loader2, DollarSign, 
   TrendingUp, UserPlus, Activity, StickyNote, ChevronLeft, Shield,
-  Award, Hash, AlertTriangle, Filter, BarChart3, RefreshCw
+  Award, Hash, AlertTriangle, Filter, BarChart3, RefreshCw, Dumbbell
 } from "lucide-react";
 import AdminPilotOps from "./admin-pilot-ops";
 
@@ -121,6 +121,15 @@ export default function PortalAdmin() {
       Object.entries(reportFilters).forEach(([key, value]) => value && params.set(key, value));
       const response = await fetch(`/api/portal/admin/campaign-report?${params}`);
       if (!response.ok) throw new Error("Failed to load campaign report");
+      return response.json();
+    },
+    enabled: isAuthenticated && isStaff,
+  });
+  const { data: discoveryFunnel, isLoading: discoveryFunnelLoading } = useQuery<any>({
+    queryKey: ["/api/portal/admin/discovery-funnel"],
+    queryFn: async () => {
+      const response = await fetch("/api/portal/admin/discovery-funnel?days=30");
+      if (!response.ok) throw new Error("Failed to load Discovery funnel");
       return response.json();
     },
     enabled: isAuthenticated && isStaff,
@@ -863,6 +872,117 @@ export default function PortalAdmin() {
                     </table>
                   </div>
                 )}
+              </>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="bg-[#121826] border-[#5EEBFF]/20 mb-6" data-testid="discovery-funnel-report">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-white flex items-center gap-2 text-base">
+              <Dumbbell className="h-5 w-5 text-[#5EEBFF]" /> {copy.discoveryFunnelReport}
+            </CardTitle>
+            <p className="text-xs text-gray-400">{copy.discoveryFunnelReportDescription}</p>
+            <div className="flex flex-wrap items-center gap-2 pt-2 text-[11px] text-gray-500">
+              <span className="rounded-full border border-white/10 bg-white/[0.03] px-2 py-1">{copy.discoveryFunnelDateRange(discoveryFunnel?.range?.days || 30)}</span>
+              <span>{copy.discoverySourceNote}</span>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {discoveryFunnelLoading ? (
+              <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-[#5EEBFF]" /></div>
+            ) : (
+              <>
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[620px] text-sm">
+                    <thead>
+                      <tr className="border-b border-white/10 text-left text-xs text-gray-500">
+                        <th className="p-2">{copy.discoveryFunnelReport}</th>
+                        <th className="p-2 text-right">{copy.count}</th>
+                        <th className="p-2 text-right">{copy.discoveryFromPrevious}</th>
+                        <th className="p-2 text-right">{copy.discoveryOverall}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[
+                        ["landingPageViewed", copy.discoveryStageLanding],
+                        ["ctaClicked", copy.discoveryStageCta],
+                        ["accountCreated", copy.discoveryStageAccount],
+                        ["formsStarted", copy.discoveryStageFormsStarted],
+                        ["formsCompleted", copy.discoveryStageFormsComplete],
+                        ["passActivated", copy.discoveryStageActivated],
+                        ["classBooked", copy.discoveryStageBooked],
+                      ].map(([key, label]) => (
+                        <tr key={key} className="border-b border-white/5 text-gray-300">
+                          <td className="p-2 text-white">{label}</td>
+                          <td className="p-2 text-right font-semibold text-[#5EEBFF]">{discoveryFunnel?.stages?.[key] ?? 0}</td>
+                          <td className="p-2 text-right">{discoveryFunnel?.conversion?.[key]?.fromPrevious == null ? "—" : `${discoveryFunnel.conversion[key].fromPrevious}%`}</td>
+                          <td className="p-2 text-right">{discoveryFunnel?.conversion?.[key]?.overall == null ? "—" : `${discoveryFunnel.conversion[key].overall}%`}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="mt-5">
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">{copy.discoveryDiagnostics}</p>
+                  <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                    {[
+                      [copy.discoveryNoFormsStarted, "accountCreatedNoFormsStarted"],
+                      [copy.discoveryFormsNotComplete, "formsStartedNotCompleted"],
+                      [copy.discoveryNotActivated, "formsCompletedNotActivated"],
+                      [copy.discoveryNotBooked, "passActivatedNotBooked"],
+                    ].map(([label, key]) => (
+                      <div key={key} className="rounded-lg border border-white/5 bg-[#0B0F14] p-3">
+                        <p className="text-lg font-bold text-white">{discoveryFunnel?.diagnostics?.[key] ?? 0}</p>
+                        <p className="text-[11px] leading-tight text-gray-500">{label}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                  {(["en", "es"] as const).map((locale) => (
+                    <div key={locale} className="rounded-lg border border-white/5 bg-[#0B0F14] p-3">
+                      <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">{locale === "en" ? "English" : "Español"}</p>
+                      <p className="mt-2 text-sm text-gray-300">
+                        {copy.discoveryStageAccount}: <span className="font-semibold text-white">{discoveryFunnel?.byLocale?.[locale]?.stages?.accountCreated ?? 0}</span>
+                        {" · "}
+                        {copy.discoveryStageActivated}: <span className="font-semibold text-white">{discoveryFunnel?.byLocale?.[locale]?.stages?.passActivated ?? 0}</span>
+                        {" · "}
+                        {copy.discoveryStageBooked}: <span className="font-semibold text-white">{discoveryFunnel?.byLocale?.[locale]?.stages?.classBooked ?? 0}</span>
+                      </p>
+                      <p className="mt-1 text-[11px] text-gray-500">{copy.discoveryFunnelConsentedNote}: {discoveryFunnel?.byLocale?.[locale]?.consentedSessions ?? 0}</p>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-5 overflow-x-auto">
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">Attribution</p>
+                  {!discoveryFunnel?.byAttribution?.length ? (
+                    <p className="text-sm text-gray-500">{copy.campaignNoData}</p>
+                  ) : (
+                    <table className="w-full min-w-[680px] text-sm">
+                      <thead>
+                        <tr className="border-b border-white/10 text-left text-xs text-gray-500">
+                          <th className="p-2">{copy.sourceCampaign}</th>
+                          <th className="p-2">{copy.landingPath}</th>
+                          <th className="p-2">{copy.discoveryStageLanding}</th>
+                          <th className="p-2">{copy.discoveryStageCta}</th>
+                          <th className="p-2">{copy.discoveryFunnelConsentedNote}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {discoveryFunnel.byAttribution.map((row: any) => (
+                          <tr key={`${row.source}-${row.medium}-${row.campaign}-${row.landingPath}`} className="border-b border-white/5 text-gray-300">
+                            <td className="p-2"><span className="text-white">{row.source}</span><span className="block text-xs text-gray-500">{row.medium} · {row.campaign}</span></td>
+                            <td className="p-2 text-xs">{row.landingPath}</td>
+                            <td className="p-2">{row.stages?.page_view ?? 0}</td>
+                            <td className="p-2">{row.stages?.cta_click ?? 0}</td>
+                            <td className="p-2 text-[#5EEBFF]">{row.consentedSessions}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
               </>
             )}
           </CardContent>
