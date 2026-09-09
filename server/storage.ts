@@ -124,7 +124,23 @@ export interface IStorage {
   getUserProfile(userId: string): Promise<{ user: SafeUser; formResponses: (FormResponse & { form: Form })[]; bookings: BookingWithTrainer[]; classReservations: Array<ClassReservation & { occurrence: ClassOccurrence; trainer: Trainer | null; classType: ClassType | null; minorProfile: MinorProfile | null }>; memberships: Membership[]; sessionNotes: (SessionNote & { coach: SafeUser })[] } | undefined>;
   updateAdminNotes(userId: string, notes: string): Promise<SafeUser | undefined>;
   
-  getAdminStats(): Promise<{ totalUsers: number; newUsers30Days: number; activeMemberships: number; upcomingSessions7Days: number; monthlyRevenue: number; membersNeedingForms: number; totalRequiredForms: number }>;
+  getAdminStats(): Promise<{
+    totalUsers: number;
+    newUsers30Days: number;
+    activeMemberships: number;
+    upcomingSessions7Days: number;
+    monthlyRevenue: number;
+    membersNeedingForms: number;
+    totalRequiredForms: number;
+    signupFunnel30Days: {
+      accountsCreated: number;
+      formsIncomplete: number;
+      formsComplete: number;
+      passActivated: number;
+      bookingCompleted: number;
+      blockedNoEntitlement: number;
+    };
+  }>;
   
   getMemberships(userId: string): Promise<Membership[]>;
   createMembership(membership: InsertMembership): Promise<Membership>;
@@ -716,7 +732,23 @@ export class DatabaseStorage implements IStorage {
     return this.updateUser(userId, { adminNotes: notes });
   }
 
-  async getAdminStats(): Promise<{ totalUsers: number; newUsers30Days: number; activeMemberships: number; upcomingSessions7Days: number; monthlyRevenue: number; membersNeedingForms: number; totalRequiredForms: number }> {
+  async getAdminStats(): Promise<{
+    totalUsers: number;
+    newUsers30Days: number;
+    activeMemberships: number;
+    upcomingSessions7Days: number;
+    monthlyRevenue: number;
+    membersNeedingForms: number;
+    totalRequiredForms: number;
+    signupFunnel30Days: {
+      accountsCreated: number;
+      formsIncomplete: number;
+      formsComplete: number;
+      passActivated: number;
+      bookingCompleted: number;
+      blockedNoEntitlement: number;
+    };
+  }> {
     const now = new Date();
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
     const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
@@ -767,6 +799,69 @@ export class DatabaseStorage implements IStorage {
     const completedUserIds = await this.getCompletedUserIds(requiredFormIds);
      const membersNeedingForms = memberUsersResult.count - completedUserIds.size;
 
+    const [signupFunnelResult] = await db.select({
+      accountsCreated: count(),
+      formsIncomplete: sql<number>`count(*) filter (where exists (
+        select 1 from ${forms} required_form
+        where required_form.required_before_booking = true
+          and not exists (
+            select 1 from ${formResponses} response
+            where response.user_id = ${users.id}
+              and response.form_id = required_form.id
+              and response.status = 'submitted'
+          )
+      ))`,
+      formsComplete: sql<number>`count(*) filter (where not exists (
+        select 1 from ${forms} required_form
+        where required_form.required_before_booking = true
+          and not exists (
+            select 1 from ${formResponses} response
+            where response.user_id = ${users.id}
+              and response.form_id = required_form.id
+              and response.status = 'submitted'
+          )
+      ))`,
+      passActivated: sql<number>`count(*) filter (where exists (
+        select 1 from ${discoveryPasses} pass
+        where pass.user_id = ${users.id}
+          and pass.activation_timestamp is not null
+      ))`,
+      bookingCompleted: sql<number>`count(*) filter (where exists (
+        select 1 from ${classReservations} reservation
+        where reservation.user_id = ${users.id}
+      ))`,
+      blockedNoEntitlement: sql<number>`count(*) filter (where
+        not exists (
+          select 1 from ${forms} required_form
+          where required_form.required_before_booking = true
+            and not exists (
+              select 1 from ${formResponses} response
+              where response.user_id = ${users.id}
+                and response.form_id = required_form.id
+                and response.status = 'submitted'
+            )
+        )
+        and not exists (
+          select 1 from ${memberships} membership
+          where membership.user_id = ${users.id}
+            and membership.status in ('active', 'ACTIVE')
+            and membership.start_date <= now()
+            and (membership.end_date is null or membership.end_date >= now())
+        )
+        and not exists (
+          select 1 from ${discoveryPasses} pass
+          where pass.user_id = ${users.id}
+            and pass.activation_timestamp is not null
+            and pass.status in ('CLAIMED', 'PARTIALLY_BOOKED', 'PARTIALLY_ATTENDED')
+            and pass.expiration_timestamp > now()
+        )
+      )`,
+    }).from(users).where(and(
+      eq(users.role, "member"),
+      gte(users.createdAt, thirtyDaysAgo),
+      not(ilike(users.email, INTERNAL_TEST_EMAIL_PATTERN)),
+    ));
+
     return {
       totalUsers: totalUsersResult.count,
       newUsers30Days: newUsersResult.count,
@@ -775,6 +870,14 @@ export class DatabaseStorage implements IStorage {
       monthlyRevenue: Number(revenueResult.total || 0),
       membersNeedingForms: Math.max(0, membersNeedingForms),
       totalRequiredForms: requiredFormIds.length,
+      signupFunnel30Days: {
+        accountsCreated: Number(signupFunnelResult.accountsCreated || 0),
+        formsIncomplete: Number(signupFunnelResult.formsIncomplete || 0),
+        formsComplete: Number(signupFunnelResult.formsComplete || 0),
+        passActivated: Number(signupFunnelResult.passActivated || 0),
+        bookingCompleted: Number(signupFunnelResult.bookingCompleted || 0),
+        blockedNoEntitlement: Number(signupFunnelResult.blockedNoEntitlement || 0),
+      },
     };
   }
 

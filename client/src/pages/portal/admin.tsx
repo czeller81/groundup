@@ -58,7 +58,7 @@ export default function PortalAdmin() {
   const membersSectionRef = useRef<HTMLDivElement>(null);
   const PAGE_SIZE = 15;
 
-  const { data: stats, isLoading: statsLoading } = useQuery<any>({
+  const { data: stats, isLoading: statsLoading, isError: statsError } = useQuery<any>({
     queryKey: ["/api/portal/admin/stats"],
     enabled: isAuthenticated && isAdmin,
   });
@@ -709,6 +709,41 @@ export default function PortalAdmin() {
             </CardContent>
           </Card>
         </div>
+
+        <Card className="mb-6 border-[#5EEBFF]/20 bg-[#121826]" data-testid="signup-funnel-card">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base text-white">
+              <TrendingUp className="h-5 w-5 text-[#5EEBFF]" />
+              {copy.signupFunnelTitle}
+            </CardTitle>
+            <p className="text-xs text-gray-400">{copy.signupFunnelDescription}</p>
+          </CardHeader>
+          <CardContent>
+            {statsError ? (
+              <p className="rounded-lg border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-300" role="alert">
+                {copy.signupFunnelUnavailable}
+              </p>
+            ) : (
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+              {[
+                { label: copy.accountsCreatedStage, value: stats?.signupFunnel30Days?.accountsCreated, tone: "text-[#5EEBFF]" },
+                { label: copy.formsIncompleteStage, value: stats?.signupFunnel30Days?.formsIncomplete, tone: "text-orange-400" },
+                { label: copy.formsCompleteStage, value: stats?.signupFunnel30Days?.formsComplete, tone: "text-green-400" },
+                { label: copy.passActivatedStage, value: stats?.signupFunnel30Days?.passActivated, tone: "text-[#B06CFF]" },
+                { label: copy.bookingCompletedStage, value: stats?.signupFunnel30Days?.bookingCompleted, tone: "text-[#FFB199]" },
+                { label: copy.blockedNoEntitlementStage, value: stats?.signupFunnel30Days?.blockedNoEntitlement, tone: "text-red-400" },
+              ].map((stage) => (
+                <div key={stage.label} className="rounded-lg border border-white/5 bg-white/[0.025] p-3">
+                  <p className={`text-2xl font-bold ${stage.tone}`}>
+                    {statsLoading ? "..." : stage.value ?? 0}
+                  </p>
+                  <p className="mt-1 text-xs leading-snug text-gray-400">{stage.label}</p>
+                </div>
+              ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Forms Incomplete Alert */}
         {!statsLoading && stats?.membersNeedingForms > 0 && (
