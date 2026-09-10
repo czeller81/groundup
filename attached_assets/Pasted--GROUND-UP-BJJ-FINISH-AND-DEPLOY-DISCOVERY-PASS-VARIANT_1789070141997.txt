@@ -1,0 +1,792 @@
+# GROUND UP BJJ — FINISH AND DEPLOY DISCOVERY PASS VARIANT B
+
+Malu has completed the ad-side preparation for the Discovery Pass A/B experiment.
+
+Current ad-side verdict:
+
+`DISCOVERY_PASS_AB_EXPERIMENT_BLOCKED`
+
+The blocker is strictly website-side:
+
+- `/discovery-pass-b` returns 404
+- `/es/discovery-pass-b` returns 404
+- Variant A remains healthy:
+  - `/discovery-pass` = 200
+  - `/es/discovery-pass` = 200
+- Existing `/api/portal/discovery/claim` is authenticated and cannot be reused directly as the anonymous minimal lead endpoint for Variant B
+
+Malu has made ZERO ad changes.
+
+Your task is to complete, validate, and deploy the Variant B website implementation so Malu can stage the paused B ads.
+
+Do not change Variant A.
+
+Do not alter the live Discovery campaign.
+
+Do not modify Meta.
+
+Do not weaken the secure downstream Discovery Pass flow.
+
+---
+
+# 1. REQUIRED VARIANT B ROUTES
+
+Deploy:
+
+English:
+`/discovery-pass-b`
+
+Spanish:
+`/es/discovery-pass-b`
+
+Both must return HTTP 200 in production.
+
+Use the existing Ground Up design system and localization architecture.
+
+Expected document language:
+
+English:
+`lang=en`
+
+Spanish:
+`lang=es`
+
+Variant A must remain unchanged and healthy.
+
+---
+
+# 2. VARIANT B PRIMARY GOAL
+
+Variant B exists to remove the password/account wall from the FIRST conversion step.
+
+Flow:
+
+AD
+→ VARIANT B LANDING PAGE
+→ MINIMAL CLAIM
+→ CONTINUATION SCREEN
+→ EXISTING ACCOUNT FLOW
+→ REQUIRED FORMS
+→ DISCOVERY PASS ACTIVATION
+→ CLASS BOOKING
+
+The first claim is NOT pass activation.
+
+The first claim is NOT membership creation.
+
+The first claim is NOT an entitlement.
+
+---
+
+# 3. MINIMAL CLAIM FORM
+
+Required:
+
+- firstName
+- email
+
+Optional:
+
+- phone
+
+Do not require:
+
+- password
+- lastName unless absolutely required by existing schema
+- waiver
+- membership choice
+- payment
+
+Primary CTA:
+
+English:
+`CLAIM MY FREE DISCOVERY PASS`
+
+Spanish:
+`QUIERO MI DISCOVERY PASS GRATIS`
+
+---
+
+# 4. CREATE AN ANONYMOUS VARIANT B CLAIM ENDPOINT
+
+Malu confirmed the existing endpoint:
+
+`/api/portal/discovery/claim`
+
+returns:
+
+`401 Not authenticated`
+
+That is correct and should remain auth-gated.
+
+Do NOT weaken it.
+
+Instead, create a separate minimal unauthenticated lead/claim endpoint for Variant B.
+
+Example conceptual route:
+
+`POST /api/discovery-pass/claim`
+
+or follow existing project route conventions.
+
+It must accept only the minimal prospect payload required for Variant B.
+
+At minimum:
+
+{
+  firstName,
+  email
+}
+
+Optional:
+
+{
+  phone
+}
+
+Also capture safe attribution/session data where appropriate.
+
+Do not create a member account at this stage.
+
+Do not create a Discovery Pass.
+
+Do not create entitlements.
+
+Do not create waiver state.
+
+Do not start the 7-day timer.
+
+---
+
+# 5. VALIDATION
+
+Anonymous claim endpoint must validate:
+
+- firstName present
+- valid email
+- phone format if supplied
+- request size
+- malformed payload
+- repeated submission
+
+Malformed requests must return appropriate 4xx responses.
+
+A failed request must create no record.
+
+---
+
+# 6. ABUSE / RATE-LIMITING
+
+Because the endpoint is unauthenticated, add appropriate protection using the project's existing architecture.
+
+Consider:
+
+- rate limiting
+- duplicate suppression
+- CSRF model if relevant
+- spam/bot protection if already available
+- input normalization
+
+Do not add an invasive third-party dependency unless necessary.
+
+---
+
+# 7. LEAD STORAGE
+
+Audit existing lead/contact/prospect storage first.
+
+Reuse an existing safe model if available.
+
+If none exists, create the smallest scoped record needed.
+
+Suggested fields:
+
+- id
+- firstName
+- email
+- phone nullable
+- locale
+- createdAt
+- campaign attribution
+- experimentVariant = `B`
+- continuationState
+- linkedMemberId nullable
+- linkedAt nullable
+
+Do not store waiver content.
+
+Do not store sensitive answers.
+
+Do not create unnecessary PII.
+
+---
+
+# 8. DUPLICATE CLAIMS
+
+Handle repeated submissions for the same normalized email safely.
+
+Do not create unlimited duplicate leads.
+
+Preferred behavior:
+
+- return/reuse existing active Variant B claim where appropriate
+- update safe non-sensitive fields if consistent with existing conventions
+- never overwrite an unrelated member
+- preserve attribution safely
+
+Document exact behavior.
+
+---
+
+# 9. CONTINUATION SCREEN
+
+After successful minimal claim, show:
+
+## English
+
+**Your Discovery Pass is reserved.**
+
+**One more step: create your Ground Up account so you can complete the required forms, activate your pass, and book your classes.**
+
+Primary CTA:
+
+`CONTINUE TO MY ACCOUNT`
+
+Support text:
+
+- No payment required
+- Includes 1 SKILL class
+- Includes 1 STRENGTH class
+- 7 days after activation
+
+## Spanish
+
+**Tu Discovery Pass está reservado.**
+
+**Solo falta un paso: crea tu cuenta de Ground Up para completar los formularios requeridos, activar tu pase y reservar tus clases.**
+
+Primary CTA:
+
+`CONTINUAR A MI CUENTA`
+
+---
+
+# 10. ACCOUNT HANDOFF
+
+When the user continues:
+
+route them into the existing localized member signup/login flow.
+
+Preserve:
+
+`intent=discovery-pass`
+
+and internal:
+
+`experiment_variant=B`
+
+Also preserve:
+
+- locale
+- utm_source
+- utm_medium
+- utm_campaign
+- utm_content
+- utm_term
+- fbclid
+- gclid
+- ttclid
+
+Do not expose sensitive state in insecure URL parameters if session/server state is available.
+
+---
+
+# 11. PREFILL
+
+Where safely supported, prefill the account creation screen with:
+
+- firstName
+- email
+- phone
+
+Do not auto-create the account.
+
+Do not auto-login insecurely.
+
+Do not bypass password rules.
+
+---
+
+# 12. LEAD → MEMBER LINKING
+
+After successful account creation:
+
+associate the Variant B lead with the created member using safe server-side logic.
+
+Use:
+
+- session-linked lead id
+- matching normalized email
+- or equivalent safe deterministic relationship
+
+Do not attach one person's lead to another person's member account.
+
+Document the exact link logic.
+
+---
+
+# 13. DOWNSTREAM SECURITY MUST REMAIN IDENTICAL
+
+After account creation, Variant B must rejoin the same existing secure Discovery flow.
+
+Keep:
+
+- required `gym-rules`
+- required `liability-waiver`
+- server-side form enforcement
+- 1 SKILL entitlement
+- 1 STRENGTH entitlement
+- 7 × 24 hour validity
+- duplicate claim protection
+- class entitlement rules
+
+Do not fork these business rules for Variant B.
+
+---
+
+# 14. NO ENTITLEMENT BEFORE ACTIVATION
+
+Explicitly test:
+
+Variant B lead created
+→ NO pass
+
+Variant B continuation
+→ NO pass
+
+Account created
+→ NO pass
+
+Forms completed
+→ NO pass until explicit valid activation
+
+Successful activation
+→ exactly:
+  - 1 SKILL
+  - 1 STRENGTH
+
+This is a hard requirement.
+
+---
+
+# 15. VARIANT B ANALYTICS
+
+Preferred model:
+
+reuse canonical Discovery events and attach:
+
+`variant=B`
+
+Where the analytics architecture supports event properties.
+
+At minimum record:
+
+- page view
+- claim start
+- claim submitted
+- continue to account
+- account created
+- required forms completed
+- pass activated
+- class booked
+
+Do not create a conflicting parallel analytics vocabulary if canonical events can support a variant property.
+
+Document the chosen event model.
+
+---
+
+# 16. VARIANT A ANALYTICS
+
+Preserve Variant A historical behavior.
+
+Where safe, mark new A traffic as:
+
+`variant=A`
+
+Do not rewrite historical records.
+
+---
+
+# 17. DEDICATED A/B REPORT
+
+Create or finish:
+
+`Discovery Pass — A/B Funnel`
+
+At minimum compare:
+
+## A
+Landing
+→ CTA
+→ Account
+→ Forms
+→ Activated
+→ Booked
+
+## B
+Landing
+→ Claim
+→ Continue
+→ Account
+→ Forms
+→ Activated
+→ Booked
+
+Show:
+
+- counts
+- step conversion %
+- overall conversion %
+- English
+- Spanish
+- combined
+
+---
+
+# 18. KEY EXPERIMENT QUESTION
+
+The report must make this easy to answer:
+
+**Does Variant B improve Landing → Account Created conversion?**
+
+Do not declare B a winner merely because it collects more email addresses.
+
+Also show:
+
+- Claim → Account Created %
+- Account → Forms Completed %
+- Forms → Activated %
+- Activated → Booked %
+
+---
+
+# 19. ROUTE / UTM HANDOFF TO MALU
+
+Malu is prepared to use these destinations:
+
+## A English
+
+`https://www.groundupbjj.com/discovery-pass?utm_source=meta&utm_medium=paid_social&utm_campaign=discovery_pass&utm_content=english_video`
+
+## B English
+
+`https://www.groundupbjj.com/discovery-pass-b?utm_source=meta&utm_medium=paid_social&utm_campaign=discovery_pass&utm_content=english_video_b`
+
+## A Spanish
+
+`https://www.groundupbjj.com/es/discovery-pass?utm_source=meta&utm_medium=paid_social&utm_campaign=discovery_pass&utm_content=spanish_video`
+
+## B Spanish
+
+`https://www.groundupbjj.com/es/discovery-pass-b?utm_source=meta&utm_medium=paid_social&utm_campaign=discovery_pass&utm_content=spanish_video_b`
+
+Keep:
+
+`experiment_variant=B`
+
+in internal session/state rather than requiring it in the visible URL.
+
+Confirm `fbclid` preservation.
+
+---
+
+# 20. MALU PRE-BUILD GATES
+
+Malu will independently verify these before creating B ads:
+
+1. `/discovery-pass-b` = 200
+2. `/es/discovery-pass-b` = 200
+3. correct `lang`
+4. anonymous claim accepts `{firstName,email}`
+5. malformed claim returns 4xx and creates no record
+6. continuation screen exists
+7. no entitlement exists before activation
+8. `intent=discovery-pass` survives handoff
+9. variant=B survives handoff
+10. Discovery analytics reflect variant B
+
+Build to satisfy these gates exactly.
+
+---
+
+# 21. MOBILE QA
+
+Test B at:
+
+- 320px
+- 375px
+- 390px
+- 430px
+
+Verify:
+
+- no horizontal overflow
+- form inputs fit
+- CTA is easy to tap
+- Spanish strings fit
+- continuation screen fits
+- account handoff works
+- consent dialog does not block form completion
+
+---
+
+# 22. ACCESSIBILITY
+
+Verify:
+
+- input labels
+- focus states
+- validation messages
+- keyboard navigation
+- semantic headings
+- error announcement where supported
+- proper autocomplete attributes
+- email input type
+- phone input type
+
+---
+
+# 23. PERFORMANCE
+
+Do not make Variant B heavier than Variant A.
+
+Reuse:
+
+- existing fonts
+- components
+- assets
+- layout system
+
+Do not introduce large new client libraries.
+
+---
+
+# 24. TEST MATRIX
+
+Required automated/integration tests:
+
+- B EN route
+- B ES route
+- correct lang
+- anonymous claim success
+- missing firstName
+- invalid email
+- duplicate email
+- malformed body
+- lead record created exactly once
+- no member created at claim
+- no pass created at claim
+- no entitlement created at claim
+- continuation state
+- account prefill
+- Variant B state survives signup
+- lead links to correct member
+- waivers still required
+- activation still secure
+- exact entitlement counts
+- booking works
+- Variant A unchanged
+- analytics variant separation
+- A/B report calculations
+
+Run:
+
+- `npm run check`
+- `npm test`
+- production build
+- route inventory
+- locale tests
+- mobile QA
+- `git diff --check`
+
+---
+
+# 25. PRODUCTION DEPLOYMENT
+
+This task is not complete when code exists only in the workspace.
+
+Variant B must be published/deployed so these production URLs return 200:
+
+`https://www.groundupbjj.com/discovery-pass-b`
+
+`https://www.groundupbjj.com/es/discovery-pass-b`
+
+If Replit requires a user-initiated Publish action that cannot be performed automatically:
+
+return:
+
+`VARIANT_B_CODE_READY_REQUIRES_REPLIT_PUBLISH`
+
+and clearly state that deployment is the remaining blocker.
+
+Do not claim live readiness while routes still return 404.
+
+---
+
+# 26. REQUIRED SCREENSHOTS
+
+Capture:
+
+- EN B desktop
+- EN B mobile
+- ES B desktop
+- ES B mobile
+- successful minimal claim
+- continuation screen
+- account handoff/prefill
+- A/B funnel report
+
+Use synthetic data only.
+
+---
+
+# 27. FINAL REPORT
+
+Return:
+
+## A. Starting SHA
+[full]
+
+## B. Ending SHA
+[full]
+
+## C. Files changed
+[exact]
+
+## D. Production routes
+
+EN B:
+HTTP [status]
+
+ES B:
+HTTP [status]
+
+## E. Anonymous claim endpoint
+
+Route:
+[exact]
+
+Auth required:
+NO
+
+Payload:
+[exact]
+
+Validation:
+PASS / FAIL
+
+Rate limiting:
+[exact]
+
+Duplicate behavior:
+[exact]
+
+## F. Lead storage
+
+Model/table:
+[exact]
+
+Fields:
+[exact]
+
+## G. Security
+
+Member auto-created:
+NO
+
+Pass auto-created:
+NO
+
+Entitlement pre-activation:
+NO
+
+Waiver bypass:
+NO
+
+## H. Account handoff
+
+Prefill:
+PASS / FAIL
+
+Intent:
+PASS / FAIL
+
+Variant:
+PASS / FAIL
+
+Attribution:
+PASS / FAIL
+
+Lead/member association:
+PASS / FAIL
+
+## I. Variant A regression
+
+EN A:
+PASS / FAIL
+
+ES A:
+PASS / FAIL
+
+## J. Variant B
+
+EN:
+PASS / FAIL
+
+ES:
+PASS / FAIL
+
+Mobile:
+PASS / FAIL
+
+## K. Analytics
+
+Variant separation:
+PASS / FAIL
+
+A/B report:
+PASS / FAIL
+
+## L. Malu handoff
+
+Return exact:
+
+EN A URL
+EN B URL
+ES A URL
+ES B URL
+
+and confirm:
+
+`DISCOVERY_PASS_AB_EXPERIMENT_READY_FOR_MALU`
+
+only if both B routes are live 200 and all security gates pass.
+
+---
+
+# 28. FINAL VERDICT
+
+Return exactly one:
+
+`DISCOVERY_PASS_AB_EXPERIMENT_READY_FOR_MALU`
+
+or
+
+`VARIANT_B_CODE_READY_REQUIRES_REPLIT_PUBLISH`
+
+or
+
+`DISCOVERY_PASS_AB_EXPERIMENT_BLOCKED`
+
+Do not return READY while the production B routes return 404.
