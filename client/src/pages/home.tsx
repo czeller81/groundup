@@ -12,7 +12,7 @@ import { classDateLabel, classTimeLabel, localizedClassTitle, type ClassSchedule
 import { localizedPublicPath, useLocale } from "@/lib/locale";
 import selfDefenseFeaturedImg from "@assets/womens-sparring-1.jpg";
 import bjjFundamentalsImg from "@assets/womens-sparring-2.jpg";
-import girlsClassImg from "@assets/facility-conditioning.jpg";
+import girlsClassImg from "@assets/generated_images/girls_jiujitsu_ground_up.jpg";
 import strengthImg from "@assets/IMG_5701_1788402339390.jpg";
 import personalTrainingImg from "@assets/IMG_5699_1788402474136.png";
 import whyDifferentImg from "@assets/womens-team-1.jpg";
