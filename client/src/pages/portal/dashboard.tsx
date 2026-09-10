@@ -76,6 +76,7 @@ export default function PortalDashboard() {
     && (new URLSearchParams(location.split("?")[1] || "").get("intent") === "discovery-pass"
       || window.localStorage.getItem("groundup-discovery-onboarding") === "1");
   const trackedFormsComplete = useRef(false);
+  const discoveryVariant = typeof window !== "undefined" && window.localStorage.getItem("groundup-discovery-variant") === "B" ? "B" : "A";
 
   const { data: forms = [] } = useQuery<any[]>({
     queryKey: ["/api/portal/forms"],
@@ -111,8 +112,8 @@ export default function PortalDashboard() {
     mutationFn: async () => (await apiRequest("POST", "/api/portal/discovery/claim", {})).json(),
     onSuccess: (pass: { id?: string }) => {
       queryClient.invalidateQueries({ queryKey: ["/api/portal/member-program"] });
-      trackEvent("discovery_pass_activated", { locale });
-      track("discovery_pass_activated", "training", { funnel_kind: "discovery_pass", locale });
+       trackEvent("discovery_pass_activated", { locale, variant: discoveryVariant });
+       track("discovery_pass_activated", "training", { funnel_kind: "discovery_pass", locale, variant: discoveryVariant });
       if (pass.id) trackMetaDiscoveryPassActivation(pass.id, locale);
       toast({ title: copy.discoveryPassTitle });
     },
@@ -167,8 +168,8 @@ export default function PortalDashboard() {
   useEffect(() => {
     if (!discoveryOnboarding || !allFormsComplete || trackedFormsComplete.current) return;
     trackedFormsComplete.current = true;
-    track("discovery_required_forms_completed", "training", { funnel_kind: "discovery_pass", locale });
-    trackEvent("discovery_required_forms_completed", { locale });
+    track("discovery_required_forms_completed", "training", { funnel_kind: "discovery_pass", locale, variant: discoveryVariant });
+    trackEvent("discovery_required_forms_completed", { locale, variant: discoveryVariant });
   }, [allFormsComplete, discoveryOnboarding, locale]);
 
   if (authLoading) {

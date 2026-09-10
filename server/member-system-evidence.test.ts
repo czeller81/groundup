@@ -116,8 +116,11 @@ test("member system evidence: Discovery to membership with weekly limits, waitli
     classTypeStrengthId = strengthType.id;
     classTypeGirlsId = girlsType.id;
 
+    // Anchor the fixture to the next Monday so day 0, 1, 2, and 3 all share
+    // the configured membership week regardless of the day the suite runs.
     const base = new Date(Date.now() + 1 * 24 * 60 * 60 * 1000);
     base.setUTCHours(20, 0, 0, 0);
+    base.setUTCDate(base.getUTCDate() + (1 - base.getUTCDay() + 7) % 7);
     const makeOccurrence = async (typeId: string, offsetDays: number, title: string, capacity: number) => {
       const start = new Date(base.getTime() + offsetDays * 24 * 60 * 60 * 1000);
       const canonicalCategory = typeId === classTypeSkillId

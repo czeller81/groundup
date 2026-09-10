@@ -637,6 +637,9 @@ export const insertAnalyticsEventSchema = createInsertSchema(analyticsEvents).om
     "reservation_failed",
     "discovery_page_view",
     "discovery_cta_click",
+    "discovery_claim_started",
+    "discovery_claim_submitted",
+    "discovery_continue_to_account",
     "discovery_account_created",
     "discovery_waiver_completed",
     "discovery_forms_started",
@@ -651,6 +654,44 @@ export const insertAnalyticsEventSchema = createInsertSchema(analyticsEvents).om
 });
 export type InsertAnalyticsEvent = z.infer<typeof insertAnalyticsEventSchema>;
 export type AnalyticsEvent = typeof analyticsEvents.$inferSelect;
+
+export const discoveryPassClaims = pgTable("discovery_pass_claims", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  firstName: text("first_name").notNull(),
+  email: text("email").notNull(),
+  phone: text("phone"),
+  locale: text("locale").notNull().default("en"),
+  attribution: jsonb("attribution").notNull().default(sql`'{}'::jsonb`),
+  experimentVariant: text("experiment_variant").notNull().default("B"),
+  continuationState: text("continuation_state").notNull().default("claim_submitted"),
+  linkedMemberId: varchar("linked_member_id").references(() => users.id),
+  linkedAt: timestamp("linked_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  variantEmailUnique: uniqueIndex("discovery_pass_claims_variant_email_unique").on(table.experimentVariant, table.email),
+  linkedMemberIndex: index("discovery_pass_claims_linked_member_idx").on(table.linkedMemberId),
+  createdAtIndex: index("discovery_pass_claims_created_at_idx").on(table.createdAt),
+}));
+
+export const insertDiscoveryPassClaimSchema = createInsertSchema(discoveryPassClaims).omit({
+  id: true,
+  continuationState: true,
+  linkedMemberId: true,
+  linkedAt: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  firstName: z.string().trim().min(1).max(80),
+  email: z.string().trim().email().max(254),
+  phone: z.string().trim().max(30).nullable().optional(),
+  locale: z.enum(["en", "es"]).default("en"),
+  attribution: z.record(z.string().max(200)).default({}),
+  experimentVariant: z.literal("B").default("B"),
+});
+
+export type InsertDiscoveryPassClaim = z.infer<typeof insertDiscoveryPassClaimSchema>;
+export type DiscoveryPassClaim = typeof discoveryPassClaims.$inferSelect;
 
 export const contactSubmissions = pgTable("contact_submissions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),

@@ -2,9 +2,10 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { eq } from "drizzle-orm";
 import { db } from "./db";
-import { discoveryEntitlements, discoveryPasses, formResponses, forms, insertAnalyticsEventSchema, memberAuditEvents, users } from "@shared/schema";
+import { discoveryEntitlements, discoveryPassClaims, discoveryPasses, formResponses, forms, insertAnalyticsEventSchema, memberAuditEvents, users } from "@shared/schema";
 import { storage } from "./storage";
 import { discoveryReservationCountsAsPriorUse, issueDiscoveryPass, missingRequiredBookingForms } from "./member-routes";
+import { discoveryPassClaimRequestSchema, normalizeDiscoveryPassClaimInput } from "./discovery-pass-b";
 
 test("Discovery Pass treats prior interest and cancelled unused reservations as new-user eligible", () => {
   assert.equal(discoveryReservationCountsAsPriorUse("cancelled", null), false);
@@ -30,6 +31,32 @@ test("Discovery funnel event contract preserves consented attribution fields", (
   assert.equal(event.event, "discovery_required_forms_completed");
   assert.equal(event.properties.funnel_kind, "discovery_pass");
   assert.equal(event.properties.utm_source, "meta");
+});
+
+test("Variant B claim validation and duplicate handling stay account-free", async () => {
+  assert.equal(discoveryPassClaimRequestSchema.safeParse({ firstName: "A", email: "bad", phone: "not-a-phone", locale: "en", attribution: {} }).success, false);
+  assert.notEqual(process.env.NODE_ENV, "production", "fixture claim tests must never run in production");
+  const suffix = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  const email = `discovery-variant-b-${suffix}@example.invalid`;
+  try {
+    const input = normalizeDiscoveryPassClaimInput(discoveryPassClaimRequestSchema.parse({
+      firstName: "Variant",
+      email,
+      phone: "555-000-0199",
+      locale: "es",
+      attribution: { utm_source: "test", fbclid: "click-id" },
+    }));
+    const first = await storage.createOrGetDiscoveryPassClaim(input);
+    const second = await storage.createOrGetDiscoveryPassClaim(input);
+    assert.equal(first.created, true);
+    assert.equal(second.created, false);
+    assert.equal(first.claim.id, second.claim.id);
+    assert.equal(second.claim.continuationState, "claim_submitted");
+    assert.equal(await storage.getUserByEmail(email), undefined);
+    assert.equal((await db.select().from(discoveryPasses).where(eq(discoveryPasses.userId, first.claim.id))).length, 0);
+  } finally {
+    await db.delete(discoveryPassClaims).where(eq(discoveryPassClaims.email, email));
+  }
 });
 
 test("Discovery Pass activation is waiver-gated, exact, seven days, and duplicate-safe", async () => {

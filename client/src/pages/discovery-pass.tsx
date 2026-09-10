@@ -137,14 +137,16 @@ export default function DiscoveryPass() {
   const canonical = locale === "es" ? "/es/discovery-pass" : "/discovery-pass";
 
   useEffect(() => {
+    window.localStorage.setItem("groundup-discovery-variant", "A");
     captureAttribution();
-    trackEvent("discovery_page_view", { locale });
-    track("discovery_page_view", "training", { funnel_kind: "discovery_pass", locale });
+    trackEvent("discovery_page_view", { locale, variant: "A" });
+    track("discovery_page_view", "training", { funnel_kind: "discovery_pass", locale, variant: "A" });
   }, [locale]);
 
   const handleCta = () => {
-    trackEvent("discovery_cta_click", { locale });
-    track("discovery_cta_click", "training", { funnel_kind: "discovery_pass", locale });
+    window.localStorage.setItem("groundup-discovery-variant", "A");
+    trackEvent("discovery_cta_click", { locale, variant: "A" });
+    track("discovery_cta_click", "training", { funnel_kind: "discovery_pass", locale, variant: "A" });
   };
 
   return (

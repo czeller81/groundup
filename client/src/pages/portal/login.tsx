@@ -30,8 +30,32 @@ export default function PortalLogin() {
     lastName: "",
     phone: "",
   });
+  const [discoveryClaimContext, setDiscoveryClaimContext] = useState<{ variant: "B"; firstName: string; email: string; phone: string } | null>(null);
   const discoveryIntent = typeof window !== "undefined"
     && new URLSearchParams(window.location.search).get("intent") === "discovery-pass";
+  const discoveryVariant = typeof window !== "undefined"
+    ? (window.localStorage.getItem("groundup-discovery-variant") === "B" || discoveryClaimContext?.variant === "B" ? "B" : "A")
+    : "A";
+
+  useEffect(() => {
+    if (!discoveryIntent) return;
+    let cancelled = false;
+    void fetch("/api/discovery-pass/claim-context")
+      .then((response) => response.ok ? response.json() : null)
+      .then((context) => {
+        if (cancelled || !context || context.variant !== "B") return;
+        setDiscoveryClaimContext(context);
+        window.localStorage.setItem("groundup-discovery-variant", "B");
+        setSignupData((current) => ({
+          ...current,
+          firstName: current.firstName || context.firstName || "",
+          email: current.email || context.email || "",
+          phone: current.phone || context.phone || "",
+        }));
+      })
+      .catch(() => undefined);
+    return () => { cancelled = true; };
+  }, [discoveryIntent]);
 
   const postAuthPath = () => {
     const destination = locale === "es" || isSpanishRoute ? "/es/portal/dashboard" : "/portal/dashboard";
@@ -100,8 +124,8 @@ export default function PortalLogin() {
       trackEvent("member_signup_completed", { method: "password", locale });
       if (discoveryIntent) {
         window.localStorage.setItem("groundup-discovery-onboarding", "1");
-        trackEvent("discovery_account_created", { locale });
-        track("discovery_account_created", "training", { funnel_kind: "discovery_pass", locale });
+        trackEvent("discovery_account_created", { locale, variant: discoveryVariant });
+        track("discovery_account_created", "training", { funnel_kind: "discovery_pass", locale, variant: discoveryVariant });
       }
       toast({ title: copy.accountCreated, description: copy.welcomeToGroundUp });
       setLocation(postAuthPath());

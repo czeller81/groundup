@@ -25,6 +25,7 @@ import {
   classReservations,
   classReservationEvents,
   analyticsEvents,
+  discoveryPassClaims,
   type Trainer, 
   type InsertTrainer,
   type Booking,
@@ -55,6 +56,7 @@ import {
   type ClassOccurrence,
   type ClassReservation,
   type MinorProfile
+  , type DiscoveryPassClaim
 } from "@shared/schema";
 import { db } from "./db";
  import { eq, and, gte, gt, lte, desc, asc, sql, count, sum, or, ilike, inArray, isNotNull, isNull, not } from "drizzle-orm";
@@ -212,6 +214,23 @@ export interface IStorage {
   getContactSubmissions(): Promise<import("@shared/schema").ContactSubmission[]>;
   updateContactSubmissionStatus(id: string, status: import("@shared/schema").ContactStatus): Promise<import("@shared/schema").ContactSubmission | undefined>;
   createAnalyticsEvent(data: import("@shared/schema").InsertAnalyticsEvent): Promise<import("@shared/schema").AnalyticsEvent>;
+  createOrGetDiscoveryPassClaim(data: import("@shared/schema").InsertDiscoveryPassClaim): Promise<{ claim: DiscoveryPassClaim; created: boolean }>;
+  getDiscoveryPassClaim(id: string): Promise<DiscoveryPassClaim | undefined>;
+  markDiscoveryPassClaimContinuation(id: string): Promise<DiscoveryPassClaim | undefined>;
+  linkDiscoveryPassClaim(id: string, memberId: string, email: string): Promise<DiscoveryPassClaim | undefined>;
+  getDiscoveryAbReport(filters?: { days?: number }): Promise<{
+    range: { from: string; to: string; days: number };
+    variants: Record<"A" | "B", {
+      stages: Record<string, number>;
+      conversion: Record<string, { fromPrevious: number | null; overall: number | null }>;
+      source: string;
+    }>;
+    combined: {
+      stages: Record<string, number>;
+      conversion: Record<string, { fromPrevious: number | null; overall: number | null }>;
+    };
+    byLocale: Record<"en" | "es", Record<"A" | "B", { stages: Record<string, number>; consentedSessions: number }>>;
+  }>;
   getCampaignReport(filters: {
     funnel: "training" | "adaptive_capacity";
     source?: string;
@@ -2086,6 +2105,171 @@ export class DatabaseStorage implements IStorage {
     const { analyticsEvents } = await import("@shared/schema");
     const [event] = await db.insert(analyticsEvents).values(data).returning();
     return event;
+  }
+
+  async createOrGetDiscoveryPassClaim(data: import("@shared/schema").InsertDiscoveryPassClaim): Promise<{ claim: DiscoveryPassClaim; created: boolean }> {
+    const [created] = await db.insert(discoveryPassClaims)
+      .values(data)
+      .onConflictDoNothing({
+        target: [discoveryPassClaims.experimentVariant, discoveryPassClaims.email],
+      })
+      .returning();
+    if (created) return { claim: created, created: true };
+
+    const [existing] = await db.select().from(discoveryPassClaims).where(and(
+      eq(discoveryPassClaims.experimentVariant, data.experimentVariant),
+      eq(discoveryPassClaims.email, data.email),
+    )).limit(1);
+    if (!existing) throw new Error("Discovery Pass claim could not be created");
+    return { claim: existing, created: false };
+  }
+
+  async getDiscoveryPassClaim(id: string): Promise<DiscoveryPassClaim | undefined> {
+    const [claim] = await db.select().from(discoveryPassClaims).where(eq(discoveryPassClaims.id, id)).limit(1);
+    return claim;
+  }
+
+  async markDiscoveryPassClaimContinuation(id: string): Promise<DiscoveryPassClaim | undefined> {
+    const [claim] = await db.update(discoveryPassClaims).set({
+      continuationState: "continuation_started",
+      updatedAt: new Date(),
+    }).where(eq(discoveryPassClaims.id, id)).returning();
+    return claim;
+  }
+
+  async linkDiscoveryPassClaim(id: string, memberId: string, email: string): Promise<DiscoveryPassClaim | undefined> {
+    const [claim] = await db.update(discoveryPassClaims).set({
+      linkedMemberId: memberId,
+      linkedAt: new Date(),
+      continuationState: "account_created",
+      updatedAt: new Date(),
+    }).where(and(
+      eq(discoveryPassClaims.id, id),
+      eq(discoveryPassClaims.email, email.trim().toLowerCase()),
+      isNull(discoveryPassClaims.linkedMemberId),
+    )).returning();
+    return claim || await this.getDiscoveryPassClaim(id);
+  }
+
+  async getDiscoveryAbReport(filters?: { days?: number }) {
+    const days = Math.min(365, Math.max(1, Math.round(filters?.days || 30)));
+    const to = new Date();
+    const from = new Date(to.getTime() - days * 24 * 60 * 60 * 1000);
+    const eventRows = await db.select().from(analyticsEvents).where(and(
+      eq(analyticsEvents.funnel, "training"),
+      gte(analyticsEvents.createdAt, from),
+    ));
+    const claims = await db.select().from(discoveryPassClaims).where(and(
+      eq(discoveryPassClaims.experimentVariant, "B"),
+      gte(discoveryPassClaims.createdAt, from),
+      not(ilike(discoveryPassClaims.email, INTERNAL_TEST_EMAIL_PATTERN)),
+    ));
+    const linkedIds = claims.map((claim) => claim.linkedMemberId).filter(Boolean) as string[];
+    const requiredForms = await db.select({ id: forms.id }).from(forms).where(eq(forms.requiredBeforeBooking, true));
+    const formRows = linkedIds.length
+      ? await db.select({ userId: formResponses.userId, formId: formResponses.formId, status: formResponses.status })
+        .from(formResponses).where(inArray(formResponses.userId, linkedIds))
+      : [];
+    const requiredIds = new Set(requiredForms.map((form) => form.id));
+    const submittedForms = new Map<string, Set<string>>();
+    for (const row of formRows) {
+      if (row.status !== "submitted" || !requiredIds.has(row.formId)) continue;
+      const set = submittedForms.get(row.userId) || new Set<string>();
+      set.add(row.formId);
+      submittedForms.set(row.userId, set);
+    }
+    const completeFormIds = new Set(linkedIds.filter((id) =>
+      requiredIds.size > 0 && requiredForms.every((form) => submittedForms.get(id)?.has(form.id)),
+    ));
+    const passes = linkedIds.length
+      ? await db.select({ userId: discoveryPasses.userId, activationTimestamp: discoveryPasses.activationTimestamp })
+        .from(discoveryPasses).where(inArray(discoveryPasses.userId, linkedIds))
+      : [];
+    const activatedIds = new Set(passes.filter((pass) => pass.activationTimestamp).map((pass) => pass.userId));
+    const reservations = linkedIds.length
+      ? await db.select({ userId: classReservations.userId }).from(classReservations).where(inArray(classReservations.userId, linkedIds))
+      : [];
+    const bookedIds = new Set(reservations.map((row) => row.userId).filter(Boolean) as string[]);
+
+    const stageNames = ["landing", "cta", "claim", "continue", "account", "forms", "activated", "booked"] as const;
+    const emptyStages = () => Object.fromEntries(stageNames.map((stage) => [stage, 0])) as Record<string, number>;
+    const eventStages = (variant: "A" | "B", locale?: "en" | "es") => {
+      const stages = emptyStages();
+      const sessionsByStage = new Map<string, Set<string>>();
+      for (const event of eventRows) {
+        const properties = event.properties && typeof event.properties === "object"
+          ? event.properties as Record<string, unknown>
+          : {};
+        if (properties.funnel_kind !== "discovery_pass" || properties.variant !== variant) continue;
+        if (locale && properties.locale !== locale) continue;
+        const eventStage: Record<string, string> = {
+          discovery_page_view: "landing",
+          discovery_cta_click: "cta",
+          discovery_claim_submitted: "claim",
+          discovery_continue_to_account: "continue",
+          discovery_account_created: "account",
+          discovery_required_forms_completed: "forms",
+          discovery_pass_activated: "activated",
+          discovery_class_booked: "booked",
+        };
+        const stage = eventStage[event.event];
+        if (!stage) continue;
+        const sessions = sessionsByStage.get(stage) || new Set<string>();
+        sessions.add(event.sessionId);
+        sessionsByStage.set(stage, sessions);
+      }
+      sessionsByStage.forEach((sessions, stage) => { stages[stage] = sessions.size; });
+      return { stages, sessionsByStage };
+    };
+    const dbVariantBStages = (locale?: "en" | "es") => {
+      const filteredClaims = claims.filter((claim) => !locale || claim.locale === locale);
+      const ids = new Set(filteredClaims.map((claim) => claim.linkedMemberId).filter(Boolean) as string[]);
+      const stages = eventStages("B", locale).stages;
+      stages.claim = filteredClaims.length;
+      stages.continue = filteredClaims.filter((claim) => claim.continuationState !== "claim_submitted").length;
+      stages.account = ids.size;
+      stages.forms = Array.from(completeFormIds).filter((id) => ids.has(id)).length;
+      stages.activated = Array.from(activatedIds).filter((id) => ids.has(id)).length;
+      stages.booked = Array.from(bookedIds).filter((id) => ids.has(id)).length;
+      return stages;
+    };
+    const safeRate = (value: number, denominator: number) => denominator > 0 ? Math.round((value / denominator) * 100) : null;
+    const conversionFor = (stages: Record<string, number>) => {
+      const values = stageNames.map((stage) => stages[stage] || 0);
+      return Object.fromEntries(stageNames.map((stage, index) => [
+        stage,
+        { fromPrevious: index === 0 ? null : safeRate(values[index], values[index - 1]), overall: safeRate(values[index], values[0]) },
+      ]));
+    };
+    const a = eventStages("A").stages;
+    const b = dbVariantBStages();
+    const combined = Object.fromEntries(stageNames.map((stage) => [stage, (a[stage] || 0) + (b[stage] || 0)]));
+    const byLocale = Object.fromEntries((["en", "es"] as const).map((locale) => {
+      const localeA = eventStages("A", locale);
+      const localeB = dbVariantBStages(locale);
+      const consentedSessions = new Set<string>();
+      for (const event of eventRows) {
+        const properties = event.properties && typeof event.properties === "object"
+          ? event.properties as Record<string, unknown>
+          : {};
+        if (properties.funnel_kind === "discovery_pass" && properties.variant && properties.locale === locale) {
+          consentedSessions.add(event.sessionId);
+        }
+      }
+      return [locale, {
+        A: { stages: localeA.stages, consentedSessions: consentedSessions.size },
+        B: { stages: localeB, consentedSessions: consentedSessions.size },
+      }];
+    })) as Record<"en" | "es", Record<"A" | "B", { stages: Record<string, number>; consentedSessions: number }>>;
+    return {
+      range: { from: from.toISOString(), to: to.toISOString(), days },
+      variants: {
+        A: { stages: a, conversion: conversionFor(a), source: "consented discovery analytics; post-CTA stages require consent" },
+        B: { stages: b, conversion: conversionFor(b), source: "anonymous claim records plus linked application records; landing/CTA use consented analytics" },
+      },
+      combined: { stages: combined, conversion: conversionFor(combined) },
+      byLocale,
+    };
   }
 
   async getCampaignReport(filters: {

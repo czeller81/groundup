@@ -209,8 +209,9 @@ export default function PortalForm({ formSlug, embedded = false, onSubmitted }: 
   const handleFormInteraction = () => {
     if (!discoveryMode || trackedFormStart.current || isSubmitted || !form?.requiredBeforeBooking) return;
     trackedFormStart.current = true;
-    track("discovery_forms_started", "training", { funnel_kind: "discovery_pass", form: slug });
-    trackEvent("discovery_forms_started", { locale, form: slug });
+    const variant = typeof window !== "undefined" && window.localStorage.getItem("groundup-discovery-variant") === "B" ? "B" : "A";
+    track("discovery_forms_started", "training", { funnel_kind: "discovery_pass", form: slug, locale, variant });
+    trackEvent("discovery_forms_started", { locale, form: slug, variant });
   };
 
   const renderField = (field: any) => {

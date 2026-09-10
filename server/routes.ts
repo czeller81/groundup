@@ -4,6 +4,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertBookingSchema } from "@shared/schema";
 import { z } from "zod";
+import { discoveryPassClaimRequestSchema, normalizeDiscoveryPassClaimInput } from "./discovery-pass-b";
 import Stripe from "stripe";
 import { addHours, addMinutes, format, parseISO } from "date-fns";
 import fs from "fs";
@@ -158,6 +159,16 @@ const PAGE_META: Record<string, { title: string; description: string; canonical:
     description: "Prueba Ground Up con un Discovery Pass gratis de siete días que incluye una clase de SKILL y una clase de STRENGTH. Coaching para principiantes en Oxnard.",
     canonical: "https://www.groundupbjj.com/es/discovery-pass",
   },
+  "/discovery-pass-b": {
+    title: "Claim Your Free Discovery Pass | Ground Up BJJ Oxnard",
+    description: "Claim a free seven-day Ground Up Discovery Pass with one SKILL class and one STRENGTH class, then create your secure member account.",
+    canonical: "https://www.groundupbjj.com/discovery-pass-b",
+  },
+  "/es/discovery-pass-b": {
+    title: "Reclama tu Discovery Pass gratis | Ground Up BJJ Oxnard",
+    description: "Reclama un Discovery Pass gratis de siete días con una clase de SKILL y una clase de STRENGTH, y después crea tu cuenta segura.",
+    canonical: "https://www.groundupbjj.com/es/discovery-pass-b",
+  },
 };
 
 const HREFLANG_PAIRS: Record<string, { en?: string; es?: string; xDefault?: string }> = {
@@ -184,6 +195,8 @@ const HREFLANG_PAIRS: Record<string, { en?: string; es?: string; xDefault?: stri
   "/es/girls": { en: "https://www.groundupbjj.com/girls", es: "https://www.groundupbjj.com/es/girls" },
   "/discovery-pass": { en: "https://www.groundupbjj.com/discovery-pass", es: "https://www.groundupbjj.com/es/discovery-pass", xDefault: "https://www.groundupbjj.com/discovery-pass" },
   "/es/discovery-pass": { en: "https://www.groundupbjj.com/discovery-pass", es: "https://www.groundupbjj.com/es/discovery-pass", xDefault: "https://www.groundupbjj.com/discovery-pass" },
+  "/discovery-pass-b": { en: "https://www.groundupbjj.com/discovery-pass-b", es: "https://www.groundupbjj.com/es/discovery-pass-b", xDefault: "https://www.groundupbjj.com/discovery-pass-b" },
+  "/es/discovery-pass-b": { en: "https://www.groundupbjj.com/discovery-pass-b", es: "https://www.groundupbjj.com/es/discovery-pass-b", xDefault: "https://www.groundupbjj.com/discovery-pass-b" },
   "/adaptive-capacity": { en: "https://www.groundupbjj.com/adaptive-capacity", es: "https://www.groundupbjj.com/es/adaptive-capacity" },
   "/es/adaptive-capacity": { en: "https://www.groundupbjj.com/adaptive-capacity", es: "https://www.groundupbjj.com/es/adaptive-capacity" },
 };
@@ -290,6 +303,14 @@ const PAGE_CONTENT: Record<string, string> = {
   <p>Obtén una clase de SKILL, una clase de STRENGTH y siete días para conocer Ground Up en Oxnard.</p>
   <p>Comienza con una cuenta segura, completa los formularios requeridos, activa tu pase y reserva tus clases.</p>
   <a href="/es/portal/signup?intent=discovery-pass">Obtener mi Discovery Pass gratis</a>`,
+  "/discovery-pass-b": `<h1>Claim Your Free Discovery Pass</h1>
+  <p>Share your first name and email to continue to a secure Ground Up member account.</p>
+  <p>Your account setup comes before forms, activation, and booking. The seven-day pass starts only after you activate it.</p>
+  <a href="/portal/signup?intent=discovery-pass">Continue to secure account setup</a>`,
+  "/es/discovery-pass-b": `<h1>Reclama tu Discovery Pass gratis</h1>
+  <p>Comparte tu nombre y correo para continuar a una cuenta segura de Ground Up.</p>
+  <p>Primero configurarás tu cuenta; después completarás los formularios, activarás el pase y reservarás. Los siete días comienzan cuando lo activas.</p>
+  <a href="/es/portal/signup?intent=discovery-pass">Continuar a la configuración segura</a>`,
 };
 
 async function serveWithMeta(req: Request, res: Response, next: NextFunction) {
@@ -361,6 +382,8 @@ declare module "express-session" {
   interface SessionData {
     userId: string;
     userRole: string;
+    discoveryPassClaimId?: string;
+    discoveryPassVariant?: "B";
   }
 }
 
@@ -866,6 +889,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Variant B intentionally records only a minimal prospect claim. It does
+  // not create an account, password, pass, entitlement, waiver, or timer.
+  app.post("/api/discovery-pass/claim", publicRateLimit(5, 60 * 60 * 1000), async (req, res) => {
+    const parsed = discoveryPassClaimRequestSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ message: "Please provide a first name, valid email, and optional valid phone number." });
+    }
+    try {
+      const input = normalizeDiscoveryPassClaimInput(parsed.data);
+      const result = await storage.createOrGetDiscoveryPassClaim(input);
+      req.session.discoveryPassClaimId = result.claim.id;
+      req.session.discoveryPassVariant = "B";
+      return res.status(result.created ? 201 : 200).json({
+        state: result.claim.continuationState,
+        duplicate: !result.created,
+      });
+    } catch (error) {
+      console.error("Discovery Pass Variant B claim error:", error);
+      return res.status(500).json({ message: "We could not save your claim. Please try again." });
+    }
+  });
+
+  app.get("/api/discovery-pass/claim-context", async (req, res) => {
+    const claimId = req.session.discoveryPassClaimId;
+    if (!claimId || req.session.discoveryPassVariant !== "B") {
+      return res.status(404).json({ message: "No pending Discovery Pass claim" });
+    }
+    const claim = await storage.getDiscoveryPassClaim(claimId);
+    if (!claim || claim.experimentVariant !== "B") {
+      return res.status(404).json({ message: "No pending Discovery Pass claim" });
+    }
+    return res.json({
+      firstName: claim.firstName,
+      email: claim.email,
+      phone: claim.phone || "",
+      variant: "B",
+    });
+  });
+
+  app.post("/api/discovery-pass/continue", async (req, res) => {
+    const claimId = req.session.discoveryPassClaimId;
+    if (!claimId || req.session.discoveryPassVariant !== "B") {
+      return res.status(404).json({ message: "No pending Discovery Pass claim" });
+    }
+    const claim = await storage.markDiscoveryPassClaimContinuation(claimId);
+    if (!claim) return res.status(404).json({ message: "No pending Discovery Pass claim" });
+    return res.json({ state: claim.continuationState });
+  });
+
   app.post("/api/analytics/events", publicRateLimit(), async (req, res) => {
     try {
       const { insertAnalyticsEventSchema } = await import("@shared/schema");
@@ -949,6 +1021,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Discovery funnel report error:", error);
       res.status(500).json({ message: "Failed to build Discovery Pass funnel report" });
+    }
+  });
+
+  app.get("/api/portal/admin/discovery-ab-report", requireRole("admin", "coach"), async (req, res) => {
+    try {
+      const days = typeof req.query.days === "string" ? Number(req.query.days) : undefined;
+      res.json(await storage.getDiscoveryAbReport({ days }));
+    } catch (error) {
+      console.error("Discovery A/B report error:", error);
+      res.status(500).json({ message: "Failed to build Discovery Pass A/B report" });
     }
   });
 
@@ -1095,6 +1177,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { email, password, firstName, lastName, phone } = req.body;
       const locale = req.body.locale === "es" ? "es" : "en";
+      const pendingDiscoveryClaimId = req.session.discoveryPassClaimId;
       
       if (!email || !password || !firstName || !lastName) {
         return res.status(400).json({ message: "Email, password, first name, and last name are required" });
@@ -1112,6 +1195,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await new Promise<void>((resolve, reject) => req.session.regenerate((error) => error ? reject(error) : resolve()));
       req.session.userId = user.id;
       req.session.userRole = user.role;
+      if (pendingDiscoveryClaimId) {
+        const linkedClaim = await storage.linkDiscoveryPassClaim(pendingDiscoveryClaimId, user.id, user.email);
+        if (linkedClaim) {
+          req.session.discoveryPassClaimId = linkedClaim.id;
+          req.session.discoveryPassVariant = "B";
+        }
+      }
       
       res.status(201).json({ user });
     } catch (error) {
@@ -1123,6 +1213,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/portal/login", authRateLimit(), async (req, res) => {
     try {
       const { email, password } = req.body;
+      const pendingDiscoveryClaimId = req.session.discoveryPassClaimId;
       if (!email || !password) {
         return res.status(400).json({ message: "Email and password are required" });
       }
@@ -1135,6 +1226,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await new Promise<void>((resolve, reject) => req.session.regenerate((error) => error ? reject(error) : resolve()));
       req.session.userId = user.id;
       req.session.userRole = user.role;
+      if (pendingDiscoveryClaimId) {
+        const linkedClaim = await storage.linkDiscoveryPassClaim(pendingDiscoveryClaimId, user.id, user.email);
+        if (linkedClaim) {
+          req.session.discoveryPassClaimId = linkedClaim.id;
+          req.session.discoveryPassVariant = "B";
+        }
+      }
       
       res.json({ user });
     } catch (error) {

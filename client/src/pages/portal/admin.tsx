@@ -134,6 +134,15 @@ export default function PortalAdmin() {
     },
     enabled: isAuthenticated && isStaff,
   });
+  const { data: discoveryAbReport, isLoading: discoveryAbReportLoading } = useQuery<any>({
+    queryKey: ["/api/portal/admin/discovery-ab-report"],
+    queryFn: async () => {
+      const response = await fetch("/api/portal/admin/discovery-ab-report?days=30");
+      if (!response.ok) throw new Error("Failed to load Discovery A/B report");
+      return response.json();
+    },
+    enabled: isAuthenticated && isStaff,
+  });
 
   const statusMutation = useMutation({
     mutationFn: async ({ kind, id, status }: { kind: "lead" | "message"; id: string; status: string }) =>
@@ -984,6 +993,56 @@ export default function PortalAdmin() {
                   )}
                 </div>
               </>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="mb-6 border-[#FFB199]/20 bg-[#121826]" data-testid="discovery-ab-report">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base text-white">
+              <BarChart3 className="h-5 w-5 text-[#FFB199]" /> {copy.discoveryAbReport}
+            </CardTitle>
+            <p className="text-xs text-gray-400">{copy.discoveryAbReportDescription}</p>
+            <p className="pt-2 text-[11px] text-gray-500">{copy.discoveryFunnelDateRange(discoveryAbReport?.range?.days || 30)}</p>
+          </CardHeader>
+          <CardContent>
+            {discoveryAbReportLoading ? (
+              <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-[#FFB199]" /></div>
+            ) : (
+              <div className="space-y-5">
+                {(["A", "B"] as const).map((variant) => {
+                  const report = discoveryAbReport?.variants?.[variant];
+                  const stages = [
+                    ["landing", copy.discoveryStageLanding],
+                    ["cta", copy.discoveryStageCta],
+                    ...(variant === "B" ? [["claim", copy.discoveryStageClaim], ["continue", copy.discoveryStageContinue]] : []),
+                    ["account", copy.discoveryStageAccount],
+                    ["forms", copy.discoveryStageFormsComplete],
+                    ["activated", copy.discoveryStageActivated],
+                    ["booked", copy.discoveryStageBooked],
+                  ];
+                  return (
+                    <div key={variant} className="overflow-x-auto rounded-xl border border-white/5 bg-[#0B0F14] p-3">
+                      <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
+                        <p className="text-xs font-semibold uppercase tracking-wider text-gray-300">{variant === "A" ? copy.discoveryVariantA : copy.discoveryVariantB}</p>
+                        <p className="text-[11px] text-gray-500">{report?.source}</p>
+                      </div>
+                      <table className="w-full min-w-[560px] text-sm">
+                        <thead><tr className="border-b border-white/10 text-left text-xs text-gray-500"><th className="p-2">{copy.discoveryAbReport}</th><th className="p-2 text-right">{copy.count}</th><th className="p-2 text-right">{copy.discoveryFromPrevious}</th><th className="p-2 text-right">{copy.discoveryOverall}</th></tr></thead>
+                        <tbody>{stages.map(([key, label]) => <tr key={key} className="border-b border-white/5 text-gray-300"><td className="p-2 text-white">{label}</td><td className="p-2 text-right font-semibold text-[#FFB199]">{report?.stages?.[key] ?? 0}</td><td className="p-2 text-right">{report?.conversion?.[key]?.fromPrevious == null ? "—" : `${report.conversion[key].fromPrevious}%`}</td><td className="p-2 text-right">{report?.conversion?.[key]?.overall == null ? "—" : `${report.conversion[key].overall}%`}</td></tr>)}</tbody>
+                      </table>
+                    </div>
+                  );
+                })}
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {(["en", "es"] as const).map((language) => (
+                    <div key={language} className="rounded-xl border border-white/5 bg-[#0B0F14] p-3">
+                      <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">{language === "en" ? "English" : "Español"}</p>
+                      <p className="mt-2 text-sm text-gray-300">{copy.discoveryVariantA}: <span className="text-white">{discoveryAbReport?.byLocale?.[language]?.A?.stages?.account ?? 0} {copy.discoveryStageAccount.toLowerCase()}</span> · {copy.discoveryVariantB}: <span className="text-white">{discoveryAbReport?.byLocale?.[language]?.B?.stages?.claim ?? 0} {copy.discoveryStageClaim.toLowerCase()}</span></p>
+                    </div>
+                  ))}
+                </div>
+              </div>
             )}
           </CardContent>
         </Card>

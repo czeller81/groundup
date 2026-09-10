@@ -40,8 +40,9 @@ export default function PortalClasses() {
         locale,
       });
       if (reservation.status === "confirmed" && variables.discovery) {
-        trackEvent("discovery_class_booked", { locale });
-        track("discovery_class_booked", "training", { funnel_kind: "discovery_pass", locale });
+        const variant = typeof window !== "undefined" && window.localStorage.getItem("groundup-discovery-variant") === "B" ? "B" : "A";
+        trackEvent("discovery_class_booked", { locale, variant });
+        track("discovery_class_booked", "training", { funnel_kind: "discovery_pass", locale, variant });
       }
     },
     onError: (error: Error) => {
