@@ -1,0 +1,151 @@
+# URGENT — DISCOVERY PASS BOOKING BLOCKER
+
+We have a real live prospect who successfully:
+
+- arrived through the Discovery Pass funnel
+- created an account
+- completed the required forms
+
+The prospect then attempted to select/book a class and received a requirement to have a membership.
+
+This is a production conversion blocker.
+
+Do not redesign the funnel.
+
+Diagnose and fix the exact path:
+
+FORMS COMPLETE
+→ DISCOVERY PASS ACTIVATION
+→ ELIGIBLE CLASS BOOKING
+
+## Required investigation
+
+Determine the prospect state after all required forms are submitted:
+
+1. Is the Discovery Pass automatically activated?
+2. Is an explicit activation CTA required?
+3. If activation is required, is that CTA shown immediately and prominently after the final required form?
+4. Once activated, does the booking system correctly recognize:
+   - 1 SKILL entitlement
+   - 1 STRENGTH entitlement
+   - valid 7-day Discovery window
+5. Does any generic membership gate run before Discovery entitlement eligibility is evaluated?
+
+## Correct business behavior
+
+A valid Discovery Pass user must NOT need a paid membership to book an eligible Discovery class.
+
+Expected logic:
+
+authenticated user
+→ required forms complete
+→ Discovery Pass active
+→ valid matching Discovery entitlement
+→ eligible class
+→ ALLOW BOOKING
+
+Paid membership must not be required when a valid Discovery entitlement covers the booking.
+
+## If pass is not active
+
+After the final required form submission, route the user immediately to:
+
+“Your forms are complete.”
+
+“Your Discovery Pass is ready to activate.”
+
+CTA:
+
+ACTIVATE MY DISCOVERY PASS
+
+After successful activation:
+
+“Your Discovery Pass is active.”
+
+CTA:
+
+BOOK MY FIRST CLASS
+
+Do not return the user to a generic dashboard where activation can be missed.
+
+## If pass is already active
+
+Fix the booking authorization path so Discovery entitlement is checked BEFORE rejecting the user for lack of membership.
+
+Do not weaken membership requirements for ordinary bookings.
+
+Only eligible Discovery bookings should bypass the paid-membership requirement.
+
+## Required regression tests
+
+Test:
+
+- forms complete, pass not active → booking denied with clear activation guidance
+- pass active + SKILL entitlement → SKILL booking allowed
+- pass active + STRENGTH entitlement → STRENGTH booking allowed
+- pass active + wrong class category → denied
+- pass expired → denied
+- entitlement already consumed → denied
+- ordinary non-member without Discovery entitlement → membership requirement preserved
+- paid member behavior unchanged
+- English
+- Spanish
+- mobile
+
+## Production canary
+
+Use a synthetic account and complete:
+
+signup
+→ gym-rules
+→ liability-waiver
+→ activation
+→ book SKILL
+
+Then:
+
+→ book/verify STRENGTH entitlement remains available
+
+Confirm no membership purchase is required.
+
+## Final report
+
+Return:
+
+Root cause:
+[exact]
+
+Was pass active at time of booking?
+[YES/NO]
+
+Was membership gate incorrectly ordered?
+[YES/NO]
+
+Fix applied:
+[exact]
+
+Discovery SKILL booking:
+PASS/FAIL
+
+Discovery STRENGTH booking:
+PASS/FAIL
+
+Paid membership behavior regression:
+PASS/FAIL
+
+English:
+PASS/FAIL
+
+Spanish:
+PASS/FAIL
+
+Mobile:
+PASS/FAIL
+
+Final verdict:
+
+DISCOVERY_PASS_BOOKING_BLOCKER_FIXED
+
+or
+
+DISCOVERY_PASS_BOOKING_BLOCKER_REMAINS
