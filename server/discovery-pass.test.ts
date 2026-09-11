@@ -2,10 +2,11 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { eq } from "drizzle-orm";
 import { db } from "./db";
-import { discoveryEntitlements, discoveryPassClaims, discoveryPasses, formResponses, forms, insertAnalyticsEventSchema, memberAuditEvents, users } from "@shared/schema";
+import { calendarConnections, classOccurrences, classReservationEvents, classReservations, classTypes, discoveryEntitlements, discoveryPassClaims, discoveryPasses, formResponses, forms, insertAnalyticsEventSchema, memberAuditEvents, memberLifecycleEvents, memberLifecycles, users } from "@shared/schema";
 import { storage } from "./storage";
 import { discoveryReservationCountsAsPriorUse, issueDiscoveryPass, missingRequiredBookingForms } from "./member-routes";
 import { discoveryPassClaimRequestSchema, normalizeDiscoveryPassClaimInput } from "./discovery-pass-b";
+import { evaluateBookingEligibility } from "./member-entitlements";
 
 test("Discovery Pass treats prior interest and cancelled unused reservations as new-user eligible", () => {
   assert.equal(discoveryReservationCountsAsPriorUse("cancelled", null), false);
@@ -56,6 +57,154 @@ test("Variant B claim validation and duplicate handling stay account-free", asyn
     assert.equal((await db.select().from(discoveryPasses).where(eq(discoveryPasses.userId, first.claim.id))).length, 0);
   } finally {
     await db.delete(discoveryPassClaims).where(eq(discoveryPassClaims.email, email));
+  }
+});
+
+test("Discovery booking requires activation guidance but bypasses membership after activation", async () => {
+  assert.notEqual(process.env.NODE_ENV, "production", "fixture activation tests must never run in production");
+  const suffix = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  const user = await storage.createUser(
+    `discovery-booking-${suffix}@example.invalid`,
+    "GroundUp-QA-Password-2026",
+    "Discovery",
+    "Booking",
+    "5550000399",
+    "en",
+  );
+  let passId: string | undefined;
+  let skillTypeId: string | undefined;
+  let strengthTypeId: string | undefined;
+  const occurrenceIds: string[] = [];
+  try {
+    const requiredForms = await db.select({ id: forms.id }).from(forms).where(eq(forms.requiredBeforeBooking, true));
+    await db.insert(formResponses).values(requiredForms.map((form) => ({
+      userId: user.id,
+      formId: form.id,
+      answers: {},
+      status: "submitted",
+      submittedAt: new Date(),
+    })));
+    const [skillType] = await db.insert(classTypes).values({
+      name: `Discovery QA Skill ${suffix}`,
+      description: "Fixture",
+      category: "skill",
+      matchPattern: "skill",
+      defaultCapacity: 4,
+      beginnerFriendly: true,
+      firstVisitEligible: true,
+      membershipRequired: false,
+      active: true,
+      bookingEnabled: true,
+    }).returning();
+    const [strengthType] = await db.insert(classTypes).values({
+      name: `Discovery QA Strength ${suffix}`,
+      description: "Fixture",
+      category: "strength",
+      matchPattern: "strength",
+      defaultCapacity: 4,
+      beginnerFriendly: true,
+      firstVisitEligible: true,
+      membershipRequired: false,
+      active: true,
+      bookingEnabled: true,
+    }).returning();
+    skillTypeId = skillType.id;
+    strengthTypeId = strengthType.id;
+    const occurrence = (classTypeId: string) => ({
+      id: `fixture-${suffix}`,
+      start: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      end: new Date(Date.now() + 25 * 60 * 60 * 1000),
+      status: "active",
+      bookingEnabled: true,
+      classTypeId,
+    } as any);
+
+    assert.equal((await evaluateBookingEligibility(user, occurrence(skillType.id))).code, "MEMBERSHIP_INACTIVE");
+    await storage.markDiscoveryOnboarding(user.id);
+    assert.equal((await evaluateBookingEligibility(user, occurrence(skillType.id))).code, "DISCOVERY_ACTIVATION_REQUIRED");
+
+    const pass = await issueDiscoveryPass(user.id, user.id);
+    passId = pass.id;
+    const skillEligibility = await evaluateBookingEligibility(user, occurrence(skillType.id));
+    const strengthEligibility = await evaluateBookingEligibility(user, occurrence(strengthType.id));
+    assert.equal(skillEligibility.code, "ELIGIBLE");
+    assert.equal(skillEligibility.source, "discovery");
+    assert.equal(strengthEligibility.code, "ELIGIBLE");
+    assert.equal(strengthEligibility.source, "discovery");
+
+    const [connection] = await db.select().from(calendarConnections).limit(1);
+    assert.ok(connection, "a calendar connection is required for booking fixtures");
+    const makeOccurrence = async (classTypeId: string, label: string, dayOffset: number) => {
+      const [created] = await db.insert(classOccurrences).values({
+        calendarConnectionId: connection.id,
+        googleCalendarId: connection.calendarId || "discovery-qa-calendar",
+        googleEventId: `discovery-qa-${suffix}-${label}`,
+        title: `Discovery QA ${label}`,
+        description: "Fixture",
+        start: new Date(Date.now() + (dayOffset + 1) * 24 * 60 * 60 * 1000),
+        end: new Date(Date.now() + (dayOffset + 1) * 24 * 60 * 60 * 1000 + 60 * 60 * 1000),
+        classTypeId,
+        canonicalCategory: label === "Skill" ? "JIU_JITSU_SELF_DEFENSE" : "STRENGTH_CONDITIONING",
+        capacity: 4,
+        firstVisitEligible: true,
+        bookingEnabled: true,
+        audience: "members",
+        remoteUpdatedAt: new Date(),
+        lastSyncedAt: new Date(),
+      }).returning();
+      occurrenceIds.push(created.id);
+      return created;
+    };
+    const skillOccurrence = await makeOccurrence(skillType.id, "Skill", 1);
+    const strengthOccurrence = await makeOccurrence(strengthType.id, "Strength", 2);
+    await storage.reserveClassOccurrence({
+      occurrenceId: skillOccurrence.id,
+      userId: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      phone: user.phone || "5550000399",
+    });
+    await storage.reserveClassOccurrence({
+      occurrenceId: strengthOccurrence.id,
+      userId: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      phone: user.phone || "5550000399",
+    });
+    const bookedEntitlements = await db.select().from(discoveryEntitlements)
+      .where(eq(discoveryEntitlements.discoveryPassId, pass.id));
+    assert.deepEqual(
+      bookedEntitlements.map((entitlement) => [entitlement.category, entitlement.status]).sort(),
+      [["SKILL", "BOOKED"], ["STRENGTH", "BOOKED"]],
+    );
+  } finally {
+    await db.delete(memberAuditEvents).where(eq(memberAuditEvents.userId, user.id));
+    await db.delete(memberLifecycleEvents).where(eq(memberLifecycleEvents.userId, user.id));
+    await db.delete(memberLifecycles).where(eq(memberLifecycles.userId, user.id));
+    await db.delete(formResponses).where(eq(formResponses.userId, user.id));
+    if (passId) {
+      await db.delete(discoveryEntitlements).where(eq(discoveryEntitlements.discoveryPassId, passId));
+      await db.delete(discoveryPasses).where(eq(discoveryPasses.id, passId));
+    }
+    if (occurrenceIds.length) {
+      const reservations = await db.select({ id: classReservations.id })
+        .from(classReservations)
+        .where(eq(classReservations.userId, user.id));
+      if (reservations.length) {
+        await db.delete(classReservationEvents).where(eq(classReservationEvents.reservationId, reservations[0].id));
+        if (reservations.length > 1) {
+          await db.delete(classReservationEvents).where(eq(classReservationEvents.reservationId, reservations[1].id));
+        }
+      }
+      await db.delete(classReservations).where(eq(classReservations.userId, user.id));
+    }
+    if (occurrenceIds.length) await db.delete(classOccurrences).where(eq(classOccurrences.id, occurrenceIds[0]));
+    if (occurrenceIds.length > 1) await db.delete(classOccurrences).where(eq(classOccurrences.id, occurrenceIds[1]));
+    if (skillTypeId) await db.delete(classTypes).where(eq(classTypes.id, skillTypeId));
+    if (strengthTypeId) await db.delete(classTypes).where(eq(classTypes.id, strengthTypeId));
+    await db.delete(users).where(eq(users.id, user.id));
   }
 });
 

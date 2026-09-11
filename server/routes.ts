@@ -1176,6 +1176,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/portal/signup", authRateLimit(), async (req, res) => {
     try {
       const { email, password, firstName, lastName, phone } = req.body;
+      const discoveryIntent = req.body?.discoveryIntent === true;
       const locale = req.body.locale === "es" ? "es" : "en";
       const pendingDiscoveryClaimId = req.session.discoveryPassClaimId;
       
@@ -1202,6 +1203,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           req.session.discoveryPassVariant = "B";
         }
       }
+      if (discoveryIntent || pendingDiscoveryClaimId) {
+        await storage.markDiscoveryOnboarding(user.id, pendingDiscoveryClaimId ? "discovery_variant_b" : "discovery_funnel");
+      }
       
       res.status(201).json({ user });
     } catch (error) {
@@ -1213,6 +1217,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/portal/login", authRateLimit(), async (req, res) => {
     try {
       const { email, password } = req.body;
+      const discoveryIntent = req.body?.discoveryIntent === true;
       const pendingDiscoveryClaimId = req.session.discoveryPassClaimId;
       if (!email || !password) {
         return res.status(400).json({ message: "Email and password are required" });
@@ -1232,6 +1237,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           req.session.discoveryPassClaimId = linkedClaim.id;
           req.session.discoveryPassVariant = "B";
         }
+      }
+      if (discoveryIntent || pendingDiscoveryClaimId) {
+        await storage.markDiscoveryOnboarding(user.id, pendingDiscoveryClaimId ? "discovery_variant_b" : "discovery_funnel");
       }
       
       res.json({ user });

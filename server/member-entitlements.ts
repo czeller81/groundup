@@ -10,6 +10,8 @@ import {
   formResponses,
   memberships,
   membershipPlans,
+  memberLifecycles,
+  discoveryPassClaims,
   type MinorProfile,
   type ClassOccurrence,
   type MembershipPlan,
@@ -33,6 +35,7 @@ export type BookingEligibilityCode =
   | "BOOKING_WINDOW_CLOSED"
   | "PLAN_NOT_ELIGIBLE"
   | "MEMBERSHIP_INACTIVE"
+  | "DISCOVERY_ACTIVATION_REQUIRED"
   | "DISCOVERY_SKILL_ALREADY_USED"
   | "DISCOVERY_STRENGTH_ALREADY_USED"
   | "DISCOVERY_EXPIRED"
@@ -71,6 +74,7 @@ const messages: Record<BookingEligibilityCode, string> = {
   BOOKING_WINDOW_CLOSED: "This class is outside your booking window.",
   PLAN_NOT_ELIGIBLE: "Your plan does not include this class category.",
   MEMBERSHIP_INACTIVE: "You do not have an active membership for this class.",
+  DISCOVERY_ACTIVATION_REQUIRED: "Complete your Discovery Pass activation before booking this class.",
   DISCOVERY_SKILL_ALREADY_USED: "Your Discovery skill entitlement has already been used.",
   DISCOVERY_STRENGTH_ALREADY_USED: "Your Discovery strength entitlement has already been used.",
   DISCOVERY_EXPIRED: "Your Discovery Pass has expired.",
@@ -259,6 +263,15 @@ export async function evaluateBookingEligibilityWithExecutor(
     .orderBy(sql`${discoveryPasses.createdAt} desc`)
     .limit(1);
   const discoveryClassCategory = discoveryCategory(classType);
+  const [lifecycle] = await executor.select({ currentState: memberLifecycles.currentState })
+    .from(memberLifecycles)
+    .where(eq(memberLifecycles.userId, user.id))
+    .limit(1);
+  const [linkedDiscoveryClaim] = await executor.select({ id: discoveryPassClaims.id })
+    .from(discoveryPassClaims)
+    .where(eq(discoveryPassClaims.linkedMemberId, user.id))
+    .limit(1);
+  const discoveryOnboarding = lifecycle?.currentState === "DISCOVERY_ONBOARDING" || Boolean(linkedDiscoveryClaim);
 
   if (!pass && historicalPass && !membership) {
     return result(historicalPass.pass.expirationTimestamp < now ? "DISCOVERY_EXPIRED" : "MEMBERSHIP_INACTIVE");
@@ -283,7 +296,12 @@ export async function evaluateBookingEligibilityWithExecutor(
     return await applyReservationChecks(user, occurrence, executor, result("ELIGIBLE", base));
   }
 
-  if (!membership) return result(historicalPass ? "DISCOVERY_EXPIRED" : "MEMBERSHIP_INACTIVE");
+  if (!membership) {
+    if (discoveryOnboarding && !historicalPass) {
+      return result("DISCOVERY_ACTIVATION_REQUIRED", { source: "discovery" });
+    }
+    return result(historicalPass ? "DISCOVERY_EXPIRED" : "MEMBERSHIP_INACTIVE");
+  }
   const plan = membership.plan;
   if (!plan) {
     return await applyReservationChecks(user, occurrence, executor, result("ELIGIBLE", {

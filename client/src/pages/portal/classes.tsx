@@ -86,9 +86,15 @@ export default function PortalClasses() {
               key={occurrence.id}
               occurrence={occurrence}
               locale={locale}
-              actionLabel={occurrence.bookingState === "waitlist" ? copy.joinWaitlist : copy.bookClass}
+              actionLabel={occurrence.eligibility?.code === "DISCOVERY_ACTIVATION_REQUIRED"
+                ? copy.discoveryActivate
+                : occurrence.bookingState === "waitlist" ? copy.joinWaitlist : copy.bookClass}
                  busy={reserve.isPending && reserve.variables?.occurrenceId === occurrence.id}
                onAction={() => {
+                 if (occurrence.eligibility?.code === "DISCOVERY_ACTIVATION_REQUIRED") {
+                   setLocation(`${portalPath("/portal/dashboard")}?intent=discovery-pass&next=activate`);
+                   return;
+                 }
                  trackEvent("booking_started", {
                    booking_type: "member",
                    class_category: occurrence.canonicalCategory,

@@ -25,7 +25,7 @@ interface AuthContextType {
   isAdmin: boolean;
   isCoach: boolean;
   isStaff: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string, discoveryIntent?: boolean) => Promise<void>;
   signup: (data: SignupData) => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -37,6 +37,7 @@ interface SignupData {
   lastName: string;
   phone?: string;
   locale?: Locale;
+  discoveryIntent?: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -62,8 +63,8 @@ export function PortalAuthProvider({ children }: { children: ReactNode }) {
   }, [setUserLocale, user?.id, user?.locale]);
 
   const loginMutation = useMutation({
-    mutationFn: async ({ email, password }: { email: string; password: string }) => {
-      const res = await apiRequest("POST", "/api/portal/login", { email, password });
+    mutationFn: async ({ email, password, discoveryIntent }: { email: string; password: string; discoveryIntent?: boolean }) => {
+      const res = await apiRequest("POST", "/api/portal/login", { email, password, discoveryIntent });
       return res.json();
     },
     onSuccess: () => {
@@ -91,8 +92,8 @@ export function PortalAuthProvider({ children }: { children: ReactNode }) {
     },
   });
 
-  const login = async (email: string, password: string) => {
-    await loginMutation.mutateAsync({ email, password });
+  const login = async (email: string, password: string, discoveryIntent?: boolean) => {
+    await loginMutation.mutateAsync({ email, password, discoveryIntent });
   };
 
   const signup = async (data: SignupData) => {

@@ -218,6 +218,7 @@ export interface IStorage {
   getDiscoveryPassClaim(id: string): Promise<DiscoveryPassClaim | undefined>;
   markDiscoveryPassClaimContinuation(id: string): Promise<DiscoveryPassClaim | undefined>;
   linkDiscoveryPassClaim(id: string, memberId: string, email: string): Promise<DiscoveryPassClaim | undefined>;
+  markDiscoveryOnboarding(userId: string, source?: string): Promise<MemberLifecycle>;
   getDiscoveryAbReport(filters?: { days?: number }): Promise<{
     range: { from: string; to: string; days: number };
     variants: Record<"A" | "B", {
@@ -2149,6 +2150,39 @@ export class DatabaseStorage implements IStorage {
       isNull(discoveryPassClaims.linkedMemberId),
     )).returning();
     return claim || await this.getDiscoveryPassClaim(id);
+  }
+
+  async markDiscoveryOnboarding(userId: string, source = "discovery_funnel"): Promise<MemberLifecycle> {
+    return db.transaction(async (tx) => {
+      const [existing] = await tx.select().from(memberLifecycles)
+        .where(eq(memberLifecycles.userId, userId))
+        .limit(1);
+      if (existing && ["ACTIVE_MEMBER", "DISCOVERY_PASS"].includes(existing.currentState)) {
+        return existing;
+      }
+      if (existing?.currentState === "DISCOVERY_ONBOARDING") {
+        return existing;
+      }
+      const [lifecycle] = existing
+        ? await tx.update(memberLifecycles).set({
+          currentState: "DISCOVERY_ONBOARDING",
+          source,
+          updatedAt: new Date(),
+        }).where(eq(memberLifecycles.id, existing.id)).returning()
+        : await tx.insert(memberLifecycles).values({
+          userId,
+          currentState: "DISCOVERY_ONBOARDING",
+          source,
+        }).returning();
+      await tx.insert(memberLifecycleEvents).values({
+        userId,
+        actorId: userId,
+        previousState: existing?.currentState || null,
+        nextState: "DISCOVERY_ONBOARDING",
+        reason: "Discovery Pass onboarding started",
+      });
+      return lifecycle;
+    });
   }
 
   async getDiscoveryAbReport(filters?: { days?: number }) {

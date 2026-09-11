@@ -1,11 +1,12 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { CalendarDays, ChevronRight, Loader2, Plus, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ClassCard } from "@/components/class-card";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { classDateLabel, classTimeLabel, localizedClassTitle, type LiveClass } from "@/lib/class-booking";
+import { localizedPortalPath } from "@/lib/portal-navigation";
 import { localizeApiError, useLocale } from "@/lib/locale";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -58,6 +59,8 @@ function currentDay(): DayOfWeek {
 export default function PortalSchedule() {
   const { locale, copy: portalCopy } = useLocale();
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
+  const portalPath = (path: string) => localizedPortalPath(path, locale);
   const todayDay = currentDay();
   const [activeDay, setActiveDay] = useState<DayOfWeek>(todayDay);
   const [selectedMinorId, setSelectedMinorId] = useState("");
@@ -192,6 +195,7 @@ export default function PortalSchedule() {
     today: "Hoy", classes: "clases", browse: "Ver por día", noClasses: "No hay clases programadas.",
     book: "Reservar", waitlist: "Unirse a lista de espera", notAvailable: "Consulta al equipo",
     notEligible: "Tu plan actual no incluye esta clase.", loading: "Cargando horario…",
+     discoveryActivationRequired: portalCopy.discoveryActivationRequired,
       error: "No se pudo cargar el horario.", couldNotBook: "No se pudo reservar la clase", classBooked: "Clase reservada", classFullNow: "La clase ya está completamente llena.", waitlistAdded: "Te agregamos a la lista de espera. Te enviaremos un correo si se abre un lugar.", spotConfirmed: portalCopy.spotConfirmed, type: "Tipos de clase", full: "Ver horario completo",
     fullDescription: "Consulta todas las clases en el sitio público.",
     confirmed: "Confirmada", cancelled: "Cancelada",
@@ -240,6 +244,7 @@ export default function PortalSchedule() {
     today: "Today", classes: "classes", browse: "Browse by day", noClasses: "No classes scheduled.",
     book: "Reserve", waitlist: "Join waitlist", notAvailable: "Contact the team",
     notEligible: "Your current plan does not include this class.", loading: "Loading schedule…",
+     discoveryActivationRequired: portalCopy.discoveryActivationRequired,
       error: "The schedule could not be loaded.", couldNotBook: "Could not book class", classBooked: "Class booked", classFullNow: "Class is completely full now.", waitlistAdded: "You’ve been added to the waitlist. We’ll email you if a spot opens.", spotConfirmed: portalCopy.spotConfirmed, type: "Class types", full: "View full schedule",
     fullDescription: "See every class on the public website.",
     confirmed: "Confirmed", cancelled: "Cancelled",
@@ -311,12 +316,17 @@ export default function PortalSchedule() {
   const selectedMinor = (minors.data || []).find((minor) => minor.id === selectedMinorId);
   const actionFor = (item: LiveClass) => {
     if (!item.bookable) return undefined;
+    if (item.eligibility?.code === "DISCOVERY_ACTIVATION_REQUIRED") return portalCopy.discoveryActivate;
     if (item.girlsClass && !selectedMinorId) return copy.chooseMinor;
     if (item.girlsClass && selectedMinor?.consentRevokedAt) return undefined;
     if (!item.girlsClass && item.eligibility && !item.eligibility.eligible) return undefined;
     return item.bookingState === "waitlist" ? copy.waitlist : copy.book;
   };
   const reserveClass = (item: LiveClass) => {
+    if (item.eligibility?.code === "DISCOVERY_ACTIVATION_REQUIRED") {
+      setLocation(`${portalPath("/portal/dashboard")}?intent=discovery-pass&next=activate`);
+      return;
+    }
     if (item.girlsClass && !selectedMinorId) {
       setMinorDialogOpen(true);
       return;
@@ -439,7 +449,9 @@ export default function PortalSchedule() {
                 </div>
                 {selectedClasses.length ? <div className="space-y-3">{selectedClasses.map((item) => <div key={item.id}>
                   <ClassCard occurrence={item} actionLabel={actionFor(item)} busy={reserve.isPending} onAction={() => reserveClass(item)} />
-                  {item.bookable && item.eligibility && !item.eligibility.eligible && <p className="mt-1 px-2 text-xs text-amber-300">{item.eligibility.message || copy.notEligible}</p>}
+                  {item.bookable && item.eligibility && !item.eligibility.eligible && <p className="mt-1 px-2 text-xs text-amber-300">
+                    {item.eligibility.code === "DISCOVERY_ACTIVATION_REQUIRED" ? copy.discoveryActivationRequired : item.eligibility.message || copy.notEligible}
+                  </p>}
                 </div>)}</div> :
                   <div className="py-10 text-center text-gray-600"><CalendarDays className="mx-auto mb-2 h-8 w-8 opacity-30" /><p className="text-sm">{copy.noClasses}</p></div>}
               </section>

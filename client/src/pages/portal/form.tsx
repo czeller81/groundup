@@ -115,7 +115,8 @@ export default function PortalForm({ formSlug, embedded = false, onSubmitted }: 
       if (embedded && slug) {
         onSubmitted?.(slug);
       } else {
-        setLocation(portalPath("/portal/dashboard"));
+        const destination = portalPath("/portal/dashboard");
+        setLocation(discoveryMode ? `${destination}?intent=discovery-pass&next=activate` : destination);
       }
     },
     onError: (error: any) => {

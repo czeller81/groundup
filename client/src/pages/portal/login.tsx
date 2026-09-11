@@ -83,7 +83,7 @@ export default function PortalLogin() {
     e.preventDefault();
     setIsLoading(true);
     try {
-      await login(loginData.email, loginData.password);
+      await login(loginData.email, loginData.password, discoveryIntent);
       trackEvent("member_login_completed", { method: "password", locale });
       if (discoveryIntent) {
         window.localStorage.setItem("groundup-discovery-onboarding", "1");
@@ -120,6 +120,7 @@ export default function PortalLogin() {
         lastName: signupData.lastName,
         phone: signupData.phone || undefined,
         locale,
+        discoveryIntent,
       });
       trackEvent("member_signup_completed", { method: "password", locale });
       if (discoveryIntent) {
