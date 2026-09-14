@@ -1,0 +1,122 @@
+Complete Ground Up BJJ’s production Stripe integration and fix the remaining website and operational reporting issues in one coordinated pass. You have access to this app and its Stripe integration and performed the earlier testing. Inspect the actual code, configuration, and Stripe records before changing anything.
+
+Leave the business tax ID and legal-entity verification untouched. I will complete those directly in Stripe tomorrow. Report any remaining verification restriction without trying to bypass it.
+
+STRIPE ACCOUNT AND EXISTING PRODUCTS
+
+Use Ground Up’s live Stripe account:
+acct_1T8cWMHXiLz0GZmd
+
+Keep its sandbox separate:
+acct_1T8cWWQWwmuPtHJC
+
+Four live monthly USD prices and payment links already exist. Reuse these; do not create duplicate products or prices:
+
+• Ground Up 2 — $139/month, two adult group sessions per week
+price_1UFSMHHXiLz0GZmdFWGtuEq8
+https://buy.stripe.com/6oUfZheOE9v5aCz9nj6J200
+
+• Ground Up 3 — $159/month, three adult group sessions per week
+price_1UFSNEHXiLz0GZmdXI8lK5cT
+https://buy.stripe.com/7sY00j9uk4aLeSP6b76J201
+
+• Ground Up Personal — $250/month, one private coaching session per week; group classes excluded
+price_1UFSNiHXiLz0GZmdnsdGjqu3
+https://buy.stripe.com/cNicN55e47mX11Z5736J202
+
+• Girls Program — $119/month, two girls classes per week, eligibility approved before enrollment; guardian completes payment
+price_1UFSO7HXiLz0GZmdWUAjeW1L
+https://buy.stripe.com/cNi8wP0XO22D11Z8jf6J203
+
+Preserve the existing Free Discovery Pass flow and bilingual pricing. Do not introduce free membership trials, change prices, invent cancellation/refund policies, or enroll customers automatically.
+
+1. REPAIR CHECKOUT AND MEMBER ACCESS
+
+Inspect the existing checkout implementation and complete the simplest reliable integration.
+
+Create checkout sessions on the server for authenticated, eligible members using an allowlist of the existing price IDs. Associate each session, Stripe customer, and subscription with the correct internal member ID. Never trust client-supplied prices or entitlement claims.
+
+Reuse an existing Stripe customer where appropriate and prevent accidental duplicate active subscriptions. Show clear monthly renewal terms and useful pending, successful, canceled, and failed-payment states in English and Spanish.
+
+Grant paid membership access only after a verified server-side payment event. A success-page redirect alone must never activate membership.
+
+Keep Discovery Pass access separate from paid membership. Enforce staff approval and guardian/member relationships for the Girls Program.
+
+The standalone payment links already exist. Determine how to reconcile payments made through them to members safely. Do not grant access based solely on an unverified email match. Send ambiguous or unmatched payments to a staff review queue.
+
+2. FIX WEBHOOKS AND SEPARATE TEST FROM LIVE DATA
+
+The sandbox endpoint at:
+https://www.groundupbjj.com/api/stripe/webhook
+previously returned repeated HTTP 500 errors for checkout, invoice, and subscription events.
+
+Find and fix the root cause using the code and relevant logs. Verify raw-body signature validation, the correct endpoint signing secret, database writes, and event handling.
+
+Ensure live and sandbox credentials, signing secrets, Stripe objects, and operational records cannot be mixed. Test events must never activate real memberships or inflate production revenue.
+
+Handle duplicate deliveries, retries, and out-of-order events safely. Record event processing results and make failures diagnosable without logging secrets or unnecessary personal information.
+
+Handle the relevant checkout, paid/failed invoice, subscription lifecycle, refund, and dispute events supported by this integration. Define access behavior explicitly using existing business rules. Flag any missing policy for owner review rather than inventing one.
+
+Do not blindly replay historical events into production. Preserve financial history; identify and label existing test fixtures so operational reports exclude them.
+
+3. COMPLETE CUSTOMER BILLING MANAGEMENT
+
+Integrate Stripe’s hosted customer portal so authenticated members can access their own invoices and update their payment methods. Prevent access to another member’s Stripe customer.
+
+Inspect the existing cancellation and plan-change rules. Enable those portal options only where they match an established policy; otherwise identify the policy decision needed.
+
+Review receipts, renewal notices, and payment-failure notifications. Document current settings and proposed changes. Do not send test messages to real customers or enable new customer messaging without listing the exact changes for approval.
+
+Do not change payout banks, initiate payouts, charge real cards, issue refunds, cancel real subscriptions, or modify tax/legal verification.
+
+4. MAKE OPERATIONS REPORTING RELIABLE
+
+Reconcile these previously observed inconsistencies against the underlying records:
+
+• Summary reports showed zero forms, Discovery Passes, or bookings while detailed reports showed activity.
+• Booking lookup returned an empty list while schedule availability showed confirmed reservations.
+• Marketing funnel rates reached 150% or 167%, suggesting mismatched cohorts or denominators.
+• Expired admin sessions displayed zero or undefined values instead of a clear login-required state.
+
+Use consistent definitions, time windows, and America/Los_Angeles timezone. Distinguish:
+registered clients, first-time paying customers, active paid members, Discovery Pass holders, leads, and test accounts.
+
+Separate successful payments, refunds, processor fees, net receipts, and bank payouts. Do not count a payout as additional revenue. Display unavailable or incomplete data as unknown, not zero.
+
+Extend the existing authenticated /api/ai/v1 management API with read-only, paginated payment and membership reporting needed for the Google operations workbook. Include stable record IDs, timestamps, currency, live/test mode, payment/refund status, and safe member references. Expose fees only where available and flag pending reconciliation.
+
+Preserve bearer authentication using AI_MANAGEMENT_API_KEY, keep secrets server-side, minimize personal data, and update the OpenAPI schema. Provide a practical CSV export for reconciliation. Do not claim Google Sheets synchronization unless it is actually connected and tested.
+
+5. FIX REMAINING PUBLIC WEBSITE ISSUES
+
+Review all English and Spanish public routes and member/payment flows on mobile and desktop.
+
+Check the women’s self-defense timetable against the canonical schedule. The previous review found stale copy versus skill training at 5 PM and strength at 6 PM; confirm the actual schedule before changing it.
+
+Fix misleading personal-training booking labels, duplicate page titles, and any contact field incorrectly labeled or configured as email when it should accept a phone number.
+
+Preserve:
+• Free Discovery Pass terminology and onboarding
+• Verified monthly prices and membership limits
+• Youth eligibility/contact routing
+• Legacy /book and /es/reservar redirects
+• Instagram link: https://instagram.com/groundupbjj
+
+6. VERIFY AND HAND OFF
+
+Run type checks, relevant automated tests, the production build, and bilingual route smoke checks.
+
+Use the sandbox for end-to-end payment testing. Demonstrate successful checkout, failed payment, duplicate webhook delivery, subscription changes, cancellation handling, unauthorized portal access prevention, and correct membership/reporting updates. Use test identities only.
+
+Validate live configuration through read-only checks. Do not make a real charge to prove it works.
+
+Provide:
+1. What you fixed and the root causes.
+2. Test results with clear sandbox versus live distinctions.
+3. Any remaining owner action, including the deferred tax-ID requirement.
+4. Exact environment variable names required, without secret values.
+5. Updated API schema URL and export instructions.
+6. Whether deployment is still required.
+
+Complete all available implementation and testing now. Prepare the changes for publishing, but do not publish until I approve the final result.
