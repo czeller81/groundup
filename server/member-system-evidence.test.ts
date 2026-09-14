@@ -125,7 +125,9 @@ test("member system evidence: Discovery to membership with weekly limits, waitli
       base.setUTCHours(0, 0, 0, 0);
       base.setUTCDate(base.getUTCDate() + ((1 - weekday + 7) % 7 || 7));
     } else if (weekday < 4) {
-      base.setTime(base.getTime() + 2 * 60 * 60 * 1000);
+      // Keep the first class outside the late-cancellation cutoff so the
+      // cancellation below releases the membership entitlement.
+      base.setTime(base.getTime() + 8 * 60 * 60 * 1000);
     }
     const makeOccurrence = async (typeId: string, offsetDays: number, title: string, capacity: number) => {
       const start = new Date(base.getTime() + offsetDays * 24 * 60 * 60 * 1000);

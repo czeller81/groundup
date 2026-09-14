@@ -370,12 +370,50 @@ export function registerMemberRoutes(app: Express) {
         eq(membershipPlans.internalKey, data.planKey),
         eq(membershipPlans.active, true),
       )).limit(1);
-      if (!plan?.stripePriceId) {
+      if (!plan?.stripePriceId || !plan.stripeProductId || plan.displayPriceCents !== config.amountCents) {
         return res.status(503).json({ code: "PLAN_NOT_READY", message: "This membership is not ready for checkout yet." });
       }
 
       const origin = `${req.protocol}://${req.get("host")}`;
-      const session = await stripe.checkout.sessions.create({
+      const pendingMembership = await db.transaction(async (tx) => {
+        await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${req.session.userId!}))`);
+        const [existingMembership] = await tx.select({ id: memberships.id }).from(memberships).where(and(
+          eq(memberships.userId, req.session.userId!),
+          inArray(memberships.billingSource, ["stripe", "stripe_checkout"]),
+          or(
+            inArray(memberships.billingState, ["active", "past_due", "cancel_at_period_end"]),
+            and(
+              eq(memberships.billingState, "pending"),
+              gte(memberships.createdAt, new Date(Date.now() - 30 * 60 * 1000)),
+            ),
+          ),
+        )).limit(1);
+        if (existingMembership) return null;
+        const [created] = await tx.insert(memberships).values({
+          userId: req.session.userId!,
+          planId: plan.id,
+          type: plan.internalKey,
+          status: "pending",
+          priceCents: plan.displayPriceCents ?? config.amountCents,
+          source: "stripe_checkout",
+          billingSource: "stripe_checkout",
+          billingState: "pending",
+          stripeCustomerId: customer.id,
+          stripeProductId: plan.stripeProductId,
+          stripePriceId: plan.stripePriceId,
+        }).returning();
+        return created;
+      });
+      if (!pendingMembership) {
+        return res.status(409).json({
+          code: "ACTIVE_SUBSCRIPTION_EXISTS",
+          message: "You already have a membership checkout or subscription in progress.",
+        });
+      }
+
+      let session: Stripe.Checkout.Session;
+      try {
+        session = await stripe.checkout.sessions.create({
         mode: "subscription",
         customer: customer.id,
         line_items: [{ price: plan.stripePriceId, quantity: 1 }],
@@ -395,24 +433,23 @@ export function registerMemberRoutes(app: Express) {
             ...(data.minorProfileId ? { ground_up_minor_profile_id: data.minorProfileId } : {}),
           },
         },
-      });
-      if (!session.url) {
-        return res.status(503).json({ code: "PLAN_NOT_READY", message: "This membership is not ready for checkout yet." });
+        }, {
+          idempotencyKey: `ground-up-membership-checkout-${pendingMembership.id}`,
+        });
+        if (!session.url) throw new Error("CHECKOUT_SESSION_URL_MISSING");
+        await db.update(memberships).set({
+          stripeCheckoutSessionId: session.id,
+          updatedAt: new Date(),
+        }).where(eq(memberships.id, pendingMembership.id));
+      } catch (error) {
+        await db.update(memberships).set({
+          status: "cancelled",
+          billingState: "cancelled",
+          cancelledAt: new Date(),
+          updatedAt: new Date(),
+        }).where(eq(memberships.id, pendingMembership.id));
+        throw error;
       }
-      await db.insert(memberships).values({
-        userId: req.session.userId!,
-        planId: plan.id,
-        type: plan.internalKey,
-        status: "pending",
-        priceCents: plan.displayPriceCents || config.amountCents,
-        source: "stripe_checkout",
-        billingSource: "stripe_checkout",
-        billingState: "pending",
-        stripeCustomerId: customer.id,
-        stripeProductId: plan.stripeProductId,
-        stripePriceId: plan.stripePriceId,
-        stripeCheckoutSessionId: session.id,
-      });
       return res.json({ checkoutUrl: session.url, sessionId: session.id });
     } catch (error) {
       if (error instanceof z.ZodError) return res.status(400).json({ code: "INVALID_REQUEST", message: "Choose a valid membership plan." });
@@ -451,7 +488,14 @@ export function registerMemberRoutes(app: Express) {
         isNull(memberships.cancelledAt),
       )).orderBy(desc(memberships.createdAt)).limit(1);
       if (!membership?.stripeSubscriptionId) return res.status(404).json({ code: "SUBSCRIPTION_NOT_FOUND", message: "No active subscription was found." });
-      const subscription = await stripe.subscriptions.update(membership.stripeSubscriptionId, { cancel_at_period_end: true });
+      const subscription = await stripe.subscriptions.update(membership.stripeSubscriptionId, { cancel_at_period_end: true }) as unknown as Stripe.Subscription;
+      await db.update(memberships).set({
+        cancelAtPeriodEnd: subscription.cancel_at_period_end,
+        currentPeriodEnd: subscription.items.data[0]?.current_period_end
+          ? new Date(subscription.items.data[0].current_period_end * 1000)
+          : membership.currentPeriodEnd,
+        updatedAt: new Date(),
+      }).where(eq(memberships.id, membership.id));
       res.json({ cancelAtPeriodEnd: subscription.cancel_at_period_end, status: subscription.status });
     } catch (error) {
       console.error("Subscription cancellation error:", error);

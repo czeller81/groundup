@@ -1,7 +1,18 @@
 import { Router, type Express, type Request, type Response, type NextFunction } from "express";
 import crypto from "node:crypto";
+import { and, count, desc, eq, gte, ilike, isNull, lte, not, or } from "drizzle-orm";
+import { db } from "./db";
 import { storage } from "./storage";
-import { leadStatuses, contactStatuses } from "@shared/schema";
+import {
+  bookings,
+  contactStatuses,
+  leadStatuses,
+  membershipPlans,
+  memberships,
+  users,
+} from "@shared/schema";
+import { getStripeCheckoutReconciliationHealth } from "./membership-billing";
+import { INTERNAL_TEST_EMAIL_PATTERN } from "./route-security";
 
 const AI_API_PREFIX = "/api/ai/v1";
 const MAX_PAGE_SIZE = 100;
@@ -63,6 +74,139 @@ function queryText(value: unknown) {
 function sendServerError(res: Response, message: string, error: unknown) {
   console.error(`AI management API: ${message}`, error);
   return res.status(500).json({ code: "AI_MANAGEMENT_REQUEST_FAILED", message });
+}
+
+function stripeMode() {
+  if (process.env.STRIPE_SECRET_KEY?.startsWith("sk_live_")) return "live" as const;
+  if (process.env.STRIPE_SECRET_KEY?.startsWith("sk_test_")) return "test" as const;
+  return "unknown" as const;
+}
+
+function csvCell(value: unknown) {
+  const text = value === null || value === undefined ? "" : String(value);
+  const safeText = /^[=+\-@]/.test(text) ? `'${text}` : text;
+  return `"${safeText.replaceAll('"', '""')}"`;
+}
+
+function csvLine(values: unknown[]) {
+  return values.map(csvCell).join(",");
+}
+
+async function getPaymentReport(params: {
+  from?: Date;
+  to?: Date;
+  status?: string;
+  page: number;
+  limit: number;
+}) {
+  const filters = [
+    not(ilike(users.email, INTERNAL_TEST_EMAIL_PATTERN)),
+    ...(params.from ? [gte(bookings.createdAt, params.from)] : []),
+    ...(params.to ? [lte(bookings.createdAt, params.to)] : []),
+    ...(params.status ? [eq(bookings.status, params.status)] : []),
+  ];
+  const [rows, total] = await Promise.all([
+    db.select({
+      id: bookings.id,
+      memberId: bookings.userId,
+      occurredAt: bookings.createdAt,
+      amountCents: bookings.amountCents,
+      currency: bookings.currency,
+      paymentStatus: bookings.paymentStatus,
+      bookingStatus: bookings.status,
+      stripeSessionId: bookings.stripeSessionId,
+    })
+      .from(bookings)
+      .leftJoin(users, eq(bookings.userId, users.id))
+      .where(and(
+        or(isNull(users.id), ...filters),
+      ))
+      .orderBy(desc(bookings.createdAt))
+      .limit(params.limit)
+      .offset((params.page - 1) * params.limit),
+    db.select({ count: count() })
+      .from(bookings)
+      .leftJoin(users, eq(bookings.userId, users.id))
+      .where(and(
+        or(isNull(users.id), ...filters),
+      )),
+  ]);
+  return {
+    source: "application_booking_records",
+    accountingNote: "Fees, refunds, and bank payouts are not stored in the application record and are returned as unavailable.",
+    mode: stripeMode(),
+    page: params.page,
+    limit: params.limit,
+    total: Number(total[0]?.count || 0),
+    rows: rows.map((row) => ({
+      ...row,
+      recordType: "booking_payment",
+      feeCents: null,
+      refundStatus: "unavailable",
+      reconciliationStatus: row.paymentStatus === "paid" ? "recorded" : "not_paid",
+    })),
+  };
+}
+
+async function getMembershipReport(params: {
+  page: number;
+  limit: number;
+  status?: string;
+  billingState?: string;
+}) {
+  const filters = [
+    not(ilike(users.email, INTERNAL_TEST_EMAIL_PATTERN)),
+    ...(params.status ? [eq(memberships.status, params.status)] : []),
+    ...(params.billingState ? [eq(memberships.billingState, params.billingState)] : []),
+  ];
+  const [rows, total] = await Promise.all([
+    db.select({
+      id: memberships.id,
+      memberId: memberships.userId,
+      planKey: membershipPlans.internalKey,
+      planName: membershipPlans.displayName,
+      status: memberships.status,
+      billingState: memberships.billingState,
+      billingSource: memberships.billingSource,
+      priceCents: memberships.priceCents,
+      startDate: memberships.startDate,
+      endDate: memberships.endDate,
+      currentPeriodStart: memberships.currentPeriodStart,
+      currentPeriodEnd: memberships.currentPeriodEnd,
+      cancelAtPeriodEnd: memberships.cancelAtPeriodEnd,
+      billingFailureAt: memberships.billingFailureAt,
+      stripeCustomerId: memberships.stripeCustomerId,
+      stripeSubscriptionId: memberships.stripeSubscriptionId,
+      stripeCheckoutSessionId: memberships.stripeCheckoutSessionId,
+      stripeLatestInvoiceId: memberships.stripeLatestInvoiceId,
+      createdAt: memberships.createdAt,
+      updatedAt: memberships.updatedAt,
+    })
+      .from(memberships)
+      .innerJoin(users, eq(memberships.userId, users.id))
+      .leftJoin(membershipPlans, eq(memberships.planId, membershipPlans.id))
+      .where(and(...filters))
+      .orderBy(desc(memberships.updatedAt))
+      .limit(params.limit)
+      .offset((params.page - 1) * params.limit),
+    db.select({ count: count() })
+      .from(memberships)
+      .innerJoin(users, eq(memberships.userId, users.id))
+      .where(and(...filters)),
+  ]);
+  return {
+    source: "application_membership_records",
+    accountingNote: "This is a membership entitlement snapshot, not an invoice or payout ledger.",
+    mode: stripeMode(),
+    page: params.page,
+    limit: params.limit,
+    total: Number(total[0]?.count || 0),
+    rows: rows.map((row) => ({
+      ...row,
+      currency: "usd",
+      reconciliationStatus: row.billingState === "pending" ? "pending" : "recorded",
+    })),
+  };
 }
 
 function publicScheduleOccurrence(occurrence: Awaited<ReturnType<typeof storage.listClassOccurrences>>[number]) {
@@ -157,6 +301,49 @@ const openApiTemplate = {
           content: { "application/json": { schema: { type: "object", required: ["status"], properties: { status: { type: "string", enum: ["pending", "paid", "canceled"] } } } } },
         },
         responses: { "200": { description: "Updated booking" } },
+      },
+    },
+    "/api/ai/v1/operations/memberships": {
+      get: {
+        tags: ["Operations"],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: "page", in: "query", schema: { type: "integer", minimum: 1 } },
+          { name: "limit", in: "query", schema: { type: "integer", minimum: 1, maximum: 100 } },
+          { name: "status", in: "query", schema: { type: "string" } },
+          { name: "billingState", in: "query", schema: { type: "string" } },
+        ],
+        responses: { "200": { description: "Paginated membership snapshots" } },
+      },
+    },
+    "/api/ai/v1/operations/payments": {
+      get: {
+        tags: ["Operations"],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: "from", in: "query", schema: { type: "string", format: "date-time" } },
+          { name: "to", in: "query", schema: { type: "string", format: "date-time" } },
+          { name: "status", in: "query", schema: { type: "string" } },
+          { name: "page", in: "query", schema: { type: "integer", minimum: 1 } },
+          { name: "limit", in: "query", schema: { type: "integer", minimum: 1, maximum: 100 } },
+        ],
+        responses: { "200": { description: "Paginated application payment records" } },
+      },
+    },
+    "/api/ai/v1/operations/payments.csv": {
+      get: {
+        tags: ["Operations"],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: "from", in: "query", schema: { type: "string", format: "date-time" } },
+          { name: "to", in: "query", schema: { type: "string", format: "date-time" } },
+          { name: "status", in: "query", schema: { type: "string" } },
+        ],
+        responses: { "200": { description: "Bounded UTF-8 CSV export of application payment records" } },
+      },
+    },
+    "/api/ai/v1/operations/reconciliation-health": {
+      get: { tags: ["Operations"], security: [{ bearerAuth: [] }], responses: { "200": { description: "Current Stripe checkout reconciliation health" } },
       },
     },
     "/api/ai/v1/operations/leads": {
@@ -254,7 +441,7 @@ export function registerAiManagementRoutes(app: Express) {
       const days = Math.min(Math.max(Number(req.query.days) || 30, 1), 365);
       const [stats, funnel] = await Promise.all([
         storage.getAdminStats(),
-        storage.getDiscoveryFunnelReport({ days }),
+        storage.getDiscoveryFunnelReport({ days, from: parseDate(req.query.from), to: parseDate(req.query.to), timezone: queryText(req.query.timezone) }),
       ]);
       res.json({ generatedAt: new Date().toISOString(), stats, discoveryFunnel: funnel });
     } catch (error) {
@@ -310,6 +497,80 @@ export function registerAiManagementRoutes(app: Express) {
     } catch (error) {
       sendServerError(res, "Failed to load bookings.", error);
     }
+  });
+
+  router.get("/operations/memberships", async (req: Request, res: Response) => {
+    try {
+      res.json(await getMembershipReport({
+        page: parsePage(req.query.page, 1),
+        limit: parseLimit(req.query.limit),
+        status: queryText(req.query.status),
+        billingState: queryText(req.query.billingState),
+      }));
+    } catch (error) {
+      sendServerError(res, "Failed to load membership report.", error);
+    }
+  });
+
+  router.get("/operations/payments.csv", async (req: Request, res: Response) => {
+    const from = parseDate(req.query.from);
+    const to = parseDate(req.query.to);
+    if ((req.query.from && !from) || (req.query.to && !to) || (from && to && to <= from)) {
+      return res.status(400).json({ code: "INVALID_DATE_RANGE", message: "from and to must be valid ISO dates with to after from." });
+    }
+    try {
+      const report = await getPaymentReport({ from, to, status: queryText(req.query.status), page: 1, limit: 5000 });
+      const header = ["record_type", "id", "member_id", "occurred_at", "amount_cents", "currency", "payment_status", "booking_status", "stripe_session_id", "fee_cents", "refund_status", "reconciliation_status"];
+      const lines = report.rows.map((row) => csvLine([
+        row.recordType,
+        row.id,
+        row.memberId,
+        row.occurredAt?.toISOString(),
+        row.amountCents,
+        row.currency,
+        row.paymentStatus,
+        row.bookingStatus,
+        row.stripeSessionId,
+        row.feeCents,
+        row.refundStatus,
+        row.reconciliationStatus,
+      ]));
+      res.set({
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": 'attachment; filename="ground-up-payments.csv"',
+        "Cache-Control": "no-store",
+      }).send(`\uFEFF${csvLine(header)}\n${lines.join("\n")}\n`);
+    } catch (error) {
+      sendServerError(res, "Failed to export payment report.", error);
+    }
+  });
+
+  router.get("/operations/payments", async (req: Request, res: Response) => {
+    const from = parseDate(req.query.from);
+    const to = parseDate(req.query.to);
+    if ((req.query.from && !from) || (req.query.to && !to) || (from && to && to <= from)) {
+      return res.status(400).json({ code: "INVALID_DATE_RANGE", message: "from and to must be valid ISO dates with to after from." });
+    }
+    try {
+      res.json(await getPaymentReport({
+        from,
+        to,
+        status: queryText(req.query.status),
+        page: parsePage(req.query.page, 1),
+        limit: parseLimit(req.query.limit),
+      }));
+    } catch (error) {
+      sendServerError(res, "Failed to load payment report.", error);
+    }
+  });
+
+  router.get("/operations/reconciliation-health", async (_req: Request, res: Response) => {
+    res.json({
+      mode: stripeMode(),
+      source: "process_memory",
+      warning: "History resets when the process restarts; use this as current process health, not durable accounting history.",
+      health: getStripeCheckoutReconciliationHealth(),
+    });
   });
 
   router.patch("/operations/bookings/:id/status", async (req: Request, res: Response) => {
@@ -377,7 +638,7 @@ export function registerAiManagementRoutes(app: Express) {
     const days = Math.min(Math.max(Number(req.query.days) || 30, 1), 365);
     const locale = req.query.locale === "en" || req.query.locale === "es" ? req.query.locale : undefined;
     try {
-      res.json(await storage.getDiscoveryFunnelReport({ days, locale }));
+      res.json(await storage.getDiscoveryFunnelReport({ days, locale, from: parseDate(req.query.from), to: parseDate(req.query.to), timezone: queryText(req.query.timezone) }));
     } catch (error) {
       sendServerError(res, "Failed to load Discovery Pass funnel.", error);
     }
@@ -386,7 +647,7 @@ export function registerAiManagementRoutes(app: Express) {
   router.get("/marketing/discovery-ab", async (req: Request, res: Response) => {
     const days = Math.min(Math.max(Number(req.query.days) || 30, 1), 365);
     try {
-      res.json(await storage.getDiscoveryAbReport({ days }));
+      res.json(await storage.getDiscoveryAbReport({ days, from: parseDate(req.query.from), to: parseDate(req.query.to), timezone: queryText(req.query.timezone) }));
     } catch (error) {
       sendServerError(res, "Failed to load Discovery Pass A/B report.", error);
     }
@@ -406,6 +667,9 @@ export function registerAiManagementRoutes(app: Express) {
         medium: queryText(req.query.medium),
         campaign: queryText(req.query.campaign),
         landingPath: queryText(req.query.landingPath),
+        from: parseDate(req.query.from),
+        to: parseDate(req.query.to),
+        timezone: queryText(req.query.timezone),
       }));
     } catch (error) {
       sendServerError(res, "Failed to load campaign report.", error);

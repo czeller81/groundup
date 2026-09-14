@@ -28,6 +28,8 @@ const HREFLANG_PAIRS: Record<string, { en?: string; es?: string; xDefault?: stri
   "/es/privacidad": { en: "/privacy", es: "/es/privacidad" },
   "/discovery-pass": { en: "/discovery-pass", es: "/es/discovery-pass", xDefault: "/discovery-pass" },
   "/es/discovery-pass": { en: "/discovery-pass", es: "/es/discovery-pass", xDefault: "/discovery-pass" },
+  "/womens-self-defense": { en: "/womens-self-defense", es: "/es/womens-self-defense", xDefault: "/womens-self-defense" },
+  "/es/womens-self-defense": { en: "/womens-self-defense", es: "/es/womens-self-defense", xDefault: "/womens-self-defense" },
 };
 
 export default function SEO({

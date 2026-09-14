@@ -665,6 +665,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Stripe webhook signature verification failed:", err);
       return res.status(400).json({ message: "Invalid webhook signature" });
     }
+    const expectedLiveMode = process.env.STRIPE_SECRET_KEY?.startsWith("sk_live_");
+    if (typeof event.livemode === "boolean" && event.livemode !== expectedLiveMode) {
+      console.error("Stripe webhook mode mismatch; event rejected.");
+      return res.status(400).json({ message: "Stripe webhook mode mismatch" });
+    }
     if (!(await storage.startWebhookEvent("stripe", event.id))) {
       return res.json({ received: true, duplicate: true });
     }
@@ -694,7 +699,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const session = event.data.object as Stripe.Checkout.Session;
           if (session.mode !== "subscription" || !session.subscription) break;
           const subscriptionId = typeof session.subscription === "string" ? session.subscription : session.subscription.id;
-          let subscription = await stripe.subscriptions.retrieve(subscriptionId);
+          let subscription = await stripe.subscriptions.retrieve(subscriptionId, {
+            expand: ["items.data.price"],
+          });
           if (!subscription.metadata?.ground_up_user_id && Object.keys(session.metadata || {}).length) {
             subscription = await stripe.subscriptions.update(subscription.id, {
               metadata: session.metadata || {},
@@ -709,7 +716,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         case "customer.subscription.created":
         case "customer.subscription.updated":
         case "customer.subscription.deleted": {
-          await applyStripeSubscription(event.data.object as Stripe.Subscription);
+           const eventSubscription = event.data.object as Stripe.Subscription;
+           const subscription = await stripe.subscriptions.retrieve(eventSubscription.id, {
+             expand: ["items.data.price"],
+           });
+           await applyStripeSubscription(subscription);
           break;
         }
         case "invoice.paid": {
@@ -717,7 +728,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const subscription = invoice.parent?.subscription_details?.subscription;
           const subscriptionId = typeof subscription === "string" ? subscription : subscription?.id;
           if (subscriptionId) {
-            const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+            const subscription = await stripe.subscriptions.retrieve(subscriptionId, {
+              expand: ["items.data.price"],
+            });
             await applyStripeSubscription(subscription, {
               latestInvoiceId: invoice.id,
             });
@@ -729,7 +742,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const subscription = invoice.parent?.subscription_details?.subscription;
           const subscriptionId = typeof subscription === "string" ? subscription : subscription?.id;
           if (subscriptionId) {
-            const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+            const subscription = await stripe.subscriptions.retrieve(subscriptionId, {
+              expand: ["items.data.price"],
+            });
             await applyStripeSubscription(subscription, {
               latestInvoiceId: invoice.id,
               billingStateOverride: "past_due",
@@ -1001,6 +1016,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const funnel = req.query.funnel === "adaptive_capacity" ? "adaptive_capacity" : req.query.funnel === "training" ? "training" : null;
     if (!funnel) return res.status(400).json({ message: "funnel must be training or adaptive_capacity" });
     const clean = (key: string) => typeof req.query[key] === "string" ? (req.query[key] as string).trim().slice(0, 200) || undefined : undefined;
+    const parseReportDate = (key: string) => {
+      const value = clean(key);
+      if (!value) return undefined;
+      const date = new Date(value);
+      return Number.isNaN(date.getTime()) ? null : date;
+    };
+    const from = parseReportDate("from");
+    const to = parseReportDate("to");
+    if (from === null || to === null || (from && to && to <= from)) {
+      return res.status(400).json({ message: "from and to must be valid ISO dates with to after from" });
+    }
     try {
       res.json(await storage.getCampaignReport({
         funnel,
@@ -1008,6 +1034,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         medium: clean("medium"),
         campaign: clean("campaign"),
         landingPath: clean("landingPath"),
+        from: from || undefined,
+        to: to || undefined,
+        timezone: clean("timezone"),
       }));
     } catch (error) {
       console.error("Campaign report error:", error);
@@ -1019,7 +1048,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const days = typeof req.query.days === "string" ? Number(req.query.days) : undefined;
       const locale = req.query.locale === "en" || req.query.locale === "es" ? req.query.locale : undefined;
-      res.json(await storage.getDiscoveryFunnelReport({ days, locale }));
+      const from = typeof req.query.from === "string" ? new Date(req.query.from) : undefined;
+      const to = typeof req.query.to === "string" ? new Date(req.query.to) : undefined;
+      if ((from && Number.isNaN(from.getTime())) || (to && Number.isNaN(to.getTime())) || (from && to && to <= from)) {
+        return res.status(400).json({ message: "from and to must be valid ISO dates with to after from" });
+      }
+      res.json(await storage.getDiscoveryFunnelReport({ days, locale, from, to, timezone: typeof req.query.timezone === "string" ? req.query.timezone : undefined }));
     } catch (error) {
       console.error("Discovery funnel report error:", error);
       res.status(500).json({ message: "Failed to build Discovery Pass funnel report" });
@@ -1029,7 +1063,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/portal/admin/discovery-ab-report", requireRole("admin", "coach"), async (req, res) => {
     try {
       const days = typeof req.query.days === "string" ? Number(req.query.days) : undefined;
-      res.json(await storage.getDiscoveryAbReport({ days }));
+      const from = typeof req.query.from === "string" ? new Date(req.query.from) : undefined;
+      const to = typeof req.query.to === "string" ? new Date(req.query.to) : undefined;
+      if ((from && Number.isNaN(from.getTime())) || (to && Number.isNaN(to.getTime())) || (from && to && to <= from)) {
+        return res.status(400).json({ message: "from and to must be valid ISO dates with to after from" });
+      }
+      res.json(await storage.getDiscoveryAbReport({ days, from, to, timezone: typeof req.query.timezone === "string" ? req.query.timezone : undefined }));
     } catch (error) {
       console.error("Discovery A/B report error:", error);
       res.status(500).json({ message: "Failed to build Discovery Pass A/B report" });

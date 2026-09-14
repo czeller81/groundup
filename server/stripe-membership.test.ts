@@ -159,6 +159,16 @@ test("completed Checkout sessions reconcile the existing pending membership", as
         data: [{
           current_period_start: timestamp,
           current_period_end: timestamp + 30 * 24 * 60 * 60,
+          price: {
+            id: plan.stripePriceId,
+            object: "price",
+            active: true,
+            currency: "usd",
+            type: "recurring",
+            unit_amount: plan.displayPriceCents,
+            recurring: { interval: "month", interval_count: 1 },
+            product: plan.stripeProductId,
+          },
         }],
       },
     } as unknown as Stripe.Subscription;
@@ -530,6 +540,16 @@ test("member billing moves the same checkout membership from pending to active a
         data: [{
           current_period_start: timestamp,
           current_period_end: timestamp + 30 * 24 * 60 * 60,
+          price: {
+            id: plan.stripePriceId,
+            object: "price",
+            active: true,
+            currency: "usd",
+            type: "recurring",
+            unit_amount: plan.displayPriceCents,
+            recurring: { interval: "month", interval_count: 1 },
+            product: plan.stripeProductId,
+          },
         }],
       },
     } as unknown as Stripe.Subscription, {
@@ -566,6 +586,16 @@ test("member billing moves the same checkout membership from pending to active a
         data: [{
           current_period_start: timestamp,
           current_period_end: timestamp + 30 * 24 * 60 * 60,
+          price: {
+            id: plan.stripePriceId,
+            object: "price",
+            active: true,
+            currency: "usd",
+            type: "recurring",
+            unit_amount: plan.displayPriceCents,
+            recurring: { interval: "month", interval_count: 1 },
+            product: plan.stripeProductId,
+          },
         }],
       },
     } as unknown as Stripe.Subscription);
@@ -642,6 +672,16 @@ test("member billing keeps the same active membership when Stripe reconciliation
         data: [{
           current_period_start: timestamp,
           current_period_end: timestamp + 30 * 24 * 60 * 60,
+          price: {
+            id: plan.stripePriceId,
+            object: "price",
+            active: true,
+            currency: "usd",
+            type: "recurring",
+            unit_amount: plan.displayPriceCents,
+            recurring: { interval: "month", interval_count: 1 },
+            product: plan.stripeProductId,
+          },
         }],
       },
     } as unknown as Stripe.Subscription;

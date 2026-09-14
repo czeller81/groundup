@@ -74,6 +74,44 @@ export function getBillingPlanConfig(key: string) {
   return isBillingPlanKey(key) ? STRIPE_MEMBERSHIP_CATALOG[key] : null;
 }
 
+export function stripeSubscriptionCustomerId(subscription: Stripe.Subscription) {
+  return typeof subscription.customer === "string"
+    ? subscription.customer
+    : subscription.customer?.id || null;
+}
+
+export function validateStripeSubscriptionPrice(
+  subscription: Stripe.Subscription,
+  membershipPlan: {
+    internalKey: string;
+    stripePriceId: string | null;
+    stripeProductId: string | null;
+    displayPriceCents: number | null;
+  },
+) {
+  const items = subscription.items?.data || [];
+  if (items.length !== 1) throw new Error("STRIPE_SUBSCRIPTION_ITEM_COUNT_INVALID");
+  const price = items[0]?.price;
+  if (!price || typeof price === "string") throw new Error("STRIPE_SUBSCRIPTION_PRICE_UNEXPANDED");
+  const productId = typeof price.product === "string" ? price.product : price.product?.id;
+  const expectedAmount = membershipPlan.displayPriceCents ?? STRIPE_MEMBERSHIP_CATALOG[membershipPlan.internalKey as BillingPlanKey]?.amountCents;
+  if (
+    !membershipPlan.stripePriceId
+    || !membershipPlan.stripeProductId
+    || price.id !== membershipPlan.stripePriceId
+    || productId !== membershipPlan.stripeProductId
+    || price.currency !== "usd"
+    || price.type !== "recurring"
+    || price.active !== true
+    || price.recurring?.interval !== "month"
+    || price.recurring?.interval_count !== 1
+    || price.unit_amount !== expectedAmount
+  ) {
+    throw new Error("STRIPE_SUBSCRIPTION_PRICE_MISMATCH");
+  }
+  return price;
+}
+
 export function stripeBillingState(subscription: Stripe.Subscription) {
   if (subscription.cancel_at_period_end) return "cancel_at_period_end";
   switch (subscription.status) {
@@ -351,7 +389,13 @@ async function reconcilePendingCheckoutMemberships(
     processingFailures: 0,
   };
   for (const membership of pendingMemberships) {
-    if (!membership.stripeCheckoutSessionId) continue;
+    if (!membership.stripeCheckoutSessionId) {
+      if (membership.createdAt.getTime() <= now - MISSING_CHECKOUT_SESSION_GRACE_MS) {
+        await cancelPendingCheckoutMembership(membership.id);
+        summary.missing++;
+      }
+      continue;
+    }
 
     let session: Stripe.Checkout.Session;
     try {
@@ -383,7 +427,10 @@ async function reconcilePendingCheckoutMemberships(
       let subscription: Stripe.Subscription;
       try {
         subscription = await withStripeReconciliationRequestTimeout(
-          (requestOptions) => stripe.subscriptions.retrieve(subscriptionId, requestOptions),
+          (requestOptions) => stripe.subscriptions.retrieve(subscriptionId, {
+            ...requestOptions,
+            expand: ["items.data.price"],
+          }),
           requestTimeoutMs,
         );
         if (!subscription.metadata?.ground_up_user_id && Object.keys(session.metadata || {}).length) {
@@ -435,7 +482,6 @@ export async function reconcilePendingStripeCheckouts(
     eq(memberships.userId, userId),
     eq(memberships.billingState, "pending"),
     eq(memberships.billingSource, "stripe_checkout"),
-    isNotNull(memberships.stripeCheckoutSessionId),
   ));
 
   return reconcilePendingCheckoutMemberships(
@@ -455,7 +501,6 @@ export async function reconcileStalePendingStripeCheckouts(
   const pendingMemberships = await db.select().from(memberships).where(and(
     eq(memberships.billingState, "pending"),
     eq(memberships.billingSource, "stripe_checkout"),
-    isNotNull(memberships.stripeCheckoutSessionId),
     lte(memberships.createdAt, new Date(now - PENDING_CHECKOUT_STALE_AFTER_MS)),
   )).orderBy(asc(memberships.createdAt)).limit(limit);
 
@@ -505,8 +550,14 @@ export async function getOrCreateStripeCustomer(stripe: Stripe, userId: string) 
   if (user.stripeCustomerId) {
     try {
       const customer = await stripe.customers.retrieve(user.stripeCustomerId);
-      if (!customer.deleted) return customer;
-    } catch {
+      if (!customer.deleted) {
+        if (customer.metadata?.ground_up_user_id !== user.id) {
+          throw new Error("STRIPE_CUSTOMER_OWNERSHIP_FAILED");
+        }
+        return customer;
+      }
+    } catch (error) {
+      if (!isMissingStripeResource(error)) throw error;
       // A deleted customer can be safely replaced and linked below.
     }
   }
@@ -549,7 +600,17 @@ export async function applyStripeSubscription(subscription: Stripe.Subscription,
   }
   const plan = await db.select().from(membershipPlans).where(eq(membershipPlans.internalKey, planKey)).limit(1);
   const membershipPlan = plan[0];
-  if (!membershipPlan) throw new Error("MEMBERSHIP_PLAN_NOT_CONFIGURED");
+  if (!membershipPlan || !membershipPlan.active) throw new Error("MEMBERSHIP_PLAN_NOT_CONFIGURED");
+  const stripeCustomerId = stripeSubscriptionCustomerId(subscription);
+  if (!stripeCustomerId) throw new Error("STRIPE_SUBSCRIPTION_CUSTOMER_INVALID");
+  const [user] = await db.select({
+    id: users.id,
+    stripeCustomerId: users.stripeCustomerId,
+  }).from(users).where(eq(users.id, userId)).limit(1);
+  if (!user || !user.stripeCustomerId || user.stripeCustomerId !== stripeCustomerId) {
+    throw new Error("STRIPE_SUBSCRIPTION_CUSTOMER_MISMATCH");
+  }
+  validateStripeSubscriptionPrice(subscription, membershipPlan);
   const state = extra.billingStateOverride || stripeBillingState(subscription);
   const values = {
     userId,
@@ -560,7 +621,7 @@ export async function applyStripeSubscription(subscription: Stripe.Subscription,
     source: "stripe_subscription",
     billingSource: "stripe",
     billingState: state,
-    stripeCustomerId: typeof subscription.customer === "string" ? subscription.customer : subscription.customer.id,
+    stripeCustomerId,
     stripeProductId: membershipPlan.stripeProductId,
     stripePriceId: membershipPlan.stripePriceId,
     stripeSubscriptionId: subscription.id,

@@ -79,6 +79,26 @@ import {
   type BookingEligibility,
 } from "./member-entitlements";
 
+const DEFAULT_REPORT_TIMEZONE = "America/Los_Angeles";
+
+function validReportTimezone(timezone?: string) {
+  if (!timezone) return DEFAULT_REPORT_TIMEZONE;
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone: timezone }).format();
+    return timezone;
+  } catch {
+    return DEFAULT_REPORT_TIMEZONE;
+  }
+}
+
+function reportRange(input: { days?: number; from?: Date; to?: Date; timezone?: string }, maxDays: number) {
+  const to = input.to || new Date();
+  const requestedDays = Math.min(maxDays, Math.max(1, Math.round(input.days || 30)));
+  const from = input.from || new Date(to.getTime() - requestedDays * 24 * 60 * 60 * 1000);
+  const days = Math.max(1, Math.ceil((to.getTime() - from.getTime()) / (24 * 60 * 60 * 1000)));
+  return { from, to, days, timezone: validReportTimezone(input.timezone) };
+}
+
 export interface IStorage {
   getUserById(id: string): Promise<User | undefined>;
   listMinorProfiles(guardianUserId: string): Promise<MinorProfile[]>;
@@ -219,8 +239,8 @@ export interface IStorage {
   markDiscoveryPassClaimContinuation(id: string): Promise<DiscoveryPassClaim | undefined>;
   linkDiscoveryPassClaim(id: string, memberId: string, email: string): Promise<DiscoveryPassClaim | undefined>;
   markDiscoveryOnboarding(userId: string, source?: string): Promise<MemberLifecycle>;
-  getDiscoveryAbReport(filters?: { days?: number }): Promise<{
-    range: { from: string; to: string; days: number };
+  getDiscoveryAbReport(filters?: { days?: number; from?: Date; to?: Date; timezone?: string }): Promise<{
+    range: { from: string; to: string; days: number; timezone: string };
     variants: Record<"A" | "B", {
       stages: Record<string, number>;
       conversion: Record<string, { fromPrevious: number | null; overall: number | null }>;
@@ -238,14 +258,17 @@ export interface IStorage {
     medium?: string;
     campaign?: string;
     landingPath?: string;
+    from?: Date;
+    to?: Date;
+    timezone?: string;
   }): Promise<{
     funnel: string;
     filters: Record<string, string>;
     totals: { pageViews: number; funnelSteps: number; formStarts: number; submissions: number; successfulLeads: number; totalLeads: number; consentedSessions: number };
     breakdown: Array<{ source: string; medium: string; campaign: string; landingPath: string; pageViews: number; funnelSteps: number; formStarts: number; submissions: number; successfulLeads: number; totalLeads: number; consentedSessions: number }>;
   }>;
-  getDiscoveryFunnelReport(filters?: { days?: number; locale?: "en" | "es" }): Promise<{
-    range: { from: string; to: string; days: number };
+  getDiscoveryFunnelReport(filters?: { days?: number; locale?: "en" | "es"; from?: Date; to?: Date; timezone?: string }): Promise<{
+    range: { from: string; to: string; days: number; timezone: string };
     stages: Record<string, number>;
     conversion: Record<string, { fromPrevious: number | null; overall: number | null }>;
     diagnostics: Record<string, number>;
@@ -2014,16 +2037,23 @@ export class DatabaseStorage implements IStorage {
       return true;
     } catch (error: any) {
       if (error?.code !== "23505") throw error;
-      const [existing] = await db.select().from(webhookEvents).where(eq(webhookEvents.id, id));
-       if (!existing || !canRetryWebhook(existing.status, existing.lockedUntil, now)) return false;
-      await db.update(webhookEvents).set({
+      const [claimed] = await db.update(webhookEvents).set({
         status: "processing",
-        attempts: existing.attempts + 1,
+        attempts: sql`${webhookEvents.attempts} + 1`,
         processingStartedAt: now,
         lockedUntil: retryUntil,
         lastError: null,
-      }).where(eq(webhookEvents.id, id));
-      return true;
+      }).where(and(
+        eq(webhookEvents.id, id),
+        or(
+          eq(webhookEvents.status, "failed_retryable"),
+          and(
+            eq(webhookEvents.status, "processing"),
+            or(isNull(webhookEvents.lockedUntil), lte(webhookEvents.lockedUntil, now)),
+          ),
+        ),
+      )).returning({ id: webhookEvents.id });
+      return Boolean(claimed);
     }
   }
 
@@ -2185,17 +2215,17 @@ export class DatabaseStorage implements IStorage {
     });
   }
 
-  async getDiscoveryAbReport(filters?: { days?: number }) {
-    const days = Math.min(365, Math.max(1, Math.round(filters?.days || 30)));
-    const to = new Date();
-    const from = new Date(to.getTime() - days * 24 * 60 * 60 * 1000);
+  async getDiscoveryAbReport(filters?: { days?: number; from?: Date; to?: Date; timezone?: string }) {
+    const { from, to, days, timezone } = reportRange(filters || {}, 365);
     const eventRows = await db.select().from(analyticsEvents).where(and(
       eq(analyticsEvents.funnel, "training"),
       gte(analyticsEvents.createdAt, from),
+      lte(analyticsEvents.createdAt, to),
     ));
     const claims = await db.select().from(discoveryPassClaims).where(and(
       eq(discoveryPassClaims.experimentVariant, "B"),
       gte(discoveryPassClaims.createdAt, from),
+      lte(discoveryPassClaims.createdAt, to),
       not(ilike(discoveryPassClaims.email, INTERNAL_TEST_EMAIL_PATTERN)),
     ));
     const linkedIds = claims.map((claim) => claim.linkedMemberId).filter(Boolean) as string[];
@@ -2296,7 +2326,7 @@ export class DatabaseStorage implements IStorage {
       }];
     })) as Record<"en" | "es", Record<"A" | "B", { stages: Record<string, number>; consentedSessions: number }>>;
     return {
-      range: { from: from.toISOString(), to: to.toISOString(), days },
+      range: { from: from.toISOString(), to: to.toISOString(), days, timezone },
       variants: {
         A: { stages: a, conversion: conversionFor(a), source: "consented discovery analytics; post-CTA stages require consent" },
         B: { stages: b, conversion: conversionFor(b), source: "anonymous claim records plus linked application records; landing/CTA use consented analytics" },
@@ -2312,14 +2342,24 @@ export class DatabaseStorage implements IStorage {
     medium?: string;
     campaign?: string;
     landingPath?: string;
+    from?: Date;
+    to?: Date;
+    timezone?: string;
   }) {
+    const { from, to, timezone } = reportRange(filters, 365);
     const { analyticsEvents, trialLeads } = await import("@shared/schema");
-    const events = await db.select().from(analyticsEvents).where(eq(analyticsEvents.funnel, filters.funnel));
+    const events = await db.select().from(analyticsEvents).where(and(
+      eq(analyticsEvents.funnel, filters.funnel),
+      gte(analyticsEvents.createdAt, from),
+      lte(analyticsEvents.createdAt, to),
+    ));
     const leads = await db.select().from(trialLeads).where(and(
       filters.funnel === "adaptive_capacity"
         ? eq(trialLeads.program, "adaptive-capacity")
         : sql`${trialLeads.program} <> 'adaptive-capacity'`,
       not(ilike(trialLeads.email, INTERNAL_TEST_EMAIL_PATTERN)),
+      gte(trialLeads.createdAt, from),
+      lte(trialLeads.createdAt, to),
     ));
     const value = (obj: unknown, key: string) => {
       const v = obj && typeof obj === "object" ? (obj as Record<string, unknown>)[key] : undefined;
@@ -2335,29 +2375,62 @@ export class DatabaseStorage implements IStorage {
         (!filters.campaign || filters.campaign === campaign) &&
         (!filters.landingPath || filters.landingPath === landingPath);
     };
-    type Row = { source: string; medium: string; campaign: string; landingPath: string; pageViews: number; funnelSteps: number; formStarts: number; submissions: number; successfulLeads: number; totalLeads: number; consentedSessions: Set<string> };
+    type Row = {
+      source: string;
+      medium: string;
+      campaign: string;
+      landingPath: string;
+      pageViews: Set<string>;
+      funnelSteps: Set<string>;
+      formStarts: Set<string>;
+      submissions: Set<string>;
+      successfulLeads: Set<string>;
+      totalLeads: Set<string>;
+      consentedSessions: Set<string>;
+    };
     const rows = new Map<string, Row>();
     const getRow = (obj: unknown) => {
       const row = { source: value(obj, "utm_source"), medium: value(obj, "utm_medium"), campaign: value(obj, "utm_campaign"), landingPath: value(obj, "landing_path") };
       const key = JSON.stringify(row);
-      if (!rows.has(key)) rows.set(key, { ...row, pageViews: 0, funnelSteps: 0, formStarts: 0, submissions: 0, successfulLeads: 0, totalLeads: 0, consentedSessions: new Set() });
+      if (!rows.has(key)) rows.set(key, {
+        ...row,
+        pageViews: new Set(),
+        funnelSteps: new Set(),
+        formStarts: new Set(),
+        submissions: new Set(),
+        successfulLeads: new Set(),
+        totalLeads: new Set(),
+        consentedSessions: new Set(),
+      });
       return rows.get(key)!;
     };
     for (const event of events) {
       if (!matches(event.properties)) continue;
       const row = getRow(event.properties);
-      if (event.event === "page_view") row.pageViews++;
-      if (event.event === "funnel_step") row.funnelSteps++;
-      if (event.event === "lead_form_started") row.formStarts++;
-      if (event.event === "lead_form_submitted") row.submissions++;
-      if (event.event === "lead_form_succeeded") row.successfulLeads++;
+      if (event.event === "page_view") row.pageViews.add(event.sessionId);
+      if (event.event === "funnel_step") row.funnelSteps.add(event.sessionId);
+      if (event.event === "lead_form_started") row.formStarts.add(event.sessionId);
+      if (event.event === "lead_form_submitted") row.submissions.add(event.sessionId);
+      if (event.event === "lead_form_succeeded") row.successfulLeads.add(event.sessionId);
       row.consentedSessions.add(event.sessionId);
     }
     for (const lead of leads) {
       if (!matches(lead.attribution)) continue;
-      getRow(lead.attribution).totalLeads++;
+       getRow(lead.attribution).totalLeads.add((lead.email || lead.id).toLowerCase());
     }
-    const breakdown = Array.from(rows.values()).map(({ consentedSessions, ...row }) => ({ ...row, consentedSessions: consentedSessions.size }));
+    const breakdown = Array.from(rows.values()).map((row) => ({
+      source: row.source,
+      medium: row.medium,
+      campaign: row.campaign,
+      landingPath: row.landingPath,
+      pageViews: row.pageViews.size,
+      funnelSteps: row.funnelSteps.size,
+      formStarts: row.formStarts.size,
+      submissions: row.submissions.size,
+      successfulLeads: row.successfulLeads.size,
+      totalLeads: row.totalLeads.size,
+      consentedSessions: row.consentedSessions.size,
+    }));
     const totals = breakdown.reduce((total, row) => ({
       pageViews: total.pageViews + row.pageViews,
       funnelSteps: total.funnelSteps + row.funnelSteps,
@@ -2367,19 +2440,26 @@ export class DatabaseStorage implements IStorage {
       totalLeads: total.totalLeads + row.totalLeads,
       consentedSessions: total.consentedSessions + row.consentedSessions,
     }), { pageViews: 0, funnelSteps: 0, formStarts: 0, submissions: 0, successfulLeads: 0, totalLeads: 0, consentedSessions: 0 });
-    return { funnel: filters.funnel, filters: Object.fromEntries(Object.entries(filters).filter(([, v]) => v)), totals, breakdown };
+    return {
+      funnel: filters.funnel,
+      range: { from: from.toISOString(), to: to.toISOString(), timezone },
+      filters: Object.fromEntries(Object.entries(filters)
+        .filter(([, value]) => value instanceof Date ? false : Boolean(value))
+        .map(([key, value]) => [key, String(value)])),
+      totals,
+      breakdown,
+    };
   }
 
-  async getDiscoveryFunnelReport(filters: { days?: number; locale?: "en" | "es" } = {}) {
-    const days = Math.min(90, Math.max(1, filters.days || 30));
-    const to = new Date();
-    const from = new Date(to.getTime() - days * 24 * 60 * 60 * 1000);
+  async getDiscoveryFunnelReport(filters: { days?: number; locale?: "en" | "es"; from?: Date; to?: Date; timezone?: string } = {}) {
+    const { from, to, days, timezone } = reportRange(filters, 90);
     const recentUsers = await db.select({
       id: users.id,
       locale: users.locale,
     }).from(users).where(and(
       eq(users.role, "member"),
       gte(users.createdAt, from),
+      lte(users.createdAt, to),
       not(ilike(users.email, INTERNAL_TEST_EMAIL_PATTERN)),
       filters.locale ? eq(users.locale, filters.locale) : sql`true`,
     ));
@@ -2416,6 +2496,7 @@ export class DatabaseStorage implements IStorage {
     const eventRows = await db.select().from(analyticsEvents).where(and(
       eq(analyticsEvents.funnel, "training"),
       gte(analyticsEvents.createdAt, from),
+      lte(analyticsEvents.createdAt, to),
     ));
     const consentedSteps = new Map<string, Set<string>>();
     const consentedSessions = new Set<string>();
@@ -2523,7 +2604,7 @@ export class DatabaseStorage implements IStorage {
       stages: Object.fromEntries(Array.from(group.stages.entries()).map(([stage, sessions]) => [stage, sessions.size])),
     })).sort((a, b) => b.consentedSessions - a.consentedSessions);
     return {
-      range: { from: from.toISOString(), to: to.toISOString(), days },
+      range: { from: from.toISOString(), to: to.toISOString(), days, timezone },
       stages,
       conversion,
       diagnostics,

@@ -147,6 +147,7 @@ export default function Contact() {
                             <FormControl>
                               <Input
                                 {...field}
+                                autoComplete="given-name"
                                 className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-[#5EEBFF]"
                                 data-testid="input-first-name"
                               />
@@ -164,6 +165,7 @@ export default function Contact() {
                             <FormControl>
                               <Input
                                 {...field}
+                                autoComplete="family-name"
                                 className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-[#5EEBFF]"
                                 data-testid="input-last-name"
                               />
@@ -184,6 +186,7 @@ export default function Contact() {
                             <Input
                               type="email"
                               {...field}
+                              autoComplete="email"
                               className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-[#5EEBFF]"
                               data-testid="input-email"
                             />
@@ -203,6 +206,7 @@ export default function Contact() {
                             <Input
                               type="tel"
                               {...field}
+                              autoComplete="tel"
                               className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-[#5EEBFF]"
                               data-testid="input-phone"
                             />

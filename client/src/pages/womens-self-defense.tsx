@@ -54,9 +54,21 @@ function FAQ({ question, answer }: { question: string; answer: string }) {
   );
 }
 
-const womenClasses = SCHEDULE.filter(c =>
-  c.category === "jiu-jitsu" && !c.advanced
+// Discovery Pass visitors need one eligible SKILL and one eligible STRENGTH
+// class, so this page must show the same canonical options as the booking flow.
+const womenClasses = SCHEDULE.filter((c) =>
+  (c.category === "jiu-jitsu" || c.category === "strength") && !c.advanced
 );
+
+const DAY_LABELS: Record<string, string> = {
+  Monday: "Lunes",
+  Tuesday: "Martes",
+  Wednesday: "Miércoles",
+  Thursday: "Jueves",
+  Friday: "Viernes",
+  Saturday: "Sábado",
+  Sunday: "Domingo",
+};
 
 export default function WomensSelfDefense() {
   const { locale } = useLocale();
@@ -284,21 +296,21 @@ export default function WomensSelfDefense() {
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.07, duration: 0.4 }}
-                  className={`flex items-center gap-4 p-4 rounded-xl border ${cfg.border} bg-[#0B0F14]`}
+                   className={`flex flex-col items-start gap-3 p-4 rounded-xl border ${cfg.border} bg-[#0B0F14] sm:flex-row sm:items-center`}
                 >
-                  <div className={`w-2 h-10 rounded-full flex-shrink-0 ${cfg.bg}`} style={{ backgroundColor: undefined, background: cfg.bg.replace("bg-", "") }} />
+                   <div className={`w-2 h-10 rounded-full flex-shrink-0 ${cfg.bg}`} />
                   <div className="flex-1 min-w-0">
                     <div className="text-white font-semibold text-sm">{cls.title}</div>
                     <div className="flex items-center gap-3 mt-0.5">
-                      <span className={`flex items-center gap-1 text-xs ${cfg.color}`}>
-                        <Calendar className="h-3 w-3" /> {cls.day}
+                       <span className={`flex items-center gap-1 text-xs ${cfg.color}`}>
+                         <Calendar className="h-3 w-3" /> {cls.day}
                       </span>
                       <span className={`flex items-center gap-1 text-xs ${cfg.color}`}>
                         <Clock className="h-3 w-3" /> {cls.startTime}{cls.endTime ? `–${cls.endTime}` : ""}
                       </span>
                     </div>
                   </div>
-                  <Link href={discoveryPassPath}>
+                   <Link href={discoveryPassPath} className="self-stretch sm:self-auto">
                     <Button size="sm" className="text-xs font-semibold uppercase tracking-wide flex-shrink-0 bg-[#FF6B8A]/10 text-[#FF6B8A] border border-[#FF6B8A]/20 hover:bg-[#FF6B8A]/20">
                       Book
                     </Button>
@@ -397,8 +409,74 @@ function SpanishWomensSelfDefense() {
         </div></div>
       </section>
       <Section className="py-24 bg-[#121826]"><div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8"><div className="text-center mb-14"><div className="inline-flex px-4 py-1.5 rounded-full border border-[#FF6B8A]/20 bg-[#FF6B8A]/5 text-[#FF6B8A] text-xs font-semibold uppercase tracking-wider mb-4">Plan de estudios</div><h2 className="text-4xl md:text-5xl font-bold text-white mb-4" style={{ fontFamily: "var(--font-display)" }}>LO QUE <span className="text-[#FF6B8A]">APRENDERÁS</span></h2><p className="text-gray-400 max-w-lg mx-auto text-sm">Cada técnica se elige porque funciona en situaciones reales, no para competir. Aprendes a protegerte, no a pelear.</p></div><div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">{curriculum.map(([title, desc], i) => { const icons = [Shield, Lock, Heart, Users, Shield, CheckCircle]; const Icon = icons[i]; return <motion.div key={title} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="p-6 rounded-2xl border border-white/5 bg-[#0B0F14]"><div className="w-10 h-10 rounded-lg flex items-center justify-center mb-4 bg-[#FF6B8A]/10"><Icon className="h-5 w-5 text-[#FF6B8A]" /></div><h3 className="text-white font-bold text-sm mb-2">{title}</h3><p className="text-gray-500 text-xs leading-relaxed">{desc}</p></motion.div>; })}</div></div></Section>
-        <Section className="py-24 bg-[#0B0F14]"><div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8"><div className="grid lg:grid-cols-2 gap-12 items-center"><div><div className="inline-flex px-4 py-1.5 rounded-full border border-[#B06CFF]/20 bg-[#B06CFF]/5 text-[#B06CFF] text-xs font-semibold uppercase tracking-wider mb-6">Estructura del programa</div><h2 className="text-4xl font-bold text-white mb-6" style={{ fontFamily: "var(--font-display)" }}>8 SEMANAS. <span className="text-[#B06CFF]">DISEÑADAS</span> PARA PRINCIPIANTES.</h2><p className="text-gray-400 leading-relaxed mb-8 text-sm">Cada clase se construye sobre la anterior. No solo memorizarás movimientos: entenderás por qué funcionan y ganarás confianza para usarlos.</p><div className="space-y-4 mb-8">{[["Duración", "8 semanas"], ["Clases por semana", "2 clases"], ["Clases totales", "16 sesiones"], ["Tamaño de clase", "Máximo 6 estudiantes"], ["Ubicación", "Oxnard, CA"], ["Qué usar", "Ropa deportiva cómoda"], ["Equipo", "Ninguno para tu primera clase"]].map(([label, value]) => <div key={label} className="flex items-center justify-between py-3 border-b border-white/5"><span className="text-gray-500 text-sm">{label}</span><span className="text-white font-semibold text-sm">{value}</span></div>)}</div><Button asChild size="lg" className="bg-[#FF6B8A] text-[#0B0F14] font-bold uppercase tracking-wider"><Link href={discoveryPassPath}>Obtén tu Discovery Pass gratis <ArrowRight className="ml-2 h-4 w-4" /></Link></Button></div><img src={facilityFrame7} alt="Mujeres entrenando juntas" className="rounded-2xl w-full aspect-[4/3] object-cover border border-white/10" /></div></div></Section>
-      <section className="py-20 px-4 bg-[#121826] border-y border-white/5"><div className="max-w-2xl mx-auto text-center"><h2 className="text-3xl font-bold text-white mb-4">¿Tienes preguntas?</h2><p className="text-gray-400 mb-7">La elegibilidad, el horario y la disponibilidad se confirman antes de reservar. Escríbenos y te ayudaremos a elegir el siguiente paso.</p><Button asChild variant="outline" className="border-white/15 text-white"><Link href={contactPath}>Contacta a Ground Up</Link></Button></div></section>
+       <Section className="py-24 bg-[#0B0F14]"><div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8"><div className="grid lg:grid-cols-2 gap-12 items-center"><div><div className="inline-flex px-4 py-1.5 rounded-full border border-[#B06CFF]/20 bg-[#B06CFF]/5 text-[#B06CFF] text-xs font-semibold uppercase tracking-wider mb-6">Estructura del programa</div><h2 className="text-4xl font-bold text-white mb-6" style={{ fontFamily: "var(--font-display)" }}>8 SEMANAS. <span className="text-[#B06CFF]">DISEÑADAS</span> PARA PRINCIPIANTES.</h2><p className="text-gray-400 leading-relaxed mb-8 text-sm">Cada clase se construye sobre la anterior. No solo memorizarás movimientos: entenderás por qué funcionan y ganarás confianza para usarlos.</p><div className="space-y-4 mb-8">{[["Duración", "8 semanas"], ["Clases por semana", "2 clases"], ["Clases totales", "16 sesiones"], ["Tamaño de clase", "Máximo 6 estudiantes"], ["Ubicación", "Oxnard, CA"], ["Qué usar", "Ropa deportiva cómoda"], ["Equipo", "Ninguno para tu primera clase"]].map(([label, value]) => <div key={label} className="flex items-center justify-between py-3 border-b border-white/5"><span className="text-gray-500 text-sm">{label}</span><span className="text-white font-semibold text-sm">{value}</span></div>)}</div><Button asChild size="lg" className="bg-[#FF6B8A] text-[#0B0F14] font-bold uppercase tracking-wider"><Link href={discoveryPassPath}>Obtén tu Discovery Pass gratis <ArrowRight className="ml-2 h-4 w-4" /></Link></Button></div><img src={facilityFrame7} alt="Mujeres entrenando juntas" className="rounded-2xl w-full aspect-[4/3] object-cover border border-white/10" /></div></div></Section>
+       <Section className="py-24 bg-[#121826]">
+         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+           <div className="text-center mb-12">
+             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[#5EEBFF]/20 bg-[#5EEBFF]/5 text-[#5EEBFF] text-xs font-semibold uppercase tracking-wider mb-4">
+               <Calendar className="h-3.5 w-3.5" /> Horarios elegibles
+             </div>
+             <h2 className="text-4xl font-bold text-white" style={{ fontFamily: "var(--font-display)" }}>
+               ELIGE UN HORARIO <span className="text-[#5EEBFF]">PARA TI</span>
+             </h2>
+             <p className="text-gray-400 text-sm mt-4 max-w-xl mx-auto">
+               El Discovery Pass incluye una clase de SKILL y una de STRENGTH dentro de los siete días de activación. La disponibilidad se confirma en el calendario en vivo.
+             </p>
+           </div>
+           <div className="space-y-3">
+             {womenClasses.map((cls) => {
+               const cfg = CATEGORY_CONFIG[cls.category];
+               return (
+                 <div key={cls.id} className={`flex flex-col items-start gap-3 p-4 rounded-xl border ${cfg.border} bg-[#0B0F14] sm:flex-row sm:items-center`}>
+                   <div className={`w-2 h-10 rounded-full flex-shrink-0 ${cfg.bg}`} />
+                   <div className="flex-1 min-w-0">
+                     <div className="text-white font-semibold text-sm">{cls.title}</div>
+                     <div className="flex items-center gap-3 mt-0.5">
+                       <span className={`flex items-center gap-1 text-xs ${cfg.color}`}><Calendar className="h-3 w-3" /> {DAY_LABELS[cls.day]}</span>
+                       <span className={`flex items-center gap-1 text-xs ${cfg.color}`}><Clock className="h-3 w-3" /> {cls.startTime}{cls.endTime ? `–${cls.endTime}` : ""}</span>
+                     </div>
+                   </div>
+                   <Link href={discoveryPassPath} className="self-stretch sm:self-auto">
+                     <Button size="sm" className="w-full text-xs font-semibold uppercase tracking-wide bg-[#FF6B8A]/10 text-[#FF6B8A] border border-[#FF6B8A]/20 hover:bg-[#FF6B8A]/20">Reservar</Button>
+                   </Link>
+                 </div>
+               );
+             })}
+           </div>
+         </div>
+       </Section>
+       <Section className="py-24 bg-[#0B0F14]">
+         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+           <div className="flex justify-center text-[#FF6B8A] mb-6">{[...Array(5)].map((_, i) => <Star key={i} className="h-5 w-5 fill-current" />)}</div>
+           <blockquote className="text-xl md:text-2xl text-white font-medium leading-relaxed mb-8" style={{ fontFamily: "var(--font-display)" }}>
+             “Llegué sin saber absolutamente nada. En la primera clase aprendí a moverme y caer de forma segura. Coach Raymi hizo que me sintiera capaz desde el primer día.”
+           </blockquote>
+           <div className="text-white font-semibold text-sm">María G.</div>
+           <div className="text-gray-500 text-xs mt-1">Defensa personal para mujeres, Oxnard</div>
+         </div>
+       </Section>
+       <Section className="py-24 bg-[#121826]">
+         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+           <h2 className="text-4xl font-bold text-white mb-12 text-center" style={{ fontFamily: "var(--font-display)" }}>PREGUNTAS <span className="text-[#FF6B8A]">COMUNES</span></h2>
+           <div className="space-y-3">
+             <FAQ question="¿Necesito experiencia en artes marciales?" answer="No. El programa está diseñado desde cero para principiantes y cada técnica se enseña paso a paso." />
+             <FAQ question="¿Las clases son solo para mujeres?" answer="Sí. Son espacios solo para mujeres, diseñados para que entrenes con comodidad y concentración." />
+             <FAQ question="¿Qué debo llevar?" answer="Ropa deportiva cómoda. No necesitas uniforme, zapatos en el tatami ni equipo especial para tu primera clase." />
+             <FAQ question="¿Tendré que pelear o hacer sparring?" answer="No. Practicarás con una compañera de forma controlada y colaborativa, sin sparring competitivo." />
+             <FAQ question="¿Qué pasa si no puedo ir a una clase?" answer="Habla con Coach Raymi para revisar el material y elegir el siguiente paso disponible." />
+           </div>
+         </div>
+       </Section>
+       <Section className="py-24 bg-[#0B0F14] relative overflow-hidden">
+         <div className="absolute inset-0 bg-gradient-to-br from-[#FF6B8A]/5 via-transparent to-[#B06CFF]/5" />
+         <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+           <h2 className="text-4xl md:text-5xl font-bold text-white mb-4" style={{ fontFamily: "var(--font-display)" }}>DISCOVERY PASS <span className="text-[#FF6B8A]">GRATIS</span></h2>
+           <p className="text-gray-400 mb-10 max-w-md mx-auto">Crea tu cuenta, completa los formularios, activa tu pase y reserva una clase elegible de SKILL y otra de STRENGTH dentro de siete días.</p>
+           <Button asChild size="lg" className="h-14 px-12 text-base font-bold uppercase tracking-wider bg-[#FF6B8A] text-[#0B0F14]"><Link href={discoveryPassPath}>Obtén tu Discovery Pass gratis <ArrowRight className="ml-2 h-5 w-5" /></Link></Button>
+           <p className="text-gray-600 text-xs mt-4">Sin tarjeta de crédito · Oxnard, CA · (786) 757-1175</p>
+         </div>
+       </Section>
+       <section className="py-20 px-4 bg-[#121826] border-y border-white/5"><div className="max-w-2xl mx-auto text-center"><h2 className="text-3xl font-bold text-white mb-4">¿Tienes preguntas?</h2><p className="text-gray-400 mb-7">La elegibilidad, el horario y la disponibilidad se confirman antes de reservar. Escríbenos y te ayudaremos a elegir el siguiente paso.</p><Button asChild variant="outline" className="border-white/15 text-white"><Link href={contactPath}>Contacta a Ground Up</Link></Button></div></section>
     </div>
   );
 }
