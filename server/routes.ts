@@ -1211,7 +1211,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (program && !["training", "adaptive-capacity"].includes(program)) {
         return res.status(400).json({ message: "Invalid lead program" });
       }
-      const leads = await storage.getTrialLeads(program === "training" ? undefined : program);
+      const leads = await storage.getTrialLeads(program === "training" ? undefined : program, { includeSuppressed: true });
       const filtered = program === "training"
         ? leads.filter((lead) => lead.program !== "adaptive-capacity")
         : leads;

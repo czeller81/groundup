@@ -622,8 +622,14 @@ export function registerAiManagementRoutes(app: Express) {
     if (program && !["training", "adaptive-capacity"].includes(program)) {
       return res.status(400).json({ code: "INVALID_PROGRAM", message: "program must be training or adaptive-capacity." });
     }
+    const requestedStatus = queryText(req.query.status);
+    if (requestedStatus && !leadStatuses.includes(requestedStatus as typeof leadStatuses[number])) {
+      return res.status(400).json({ code: "INVALID_LEAD_STATUS", message: "Invalid lead status." });
+    }
     try {
-      const leads = await storage.getTrialLeads(program === "training" ? undefined : program);
+      const leads = await storage.getTrialLeads(program === "training" ? undefined : program, {
+        status: requestedStatus as typeof leadStatuses[number] | undefined,
+      });
       res.json(program === "training" ? leads.filter((lead) => lead.program !== "adaptive-capacity") : leads);
     } catch (error) {
       sendServerError(res, "Failed to load leads.", error);

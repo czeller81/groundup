@@ -641,7 +641,7 @@ export const insertTrialLeadSchema = createInsertSchema(trialLeads).omit({
 
 export type InsertTrialLead = z.infer<typeof insertTrialLeadSchema>;
 export type TrialLead = typeof trialLeads.$inferSelect;
-export const leadStatuses = ["new", "contacted", "qualified", "archived"] as const;
+export const leadStatuses = ["new", "contacted", "qualified", "needs_review", "suspicious", "archived"] as const;
 export type LeadStatus = typeof leadStatuses[number];
 
 export const analyticsEvents = pgTable("analytics_events", {

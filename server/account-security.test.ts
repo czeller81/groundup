@@ -103,3 +103,20 @@ test("admin review can restore a suspicious account to legitimate", async () => 
   assert.equal(updated?.accountStatus, "legitimate");
   assert.deepEqual(updated?.riskReasons, ["test-signal"]);
 });
+
+test("suppressed leads stay out of active lead queues", async () => {
+  const suffix = crypto.randomBytes(6).toString("hex");
+  const lead = await storage.createTrialLead({
+    firstName: "Suspicious",
+    lastName: "Lead",
+    email: `suppressed-lead-${suffix}@test.invalid`,
+    phone: "5550000998",
+    program: "adaptive-capacity",
+    experience: "none",
+  });
+  await storage.updateTrialLeadStatus(lead.id, "suspicious");
+  const activeLeads = await storage.getTrialLeads("adaptive-capacity");
+  const allLeads = await storage.getTrialLeads("adaptive-capacity", { includeSuppressed: true });
+  assert.equal(activeLeads.some((item) => item.id === lead.id), false);
+  assert.equal(allLeads.some((item) => item.id === lead.id && item.status === "suspicious"), true);
+});

@@ -173,6 +173,8 @@ test("public occurrence filtering excludes test-marked records without deleting 
   assert.equal(isPublicOccurrenceText("Women’s BJJ", "Beginner class", "Oxnard"), true);
   assert.equal(isPublicOccurrenceText("BOOKING READINESS TEST SERIES", "Internal test", "Oxnard"), false);
   assert.equal(isPublicOccurrenceText("Women’s BJJ", null, "TEST LOCATION"), false);
+  assert.equal(isPublicOccurrenceText("QA Future Skill Class", "Skill", "Ground Up fixture"), false);
+  assert.equal(isPublicOccurrenceText("Women’s BJJ", "Beginner class", "Fixture Coach"), false);
 });
 
 test("internal QA email markers stay out of production-facing admin data", () => {

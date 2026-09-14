@@ -406,7 +406,9 @@ export default function PortalAdmin() {
   const getInboxStatusBadge = (status: string) => (
     <Badge className={
       status === "new" ? "bg-orange-500/20 text-orange-300 border-orange-500/30" :
-      status === "archived" ? "bg-gray-500/20 text-gray-400 border-gray-500/30" :
+       status === "archived" ? "bg-gray-500/20 text-gray-400 border-gray-500/30" :
+       status === "suspicious" ? "bg-red-500/20 text-red-300 border-red-500/30" :
+       status === "needs_review" ? "bg-amber-500/20 text-amber-300 border-amber-500/30" :
       "bg-green-500/20 text-green-400 border-green-500/30"
     }>{({
       new: copy.statusNew,
@@ -415,13 +417,15 @@ export default function PortalAdmin() {
       resolved: copy.statusResolved,
       contacted: copy.statusContacted,
       qualified: copy.statusQualified,
+       suspicious: locale === "es" ? "Sospechosa" : "Suspicious",
+       needs_review: locale === "es" ? "Necesita revisión" : "Needs review",
     } as Record<string, string>)[status] || status.replace("-", " ")}</Badge>
   );
 
   const renderInboxRow = (item: any, kind: "lead" | "message") => {
     const isMessage = kind === "message";
     const name = isMessage ? `${item.firstName} ${item.lastName}` : `${item.firstName} ${item.lastName}`;
-    const statuses = isMessage ? ["new", "acknowledged", "resolved", "archived"] : ["new", "contacted", "qualified", "archived"];
+    const statuses = isMessage ? ["new", "acknowledged", "resolved", "archived"] : ["new", "contacted", "qualified", "needs_review", "suspicious", "archived"];
     return (
       <div key={item.id} className="rounded-lg bg-[#0B0F14] border border-white/5 p-4 space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">

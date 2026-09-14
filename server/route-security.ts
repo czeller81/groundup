@@ -13,7 +13,9 @@ export function coachCanManageMember(member: { assignedCoachId?: string | null }
 }
 
 export function isPublicOccurrenceText(title?: string | null, description?: string | null, location?: string | null) {
-  return ![title, description, location].some((value) => value?.toLowerCase().includes("test"));
+  return ![title, description, location].some((value) =>
+    /\btest\b|\bqa\b|\bfixture\b/i.test(value || ""),
+  );
 }
 
 export const INTERNAL_TEST_EMAIL_PATTERN = "%@example.invalid";

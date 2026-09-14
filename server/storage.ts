@@ -249,7 +249,7 @@ export interface IStorage {
   createAdminUser(adminUser: InsertAdminUser): Promise<AdminUser>;
 
   createTrialLead(lead: import("@shared/schema").InsertTrialLead): Promise<import("@shared/schema").TrialLead>;
-  getTrialLeads(program?: string): Promise<import("@shared/schema").TrialLead[]>;
+  getTrialLeads(program?: string, options?: { includeSuppressed?: boolean; status?: import("@shared/schema").LeadStatus }): Promise<import("@shared/schema").TrialLead[]>;
   updateTrialLeadStatus(id: string, status: import("@shared/schema").LeadStatus): Promise<import("@shared/schema").TrialLead | undefined>;
   createContactSubmission(data: import("@shared/schema").InsertContactSubmission): Promise<import("@shared/schema").ContactSubmission>;
   getContactSubmissions(): Promise<import("@shared/schema").ContactSubmission[]>;
@@ -911,7 +911,8 @@ export class DatabaseStorage implements IStorage {
       paidCustomers: number;
       filteredOut: number;
     };
-    newCustomers30Days: number;
+    newLegitimateProspects30Days: number;
+    newPaidCustomers30Days: number;
     signupFunnel30Days: {
       accountsCreated: number;
       formsIncomplete: number;
@@ -981,30 +982,34 @@ export class DatabaseStorage implements IStorage {
 
      const [paidCustomersResult] = await db.select({
        count: sql<number>`count(distinct ${users.id})`,
-     }).from(users)
-       .leftJoin(memberships, eq(memberships.userId, users.id))
-       .leftJoin(bookings, eq(bookings.userId, users.id))
-       .where(and(
-         operationalMemberCondition(),
-         or(
-           inArray(memberships.status, ["active", "ACTIVE"]),
-           eq(bookings.status, "paid"),
-         ),
-       ));
+      }).from(users)
+        .innerJoin(memberships, eq(memberships.userId, users.id))
+        .where(and(
+          operationalMemberCondition(),
+          eq(memberships.status, "active"),
+          inArray(memberships.billingSource, ["stripe", "stripe_checkout"]),
+          inArray(memberships.billingState, ["active", "cancel_at_period_end"]),
+        ));
 
-     const [newCustomersResult] = await db.select({
+     const [newLegitimateProspectsResult] = await db.select({
        count: sql<number>`count(distinct ${users.id})`,
      }).from(users)
-       .leftJoin(memberships, eq(memberships.userId, users.id))
-       .leftJoin(bookings, eq(bookings.userId, users.id))
        .where(and(
          operationalMemberCondition(),
          gte(users.createdAt, thirtyDaysAgo),
-         or(
-           eq(users.accountStatus, "legitimate"),
-           inArray(memberships.status, ["active", "ACTIVE"]),
-           eq(bookings.status, "paid"),
-         ),
+         eq(users.accountStatus, "legitimate"),
+       ));
+
+     const [newPaidCustomersResult] = await db.select({
+       count: sql<number>`count(distinct ${users.id})`,
+     }).from(users)
+       .innerJoin(memberships, eq(memberships.userId, users.id))
+       .where(and(
+         operationalMemberCondition(),
+         gte(users.createdAt, thirtyDaysAgo),
+         eq(memberships.status, "active"),
+         inArray(memberships.billingSource, ["stripe", "stripe_checkout"]),
+         inArray(memberships.billingState, ["active", "past_due", "cancel_at_period_end"]),
        ));
     
     const requiredFormIds = await this.getRequiredFormIds();
@@ -1091,7 +1096,8 @@ export class DatabaseStorage implements IStorage {
          paidCustomers: Number(paidCustomersResult.count || 0),
          filteredOut: Math.max(0, Number(accountBreakdownResult.rawAccountsCreated || 0) - Number(totalUsersResult.count || 0)),
        },
-       newCustomers30Days: Number(newCustomersResult.count || 0),
+       newLegitimateProspects30Days: Number(newLegitimateProspectsResult.count || 0),
+       newPaidCustomers30Days: Number(newPaidCustomersResult.count || 0),
       signupFunnel30Days: {
         accountsCreated: Number(signupFunnelResult.accountsCreated || 0),
         formsIncomplete: Number(signupFunnelResult.formsIncomplete || 0),
@@ -2300,12 +2306,14 @@ export class DatabaseStorage implements IStorage {
     return newLead;
   }
 
-  async getTrialLeads(program?: string): Promise<import("@shared/schema").TrialLead[]> {
+  async getTrialLeads(program?: string, options: { includeSuppressed?: boolean; status?: import("@shared/schema").LeadStatus } = {}): Promise<import("@shared/schema").TrialLead[]> {
     const { trialLeads } = await import("@shared/schema");
     return db.select().from(trialLeads)
       .where(and(
         program ? eq(trialLeads.program, program) : undefined,
         not(ilike(trialLeads.email, INTERNAL_TEST_EMAIL_PATTERN)),
+        options.status ? eq(trialLeads.status, options.status) : undefined,
+        options.includeSuppressed ? undefined : not(inArray(trialLeads.status, ["needs_review", "suspicious", "archived"])),
       ))
       .orderBy(desc(trialLeads.createdAt));
   }
@@ -2559,6 +2567,7 @@ export class DatabaseStorage implements IStorage {
         ? eq(trialLeads.program, "adaptive-capacity")
         : sql`${trialLeads.program} <> 'adaptive-capacity'`,
       not(ilike(trialLeads.email, INTERNAL_TEST_EMAIL_PATTERN)),
+      not(inArray(trialLeads.status, ["needs_review", "suspicious", "archived"])),
       gte(trialLeads.createdAt, from),
       lte(trialLeads.createdAt, to),
     ));
