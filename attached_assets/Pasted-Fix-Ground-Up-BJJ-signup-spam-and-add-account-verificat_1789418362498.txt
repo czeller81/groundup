@@ -1,0 +1,103 @@
+Fix Ground Up BJJ signup spam and add account verification controls.
+
+Live issue found on September 14, 2026:
+
+- 11 new member accounts were created in the last 7 days.
+- 6 were created today and appear fake based on random-looking names.
+- There are 0 active memberships, 0 payment records, and 0 Stripe customer IDs.
+- These fake accounts are reaching member account creation without becoming real leads or paying customers.
+
+Goal: prevent scam/bot accounts from polluting the member database while keeping the real Discovery Pass flow easy for legitimate local users.
+
+Implement the following:
+
+1. Email verification before full account activation
+   - New users must verify their email before they can activate a Discovery Pass, book a class, start checkout, or appear as a normal active member.
+   - Unverified users should be stored with status `unverified`.
+   - Add resend verification email.
+   - Verification tokens must expire.
+   - Do not expose whether an email already exists.
+
+2. Add signup bot protection
+   - Add a hidden honeypot field to signup and lead/contact forms.
+   - Add minimum completion-time validation so instant submissions are rejected.
+   - Add server-side rate limiting by IP and email for:
+     - signup
+     - login attempts
+     - Discovery Pass activation
+     - contact forms
+     - lead forms
+   - Add a daily cap for new accounts from the same IP/device fingerprint where available.
+   - Log blocked attempts without storing sensitive raw payloads.
+
+3. Add a lightweight human check
+   - Prefer Cloudflare Turnstile if practical in Replit.
+   - Use it on public signup, contact, and lead forms.
+   - Server must verify Turnstile token before creating records.
+   - If Turnstile secrets are missing, production should fail closed for public signup/contact/lead submissions and show a friendly message.
+
+4. Add suspicious-account detection
+   - Flag accounts as `needs_review` when they match obvious risk signals:
+     - random-looking first/last names
+     - repeated consonant-heavy strings
+     - disposable email domains
+     - SMS gateway email domains such as `txt.att.net`
+     - too many accounts from same IP/device
+     - account created but no forms, no pass, no booking, and no payment after a configurable window
+   - Do not auto-delete accounts.
+   - Suspicious accounts should be excluded from normal operational customer counts unless an admin marks them as legitimate.
+
+5. Add admin review tools
+   - Admin dashboard should show:
+     - unverified accounts
+     - suspicious accounts
+     - verified legitimate members
+     - paid members
+   - Admin can mark an account as:
+     - legitimate
+     - suspicious
+     - archived
+   - Archived/suspicious accounts must not count as new customers, active leads, booking-ready members, or marketing conversions.
+
+6. Clean existing fake accounts safely
+   - Create a one-time migration or admin utility to flag the likely fake accounts from September 14, 2026 as `needs_review` or `suspicious`, not delete them.
+   - Include the six obvious fake names found today:
+     - Vyyn Mrobp
+     - Denwfk Lnnvxa
+     - Wfstvs Dpsgrld
+     - Ydpoccol Icjheen
+     - Joagv Lnozziq
+     - Qiwoh Guppz
+   - Also flag any account using SMS gateway email domains such as `txt.att.net`.
+
+7. Fix reporting semantics
+   - Management API summary should separate:
+     - raw accounts created
+     - verified users
+     - suspicious users
+     - archived users
+     - real leads
+     - paid customers
+   - “New customers” should mean paid members or admin-confirmed legitimate members, not every raw signup.
+   - Discovery funnel should exclude suspicious/archived accounts from conversion totals.
+   - Add fields showing how many accounts were filtered out.
+
+8. Payment safety
+   - Do not allow suspicious or unverified accounts to start paid checkout.
+   - Checkout should require:
+     - verified email
+     - required forms complete
+     - account not suspicious/archived
+     - plan eligibility
+   - Girls Program checkout should still require staff/admin approval before payment.
+
+9. Tests and verification
+   - Add tests for honeypot rejection.
+   - Add tests for rate limit rejection.
+   - Add tests for email verification required before booking/checkout.
+   - Add tests that suspicious accounts are excluded from customer/revenue/funnel reporting.
+   - Add tests that admin can mark suspicious accounts legitimate.
+   - Run check, full tests, and build.
+   - Return a PASS/FAIL table.
+
+Do not delete existing records. Do not make live Stripe charges. Do not change bank, tax, payout, or legal Stripe settings.
