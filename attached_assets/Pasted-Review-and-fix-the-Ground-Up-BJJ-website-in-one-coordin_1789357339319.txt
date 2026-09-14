@@ -1,0 +1,68 @@
+Review and fix the Ground Up BJJ website in one coordinated pass. Work in the existing project, preserve its visual identity, and implement the changes—not just a plan.
+
+The business is Ground Up Jiu-Jitsu & Fitness in Oxnard, California. Its public positioning is women-only, beginner-friendly Brazilian Jiu-Jitsu, practical self-defense, strength and conditioning, and personal coaching.
+
+These findings were observed on the live public website. Verify them against the current code and configuration before editing.
+
+1. Correct inconsistent scheduling information.
+The homepage booking FAQ says sessions are available 8 a.m.–5 p.m., Monday through Saturday, while /schedule shows evening classes at 5 p.m. and 6 p.m.
+Replace outdated hard-coded hours with wording that directs visitors to the live schedule. Use the existing calendar as the source of truth. Preserve Pacific Time handling, cancellations, availability, and existing bookings.
+
+2. Standardize the free introductory offer.
+The homepage advertises a free first class, but /discovery-pass describes:
+- One SKILL class.
+- One STRENGTH class.
+- Seven days after activation to use the pass.
+- No membership commitment.
+
+Verify these terms against the actual pass implementation. If confirmed, consistently present the offer as “Free Discovery Pass” across the homepage, navigation, program pages, schedule entry points, FAQs, and English/Spanish equivalents. Briefly explain the two included classes and seven-day window wherever visitors need those details.
+
+Preserve the existing signup destination and intent parameter:
+/portal/signup?locale=en&intent=discovery-pass
+
+Clearly explain the actual sequence: create an account, complete required forms, activate the pass, and book eligible classes. Do not imply that clicking the CTA immediately reserves a class. Do not change pass entitlements, eligibility, activation logic, waiver requirements, or billing rules merely to match marketing copy.
+
+3. Fix the Instagram destination.
+The footer currently links to instagram.com rather than Ground Up’s profile.
+Find the verified business profile in existing configuration, repository content, or other reliable project records and use it consistently. Do not guess a handle. If no verified URL exists, remove the misleading link and report the missing URL as an owner follow-up.
+
+4. Clarify membership pricing.
+The /pricing route currently presents programs without prices.
+Inspect existing membership/product configuration and determine which prices are intended for public display. If verified public prices exist, show them clearly with the billing interval and any applicable commitments or fees.
+Do not invent prices, expose private/custom pricing, or modify Stripe products, subscriptions, or checkout configuration.
+If public pricing cannot be verified, add an honest explanation that visitors can contact Ground Up for current membership options, with a clear contact CTA. Keep /pricing working and preserve existing inbound links.
+
+5. Sharpen the homepage message.
+Preserve the current typography, colors, imagery, and overall design.
+Keep the main message concrete: women-only training in Oxnard, beginner-friendly coaching, small classes, strength, BJJ, self-defense, and confidence.
+Reduce abstract wording such as “human resilience and capability platform” in primary marketing sections and the footer.
+Preserve Adaptive Capacity as a separate existing offering and retain its route, but place it as a secondary learning path so it does not distract from the primary training and Discovery Pass journey.
+Do not invent testimonials, credentials, guarantees, program availability, or business claims.
+
+6. Resolve closely related navigation and content issues.
+- The homepage’s Women’s BJJ Fundamentals “Learn More” link currently points to /womens-self-defense. Check whether that page adequately explains BJJ fundamentals. Link to a more appropriate existing destination, or make the destination clearly cover both offerings.
+- Make girls/mother-daughter eligibility and booking instructions consistent with actual program rules. Do not assume the adult Discovery Pass applies to youth.
+- Ensure first-visit instructions, CTAs, and terminology agree across pages.
+- Check relevant Spanish pages and preserve locale through signup and navigation.
+- Check page titles for duplicated branding and correct it where present.
+
+Validation:
+- Run the existing build and relevant checks.
+- Verify the changed pages on desktop and mobile.
+- Check navigation, CTA destinations, FAQ behavior, readability, and layout.
+- Verify the public schedule still loads correctly.
+- Inspect the signup/booking integration without creating real accounts, accepting waivers, reserving classes, sending emails, or charging payments.
+- Use existing test or sandbox facilities for any necessary end-to-end tests.
+- Do not access or alter production member records for this work.
+- Avoid unrelated refactoring and new dependencies unless necessary.
+
+Complete every fix that can be supported by verified project information. For missing business facts, use the safe fallback described above and list the exact information still needed.
+
+Finish with a concise report of:
+- Changes implemented.
+- Pages affected.
+- Validation completed and any limitations.
+- Any owner information still needed.
+- Deployment status.
+
+Leave the completed changes ready for review in Replit Preview. Do not publish to production in this pass.
