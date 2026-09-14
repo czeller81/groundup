@@ -1,0 +1,62 @@
+Final post-publish cleanup for Ground Up BJJ.
+
+I verified the latest production deployment on September 14, 2026.
+
+Working now:
+- Adaptive Capacity bot submissions are being rejected.
+- Honeypot/timing rejection returned HTTP 400.
+- Lead count did not increase after synthetic spam tests.
+- Account reporting now separates raw accounts, suspicious users, legitimate users, and paid customers.
+- Six fake member accounts are flagged as suspicious.
+- `/api/ai/v1/operations/reservations` now works.
+- `upcomingSessions7Days` now reports 2 instead of a misleading zero.
+
+Still needs fixing:
+
+1. Production billing mode
+   - `/api/ai/v1/operations/memberships` still returns `mode: "test"`.
+   - `/api/ai/v1/operations/payments` still returns `mode: "test"`.
+   - `/api/ai/v1/operations/reconciliation-health` still returns `mode: "test"`.
+   - Fix production so these reflect the live Ground Up Stripe configuration.
+   - Keep the live-key guard and verify the account is `acct_1T8cWMHXiLz0GZmd`.
+
+2. Turnstile configuration
+   - The Adaptive Capacity page does not visibly render a Turnstile widget.
+   - Configure the production Turnstile site key and secret in Replit Secrets.
+   - Confirm public signup, contact, lead, and Adaptive Capacity forms use server-verified Turnstile in production.
+   - If Turnstile is intentionally invisible/managed, return proof from the rendered production page and server verification path.
+
+3. Remove production QA schedule fixture
+   - The live schedule API still includes:
+     - `QA Future Skill Class`
+     - location: `Ground Up fixture`
+     - instructor: `Fixture Coach`
+   - Remove or hide this fixture from production.
+   - Add a guard so QA/test fixture classes cannot appear in public or management API schedule results.
+
+4. Flag matching fake leads
+   - The six fake member accounts are marked suspicious, but their Adaptive Capacity lead records still show `status: "new"`.
+   - Mark the matching fake Adaptive Capacity leads as suspicious, needs_review, or archived.
+   - Exclude those leads from active lead counts, follow-up queues, and marketing conversion reports.
+
+5. Rename customer metrics
+   - `newCustomers30Days` currently reports 5, while `paidCustomers` is 0.
+   - Rename or split this metric so it does not imply unpaid prospects are paying customers.
+   - Use:
+     - `newLegitimateProspects30Days`
+     - `newPaidCustomers30Days`
+     - `paidCustomers`
+   - Customer should mean Stripe-backed active paying member unless explicitly admin-marked otherwise.
+
+Verification required:
+- Run check, full tests, and build.
+- Smoke check:
+  - `/adaptive-capacity`
+  - `/api/trial-leads` spam rejection
+  - `/api/ai/v1/operations/summary`
+  - `/api/ai/v1/operations/schedule`
+  - `/api/ai/v1/operations/reservations`
+  - `/api/ai/v1/operations/memberships`
+  - `/api/ai/v1/operations/payments`
+  - `/api/ai/v1/operations/reconciliation-health`
+- Return a PASS/FAIL table.
