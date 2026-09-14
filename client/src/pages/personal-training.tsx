@@ -28,7 +28,7 @@ export default function PersonalTraining() {
   const { locale } = useLocale();
   const copy = locale === "es" ? {
     seoTitle: "Entrenamiento Personal en Oxnard, CA — Coaching de BJJ y Fitness 1 a 1",
-    seoDescription: "Reserva una sesión privada de entrenamiento personal en Ground Up Jiu-Jitsu en Oxnard, CA. Coaching individualizado para todos los niveles. Tu primera sesión es gratis.",
+     seoDescription: "Pregunta por entrenamiento personal privado en Ground Up Jiu-Jitsu en Oxnard, CA. Coaching individualizado para mujeres; la disponibilidad se confirma antes de reservar.",
     title: "ENTRENAMIENTO", accent: "PERSONAL",
     intro: "Instrucción de BJJ y fuerza y acondicionamiento 1 a 1, adaptados específicamente para mujeres. Entrena a tu ritmo y según tu horario.",
     bookSession: "Reserva tu sesión", whyTitle: "¿POR QUÉ ENTRENAR", whyAccent: "1 A 1?",
@@ -36,7 +36,7 @@ export default function PersonalTraining() {
     features: [
       ["Personalizado", "Cada sesión se adapta a tu tipo de cuerpo, objetivos y nivel de habilidad."],
       ["Fuerza + BJJ", "Combina artes marciales con fuerza y acondicionamiento."],
-      ["Horarios flexibles", "Reserva sesiones de 8 a. m. a 5 p. m., de lunes a sábado."],
+     ["Horarios flexibles", "La disponibilidad se coordina según tus objetivos y se confirma antes de reservar."],
       ["Solo para mujeres", "Entrena en un ambiente seguro, cómodo y solo para mujeres."],
       ["Defensa personal", "Aprende técnicas prácticas que desarrollan confianza y seguridad."],
       ["Resultados rápidos", "Avanza más rápido con atención individual dedicada."],
@@ -44,12 +44,12 @@ export default function PersonalTraining() {
     includedTitle: "¿QUÉ INCLUYE?",
     included: ["Sesiones personalizadas de 60 minutos", "Instrucción técnica según tu nivel", "Ejercicios de fuerza y acondicionamiento", "Fundamentos de defensa personal", "Todo el equipo incluido (gis, cinturones y tatamis)", "Reserva flexible desde el portal de miembros", "Seguimiento de progreso y objetivos"],
     signUp: "Regístrate para reservar",
-    freeTitle: "TU PRIMERA SESIÓN ES", freeAccent: "GRATIS",
-    freeDescription: "Sin compromiso. Ven a probar una sesión, conoce a tu coach y descubre si Ground Up BJJ es para ti.",
-    freeTrial: "Reserva tu prueba gratis", noCard: "No necesitas tarjeta · Cancela cuando quieras",
+     freeTitle: "¿TE INTERESA EL", freeAccent: "ENTRENAMIENTO PERSONAL?",
+     freeDescription: "Contáctanos para hablar sobre tus objetivos, disponibilidad y la mejor forma de comenzar. La disponibilidad se confirma antes de reservar.",
+     freeTrial: "Preguntar sobre entrenamiento personal", noCard: "Coaching individualizado · Solo para mujeres",
   } : {
     seoTitle: "Personal Training in Oxnard, CA — 1-on-1 BJJ & Fitness Coaching",
-    seoDescription: "Book a private personal training session at Ground Up Jiu-Jitsu in Oxnard, CA. Custom 1-on-1 coaching for all fitness levels. Your first session is free.",
+     seoDescription: "Ask about private personal training at Ground Up Jiu-Jitsu in Oxnard, CA. Custom 1-on-1 coaching for women; availability is confirmed before booking.",
     title: "PERSONAL", accent: "TRAINING",
     intro: "1-on-1 BJJ instruction and strength & conditioning tailored specifically for women. Train at your pace, on your schedule.",
     bookSession: "Book Your Session", whyTitle: "WHY", whyAccent: "1-ON-1", whySuffix: "TRAINING?",
@@ -57,7 +57,7 @@ export default function PersonalTraining() {
     features: [
       ["Personalized", "Every session is tailored to your body type, goals, and skill level."],
       ["Strength + BJJ", "Combined martial arts training with strength and conditioning."],
-      ["Flexible Hours", "Book sessions 8am–5pm, Monday through Saturday."],
+       ["Flexible Hours", "Availability is coordinated around your goals and confirmed before booking."],
       ["Women Only", "Train in a safe, comfortable, women-only environment."],
       ["Self-Defense", "Learn real-world techniques that build confidence and safety."],
       ["Fast Results", "See progress faster with dedicated 1-on-1 attention."],
@@ -65,12 +65,11 @@ export default function PersonalTraining() {
     includedTitle: "WHAT'S INCLUDED",
     included: ["60-minute personalized training sessions", "Technique instruction at your level", "Strength & conditioning exercises", "Self-defense fundamentals", "All equipment provided (gis, belts, mats)", "Flexible booking through member portal", "Progress tracking and goal setting"],
     signUp: "Sign Up to Book",
-    freeTitle: "YOUR FIRST SESSION IS", freeAccent: "FREE",
-    freeDescription: "No commitment required. Come try a session, meet your coach, and see if Ground Up BJJ is right for you.",
-    freeTrial: "Book Your Free Trial", noCard: "No credit card required · Cancel anytime",
+     freeTitle: "INTERESTED IN", freeAccent: "PERSONAL TRAINING?",
+     freeDescription: "Contact us to discuss your goals, availability, and the best way to begin. Availability is confirmed before booking.",
+     freeTrial: "Ask About Personal Training", noCard: "Individualized coaching · Women only",
   };
-  const bookPath = localizedPublicPath("/book", locale);
-  const discoveryPassPath = localizedPublicPath("/discovery-pass", locale);
+  const contactPath = localizedPublicPath("/contact", locale);
   return (
     <div className="flex flex-col bg-[#0B0F14]">
       <SEO
@@ -97,7 +96,7 @@ export default function PersonalTraining() {
             size="lg"
             className="bg-[#FFB199] text-[#0B0F14] font-bold uppercase tracking-wider hover:bg-[#FFB199]/90 text-base px-10 h-14"
           >
-            <Link href={bookPath}>
+              <Link href={contactPath}>
               {copy.bookSession}
               <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
@@ -169,7 +168,7 @@ export default function PersonalTraining() {
                 asChild
                 className="bg-[#FFB199] text-[#0B0F14] font-bold uppercase tracking-wider hover:bg-[#FFB199]/90"
               >
-                <Link href={bookPath}>
+                 <Link href={contactPath}>
                   {copy.signUp}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
@@ -193,7 +192,7 @@ export default function PersonalTraining() {
             size="lg"
             className="bg-[#FFB199] text-[#0B0F14] font-bold uppercase tracking-wider hover:bg-[#FFB199]/90 text-base px-10 h-14"
           >
-            <Link href={discoveryPassPath}>
+            <Link href={contactPath}>
               {copy.freeTrial}
               <ArrowRight className="ml-2 h-5 w-5" />
             </Link>

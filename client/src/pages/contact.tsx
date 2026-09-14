@@ -54,8 +54,8 @@ export default function Contact() {
     message: "Mensaje", messagePlaceholder: "Cuéntanos tus objetivos o tus preguntas...", send: "Enviar mensaje", sending: "Enviando…",
     sent: "¡Mensaje enviado!", sentDescription: "Recibimos tu mensaje y nos comunicaremos contigo.", failed: "No se pudo enviar el mensaje",
     contactInfo: "INFORMACIÓN DE CONTACTO", location: "Ubicación", hours: "Horario de entrenamiento", ready: "¿LISTA PARA COMENZAR?",
-    readyDescription: "Tu primera clase es completamente gratis: sin equipo, compromiso ni presión. Reserva directamente y nosotros nos encargamos del resto.",
-    book: "Reserva tu primera visita gratis", phoneLabel: "Teléfono", emailLabel: "Correo", contactButton: "Reserva tu primera visita gratis",
+     readyDescription: "Obtén tu Discovery Pass gratis: crea una cuenta, completa los formularios requeridos, activa el pase y reserva una clase elegible de SKILL y una de STRENGTH.",
+     book: "Obtén tu Discovery Pass gratis", phoneLabel: "Teléfono", emailLabel: "Correo", contactButton: "Obtén tu Discovery Pass gratis",
     validation: { firstName: "El nombre es obligatorio", lastName: "El apellido es obligatorio", email: "Escribe un correo válido", subject: "Selecciona un tema", message: "El mensaje es obligatorio" },
   } : {
     seoTitle: "Contact Ground Up | Women-Only Training in Oxnard",
@@ -66,8 +66,8 @@ export default function Contact() {
     message: "Message", messagePlaceholder: "Tell us about your goals or any questions...", send: "Send Message", sending: "Sending…",
     sent: "Message Sent!", sentDescription: "We received your message and will be in touch.", failed: "Failed to Send Message",
     contactInfo: "CONTACT INFO", location: "Location", hours: "Training Hours", ready: "READY TO BEGIN?",
-    readyDescription: "Your first class is completely free — no gear, no commitment, no pressure. Book directly and we'll handle the rest.",
-    book: "Book Your Free First Visit", phoneLabel: "Phone", emailLabel: "Email", contactButton: "Book Your Free First Visit",
+     readyDescription: "Get your free Discovery Pass: create an account, complete the required forms, activate the pass, then book one eligible SKILL class and one eligible STRENGTH class.",
+     book: "Get Your Free Discovery Pass", phoneLabel: "Phone", emailLabel: "Email", contactButton: "Get Your Free Discovery Pass",
     validation: { firstName: "First name is required", lastName: "Last name is required", email: "Please enter a valid email", subject: "Please select a subject", message: "Message is required" },
   };
   const contactSchema = z.object({
@@ -310,7 +310,7 @@ export default function Contact() {
                     </div>
                     <div>
                        <div className="text-gray-400 text-sm">{copy.hours}</div>
-                      <div className="text-white">Mon–Sat: 8am – 5pm</div>
+                       <div className="text-white">{locale === "es" ? "Consulta el horario en vivo" : "See the live schedule for current times"}</div>
                     </div>
                   </div>
                 </div>

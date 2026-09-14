@@ -21,7 +21,7 @@ export default function LiveSchedule() {
     loadError: "No se pudo cargar el horario en vivo.",
     configuring: "La reserva de clases está en configuración. Todavía no se está anunciando disponibilidad en vivo.",
     noClasses: "No hay clases reservables disponibles en este momento.",
-     waitlist: "Unirme a la lista de espera", firstVisit: "Reservar primera visita", member: "Reserva para miembros", girls: "Consultar disponibilidad",
+     waitlist: "Unirme a la lista de espera", firstVisit: "Obtener Discovery Pass gratis", member: "Reserva para miembros", girls: "Consultar disponibilidad",
     login: "Acceso de miembros",
   } : {
     seoTitle: "Live Class Schedule | Ground Up Jiu-Jitsu & Fitness",
@@ -32,7 +32,7 @@ export default function LiveSchedule() {
     loadError: "The live schedule could not be loaded.",
     configuring: "Online class booking is being configured. No live availability is being claimed yet.",
     noClasses: "No bookable classes are currently listed.",
-     waitlist: "Join waitlist", firstVisit: "Book first visit", member: "Member booking", girls: "Contact / inquire",
+     waitlist: "Join waitlist", firstVisit: "Get Free Discovery Pass", member: "Member booking", girls: "Contact / inquire",
     login: "Member login",
   };
   const { data, isLoading, error } = useQuery<ClassScheduleResponse>({

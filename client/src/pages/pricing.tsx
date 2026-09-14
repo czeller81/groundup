@@ -50,6 +50,41 @@ function FAQ({ question, answer }: { question: string; answer: string }) {
   );
 }
 
+const MEMBERSHIP_PLANS = [
+  {
+    name: "Ground Up 2",
+    spanishName: "Ground Up 2",
+    price: "$139",
+    description: "Two adult group sessions per week.",
+    spanishDescription: "Dos sesiones grupales para adultas por semana.",
+    accent: "#5EEBFF",
+  },
+  {
+    name: "Ground Up 3",
+    spanishName: "Ground Up 3",
+    price: "$159",
+    description: "Three adult group sessions per week.",
+    spanishDescription: "Tres sesiones grupales para adultas por semana.",
+    accent: "#B06CFF",
+  },
+  {
+    name: "Ground Up Personal",
+    spanishName: "Ground Up Personal",
+    price: "$250",
+    description: "One private coaching session per week. Group classes are not included.",
+    spanishDescription: "Una sesión privada de coaching por semana. No incluye clases grupales.",
+    accent: "#FFB199",
+  },
+  {
+    name: "Girls Program",
+    spanishName: "Programa para niñas",
+    price: "$119",
+    description: "Two girls’ classes per week for an approved minor participant.",
+    spanishDescription: "Dos clases para niñas por semana para una participante menor aprobada.",
+    accent: "#5EEBFF",
+  },
+] as const;
+
 export default function Pricing() {
   const { locale } = useLocale();
   if (locale === "es") return <SpanishPricing />;
@@ -80,7 +115,7 @@ export default function Pricing() {
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center mb-8">
             <Button asChild size="lg" className="bg-[#FFB199] text-[#0B0F14] font-bold uppercase tracking-wider hover:bg-[#FFB199]/90 px-8">
-              <Link href={discoveryPassPath}>Book Your Free First Visit <ArrowRight className="ml-2 h-4 w-4" /></Link>
+              <Link href={discoveryPassPath}>Get Your Free Discovery Pass <ArrowRight className="ml-2 h-4 w-4" /></Link>
             </Button>
             <Button asChild variant="ghost" size="lg" className="border border-white/10 text-gray-300 hover:text-white hover:bg-white/5 px-8 uppercase tracking-wider">
               <Link href="/schedule">View Schedule</Link>
@@ -96,6 +131,32 @@ export default function Pricing() {
         </motion.div>
       </section>
 
+      <section className="border-t border-white/5 px-4 py-16">
+        <div className="mx-auto max-w-5xl">
+          <Reveal className="mb-10 text-center">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-gray-500">Membership pricing</p>
+            <h2 className="text-2xl font-black uppercase tracking-tight text-white sm:text-3xl" style={{ fontFamily: 'var(--font-display)' }}>
+              Clear monthly <span className="text-[#5EEBFF]">options</span>
+            </h2>
+            <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-gray-400">
+              Memberships are billed monthly. Access and weekly session limits depend on the plan; youth eligibility is confirmed before enrollment.
+            </p>
+          </Reveal>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {MEMBERSHIP_PLANS.map((plan, index) => (
+              <Reveal key={plan.name} delay={index * 0.06}>
+                <div className="h-full rounded-2xl border border-white/8 bg-[#121826] p-5">
+                  <div className="mb-4 h-1 w-10 rounded-full" style={{ backgroundColor: plan.accent }} />
+                  <h3 className="text-base font-bold text-white">{plan.name}</h3>
+                  <p className="mt-4 text-3xl font-black text-white">{plan.price}<span className="text-sm font-normal text-gray-500"> / month</span></p>
+                  <p className="mt-3 text-sm leading-relaxed text-gray-400">{plan.description}</p>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ── WHO IT'S FOR ── */}
       <section className="py-16 px-4 border-t border-white/5">
         <div className="max-w-4xl mx-auto">
@@ -106,11 +167,11 @@ export default function Pricing() {
             </h2>
           </Reveal>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {[
-              { icon: "🥋", title: "Women",                   desc: "A safe, empowering space built specifically for women of all skill levels." },
-               { icon: "⭐", title: "Girls / Female Youth",    desc: "Ask about the current girls program and family participation options." },
-              { icon: "👋", title: "Beginners",               desc: "No experience needed — ever. We guide you from day one." },
-              { icon: "💪", title: "Strength & Conditioning", desc: "Functional fitness training designed for athletes and everyday movers." },
+             {[
+               { icon: "🥋", title: "Women", desc: "A safe, empowering space built specifically for women of all skill levels.", href: discoveryPassPath, cta: "Get Your Free Discovery Pass" },
+               { icon: "⭐", title: "Girls / Female Youth", desc: "Ask about the current girls program and family participation options.", href: "/contact", cta: "Ask About Eligibility" },
+               { icon: "👋", title: "Beginners", desc: "No experience needed — ever. We guide you from day one.", href: discoveryPassPath, cta: "Get Your Free Discovery Pass" },
+               { icon: "💪", title: "Strength & Conditioning", desc: "Functional fitness training designed for athletes and everyday movers.", href: discoveryPassPath, cta: "Get Your Free Discovery Pass" },
             ].map((card, i) => (
               <Reveal key={card.title} delay={i * 0.07}>
                 <div className="h-full flex flex-col p-6 rounded-2xl border border-white/8 bg-[#121826] hover:border-white/15 transition-all duration-200 hover:-translate-y-0.5">
@@ -118,7 +179,7 @@ export default function Pricing() {
                   <h3 className="text-white font-bold text-base mb-2">{card.title}</h3>
                   <p className="text-gray-400 text-sm leading-relaxed flex-1 mb-5">{card.desc}</p>
                   <Button asChild size="sm" variant="ghost" className="w-full border border-white/8 text-gray-300 hover:text-white hover:bg-white/5 text-xs font-semibold uppercase tracking-wider">
-                     <Link href={discoveryPassPath}>Book Your Free First Visit</Link>
+                     <Link href={card.href}>{card.cta}</Link>
                   </Button>
                 </div>
               </Reveal>
@@ -137,24 +198,30 @@ export default function Pricing() {
             </h2>
           </Reveal>
           <div className="grid sm:grid-cols-3 gap-5">
-            {[
+             {[
               {
                 title: "Women's Jiu-Jitsu & Self-Defense",
                 desc: "Practical jiu-jitsu and self-defense taught in a welcoming, women-only environment. Build skill, confidence, and community.",
                 note: "8-week self-defense program available · Women-only classes weekly",
                 accent: "#B06CFF",
+                 href: discoveryPassPath,
+                 cta: "Get Your Free Discovery Pass",
               },
               {
                  title: "Girls / Mother + Daughter",
                  desc: "A women-centered youth path for girls and female youth. Ask about current eligibility, guardian requirements, and mother-daughter participation.",
                  note: "Eligibility confirmed before booking",
                 accent: "#FFB199",
+                  href: "/contact",
+                  cta: "Ask About Eligibility",
               },
               {
                 title: "Strength & Conditioning",
                  desc: "Useful strength, mobility, and movement for women at every starting point. Build capability without a bodybuilding or fight-gym atmosphere.",
                  note: "Beginner-friendly · Women-only",
                 accent: "#5EEBFF",
+                  href: discoveryPassPath,
+                  cta: "Get Your Free Discovery Pass",
               },
             ].map((prog, i) => (
               <Reveal key={prog.title} delay={i * 0.09}>
@@ -164,7 +231,7 @@ export default function Pricing() {
                   <p className="text-gray-400 text-sm leading-relaxed flex-1 mb-4">{prog.desc}</p>
                   <p className="text-xs mb-5" style={{ color: prog.accent }}>{prog.note}</p>
                   <Button asChild size="sm" className="w-full font-bold text-[#0B0F14] hover:opacity-90 text-xs uppercase tracking-wider" style={{ backgroundColor: prog.accent }}>
-                     <Link href={discoveryPassPath}>Book Your Free First Visit</Link>
+                     <Link href={prog.href}>{prog.cta}</Link>
                   </Button>
                 </div>
               </Reveal>
@@ -197,7 +264,7 @@ export default function Pricing() {
                 </div>
                 <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                   <Button asChild size="lg" className="bg-[#B06CFF] text-white font-bold uppercase tracking-wider hover:bg-[#B06CFF]/90">
-                     <Link href={discoveryPassPath}>Book Your Free First Visit <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                   <Link href={discoveryPassPath}>Get Your Free Discovery Pass <ArrowRight className="ml-2 h-4 w-4" /></Link>
                   </Button>
                 </div>
               </div>
@@ -212,14 +279,15 @@ export default function Pricing() {
           <Reveal className="mb-10">
             <p className="text-xs text-gray-500 uppercase tracking-widest font-semibold mb-2">Zero Pressure</p>
             <h2 className="text-2xl sm:text-3xl font-black text-white uppercase tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>
-              How the Free Intro <span className="text-[#FFB199]">Works</span>
+               How the Free Discovery Pass <span className="text-[#FFB199]">Works</span>
             </h2>
           </Reveal>
           <div className="grid sm:grid-cols-3 gap-6 mb-8">
             {[
-              { num: "01", title: "Book",              desc: "Pick any time that works. No payment, no commitment.", color: "#5EEBFF" },
-              { num: "02", title: "Meet Your Coach",   desc: "Come see the space and have a quick chat about your goals.", color: "#B06CFF" },
-              { num: "03", title: "Start Training",    desc: "Try the class. Join only when you're ready.", color: "#FFB199" },
+              { num: "01", title: "Create an account", desc: "Start through the secure member portal.", color: "#5EEBFF" },
+              { num: "02", title: "Complete forms", desc: "Finish the required forms before activation.", color: "#B06CFF" },
+              { num: "03", title: "Activate and book", desc: "Book one eligible SKILL class and one STRENGTH class.", color: "#FFB199" },
+              { num: "04", title: "Use it in 7 days", desc: "Arrive ready to learn and use both entitlements before the pass expires.", color: "#5EEBFF" },
             ].map((step, i) => (
               <Reveal key={step.num} delay={i * 0.1}>
                 <div className="flex flex-col items-center text-center gap-3">
@@ -233,9 +301,9 @@ export default function Pricing() {
             ))}
           </div>
           <Reveal>
-            <p className="text-gray-500 text-sm italic mb-6">No pressure. We'll help you find the best class for your goals.</p>
+           <p className="text-gray-500 text-sm italic mb-6">No membership commitment is required to start the pass.</p>
             <Button asChild size="lg" className="bg-[#FFB199] text-[#0B0F14] font-bold uppercase tracking-wider hover:bg-[#FFB199]/90 px-8">
-               <Link href={discoveryPassPath}>Book Your Free First Visit <ArrowRight className="ml-2 h-4 w-4" /></Link>
+               <Link href={discoveryPassPath}>Get Your Free Discovery Pass <ArrowRight className="ml-2 h-4 w-4" /></Link>
             </Button>
           </Reveal>
         </div>
@@ -253,10 +321,10 @@ export default function Pricing() {
             <div className="bg-[#121826] rounded-2xl border border-white/8 px-6">
               {[
                 { question: "Do I need experience to join?",         answer: "Not at all. Every program is built for beginners. You'll start from the basics in a safe, supportive environment — no prior experience required." },
-                { question: "What happens at the free intro?",       answer: "You come in, meet Coach Raymi, see the space, and try a class. No commitment, no sales pressure. It's just a chance to feel comfortable and find the right fit." },
+                 { question: "How does the Free Discovery Pass work?", answer: "Create an account, complete the required forms, activate the pass, then book one eligible SKILL class and one eligible STRENGTH class. Use both within seven days of activation." },
                 { question: "Who are your classes designed for?",    answer: "Ground Up is a women-only training center. Women of all experience levels are welcome, including complete beginners. Ask us about current girls/female-youth availability and mother-daughter options." },
-                { question: "What should I wear?",                   answer: "Comfortable workout clothes work great for your first visit. We'll guide you on any gear you might need once you've chosen a program." },
-                { question: "How do I know which program is right?", answer: "That's what the free intro is for. After a short conversation, we'll point you to the best-fit class for your goals, schedule, and comfort level." },
+                 { question: "What should I wear?",                   answer: "Comfortable workout clothes work great for your first class. We'll guide you on any gear you might need once you've chosen a program." },
+                 { question: "How do I know which program is right?", answer: "Review the live schedule and contact us if you need help choosing an eligible class. The Discovery Pass is for one SKILL class and one STRENGTH class." },
                 { question: "Do you offer girls or mother-daughter training?", answer: "Youth availability and age eligibility are confirmed before booking so we do not give families outdated information. Contact us to ask about the current girls/female-youth and mother-daughter options." },
               ].map((faq, i) => <FAQ key={i} question={faq.question} answer={faq.answer} />)}
             </div>
@@ -272,11 +340,11 @@ export default function Pricing() {
             Ready to <span className="text-[#FFB199]">Begin?</span>
           </h2>
           <p className="text-gray-400 text-base mb-8">
-            Book your free intro and we'll help you find the right fit.
+             Get your free Discovery Pass and follow the four steps online.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Button asChild size="lg" className="bg-[#FFB199] text-[#0B0F14] font-bold uppercase tracking-wider hover:bg-[#FFB199]/90 px-8">
-               <Link href={discoveryPassPath}>Book Your Free First Visit <ArrowRight className="ml-2 h-4 w-4" /></Link>
+               <Link href={discoveryPassPath}>Get Your Free Discovery Pass <ArrowRight className="ml-2 h-4 w-4" /></Link>
             </Button>
             <Button asChild variant="outline" size="lg" className="border-white/15 text-white hover:bg-white/5 px-8 uppercase tracking-wider">
               <Link href="/contact">Contact Us</Link>
@@ -297,10 +365,10 @@ function SpanishPricing() {
   const contactPath = localizedPublicPath("/contact", "es");
   const faqs = [
     ["¿Necesito experiencia para unirme?", "Para nada. Todos los programas están hechos para principiantes y comenzarás con lo básico en un ambiente seguro y comprensivo."],
-    ["¿Qué pasa en la introducción gratis?", "Conocerás a Coach Raymi, verás el espacio y probarás una clase. No hay compromiso ni presión de venta."],
+    ["¿Cómo funciona el Discovery Pass gratis?", "Crea una cuenta, completa los formularios requeridos, activa el pase y reserva una clase elegible de SKILL y una de STRENGTH. Usa ambas dentro de los siete días posteriores a la activación."],
     ["¿Para quién están diseñadas las clases?", "Ground Up es un centro de entrenamiento solo para mujeres. Pregunta por disponibilidad actual para niñas, jóvenes femeninas y opciones madre-hija."],
-    ["¿Qué debo usar?", "La ropa deportiva cómoda funciona muy bien para tu primera visita. Te orientaremos sobre el equipo después."],
-    ["¿Cómo sé qué programa es adecuado?", "La introducción gratis te ayuda a encontrar la clase que mejor encaja con tus objetivos, horario y nivel de comodidad."],
+    ["¿Qué debo usar?", "La ropa deportiva cómoda funciona muy bien para tu primera clase. Te orientaremos sobre el equipo después."],
+    ["¿Cómo sé qué programa es adecuado?", "Consulta el horario en vivo y contáctanos si necesitas ayuda para elegir una clase elegible. El Discovery Pass incluye una clase de SKILL y una de STRENGTH."],
   ];
   const audience = [
     ["🥋", "Mujeres", "Un espacio seguro y empoderador creado para mujeres de todos los niveles."],
@@ -322,15 +390,36 @@ function SpanishPricing() {
           <h1 className="break-words text-3xl sm:text-5xl md:text-6xl font-black text-white uppercase tracking-tight leading-none mb-5" style={{ fontFamily: "var(--font-display)" }}>Comienza tu entrenamiento<br />en <span className="text-[#5EEBFF]">Ground Up</span></h1>
           <p className="text-gray-300 text-base sm:text-lg max-w-xl mx-auto leading-relaxed mb-8">Un centro de entrenamiento solo para mujeres para jiu-jitsu brasileño, defensa personal práctica, fuerza, movimiento y coaching personal. Las principiantes son bienvenidas.</p>
            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Button asChild size="lg" className="bg-[#FFB199] text-[#0B0F14] font-bold uppercase tracking-wider"><Link href={discoveryPassPath}>Reserva tu primera visita gratis <ArrowRight className="ml-2 h-4 w-4" /></Link></Button>
+               <Button asChild size="lg" className="bg-[#FFB199] text-[#0B0F14] font-bold uppercase tracking-wider"><Link href={discoveryPassPath}>Obtén tu Discovery Pass gratis <ArrowRight className="ml-2 h-4 w-4" /></Link></Button>
             <Button asChild variant="ghost" size="lg" className="border border-white/10 text-gray-300"><Link href={schedulePath}>Ver horario</Link></Button>
           </div>
         </div>
       </section>
-      <section className="py-16 px-4 border-t border-white/5"><div className="max-w-4xl mx-auto"><Reveal className="text-center mb-10"><p className="text-xs text-gray-500 uppercase tracking-widest font-semibold mb-2">A quién servimos</p><h2 className="text-2xl sm:text-3xl font-black text-white uppercase tracking-tight">Entrenamiento hecho para <span className="text-[#5EEBFF]">ti</span></h2></Reveal><div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">{audience.map(([icon, title, desc], i) => <Reveal key={title} delay={i * .07}><div className="h-full flex flex-col p-6 rounded-2xl border border-white/8 bg-[#121826]"><span className="text-2xl mb-4">{icon}</span><h3 className="text-white font-bold text-base mb-2">{title}</h3><p className="text-gray-400 text-sm leading-relaxed flex-1">{desc}</p><Button asChild size="sm" variant="ghost" className="mt-5 border border-white/8 text-gray-300"><Link href={bookPath}>Reserva tu primera visita</Link></Button></div></Reveal>)}</div></div></section>
-      <section className="py-16 px-4 border-t border-white/5"><div className="max-w-4xl mx-auto"><Reveal className="text-center mb-10"><p className="text-xs text-gray-500 uppercase tracking-widest font-semibold mb-2">Programas</p><h2 className="text-2xl sm:text-3xl font-black text-white uppercase tracking-tight">Nuestros <span className="text-[#B06CFF]">programas principales</span></h2></Reveal><div className="grid sm:grid-cols-3 gap-5">{programs.map(([title, desc, note, accent], i) => <Reveal key={title} delay={i * .09}><div className="h-full flex flex-col p-6 rounded-2xl border border-white/8 bg-[#121826]"><div className="w-1 h-8 rounded-full mb-4" style={{ backgroundColor: accent }} /><h3 className="text-white font-bold text-base mb-3">{title}</h3><p className="text-gray-400 text-sm leading-relaxed flex-1">{desc}</p><p className="text-xs my-5" style={{ color: accent }}>{note}</p><Button asChild size="sm" className="w-full font-bold text-[#0B0F14]" style={{ backgroundColor: accent }}><Link href={bookPath}>Reserva tu primera visita</Link></Button></div></Reveal>)}</div></div></section>
-      <section className="py-16 px-4 border-t border-white/5"><div className="max-w-3xl mx-auto"><Reveal><div className="rounded-3xl border border-[#B06CFF]/25 bg-[#121826] p-8 sm:p-10"><p className="text-xs text-[#B06CFF] uppercase tracking-widest font-semibold mb-4">Mejor lugar para comenzar</p><h2 className="text-2xl sm:text-3xl font-black text-white uppercase leading-none mb-4">Programa de defensa personal para mujeres de 8 semanas</h2><p className="text-gray-300 text-sm leading-relaxed mb-5">Desarrolla conciencia, técnica y la calma que nace de saber que puedes cuidarte. Sin experiencia previa y sin ambiente de pelea.</p><div className="space-y-2.5 mb-7">{["No se necesita experiencia · Principiantes bienvenidas", "16 sesiones durante 8 semanas", "Ambiente solo para mujeres · Seguro y sin juicios"].map((item) => <div key={item} className="flex items-center gap-3"><CheckCircle className="h-4 w-4 text-[#B06CFF]" /><span className="text-gray-300 text-sm">{item}</span></div>)}</div><Button asChild size="lg" className="bg-[#B06CFF] text-white font-bold uppercase tracking-wider"><Link href={bookPath}>Reserva tu primera visita <ArrowRight className="ml-2 h-4 w-4" /></Link></Button></div></Reveal></div></section>
-      <section className="py-16 px-4 border-t border-white/5"><div className="max-w-2xl mx-auto"><Reveal className="text-center mb-8"><p className="text-xs text-gray-500 uppercase tracking-widest font-semibold mb-2">Sin presión</p><h2 className="text-2xl font-black text-white uppercase tracking-tight">Cómo funciona la <span className="text-[#FFB199]">introducción gratis</span></h2></Reveal><div className="grid sm:grid-cols-3 gap-6 mb-8">{[["01", "Reserva", "Elige el horario que te funcione. Sin pago ni compromiso."], ["02", "Conoce a tu coach", "Conoce el espacio y conversa sobre tus objetivos."], ["03", "Comienza a entrenar", "Prueba la clase. Únete solo cuando estés lista."]].map(([num, title, desc]) => <div key={num} className="text-center"><div className="mx-auto mb-3 w-10 h-10 rounded-2xl flex items-center justify-center font-black text-sm text-[#FFB199] bg-[#FFB199]/10">{num}</div><h3 className="text-white font-bold">{title}</h3><p className="text-gray-400 text-sm mt-2">{desc}</p></div>)}</div><p className="text-gray-500 text-sm italic text-center mb-6">Sin presión. Te ayudaremos a encontrar la mejor clase para tus objetivos.</p><div className="text-center"><Button asChild size="lg" className="bg-[#FFB199] text-[#0B0F14] font-bold uppercase tracking-wider"><Link href={bookPath}>Reserva tu primera visita <ArrowRight className="ml-2 h-4 w-4" /></Link></Button></div></div></section>
+      <section className="border-t border-white/5 px-4 py-16">
+        <div className="mx-auto max-w-5xl">
+          <Reveal className="mb-10 text-center">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-gray-500">Precios de membresía</p>
+            <h2 className="text-2xl font-black uppercase tracking-tight text-white sm:text-3xl">Opciones mensuales <span className="text-[#5EEBFF]">claras</span></h2>
+            <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-gray-400">Las membresías se cobran mensualmente. El acceso y los límites semanales dependen del plan; la elegibilidad juvenil se confirma antes de inscribirse.</p>
+          </Reveal>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {MEMBERSHIP_PLANS.map((plan, index) => (
+              <Reveal key={plan.name} delay={index * 0.06}>
+                <div className="h-full rounded-2xl border border-white/8 bg-[#121826] p-5">
+                  <div className="mb-4 h-1 w-10 rounded-full" style={{ backgroundColor: plan.accent }} />
+                  <h3 className="text-base font-bold text-white">{plan.spanishName}</h3>
+                  <p className="mt-4 text-3xl font-black text-white">{plan.price}<span className="text-sm font-normal text-gray-500"> / mes</span></p>
+                  <p className="mt-3 text-sm leading-relaxed text-gray-400">{plan.spanishDescription}</p>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+      <section className="py-16 px-4 border-t border-white/5"><div className="max-w-4xl mx-auto"><Reveal className="text-center mb-10"><p className="text-xs text-gray-500 uppercase tracking-widest font-semibold mb-2">A quién servimos</p><h2 className="text-2xl sm:text-3xl font-black text-white uppercase tracking-tight">Entrenamiento hecho para <span className="text-[#5EEBFF]">ti</span></h2></Reveal><div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">{audience.map(([icon, title, desc], i) => <Reveal key={title} delay={i * .07}><div className="h-full flex flex-col p-6 rounded-2xl border border-white/8 bg-[#121826]"><span className="text-2xl mb-4">{icon}</span><h3 className="text-white font-bold text-base mb-2">{title}</h3><p className="text-gray-400 text-sm leading-relaxed flex-1">{desc}</p><Button asChild size="sm" variant="ghost" className="mt-5 border border-white/8 text-gray-300"><Link href={title.startsWith("Niñas") ? contactPath : bookPath}>{title.startsWith("Niñas") ? "Pregunta sobre elegibilidad" : "Obtén tu Discovery Pass"}</Link></Button></div></Reveal>)}</div></div></section>
+       <section className="py-16 px-4 border-t border-white/5"><div className="max-w-4xl mx-auto"><Reveal className="text-center mb-10"><p className="text-xs text-gray-500 uppercase tracking-widest font-semibold mb-2">Programas</p><h2 className="text-2xl sm:text-3xl font-black text-white uppercase tracking-tight">Nuestros <span className="text-[#B06CFF]">programas principales</span></h2></Reveal><div className="grid sm:grid-cols-3 gap-5">{programs.map(([title, desc, note, accent], i) => <Reveal key={title} delay={i * .09}><div className="h-full flex flex-col p-6 rounded-2xl border border-white/8 bg-[#121826]"><div className="w-1 h-8 rounded-full mb-4" style={{ backgroundColor: accent }} /><h3 className="text-white font-bold text-base mb-3">{title}</h3><p className="text-gray-400 text-sm leading-relaxed flex-1">{desc}</p><p className="text-xs my-5" style={{ color: accent }}>{note}</p><Button asChild size="sm" className="w-full font-bold text-[#0B0F14]" style={{ backgroundColor: accent }}><Link href={title.startsWith("Niñas") ? contactPath : bookPath}>{title.startsWith("Niñas") ? "Pregunta sobre elegibilidad" : "Obtén tu Discovery Pass"}</Link></Button></div></Reveal>)}</div></div></section>
+       <section className="py-16 px-4 border-t border-white/5"><div className="max-w-3xl mx-auto"><Reveal><div className="rounded-3xl border border-[#B06CFF]/25 bg-[#121826] p-8 sm:p-10"><p className="text-xs text-[#B06CFF] uppercase tracking-widest font-semibold mb-4">Mejor lugar para comenzar</p><h2 className="text-2xl sm:text-3xl font-black text-white uppercase leading-none mb-4">Programa de defensa personal para mujeres de 8 semanas</h2><p className="text-gray-300 text-sm leading-relaxed mb-5">Desarrolla conciencia, técnica y la calma que nace de saber que puedes cuidarte. Sin experiencia previa y sin ambiente de pelea.</p><div className="space-y-2.5 mb-7">{["No se necesita experiencia · Principiantes bienvenidas", "16 sesiones durante 8 semanas", "Ambiente solo para mujeres · Seguro y sin juicios"].map((item) => <div key={item} className="flex items-center gap-3"><CheckCircle className="h-4 w-4 text-[#B06CFF]" /><span className="text-gray-300 text-sm">{item}</span></div>)}</div><Button asChild size="lg" className="bg-[#B06CFF] text-white font-bold uppercase tracking-wider"><Link href={bookPath}>Obtén tu Discovery Pass gratis <ArrowRight className="ml-2 h-4 w-4" /></Link></Button></div></Reveal></div></section>
+       <section className="py-16 px-4 border-t border-white/5"><div className="max-w-3xl mx-auto"><Reveal className="text-center mb-8"><p className="text-xs text-gray-500 uppercase tracking-widest font-semibold mb-2">Sin presión</p><h2 className="text-2xl font-black text-white uppercase tracking-tight">Cómo funciona el <span className="text-[#FFB199]">Discovery Pass gratis</span></h2></Reveal><div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">{[["01", "Crea una cuenta", "Comienza en el portal seguro de miembros."], ["02", "Completa los formularios", "Termina los formularios requeridos antes de activar."], ["03", "Activa y reserva", "Reserva una clase elegible de SKILL y una de STRENGTH."], ["04", "Úsalo en 7 días", "Llega lista para aprender y usa ambos beneficios antes de que venza."]].map(([num, title, desc]) => <div key={num} className="text-center"><div className="mx-auto mb-3 w-10 h-10 rounded-2xl flex items-center justify-center font-black text-sm text-[#FFB199] bg-[#FFB199]/10">{num}</div><h3 className="text-white font-bold">{title}</h3><p className="text-gray-400 text-sm mt-2">{desc}</p></div>)}</div><p className="text-gray-500 text-sm italic text-center mb-6">No necesitas comprometerte con una membresía para comenzar el pase.</p><div className="text-center"><Button asChild size="lg" className="bg-[#FFB199] text-[#0B0F14] font-bold uppercase tracking-wider"><Link href={bookPath}>Obtén tu Discovery Pass gratis <ArrowRight className="ml-2 h-4 w-4" /></Link></Button></div></div></section>
       <section className="py-16 px-4 border-t border-white/5"><div className="max-w-2xl mx-auto"><Reveal className="text-center mb-8"><h2 className="text-2xl font-black text-white uppercase tracking-tight">Preguntas <span className="text-[#5EEBFF]">frecuentes</span></h2></Reveal><div className="bg-[#121826] rounded-2xl border border-white/8 px-6">{faqs.map(([question, answer], i) => <FAQ key={i} question={question} answer={answer} />)}</div><div className="text-center mt-8"><Button asChild variant="outline" className="border-white/15 text-white"><Link href={contactPath}>¿Todavía tienes preguntas? Contáctanos</Link></Button></div></div></section>
     </div>
   );

@@ -103,7 +103,7 @@ test("server fallback pages preserve localized Discovery Pass destinations", () 
   assert.doesNotMatch(pageContentSource, /"\/es\/programas":/);
 });
 
-test("Spanish booking and Adaptive Capacity fallbacks stay outside Discovery Pass", () => {
+test("Personal training, Spanish booking, and Adaptive Capacity fallbacks stay outside Discovery Pass", () => {
   const routesSource = fs.readFileSync(new URL("./routes.ts", import.meta.url), "utf8");
   const pageContentSource = routesSource.slice(
     routesSource.indexOf("const PAGE_CONTENT"),
@@ -127,7 +127,7 @@ test("Spanish booking and Adaptive Capacity fallbacks stay outside Discovery Pas
 
 test("Spanish booking and Adaptive Capacity fallbacks retain localized metadata", () => {
   const routesSource = fs.readFileSync(new URL("./routes.ts", import.meta.url), "utf8");
-  assert.match(routesSource, /"\/es\/reservar": \{\s*title: "Reserva tu Primera Visita Gratis/);
+  assert.match(routesSource, /"\/es\/reservar": \{\s*title: "Obtén tu Discovery Pass Gratis/);
   assert.match(routesSource, /canonical: "https:\/\/www\.groundupbjj\.com\/es\/reservar"/);
   assert.match(routesSource, /"\/es\/adaptive-capacity": \{\s*title: "Capacidad Adaptativa/);
   assert.match(routesSource, /canonical: "https:\/\/www\.groundupbjj\.com\/es\/adaptive-capacity"/);

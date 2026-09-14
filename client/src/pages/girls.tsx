@@ -10,7 +10,7 @@ export default function Girls() {
     title: "Desarrollen fuerza, habilidad y confianza", accent: "juntas.",
     eyebrow: "Niñas / Madre + hija · Oxnard",
     description: "Ground Up es un centro de entrenamiento solo para mujeres. Cuando hay programación juvenil disponible, es para niñas y jóvenes femeninas, no un programa infantil mixto genérico.",
-    book: "Reserva una primera visita gratis", eligibility: "Pregunta sobre elegibilidad",
+     book: "Pregunta sobre elegibilidad juvenil", eligibility: "Contacta a Ground Up",
     cards: [
       ["Niñas / jóvenes femeninas", "Un camino claro y centrado en mujeres jóvenes cuando el programa juvenil está abierto."],
       ["Madre + hija", "Pregunta cómo funciona la participación, incluyendo la colocación en clases y los requisitos de tutoría."],
@@ -23,7 +23,7 @@ export default function Girls() {
     title: "Build strength, skill, and confidence", accent: "together.",
     eyebrow: "Girls / Mother + Daughter · Oxnard",
     description: "Ground Up is a women-only training center. When youth programming is available, it is for girls and female youth—not a generic mixed-gender kids program.",
-    book: "Book a free first visit", eligibility: "Ask about eligibility",
+     book: "Ask about youth eligibility", eligibility: "Contact Ground Up",
     cards: [
       ["Girls / female youth", "A clear, women-centered path for young athletes when the youth program is open."],
       ["Mother + daughter", "Ask how participation works, including class placement and guardian requirements."],
@@ -34,7 +34,6 @@ export default function Girls() {
     seoDescription: "Explore Ground Up's girls and female-youth training path in Oxnard. Ask about current eligibility, beginner-friendly classes, and mother-daughter options.",
   };
   const contactPath = localizedPublicPath("/contact", locale);
-  const discoveryPassPath = localizedPublicPath("/discovery-pass", locale);
   return (
     <main className="min-h-screen bg-[#0B0F14] text-white">
       <SEO
@@ -54,7 +53,7 @@ export default function Girls() {
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <Button asChild size="lg" className="bg-[#FFB199] font-bold uppercase tracking-wider text-[#0B0F14] hover:bg-[#FFB199]/90">
-              <Link href={discoveryPassPath}>{copy.book} <ArrowRight className="ml-2 h-5 w-5" /></Link>
+              <Link href={contactPath}>{copy.book} <ArrowRight className="ml-2 h-5 w-5" /></Link>
             </Button>
             <Button asChild variant="outline" size="lg" className="border-white/15 text-white hover:bg-white/5">
               <Link href={contactPath}>{copy.eligibility}</Link>

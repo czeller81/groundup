@@ -31,14 +31,14 @@ const heroVideo = "/videos/hero-bg.mp4";
 
 const HOME_COPY: Record<string, string> = {
   "Women-Only BJJ & Self-Defense in Oxnard | Ground Up": "Jiu-Jitsu y Defensa Personal Solo para Mujeres en Oxnard | Ground Up",
-  "Ground Up is a women-only training center in Oxnard for Brazilian Jiu-Jitsu, practical self-defense, strength, and movement. Beginner-friendly small-group coaching. Book your free first visit.": "Ground Up es un centro de entrenamiento solo para mujeres en Oxnard para jiu-jitsu brasileño, defensa personal práctica, fuerza y movimiento. Coaching en grupos pequeños para principiantes. Reserva tu primera visita gratis.",
+  "Ground Up is a women-only training center in Oxnard for Brazilian Jiu-Jitsu, practical self-defense, strength, and movement. Beginner-friendly small-group coaching. Get your free Discovery Pass.": "Ground Up es un centro de entrenamiento solo para mujeres en Oxnard para jiu-jitsu brasileño, defensa personal práctica, fuerza y movimiento. Coaching en grupos pequeños para principiantes. Obtén tu Discovery Pass gratis.",
   "WOMEN ONLY · OXNARD, CA": "SOLO PARA MUJERES · OXNARD, CA",
   CONFIDENCE: "CONFIANZA",
   BUILT: "CONSTRUIDA",
   "HERE.": "AQUÍ.",
   "discover what your body can do": "descubre de lo que es capaz tu cuerpo",
   "Ground Up is a women-only training space where you can build strength, learn Brazilian Jiu-Jitsu and practical self-defense, and move with more confidence. Beginner-friendly. No experience required. No fight-gym atmosphere.": "Ground Up es un espacio de entrenamiento solo para mujeres donde puedes desarrollar fuerza, aprender jiu-jitsu brasileño y defensa personal práctica, y moverte con más confianza. Para principiantes. No necesitas experiencia. Sin ambiente de gimnasio de pelea.",
-  "Book Your Free First Visit": "Reserva tu primera visita gratis",
+  "Get Your Free Discovery Pass": "Obtén tu Discovery Pass gratis",
   "Explore Programs": "Conoce los programas",
   "Personalized Attention": "Atención personalizada",
   "Coaching tailored to you": "Coaching adaptado a ti",
@@ -63,15 +63,15 @@ const HOME_COPY: Record<string, string> = {
   "Wear comfortable athletic clothing": "Usa ropa deportiva cómoda",
   "No gear required for your first class": "No necesitas equipo para tu primera clase",
   "Bring water and an open mind": "Trae agua y una mente abierta",
-  "Book Your First Class — Free": "Reserva tu primera clase — gratis",
-  "Our Mission": "Nuestra misión",
-  "BUILD THE CAPACITY TO": "DESARROLLA LA CAPACIDAD DE",
-  ADAPT: "ADAPTARTE",
-  "Ground Up is a human resilience and capability platform. Our physical training foundation and our emerging Adaptive Capacity work share one belief: you can build the capacity to respond to change with more clarity, confidence, and agency. Start with the path that fits you.": "Ground Up es una plataforma de resiliencia y capacidad humana. Nuestro entrenamiento físico y el proyecto Capacidad Adaptativa comparten una creencia: puedes desarrollar la capacidad de responder al cambio con más claridad, confianza y autonomía. Comienza con el camino que se adapte a ti.",
+  "Book Your First Class — Free": "Obtén tu Discovery Pass gratis",
+  "Your Free Discovery Pass": "Tu Discovery Pass gratis",
+  "START WITH FOUR SIMPLE STEPS": "COMIENZA CON CUATRO PASOS SENCILLOS",
+  "Create an account, complete the required forms, activate your pass, then book one SKILL class and one STRENGTH class. Your pass is active for seven days after activation.": "Crea una cuenta, completa los formularios requeridos, activa tu pase y reserva una clase de SKILL y una de STRENGTH. Tu pase está activo durante siete días después de activarlo.",
+  "Ground Up offers practical training for women through Brazilian Jiu-Jitsu, self-defense, strength, and movement. Adaptive Capacity is a separate learning path for clearer thinking and better decisions as work and life change. Start with the path that fits you.": "Ground Up ofrece entrenamiento práctico para mujeres a través del jiu-jitsu brasileño, la defensa personal, la fuerza y el movimiento. Capacidad Adaptativa es un camino de aprendizaje separado para pensar con más claridad y tomar mejores decisiones mientras cambian el trabajo y la vida. Comienza con el camino que se adapte a ti.",
   "Find Your Path": "Encuentra tu camino",
   "TRAINING BUILT": "ENTRENAMIENTO CREADO",
   "AROUND YOU": "A TU MEDIDA",
-  "Train your body, strengthen your confidence, or build practical capacity for a changing world. Related paths, clearly separated, all grounded in action.": "Entrena tu cuerpo, fortalece tu confianza o desarrolla capacidad práctica para un mundo cambiante. Caminos relacionados, claramente separados y siempre basados en la acción.",
+  "Train your body, build practical confidence, or explore a separate learning path for a changing world. Choose the starting point that fits you.": "Entrena tu cuerpo, desarrolla confianza práctica o explora un camino de aprendizaje separado para un mundo cambiante. Elige el punto de partida que se adapte a ti.",
   "Flagship Program": "Programa principal",
   "WOMEN'S SELF-DEFENSE": "DEFENSA PERSONAL PARA MUJERES",
   "Our signature 8-week self-defense program helps women build practical skills, situational awareness, confidence, and strength in a supportive environment.": "Nuestro programa insignia de defensa personal de 8 semanas ayuda a las mujeres a desarrollar habilidades prácticas, conciencia situacional, confianza y fuerza en un ambiente comprensivo.",
@@ -114,7 +114,7 @@ const HOME_COPY: Record<string, string> = {
   "THAT FITS YOU": "PARA TI",
   "Max 6 students per class — structured for beginners. Every session is coached, not just supervised.": "Máximo 6 alumnas por clase, con estructura para principiantes. Cada sesión tiene coaching, no solo supervisión.",
   "No experience required": "No necesitas experiencia",
-  "First class free": "Primera clase gratis",
+  "Free Discovery Pass": "Discovery Pass gratis",
   "Full Schedule": "Horario completo",
   "See all classes for the full week →": "Ver todas las clases de la semana →",
   "WHY GROUND UP": "POR QUÉ GROUND UP",
@@ -171,10 +171,9 @@ const HOME_COPY: Record<string, string> = {
   "What is the free community self-defense class?": "¿Qué es la clase comunitaria gratis de defensa personal?",
   "Every two weeks we host a free, open self-defense class for the community. It's a great way to try training with no commitment, meet other students, and build local safety awareness.": "Cada dos semanas ofrecemos una clase gratis y abierta de defensa personal para la comunidad. Es una buena forma de probar sin compromiso, conocer a otras alumnas y fortalecer la seguridad local.",
   "How do I book a session?": "¿Cómo reservo una sesión?",
-  "Create a free member account, complete your intake forms, and book directly through our member portal. Sessions are available 8am–5pm, Monday through Saturday.": "Crea una cuenta gratis, completa tus formularios de ingreso y reserva directamente desde el portal de miembros. Hay sesiones de 8 a. m. a 5 p. m., de lunes a sábado.",
-  "YOUR FIRST CLASS": "TU PRIMERA CLASE",
-  "IS ALWAYS FREE": "SIEMPRE ES GRATIS",
-  "No gear. No commitment. No pressure. Just come in, meet Coach Raymi, and experience what a truly supportive training environment feels like. We'll help you find the right fit.": "Sin equipo. Sin compromiso. Sin presión. Ven, conoce a Coach Raymi y descubre cómo se siente un ambiente de entrenamiento verdaderamente comprensivo. Te ayudaremos a encontrar el programa adecuado.",
+  "Create a free member account, complete your required forms, activate your Discovery Pass, and book one eligible SKILL class and one eligible STRENGTH class. The live schedule shows current times and availability.": "Crea una cuenta gratis, completa tus formularios requeridos, activa tu Discovery Pass y reserva una clase elegible de SKILL y una de STRENGTH. El horario en vivo muestra los horarios y la disponibilidad actuales.",
+  "YOUR FREE DISCOVERY PASS": "TU DISCOVERY PASS GRATIS",
+  "No gear. No membership commitment. Complete the steps online, then use your pass within seven days of activation.": "Sin equipo. Sin compromiso de membresía. Completa los pasos en línea y usa tu pase durante los siete días posteriores a la activación.",
   "Ask Us Anything": "Pregúntanos lo que quieras",
   "Small classes": "Clases pequeñas",
   "No contracts": "Sin contratos",
@@ -245,7 +244,7 @@ export default function Home() {
     <div className="flex flex-col bg-[#0B0F14]">
       <SEO
         title={t("Women-Only BJJ & Self-Defense in Oxnard | Ground Up")}
-        description={t("Ground Up is a women-only training center in Oxnard for Brazilian Jiu-Jitsu, practical self-defense, strength, and movement. Beginner-friendly small-group coaching. Book your free first visit.")}
+        description={t("Ground Up is a women-only training center in Oxnard for Brazilian Jiu-Jitsu, practical self-defense, strength, and movement. Beginner-friendly small-group coaching. Get your free Discovery Pass.")}
         canonical={path("/")}
       />
 
@@ -313,7 +312,7 @@ export default function Home() {
                 data-testid="hero-cta-book"
               >
                 <Link href={discoveryPassPath}>
-                   {t("Book Your Free First Visit")}
+                   {t("Get Your Free Discovery Pass")}
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
@@ -372,7 +371,7 @@ export default function Home() {
               {t("WHAT TO")} <span className="gradient-text-warm">{t("EXPECT")}</span>
             </h2>
             <p className="text-gray-400 max-w-xl mx-auto">
-              {t("We know walking into a martial arts gym for the first time can feel intimidating. Here's exactly what your first visit looks like — simple, welcoming, and at your pace.")}
+              {t("We know walking into a martial arts gym for the first time can feel intimidating. Here's how the free Discovery Pass works — simple, welcoming, and at your pace.")}
             </p>
           </div>
 
@@ -443,7 +442,7 @@ export default function Home() {
             <div className="block">
               <Button asChild size="lg" className="bg-[#FFB199] text-[#0B0F14] font-bold uppercase tracking-wider hover:bg-[#FFB199]/90 h-13 px-10">
                 <Link href={discoveryPassPath}>
-                  {t("Book Your First Class — Free")}
+                   {t("Get Your Free Discovery Pass")}
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
@@ -457,13 +456,13 @@ export default function Home() {
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-[#B06CFF]/5 rounded-full blur-3xl" />
         <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[#B06CFF]/20 bg-[#B06CFF]/5 text-[#B06CFF] text-sm mb-6">
-             {t("Our Mission")}
+             {t("Your Free Discovery Pass")}
           </div>
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-8 leading-tight" style={{ fontFamily: 'var(--font-display)' }}>
-             {t("BUILD THE CAPACITY TO")} <span className="gradient-text-cyan">{t("ADAPT")}{locale === "en" ? "." : ""}</span>
+              {t("START WITH FOUR SIMPLE STEPS")}
           </h2>
           <p className="text-gray-300 text-lg leading-relaxed max-w-3xl mx-auto">
-             {t("Ground Up is a human resilience and capability platform. Our physical training foundation and our emerging Adaptive Capacity work share one belief: you can build the capacity to respond to change with more clarity, confidence, and agency. Start with the path that fits you.")}
+             {t("Create an account, complete the required forms, activate your pass, then book one SKILL class and one STRENGTH class. Your pass is active for seven days after activation.")}
           </p>
         </div>
       </Section>
@@ -513,7 +512,7 @@ export default function Home() {
                 <div className="flex flex-wrap gap-3">
                   <Button asChild className="bg-[#FFB199] text-[#0B0F14] font-bold uppercase tracking-wider hover:bg-[#FFB199]/90 w-fit">
                      <Link href={discoveryPassPath}>
-                        {t("Book Your Free First Visit")} <ArrowRight className="ml-2 h-4 w-4" />
+                         {t("Get Your Free Discovery Pass")} <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
                   </Button>
                   <Button asChild variant="outline" className="border-[#FFB199]/30 text-[#FFB199] hover:bg-[#FFB199]/10 uppercase tracking-wider w-fit bg-transparent">
@@ -638,7 +637,7 @@ export default function Home() {
                    <CheckCircle className="h-3.5 w-3.5" /> {t("Beginner friendly")}
                 </span>
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[#B06CFF]/10 text-[#B06CFF] border border-[#B06CFF]/20">
-                   <CheckCircle className="h-3.5 w-3.5" /> {t("First class free")}
+                   <CheckCircle className="h-3.5 w-3.5" /> {t("Free Discovery Pass")}
                 </span>
               </div>
             </div>
@@ -992,7 +991,7 @@ export default function Home() {
             />
             <FAQ
               question={t("How do I book a session?")}
-              answer={t("Create a free member account, complete your intake forms, and book directly through our member portal. Sessions are available 8am–5pm, Monday through Saturday.")}
+              answer={t("Create a free member account, complete your required forms, activate your Discovery Pass, and book one eligible SKILL class and one eligible STRENGTH class. The live schedule shows current times and availability.")}
             />
           </div>
         </div>
@@ -1005,11 +1004,11 @@ export default function Home() {
 
         <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight" style={{ fontFamily: 'var(--font-display)' }}>
-            {t("YOUR FIRST CLASS")}
-            <br /><span className="gradient-text-warm">{t("IS ALWAYS FREE")}</span>
+            {t("YOUR FREE DISCOVERY PASS")}
+            <br /><span className="gradient-text-warm">{t("START WITH FOUR SIMPLE STEPS")}</span>
           </h2>
           <p className="text-gray-300 text-lg mb-10 max-w-xl mx-auto">
-             {t("No gear. No commitment. No pressure. Just come in, meet Coach Raymi, and experience what a truly supportive training environment feels like. We'll help you find the right fit.")}
+              {t("No gear. No membership commitment. Complete the steps online, then use your pass within seven days of activation.")}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button
@@ -1018,7 +1017,7 @@ export default function Home() {
               className="bg-[#FFB199] text-[#0B0F14] font-bold uppercase tracking-wider hover:bg-[#FFB199]/90 text-base px-10 h-14"
             >
               <Link href={discoveryPassPath}>
-                {t("Book Your Free First Visit")}
+                {t("Get Your Free Discovery Pass")}
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>

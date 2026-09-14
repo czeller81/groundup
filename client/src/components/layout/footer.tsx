@@ -87,7 +87,7 @@ export default function Footer() {
              &copy; {new Date().getFullYear()} Ground Up Women's BJJ. {publicCopy.allRightsReserved}
           </p>
           <div className="flex items-center space-x-4">
-            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="flex min-h-11 min-w-11 items-center justify-center text-gray-500 hover:text-[#5EEBFF] transition-colors">
+            <a href="https://instagram.com/groundupbjj" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="flex min-h-11 min-w-11 items-center justify-center text-gray-500 hover:text-[#5EEBFF] transition-colors">
               <Instagram className="h-5 w-5" />
             </a>
           </div>

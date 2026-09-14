@@ -23,7 +23,6 @@ import PortalAdminMembers from "@/pages/portal/admin";
 import PortalCoach from "@/pages/portal/coach";
 import PortalBilling from "@/pages/portal/billing";
 import LiveSchedule from "@/pages/live-schedule";
-import FirstVisitBooking from "@/pages/first-visit-booking";
 import WomensSelfDefense from "@/pages/womens-self-defense";
 import Girls from "@/pages/girls";
 import Navbar from "@/components/layout/navbar";
@@ -81,7 +80,7 @@ function Router() {
         <MainLayout><LiveSchedule /></MainLayout>
       </Route>
       <Route path="/book">
-        <MainLayout><FirstVisitBooking /></MainLayout>
+        <Redirect to="/discovery-pass" />
       </Route>
       <Route path="/womens-self-defense">
         <MainLayout><WomensSelfDefense /></MainLayout>
@@ -120,7 +119,7 @@ function Router() {
         <MainLayout><LiveSchedule /></MainLayout>
       </Route>
       <Route path="/es/reservar">
-        <MainLayout><FirstVisitBooking /></MainLayout>
+        <Redirect to="/es/discovery-pass" />
       </Route>
       <Route path="/es/contacto">
         <MainLayout><Contact /></MainLayout>

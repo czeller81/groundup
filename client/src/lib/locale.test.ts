@@ -35,15 +35,17 @@ test("public free-entry CTA surfaces do not bypass the Discovery Pass", () => {
     "../../../server/routes.ts",
   ];
   const sources = sourceFiles.map((file) => readFileSync(new URL(file, import.meta.url), "utf8"));
-  const publicMarketingSources = sources.slice(0, 6);
+  const publicMarketingSources = [...sources.slice(0, 3), sources[4]];
 
   for (const source of publicMarketingSources) {
     assert.match(source, /discoveryPassPath|localizedPublicPath\(["']\/discovery-pass/);
     assert.doesNotMatch(source, /localizedPublicPath\(["']\/contact#contact-form/);
   }
 
+  assert.match(sources[3], /contactPath/);
+  assert.match(sources[5], /contactPath/);
   assert.match(sources[6], /occurrence\.firstVisitEligible[\s\S]*localizedPublicPath\(["']\/discovery-pass/);
   assert.match(sources[7], /firstVisitPath = localizedPublicPath\(["']\/discovery-pass/);
-  assert.match(sources[8], /href="\/discovery-pass">Book Your Free First Visit/);
+  assert.match(sources[8], /href="\/discovery-pass">Get Your Free Discovery Pass/);
   assert.doesNotMatch(sources[8], /href="\/book">Book Your Free First Visit/);
 });

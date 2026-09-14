@@ -20,4 +20,5 @@
 - [Meta conversion verification](meta-conversion-verification.md) — browser Pixel activation is implemented; live Meta receipt still needs owner-side verification.
 - [Production data cleanup](production-data-cleanup.md) — reconcile published screenshots with production records before guarded transactional deletion.
 - [Free-entry CTA routing](free-entry-cta-routing.md) — classify prospect, eligibility, and member actions separately before choosing a localized destination.
+- [Member evidence fixture timing](member-evidence-fixture-time.md) — calendar-relative booking fixtures must stay inside both the configured week and booking horizon.
 - [Hosted analytics verification](hosted-analytics-verification.md) — Replit-hosted analytics needs Publishing enablement and a republish before tracker or funnel data appears.

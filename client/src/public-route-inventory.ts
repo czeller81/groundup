@@ -13,7 +13,7 @@ export const PUBLIC_ROUTE_INVENTORY = [
   { id: "contact", englishPath: "/contact", spanishPath: "/es/contacto", englishComponent: "Contact", spanishComponent: "SpanishContact" },
   { id: "privacy", englishPath: "/privacy", spanishPath: "/es/privacidad", englishComponent: "Privacy", spanishComponent: "SpanishPrivacy" },
   { id: "schedule", englishPath: "/schedule", spanishPath: "/es/horario", englishComponent: "LiveSchedule", spanishComponent: "SpanishSchedule" },
-  { id: "book", englishPath: "/book", spanishPath: "/es/reservar", englishComponent: "FirstVisitBooking", spanishComponent: "SpanishBooking" },
+  { id: "book", englishPath: "/book", spanishPath: "/es/reservar", englishComponent: "Redirect", spanishComponent: "Redirect" },
   { id: "womens-self-defense", englishPath: "/womens-self-defense", spanishPath: "/es/womens-self-defense", englishComponent: "WomensSelfDefense", spanishComponent: "WomensSelfDefense" },
   { id: "girls", englishPath: "/girls", spanishPath: "/es/girls", englishComponent: "Girls", spanishComponent: "Girls" },
   { id: "adaptive-capacity", englishPath: "/adaptive-capacity", spanishPath: "/es/adaptive-capacity", englishComponent: "AdaptiveCapacity", spanishComponent: "AdaptiveCapacity" },
@@ -31,7 +31,6 @@ export const PUBLIC_NO_SCRIPT_DISCOVERY_ROUTES = [
   { englishPath: "/schedule", spanishPath: "/es/horario", englishDestination: "/discovery-pass", spanishDestination: "/es/discovery-pass" },
   { englishPath: "/pricing", spanishPath: "/es/pricing", englishDestination: "/discovery-pass", spanishDestination: "/es/discovery-pass" },
   { englishPath: "/coaches", spanishPath: "/es/coaches", englishDestination: "/discovery-pass", spanishDestination: "/es/discovery-pass" },
-  { englishPath: "/personal-training", spanishPath: "/es/personal-training", englishDestination: "/discovery-pass", spanishDestination: "/es/discovery-pass" },
   { englishPath: "/contact", spanishPath: "/es/contacto", englishDestination: "/discovery-pass", spanishDestination: "/es/discovery-pass" },
   { englishPath: "/womens-self-defense", spanishPath: "/es/womens-self-defense", englishDestination: "/discovery-pass", spanishDestination: "/es/discovery-pass" },
 ] as const;
@@ -42,6 +41,14 @@ export const PUBLIC_NO_SCRIPT_DISCOVERY_ROUTES = [
  * eligibility, and Adaptive Capacity links do not drift into free entry.
  */
 export const PUBLIC_NO_SCRIPT_NON_DISCOVERY_ROUTES = [
+  {
+    path: "/personal-training",
+    requiredLinks: ["/contact"],
+  },
+  {
+    path: "/es/personal-training",
+    requiredLinks: ["/es/contacto"],
+  },
   {
     path: "/es/reservar",
     requiredLinks: ["/es/horario", "/es/contacto#contact-form"],
