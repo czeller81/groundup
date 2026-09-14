@@ -22,3 +22,4 @@
 - [Free-entry CTA routing](free-entry-cta-routing.md) — classify prospect, eligibility, and member actions separately before choosing a localized destination.
 - [Member evidence fixture timing](member-evidence-fixture-time.md) — calendar-relative booking fixtures must stay inside both the configured week and booking horizon.
 - [Hosted analytics verification](hosted-analytics-verification.md) — Replit-hosted analytics needs Publishing enablement and a republish before tracker or funnel data appears.
+- [AI management API boundary](ai-management-api.md) — external AI access uses a separate scoped bearer key, not browser admin sessions or frontend credentials.
