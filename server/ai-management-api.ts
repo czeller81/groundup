@@ -118,18 +118,14 @@ async function getPaymentReport(params: {
     })
       .from(bookings)
       .leftJoin(users, eq(bookings.userId, users.id))
-      .where(and(
-        or(isNull(users.id), ...filters),
-      ))
+      .where(or(isNull(users.id), and(...filters)))
       .orderBy(desc(bookings.createdAt))
       .limit(params.limit)
       .offset((params.page - 1) * params.limit),
     db.select({ count: count() })
       .from(bookings)
       .leftJoin(users, eq(bookings.userId, users.id))
-      .where(and(
-        or(isNull(users.id), ...filters),
-      )),
+      .where(or(isNull(users.id), and(...filters))),
   ]);
   return {
     source: "application_booking_records",
@@ -289,6 +285,18 @@ const openApiTemplate = {
           { name: "to", in: "query", schema: { type: "string", format: "date-time" } },
         ],
         responses: { "200": { description: "Bookings" } },
+      },
+    },
+    "/api/ai/v1/operations/reservations": {
+      get: {
+        tags: ["Operations"],
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: "status", in: "query", schema: { type: "string", enum: ["confirmed", "waitlisted", "cancelled"] } },
+          { name: "from", in: "query", schema: { type: "string", format: "date-time" } },
+          { name: "to", in: "query", schema: { type: "string", format: "date-time" } },
+        ],
+        responses: { "200": { description: "Class reservation records that back schedule counts" } },
       },
     },
     "/api/ai/v1/operations/bookings/{id}/status": {
@@ -496,6 +504,28 @@ export function registerAiManagementRoutes(app: Express) {
       }));
     } catch (error) {
       sendServerError(res, "Failed to load bookings.", error);
+    }
+  });
+
+  router.get("/operations/reservations", async (req: Request, res: Response) => {
+    const from = parseDate(req.query.from);
+    const to = parseDate(req.query.to);
+    if ((req.query.from && !from) || (req.query.to && !to) || (from && to && to <= from)) {
+      return res.status(400).json({ code: "INVALID_DATE_RANGE", message: "from and to must be valid ISO dates with to after from." });
+    }
+    try {
+      const rows = await storage.getClassReservationReport({
+        status: queryText(req.query.status),
+        startDate: from,
+        endDate: to,
+      });
+      res.json({
+        source: "application_class_reservation_records",
+        accountingNote: "These reservations are the records counted by the schedule report; they are not Stripe payment records.",
+        rows,
+      });
+    } catch (error) {
+      sendServerError(res, "Failed to load class reservations.", error);
     }
   });
 

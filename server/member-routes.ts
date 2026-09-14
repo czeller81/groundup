@@ -34,6 +34,7 @@ import {
   adminMembershipBillingState,
   getOrCreateStripeCustomer,
   isBillingPlanKey,
+  canSelectGirlsProgram,
   reconcilePendingStripeCheckouts,
   requiredFormsForCheckout,
 } from "./membership-billing";
@@ -308,11 +309,13 @@ export function registerMemberRoutes(app: Express) {
 
   app.get("/api/portal/billing/plans", requireAuth, async (req, res) => {
     try {
+      const canSelectGirls = await canSelectGirlsProgram(req.session.userId!);
       const plans = await db.select().from(membershipPlans)
         .where(eq(membershipPlans.active, true))
         .orderBy(asc(membershipPlans.displayName));
       res.json(plans
-        .filter((plan) => isBillingPlanKey(plan.internalKey))
+        .filter((plan) => isBillingPlanKey(plan.internalKey)
+          && (plan.internalKey !== "girls_program" || canSelectGirls))
         .map((plan) => ({
           ...plan,
           billingKey: plan.internalKey,

@@ -388,11 +388,23 @@ declare module "express-session" {
   }
 }
 
-if (!process.env.STRIPE_SECRET_KEY) {
+const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+const stripeSecretMode = stripeSecretKey?.startsWith("sk_test_")
+  ? "test"
+  : stripeSecretKey?.startsWith("sk_live_")
+    ? "live"
+    : stripeSecretKey
+      ? "unknown"
+      : "unconfigured";
+const stripeUsableInEnvironment = process.env.NODE_ENV !== "production" || stripeSecretMode === "live";
+
+if (!stripeSecretKey) {
   console.warn('STRIPE_SECRET_KEY not found. Stripe functionality will be disabled.');
+} else if (process.env.NODE_ENV === "production" && stripeSecretMode !== "live") {
+  console.error("Production Stripe is not configured with a live secret key. Stripe mutations and webhook processing are disabled.");
 }
 
-const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SECRET_KEY, {
+const stripe = stripeSecretKey && stripeUsableInEnvironment ? new Stripe(stripeSecretKey, {
   apiVersion: "2025-08-27.basil",
 }) : null;
 
@@ -590,6 +602,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         configured: false,
         connected: false,
         mode,
+        environmentConfigurationValid: stripeUsableInEnvironment,
         publishableKeyConfigured: Boolean(publishableKey),
         webhookConfigured: Boolean(process.env.STRIPE_WEBHOOK_SECRET),
       });
@@ -601,6 +614,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         configured: true,
         connected: true,
         mode,
+        environmentConfigurationValid: stripeUsableInEnvironment,
         publishableKeyConfigured: Boolean(publishableKey),
         webhookConfigured: Boolean(process.env.STRIPE_WEBHOOK_SECRET),
         account: {
@@ -616,6 +630,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         configured: true,
         connected: false,
         mode,
+        environmentConfigurationValid: stripeUsableInEnvironment,
         publishableKeyConfigured: Boolean(publishableKey),
         webhookConfigured: Boolean(process.env.STRIPE_WEBHOOK_SECRET),
       });
@@ -652,7 +667,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/stripe/webhook", express.raw({ type: "application/json", limit: "256kb" }), async (req, res) => {
     if (!stripe) {
-      return res.status(500).json({ message: "Stripe is not configured" });
+      return res.status(503).json({
+        code: process.env.NODE_ENV === "production" && stripeSecretMode !== "live"
+          ? "STRIPE_LIVE_CONFIGURATION_REQUIRED"
+          : "STRIPE_NOT_CONFIGURED",
+        message: "Stripe webhook processing is unavailable.",
+      });
     }
     const sig = req.headers['stripe-signature'] as string;
     if (!process.env.STRIPE_WEBHOOK_SECRET || !sig) {
@@ -665,7 +685,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Stripe webhook signature verification failed:", err);
       return res.status(400).json({ message: "Invalid webhook signature" });
     }
-    const expectedLiveMode = process.env.STRIPE_SECRET_KEY?.startsWith("sk_live_");
+    const expectedLiveMode = stripeSecretMode === "live";
     if (typeof event.livemode === "boolean" && event.livemode !== expectedLiveMode) {
       console.error("Stripe webhook mode mismatch; event rejected.");
       return res.status(400).json({ message: "Stripe webhook mode mismatch" });
@@ -757,7 +777,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.completeWebhookEvent("stripe", event.id);
     } catch (error) {
       await storage.failWebhookEvent("stripe", event.id, error instanceof Error ? error.message : "Stripe processing failed");
-      throw error;
+      console.error("Stripe webhook processing failed:", error);
+      return res.status(500).json({ message: "Stripe webhook processing failed" });
     }
     res.json({ received: true });
   });

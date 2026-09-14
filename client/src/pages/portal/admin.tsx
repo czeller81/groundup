@@ -660,6 +660,23 @@ export default function PortalAdmin() {
           </Card>
         )}
         {/* Stats Cards */}
+        {statsError ? (
+          <Card className="mb-6 border-red-500/20 bg-red-500/10" role="alert">
+            <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="font-semibold text-red-200">{copy.adminStatsUnavailable}</p>
+                <p className="mt-1 text-sm text-red-200/80">{copy.adminStatsUnavailableDescription}</p>
+              </div>
+              <Button
+                variant="outline"
+                className="border-red-300/30 text-red-100 hover:bg-red-300/10"
+                onClick={() => setLocation(portalPath("/portal/login"))}
+              >
+                {copy.signInAgain}
+              </Button>
+            </CardContent>
+          </Card>
+        ) : null}
         <div className="grid grid-cols-1 min-[360px]:grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 mb-6">
           <Card className="bg-[#121826] border-white/5">
             <CardContent className="p-3 sm:p-5 sm:pb-4">
@@ -668,7 +685,7 @@ export default function PortalAdmin() {
                   <Users className="h-4 w-4 sm:h-5 sm:w-5 text-[#B06CFF]" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-xl sm:text-2xl font-bold text-white">{statsLoading ? "..." : stats?.totalUsers || 0}</p>
+                   <p className="text-xl sm:text-2xl font-bold text-white">{statsLoading ? "..." : stats?.totalUsers ?? "—"}</p>
                    <p className="text-xs text-gray-400 break-words">{copy.totalUsers}</p>
                 </div>
               </div>
@@ -681,7 +698,7 @@ export default function PortalAdmin() {
                   <UserPlus className="h-4 w-4 sm:h-5 sm:w-5 text-[#5EEBFF]" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-xl sm:text-2xl font-bold text-white">{statsLoading ? "..." : stats?.newUsers30Days || 0}</p>
+                   <p className="text-xl sm:text-2xl font-bold text-white">{statsLoading ? "..." : stats?.newUsers30Days ?? "—"}</p>
                    <p className="text-xs text-gray-400 break-words">{copy.new30Days}</p>
                 </div>
               </div>
@@ -694,7 +711,7 @@ export default function PortalAdmin() {
                   <Activity className="h-4 w-4 sm:h-5 sm:w-5 text-green-400" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-xl sm:text-2xl font-bold text-white">{statsLoading ? "..." : stats?.activeMemberships || 0}</p>
+                   <p className="text-xl sm:text-2xl font-bold text-white">{statsLoading ? "..." : stats?.activeMemberships ?? "—"}</p>
                    <p className="text-xs text-gray-400 break-words">{copy.activePlans}</p>
                 </div>
               </div>
@@ -707,7 +724,7 @@ export default function PortalAdmin() {
                   <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-[#FFB199]" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-xl sm:text-2xl font-bold text-white">{statsLoading ? "..." : stats?.upcomingSessions7Days || 0}</p>
+                   <p className="text-xl sm:text-2xl font-bold text-white">{statsLoading ? "..." : stats?.upcomingSessions7Days ?? "—"}</p>
                    <p className="text-xs text-gray-400 break-words">{copy.upcoming7Days}</p>
                 </div>
               </div>
@@ -720,7 +737,7 @@ export default function PortalAdmin() {
                   <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-400" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-xl sm:text-2xl font-bold text-white">${statsLoading ? "..." : ((stats?.monthlyRevenue || 0) / 100).toFixed(0)}</p>
+                   <p className="text-xl sm:text-2xl font-bold text-white">${statsLoading ? "..." : stats?.monthlyRevenue == null ? "—" : (stats.monthlyRevenue / 100).toFixed(0)}</p>
                    <p className="text-xs text-gray-400 break-words">{copy.revenueMonth}</p>
                 </div>
               </div>

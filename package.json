@@ -7,7 +7,7 @@
     "dev": "NODE_ENV=development tsx server/index.ts",
     "build": "vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
     "start": "NODE_ENV=production node dist/index.js",
-    "test": "tsx --test server/security.test.ts server/member-entitlements.test.ts server/minor-booking.test.ts server/schedule-cutover.test.ts server/member-system-evidence.test.ts server/stripe-membership.test.ts server/discovery-pass.test.ts server/email.test.ts server/meta-conversions.test.ts client/src/lib/meta-pixel.test.ts client/src/lib/locale.test.ts",
+    "test": "tsx --test server/security.test.ts server/member-entitlements.test.ts server/minor-booking.test.ts server/schedule-cutover.test.ts server/member-system-evidence.test.ts server/stripe-membership.test.ts server/discovery-pass.test.ts server/email.test.ts server/meta-conversions.test.ts server/ai-management-api.test.ts client/src/lib/meta-pixel.test.ts client/src/lib/locale.test.ts",
     "test:evidence": "NODE_ENV=development tsx --test server/cutover-evidence.test.ts",
     "browser:qa": "node scripts/stripe-browser-rehearsal.mjs",
     "mobile:qa": "node scripts/mobile-responsive-audit.mjs",

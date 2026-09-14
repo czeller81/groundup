@@ -430,7 +430,7 @@ test("Stripe lookup timeouts leave items retryable and do not block later mainte
         },
       },
       subscriptions: {
-        retrieve: async (_subscriptionId: string, requestOptions?: { timeout?: number }) => {
+        retrieve: async (_subscriptionId: string, _params?: { expand?: string[] }, requestOptions?: { timeout?: number }) => {
           observedTimeouts.push(requestOptions?.timeout || 0);
           return new Promise(() => {});
         },

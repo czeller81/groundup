@@ -212,6 +212,11 @@ export interface IStorage {
     minorProfile: Pick<MinorProfile, "id" | "firstName" | "lastName" | "consentRevokedAt">;
   }>>;
   getClassReservation(id: string): Promise<(ClassReservation & { occurrence: ClassOccurrence }) | undefined>;
+  getClassReservationReport(filters?: { status?: string; startDate?: Date; endDate?: Date }): Promise<Array<ClassReservation & {
+    occurrence: ClassOccurrence;
+    user: Pick<User, "id" | "firstName" | "lastName" | "email"> | null;
+    minorProfile: Pick<MinorProfile, "id" | "firstName" | "lastName"> | null;
+  }>>;
   cancelClassReservation(input: { reservationId: string; userId?: string; manageTokenHash?: string; reason?: string }): Promise<{ reservation: ClassReservation; promoted?: ClassReservation }>;
   moveClassReservation(input: { reservationId: string; replacementOccurrenceId: string; actorId: string; reason: string }): Promise<{ reservation: ClassReservation; occurrence: ClassOccurrence; discoveryExceptionApplied: boolean }>;
   getOccurrenceReservations(occurrenceId: string): Promise<{
@@ -832,12 +837,13 @@ export class DatabaseStorage implements IStorage {
     
      const [upcomingSessionsResult] = await db
        .select({ count: count() })
-       .from(bookings)
-       .leftJoin(users, eq(bookings.userId, users.id))
+       .from(classReservations)
+       .innerJoin(classOccurrences, eq(classReservations.occurrenceId, classOccurrences.id))
+       .leftJoin(users, eq(classReservations.userId, users.id))
        .where(and(
-         gte(bookings.start, now),
-         lte(bookings.start, sevenDaysFromNow),
-         eq(bookings.status, "paid"),
+          gte(classOccurrences.start, now),
+          lte(classOccurrences.start, sevenDaysFromNow),
+          eq(classReservations.status, "confirmed"),
          or(isNull(users.id), not(ilike(users.email, INTERNAL_TEST_EMAIL_PATTERN))),
        ));
     
@@ -1438,6 +1444,41 @@ export class DatabaseStorage implements IStorage {
       .innerJoin(classOccurrences, eq(classReservations.occurrenceId, classOccurrences.id))
       .where(eq(classReservations.id, id));
     return row ? { ...row.reservation, occurrence: row.occurrence } : undefined;
+  }
+
+  async getClassReservationReport(filters: { status?: string; startDate?: Date; endDate?: Date } = {}) {
+    const rows = await db.select({
+      reservation: classReservations,
+      occurrence: classOccurrences,
+      user: {
+        id: users.id,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        email: users.email,
+      },
+      minorProfile: {
+        id: minorProfiles.id,
+        firstName: minorProfiles.firstName,
+        lastName: minorProfiles.lastName,
+      },
+    }).from(classReservations)
+      .innerJoin(classOccurrences, eq(classReservations.occurrenceId, classOccurrences.id))
+      .leftJoin(users, eq(classReservations.userId, users.id))
+      .leftJoin(minorProfiles, eq(classReservations.minorProfileId, minorProfiles.id))
+      .where(and(
+        filters.status ? eq(classReservations.status, filters.status) : undefined,
+        filters.startDate ? gte(classOccurrences.start, filters.startDate) : undefined,
+        filters.endDate ? lte(classOccurrences.start, filters.endDate) : undefined,
+        or(isNull(users.id), not(ilike(users.email, INTERNAL_TEST_EMAIL_PATTERN))),
+      ))
+      .orderBy(desc(classOccurrences.start), desc(classReservations.createdAt));
+
+    return rows.map(({ reservation, occurrence, user, minorProfile }) => ({
+      ...reservation,
+      occurrence,
+      user: user?.id ? user : null,
+      minorProfile: minorProfile?.id ? minorProfile : null,
+    }));
   }
 
   async cancelClassReservation(input: { reservationId: string; userId?: string; manageTokenHash?: string; reason?: string }): Promise<{ reservation: ClassReservation; promoted?: ClassReservation }> {

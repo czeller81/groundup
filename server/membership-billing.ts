@@ -1,5 +1,5 @@
 import Stripe from "stripe";
-import { and, asc, eq, gte, inArray, isNotNull, isNull, lte, or } from "drizzle-orm";
+import { and, asc, eq, gte, inArray, isNotNull, isNull, lte, or, sql } from "drizzle-orm";
 import { db, pool } from "./db";
 import { forms, formResponses, memberLifecycles, memberships, membershipPlans, minorProfiles, users } from "@shared/schema";
 
@@ -427,10 +427,11 @@ async function reconcilePendingCheckoutMemberships(
       let subscription: Stripe.Subscription;
       try {
         subscription = await withStripeReconciliationRequestTimeout(
-          (requestOptions) => stripe.subscriptions.retrieve(subscriptionId, {
-            ...requestOptions,
-            expand: ["items.data.price"],
-          }),
+          (requestOptions) => stripe.subscriptions.retrieve(
+            subscriptionId,
+            { expand: ["items.data.price"] },
+            requestOptions,
+          ),
           requestTimeoutMs,
         );
         if (!subscription.metadata?.ground_up_user_id && Object.keys(session.metadata || {}).length) {
@@ -545,30 +546,33 @@ export async function canSelectGirlsProgram(userId: string) {
 }
 
 export async function getOrCreateStripeCustomer(stripe: Stripe, userId: string) {
-  const [user] = await db.select().from(users).where(eq(users.id, userId));
-  if (!user) throw new Error("USER_NOT_FOUND");
-  if (user.stripeCustomerId) {
-    try {
-      const customer = await stripe.customers.retrieve(user.stripeCustomerId);
-      if (!customer.deleted) {
-        if (customer.metadata?.ground_up_user_id !== user.id) {
-          throw new Error("STRIPE_CUSTOMER_OWNERSHIP_FAILED");
+  return db.transaction(async (tx) => {
+    await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${"stripe-customer:" + userId}))`);
+    const [user] = await tx.select().from(users).where(eq(users.id, userId));
+    if (!user) throw new Error("USER_NOT_FOUND");
+    if (user.stripeCustomerId) {
+      try {
+        const customer = await stripe.customers.retrieve(user.stripeCustomerId);
+        if (!customer.deleted) {
+          if (customer.metadata?.ground_up_user_id !== user.id) {
+            throw new Error("STRIPE_CUSTOMER_OWNERSHIP_FAILED");
+          }
+          return customer;
         }
-        return customer;
+      } catch (error) {
+        if (!isMissingStripeResource(error)) throw error;
+        // A deleted customer can be safely replaced and linked below.
       }
-    } catch (error) {
-      if (!isMissingStripeResource(error)) throw error;
-      // A deleted customer can be safely replaced and linked below.
     }
-  }
-  const customer = await stripe.customers.create({
-    email: user.email,
-    name: `${user.firstName} ${user.lastName}`.trim(),
-    phone: user.phone || undefined,
-    metadata: { ground_up_user_id: user.id },
+    const customer = await stripe.customers.create({
+      email: user.email,
+      name: `${user.firstName} ${user.lastName}`.trim(),
+      phone: user.phone || undefined,
+      metadata: { ground_up_user_id: user.id },
+    });
+    await tx.update(users).set({ stripeCustomerId: customer.id }).where(eq(users.id, user.id));
+    return customer;
   });
-  await db.update(users).set({ stripeCustomerId: customer.id }).where(eq(users.id, user.id));
-  return customer;
 }
 
 export async function activeStripeMembershipForUser(userId: string, stripe?: Stripe) {

@@ -28,8 +28,11 @@ const formsFlow = FORMS_LOCALE === "es"
     };
 const password = "GroundUp-Browser-QA-2026!";
 const prefix = `ground-up-browser-${Date.now()}-${crypto.randomBytes(3).toString("hex")}`;
-const email = `${prefix}@example.invalid`;
+const email = `${prefix}@groundup.test`;
 const evidenceDir = "audit-evidence/stripe-browser";
+if (!process.env.STRIPE_SECRET_KEY?.startsWith("sk_test_")) {
+  throw new Error("Sandbox rehearsal requires an sk_test_ Stripe secret.");
+}
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: "2025-08-27.basil",
   typescript: true,
@@ -160,6 +163,17 @@ async function postSignedWebhook(type, object, id) {
     body: payload,
   });
   if (!response.ok) throw new Error(`Webhook ${type} returned ${response.status}`);
+  return { status: response.status, body: await response.text() };
+}
+
+async function managementJson(path) {
+  const key = process.env.AI_MANAGEMENT_API_KEY?.trim();
+  if (!key) throw new Error("AI management reporting requires AI_MANAGEMENT_API_KEY.");
+  const response = await fetch(`${BASE_URL}/api/ai/v1${path}`, {
+    headers: { authorization: `Bearer ${key}` },
+  });
+  if (!response.ok) throw new Error(`AI management endpoint returned ${response.status} for ${path}`);
+  return response.json();
 }
 
 async function cleanup() {
@@ -229,6 +243,7 @@ async function cleanup() {
 }
 
 async function main() {
+  const rehearsalStartedAt = Math.floor(Date.now() / 1000);
   await fs.mkdir(evidenceDir, { recursive: true });
   const browser = await chromium.launch({
     executablePath: CHROMIUM_PATH,
@@ -306,6 +321,18 @@ async function main() {
       throw new Error("Required-form modal remained open after the final submission");
     }
     page.off("request", countDocumentRequest);
+    const me = await page.evaluate(async () => (await fetch("/api/portal/me")).json());
+    const userId = me.user?.id;
+    if (!userId) throw new Error("Browser QA account did not return a member ID");
+
+    const unauthorizedPortal = await fetch(`${BASE_URL}/api/portal/billing/portal`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: "{}",
+    });
+    if (unauthorizedPortal.status !== 401) {
+      throw new Error(`Unauthenticated customer portal access returned ${unauthorizedPortal.status}`);
+    }
 
     if (process.env.BROWSER_QA_FORMS_ONLY === "1") {
       console.log(JSON.stringify({
@@ -339,8 +366,21 @@ async function main() {
       throw new Error("Girls Program is visible for an ordinary adult member");
     }
 
-    const startButtons = page.getByRole("button", { name: "Start membership" });
-    await startButtons.first().click();
+    const concurrentCheckout = await page.evaluate(async () => {
+      const request = () => fetch("/api/portal/billing/checkout", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ planKey: "ground_up_2" }),
+      }).then(async (response) => ({ status: response.status, body: await response.json() }));
+      return Promise.all([request(), request()]);
+    });
+    const concurrentStatuses = concurrentCheckout.map((result) => result.status).sort((a, b) => a - b);
+    if (concurrentStatuses[0] !== 200 || concurrentStatuses[1] !== 409) {
+      throw new Error(`Concurrent checkout results were ${concurrentStatuses.join(",")}, expected 200,409`);
+    }
+    const checkoutResult = concurrentCheckout.find((result) => result.status === 200);
+    if (!checkoutResult?.body?.checkoutUrl) throw new Error("Concurrent checkout winner did not return a Checkout URL");
+    await page.goto(checkoutResult.body.checkoutUrl, { waitUntil: "networkidle" });
     await page.waitForURL(/stripe\.com/, { timeout: 45000 });
     await page.getByText("Card", { exact: true }).waitFor({ timeout: 45000 });
     await screenshot(page, "04-stripe-checkout");
@@ -377,11 +417,11 @@ async function main() {
     await page.waitForURL(/\/portal\/billing\?checkout=success/, { timeout: 60000 });
     await waitForBillingState(page, "active", 60000);
     await page.reload({ waitUntil: "networkidle" });
-    const activeMembership = await page.evaluate(async () => (await fetch("/api/portal/billing")).json());
+    const activeBilling = await page.evaluate(async () => (await fetch("/api/portal/billing")).json());
     if (
-      activeMembership.activeMembership?.plan?.internalKey !== "ground_up_2"
-      || activeMembership.activeMembership?.billingState !== "active"
-      || !activeMembership.activeMembership?.currentPeriodEnd
+      activeBilling.activeMembership?.plan?.internalKey !== "ground_up_2"
+      || activeBilling.activeMembership?.billingState !== "active"
+      || !activeBilling.activeMembership?.currentPeriodEnd
     ) {
       throw new Error("Active Ground Up 2 membership did not include the expected active period.");
     }
@@ -403,7 +443,37 @@ async function main() {
     const billingResponse = await page.evaluate(async () => (await fetch("/api/portal/billing")).json());
     const subscriptionId = billingResponse.activeMembership?.stripeSubscriptionId;
     if (!subscriptionId) throw new Error("Active subscription ID was not returned");
-    const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+    const subscription = await stripe.subscriptions.retrieve(subscriptionId, { expand: ["items.data.price"] });
+    const subscriptionPrice = subscription.items.data[0]?.price;
+    const subscriptionProduct = typeof subscriptionPrice?.product === "string" ? subscriptionPrice.product : subscriptionPrice?.product?.id;
+    if (
+      subscription.status !== "active"
+      || subscriptionPrice?.id !== billingResponse.activeMembership?.plan?.stripePriceId
+      || subscriptionProduct !== billingResponse.activeMembership?.plan?.stripeProductId
+      || subscriptionPrice?.unit_amount !== 13900
+      || subscriptionPrice?.currency !== "usd"
+      || subscriptionPrice?.recurring?.interval !== "month"
+      || subscriptionPrice?.recurring?.interval_count !== 1
+    ) {
+      throw new Error("Sandbox subscription did not use the approved Ground Up 2 recurring price.");
+    }
+
+    const membershipReport = await managementJson("/operations/memberships?limit=100");
+    const reportedMembership = membershipReport.rows.find((row) => row.memberId === userId);
+    if (
+      !reportedMembership
+      || reportedMembership.planKey !== "ground_up_2"
+      || reportedMembership.billingState !== "active"
+      || reportedMembership.stripeSubscriptionId !== subscriptionId
+      || membershipReport.mode !== "test"
+    ) {
+      throw new Error("Activated sandbox membership was not represented correctly in the management report.");
+    }
+    const paymentReport = await managementJson("/operations/payments?limit=100");
+    if (paymentReport.mode !== "test" || !/not stored|not.*ledger/i.test(paymentReport.accountingNote)) {
+      throw new Error("Payment report did not identify its application-record accounting boundary.");
+    }
+
     await postSignedWebhook(
       "invoice.payment_failed",
       {
@@ -418,11 +488,20 @@ async function main() {
     await page.getByText("Update your payment method to keep access.", { exact: true }).waitFor();
     await screenshot(page, "08-past-due");
 
-    await postSignedWebhook(
+    const paidEventId = `evt_browser_paid_${Date.now()}`;
+    const paidEventObject = {
+      id: `in_browser_paid_${Date.now()}`,
+      parent: { subscription_details: { subscription: subscriptionId } },
+    };
+    const firstPaidDelivery = await postSignedWebhook(
       "invoice.paid",
-      { id: `in_browser_paid_${Date.now()}`, parent: { subscription_details: { subscription: subscriptionId } } },
-      `evt_browser_paid_${Date.now()}`,
+      paidEventObject,
+      paidEventId,
     );
+    const duplicatePaidDelivery = await postSignedWebhook("invoice.paid", paidEventObject, paidEventId);
+    if (firstPaidDelivery.status !== 200 || duplicatePaidDelivery.status !== 200) {
+      throw new Error("Duplicate signed webhook delivery did not return 2xx.");
+    }
     await page.reload({ waitUntil: "networkidle" });
     await waitForBillingState(page, "active");
     await page.getByRole("button", { name: "Cancel at period end" }).click();
@@ -436,6 +515,10 @@ async function main() {
       return body.activeMembership?.billingState === "cancel_at_period_end"
         && body.activeMembership?.cancelAtPeriodEnd === true;
     }, { timeout: 30000 });
+    const cancelledSubscription = await stripe.subscriptions.retrieve(subscriptionId);
+    if (!cancelledSubscription.cancel_at_period_end) {
+      throw new Error("Cancellation did not persist cancel_at_period_end in Stripe.");
+    }
     await page.getByText("Ground Up 2", { exact: true }).first().waitFor();
     await screenshot(page, "09-cancel-at-period-end");
 
@@ -468,6 +551,13 @@ async function main() {
       requiredFormsLocale: FORMS_LOCALE,
       checkout: "Stripe-hosted test Checkout completed",
       webhookUi: "active, past_due, recovered, cancel_at_period_end",
+      webhookDelivery: "signed endpoint returned 2xx for first and duplicate invoice.paid events",
+      concurrentCheckout: "one 200 winner and one 409 loser",
+      customerPortalUnauthorized: "401",
+      stripeCatalog: "test mode, approved Ground Up 2 price/product, USD monthly",
+      managementReport: "active membership snapshot matched the sandbox Stripe subscription",
+      paymentReportBoundary: "application booking records only; Stripe fees/refunds/payouts unavailable",
+      providerEventWindowStartedAt: rehearsalStartedAt,
       plans: ["ground_up_2", "ground_up_3", "ground_up_personal"],
       girlsProgram: "hidden without guardian/minor context",
     }));
