@@ -20,6 +20,7 @@ import {
 } from "./email";
 import { registerClassBookingRoutes } from "./class-booking-routes";
 import { registerMemberRoutes } from "./member-routes";
+import { registerAiManagementRoutes } from "./ai-management-api";
 import { applyStripeSubscription, expirePendingCheckoutSession } from "./membership-billing";
 import { applyDocumentLocale } from "./document-locale";
 import {
@@ -409,6 +410,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use("/api/portal/admin", staffMutationRateLimit());
   app.use("/api/admin", staffMutationRateLimit());
   app.use("/api/bookings", staffMutationRateLimit());
+  registerAiManagementRoutes(app);
   registerClassBookingRoutes(app);
   registerMemberRoutes(app);
 
