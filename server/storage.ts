@@ -3,6 +3,7 @@ import {
   bookings, 
   adminUsers,
   users,
+  emailVerificationTokens,
   passwordResetTokens,
   forms,
   formResponses,
@@ -36,6 +37,7 @@ import {
   type User,
   type InsertUser,
   type SafeUser,
+  type AccountStatus,
   type Form,
   type InsertForm,
   type FormResponse,
@@ -81,6 +83,13 @@ import {
 
 const DEFAULT_REPORT_TIMEZONE = "America/Los_Angeles";
 
+const operationalMemberCondition = () => and(
+  eq(users.role, "member"),
+  not(ilike(users.email, INTERNAL_TEST_EMAIL_PATTERN)),
+  isNotNull(users.emailVerifiedAt),
+  not(inArray(users.accountStatus, ["unverified", "suspicious", "archived"])),
+);
+
 function validReportTimezone(timezone?: string) {
   if (!timezone) return DEFAULT_REPORT_TIMEZONE;
   try {
@@ -104,9 +113,15 @@ export interface IStorage {
   listMinorProfiles(guardianUserId: string): Promise<MinorProfile[]>;
   createMinorProfile(data: Omit<MinorProfile, "id" | "createdAt" | "updatedAt">): Promise<MinorProfile>;
   getUserByEmail(email: string): Promise<User | undefined>;
-  createUser(email: string, password: string, firstName: string, lastName: string, phone?: string, locale?: "en" | "es"): Promise<SafeUser>;
+  createUser(email: string, password: string, firstName: string, lastName: string, phone?: string, locale?: "en" | "es", security?: { ipHash?: string; deviceHash?: string; accountStatus?: string; riskReasons?: string[] }): Promise<SafeUser>;
   createUserFromWebhook(email: string, firstName: string, lastName: string): Promise<SafeUser>;
   validateUserPassword(email: string, password: string): Promise<SafeUser | null>;
+  createEmailVerificationToken(userId: string, tokenHash: string, expiresAt: Date, discoveryPassClaimId?: string | null): Promise<void>;
+  consumeEmailVerificationToken(tokenHash: string): Promise<SafeUser | undefined>;
+  resendEmailVerificationToken(userId: string, tokenHash: string, expiresAt: Date): Promise<void>;
+  getLinkedDiscoveryPassClaim(userId: string): Promise<DiscoveryPassClaim | undefined>;
+  updateAccountReview(input: { userId: string; status: AccountStatus; actorId: string; reason: string }): Promise<SafeUser | undefined>;
+  countRecentSignupsBySignal(signal: "ip" | "device", hash: string, since: Date): Promise<number>;
   createPasswordResetToken(userId: string, tokenHash: string, expiresAt: Date): Promise<void>;
   consumePasswordResetToken(tokenHash: string, newPassword: string): Promise<boolean>;
   ensureAdminPassword(email: string, password: string): Promise<boolean>;
@@ -143,6 +158,7 @@ export interface IStorage {
   getTrainerBookings(trainerId: string, startDate: Date, endDate: Date): Promise<Booking[]>;
   
   getAllUsers(search?: string, page?: number, limit?: number, incompleteFormsOnly?: boolean): Promise<{ users: (SafeUser & { missingFormsCount?: number })[]; total: number }>;
+  getAccountReviewQueue(status?: AccountStatus): Promise<SafeUser[]>;
   getMembersNeedingForms(): Promise<Array<SafeUser & { missingForms: string[] }>>;
   getUserProfile(userId: string): Promise<{ user: SafeUser; formResponses: (FormResponse & { form: Form })[]; bookings: BookingWithTrainer[]; classReservations: Array<ClassReservation & { occurrence: ClassOccurrence; trainer: Trainer | null; classType: ClassType | null; minorProfile: MinorProfile | null }>; memberships: Membership[]; sessionNotes: (SessionNote & { coach: SafeUser })[] } | undefined>;
   updateAdminNotes(userId: string, notes: string): Promise<SafeUser | undefined>;
@@ -309,7 +325,7 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  async createUser(email: string, password: string, firstName: string, lastName: string, phone?: string, locale: "en" | "es" = "en"): Promise<SafeUser> {
+  async createUser(email: string, password: string, firstName: string, lastName: string, phone?: string, locale: "en" | "es" = "en", security?: { ipHash?: string; deviceHash?: string; accountStatus?: string; riskReasons?: string[] }): Promise<SafeUser> {
     const passwordHash = await bcrypt.hash(password, 10);
     const [newUser] = await db.insert(users).values({
       email: email.toLowerCase(),
@@ -318,7 +334,11 @@ export class DatabaseStorage implements IStorage {
       lastName,
       phone: phone || null,
       locale,
-      role: "member"
+      role: "member",
+      signupIpHash: security?.ipHash || null,
+      signupDeviceHash: security?.deviceHash || null,
+      accountStatus: security?.accountStatus || "unverified",
+      riskReasons: security?.riskReasons || [],
     }).returning();
     const { passwordHash: _, ...safeUser } = newUser;
     return safeUser;
@@ -331,7 +351,9 @@ export class DatabaseStorage implements IStorage {
       passwordHash: tempPassword,
       firstName,
       lastName,
-      role: "member"
+      role: "member",
+      accountStatus: "legitimate",
+      emailVerifiedAt: new Date(),
     }).returning();
     const { passwordHash: _, ...safeUser } = newUser;
     return safeUser;
@@ -344,6 +366,77 @@ export class DatabaseStorage implements IStorage {
     if (!isValid) return null;
     const { passwordHash: _, ...safeUser } = user;
     return safeUser;
+  }
+
+  async createEmailVerificationToken(userId: string, tokenHash: string, expiresAt: Date, discoveryPassClaimId: string | null = null): Promise<void> {
+    await db.delete(emailVerificationTokens).where(eq(emailVerificationTokens.userId, userId));
+    await db.insert(emailVerificationTokens).values({ userId, tokenHash, expiresAt, discoveryPassClaimId });
+  }
+
+  async resendEmailVerificationToken(userId: string, tokenHash: string, expiresAt: Date): Promise<void> {
+    await db.delete(emailVerificationTokens).where(eq(emailVerificationTokens.userId, userId));
+    await db.insert(emailVerificationTokens).values({ userId, tokenHash, expiresAt });
+  }
+
+  async consumeEmailVerificationToken(tokenHash: string): Promise<SafeUser | undefined> {
+    return db.transaction(async (tx) => {
+      const [token] = await tx.select().from(emailVerificationTokens).where(and(
+        eq(emailVerificationTokens.tokenHash, tokenHash),
+        isNull(emailVerificationTokens.usedAt),
+        gt(emailVerificationTokens.expiresAt, new Date()),
+      )).limit(1);
+      if (!token) return undefined;
+
+      const [user] = await tx.update(users).set({
+        emailVerifiedAt: new Date(),
+        accountStatus: sql`case when ${users.accountStatus} = 'unverified' then 'legitimate' else ${users.accountStatus} end`,
+      }).where(eq(users.id, token.userId)).returning();
+      await tx.update(emailVerificationTokens).set({ usedAt: new Date() }).where(eq(emailVerificationTokens.id, token.id));
+      if (!user) return undefined;
+      const { passwordHash: _, ...safeUser } = user;
+      return safeUser;
+    });
+  }
+
+  async getLinkedDiscoveryPassClaim(userId: string): Promise<DiscoveryPassClaim | undefined> {
+    const [claim] = await db.select().from(discoveryPassClaims).where(eq(discoveryPassClaims.linkedMemberId, userId)).orderBy(desc(discoveryPassClaims.createdAt)).limit(1);
+    return claim;
+  }
+
+  async updateAccountReview(input: { userId: string; status: AccountStatus; actorId: string; reason: string }): Promise<SafeUser | undefined> {
+    return db.transaction(async (tx) => {
+      const [before] = await tx.select().from(users).where(eq(users.id, input.userId)).limit(1);
+      if (!before) return undefined;
+      const previousReasons = Array.isArray(before.riskReasons) ? before.riskReasons : [];
+      const nextReasons = input.status === "legitimate"
+        ? previousReasons
+        : Array.from(new Set([...previousReasons, input.reason])).slice(-20);
+      const [updated] = await tx.update(users).set({
+        accountStatus: input.status,
+        riskReasons: nextReasons,
+      }).where(eq(users.id, input.userId)).returning();
+      await tx.insert(memberAuditEvents).values({
+        actorId: input.actorId,
+        userId: input.userId,
+        targetType: "user",
+        targetId: input.userId,
+        action: "account_status_changed",
+        before: { accountStatus: before.accountStatus, riskReasons: previousReasons },
+        after: { accountStatus: updated.accountStatus, riskReasons: nextReasons },
+        reason: input.reason,
+      });
+      const { passwordHash: _, ...safeUser } = updated;
+      return safeUser;
+    });
+  }
+
+  async countRecentSignupsBySignal(signal: "ip" | "device", hash: string, since: Date): Promise<number> {
+    const column = signal === "ip" ? users.signupIpHash : users.signupDeviceHash;
+    const [result] = await db.select({ count: count() }).from(users).where(and(
+      gte(users.createdAt, since),
+      eq(column, hash),
+    ));
+    return Number(result?.count || 0);
   }
 
   async createPasswordResetToken(userId: string, tokenHash: string, expiresAt: Date): Promise<void> {
@@ -691,10 +784,7 @@ export class DatabaseStorage implements IStorage {
     if (requiredFormIds.length === 0) return [];
     const requiredFormsData = await db.select().from(forms).where(eq(forms.isRequired, true));
     const completedUserIds = await this.getCompletedUserIds(requiredFormIds);
-     const allUsers = await db.select().from(users).where(and(
-       eq(users.role, "member"),
-       not(ilike(users.email, INTERNAL_TEST_EMAIL_PATTERN)),
-     ));
+    const allUsers = await db.select().from(users).where(operationalMemberCondition());
     const result: Array<SafeUser & { missingForms: string[] }> = [];
     for (const user of allUsers) {
       if (completedUserIds.has(user.id)) continue;
@@ -768,6 +858,16 @@ export class DatabaseStorage implements IStorage {
     };
   }
 
+  async getAccountReviewQueue(status?: AccountStatus): Promise<SafeUser[]> {
+    const whereClause = and(
+      eq(users.role, "member"),
+      not(ilike(users.email, INTERNAL_TEST_EMAIL_PATTERN)),
+      status ? eq(users.accountStatus, status) : inArray(users.accountStatus, ["unverified", "needs_review", "suspicious", "archived", "legitimate"]),
+    );
+    const rows = await db.select().from(users).where(whereClause).orderBy(desc(users.createdAt)).limit(500);
+    return rows.map(({ passwordHash: _, ...safeUser }) => safeUser);
+  }
+
   async getUserProfile(userId: string): Promise<{ user: SafeUser; formResponses: (FormResponse & { form: Form })[]; bookings: BookingWithTrainer[]; classReservations: Array<ClassReservation & { occurrence: ClassOccurrence; trainer: Trainer | null; classType: ClassType | null; minorProfile: MinorProfile | null }>; memberships: Membership[]; sessionNotes: (SessionNote & { coach: SafeUser })[] } | undefined> {
     const user = await this.getUserById(userId);
     if (!user) return undefined;
@@ -801,6 +901,17 @@ export class DatabaseStorage implements IStorage {
     monthlyRevenue: number;
     membersNeedingForms: number;
     totalRequiredForms: number;
+    accountBreakdown: {
+      rawAccountsCreated: number;
+      verifiedUsers: number;
+      unverifiedUsers: number;
+      suspiciousUsers: number;
+      archivedUsers: number;
+      legitimateUsers: number;
+      paidCustomers: number;
+      filteredOut: number;
+    };
+    newCustomers30Days: number;
     signupFunnel30Days: {
       accountsCreated: number;
       formsIncomplete: number;
@@ -815,15 +926,14 @@ export class DatabaseStorage implements IStorage {
     const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     
-     const [totalUsersResult] = await db.select({ count: count() }).from(users).where(not(ilike(users.email, INTERNAL_TEST_EMAIL_PATTERN)));
+     const [totalUsersResult] = await db.select({ count: count() }).from(users).where(operationalMemberCondition());
      const [memberUsersResult] = await db.select({ count: count() }).from(users).where(and(
-       eq(users.role, "member"),
-       not(ilike(users.email, INTERNAL_TEST_EMAIL_PATTERN)),
+       operationalMemberCondition(),
      ));
     
      const [newUsersResult] = await db.select({ count: count() }).from(users).where(and(
        gte(users.createdAt, thirtyDaysAgo),
-       not(ilike(users.email, INTERNAL_TEST_EMAIL_PATTERN)),
+       operationalMemberCondition(),
      ));
     
      const [activeMembershipsResult] = await db
@@ -832,7 +942,7 @@ export class DatabaseStorage implements IStorage {
        .innerJoin(users, eq(memberships.userId, users.id))
        .where(and(
          eq(memberships.status, "active"),
-         not(ilike(users.email, INTERNAL_TEST_EMAIL_PATTERN)),
+          operationalMemberCondition(),
        ));
     
      const [upcomingSessionsResult] = await db
@@ -844,7 +954,7 @@ export class DatabaseStorage implements IStorage {
           gte(classOccurrences.start, now),
           lte(classOccurrences.start, sevenDaysFromNow),
           eq(classReservations.status, "confirmed"),
-         or(isNull(users.id), not(ilike(users.email, INTERNAL_TEST_EMAIL_PATTERN))),
+          or(isNull(users.id), operationalMemberCondition()),
        ));
     
     const [revenueResult] = await db
@@ -854,8 +964,48 @@ export class DatabaseStorage implements IStorage {
       .where(and(
         gte(bookings.createdAt, startOfMonth),
          eq(bookings.status, "paid"),
-         or(isNull(users.id), not(ilike(users.email, INTERNAL_TEST_EMAIL_PATTERN))),
+         or(isNull(users.id), operationalMemberCondition()),
       ));
+
+     const [accountBreakdownResult] = await db.select({
+       rawAccountsCreated: count(),
+       verifiedUsers: sql<number>`count(*) filter (where ${users.emailVerifiedAt} is not null)`,
+       unverifiedUsers: sql<number>`count(*) filter (where ${users.emailVerifiedAt} is null or ${users.accountStatus} = 'unverified')`,
+       suspiciousUsers: sql<number>`count(*) filter (where ${users.accountStatus} in ('suspicious', 'needs_review'))`,
+       archivedUsers: sql<number>`count(*) filter (where ${users.accountStatus} = 'archived')`,
+       legitimateUsers: sql<number>`count(*) filter (where ${users.accountStatus} = 'legitimate' and ${users.emailVerifiedAt} is not null)`,
+     }).from(users).where(and(
+       eq(users.role, "member"),
+       not(ilike(users.email, INTERNAL_TEST_EMAIL_PATTERN)),
+     ));
+
+     const [paidCustomersResult] = await db.select({
+       count: sql<number>`count(distinct ${users.id})`,
+     }).from(users)
+       .leftJoin(memberships, eq(memberships.userId, users.id))
+       .leftJoin(bookings, eq(bookings.userId, users.id))
+       .where(and(
+         operationalMemberCondition(),
+         or(
+           inArray(memberships.status, ["active", "ACTIVE"]),
+           eq(bookings.status, "paid"),
+         ),
+       ));
+
+     const [newCustomersResult] = await db.select({
+       count: sql<number>`count(distinct ${users.id})`,
+     }).from(users)
+       .leftJoin(memberships, eq(memberships.userId, users.id))
+       .leftJoin(bookings, eq(bookings.userId, users.id))
+       .where(and(
+         operationalMemberCondition(),
+         gte(users.createdAt, thirtyDaysAgo),
+         or(
+           eq(users.accountStatus, "legitimate"),
+           inArray(memberships.status, ["active", "ACTIVE"]),
+           eq(bookings.status, "paid"),
+         ),
+       ));
     
     const requiredFormIds = await this.getRequiredFormIds();
     const completedUserIds = await this.getCompletedUserIds(requiredFormIds);
@@ -919,9 +1069,8 @@ export class DatabaseStorage implements IStorage {
         )
       )`,
     }).from(users).where(and(
-      eq(users.role, "member"),
-      gte(users.createdAt, thirtyDaysAgo),
-      not(ilike(users.email, INTERNAL_TEST_EMAIL_PATTERN)),
+       operationalMemberCondition(),
+       gte(users.createdAt, thirtyDaysAgo),
     ));
 
     return {
@@ -932,6 +1081,17 @@ export class DatabaseStorage implements IStorage {
       monthlyRevenue: Number(revenueResult.total || 0),
       membersNeedingForms: Math.max(0, membersNeedingForms),
       totalRequiredForms: requiredFormIds.length,
+       accountBreakdown: {
+         rawAccountsCreated: Number(accountBreakdownResult.rawAccountsCreated || 0),
+         verifiedUsers: Number(accountBreakdownResult.verifiedUsers || 0),
+         unverifiedUsers: Number(accountBreakdownResult.unverifiedUsers || 0),
+         suspiciousUsers: Number(accountBreakdownResult.suspiciousUsers || 0),
+         archivedUsers: Number(accountBreakdownResult.archivedUsers || 0),
+         legitimateUsers: Number(accountBreakdownResult.legitimateUsers || 0),
+         paidCustomers: Number(paidCustomersResult.count || 0),
+         filteredOut: Math.max(0, Number(accountBreakdownResult.rawAccountsCreated || 0) - Number(totalUsersResult.count || 0)),
+       },
+       newCustomers30Days: Number(newCustomersResult.count || 0),
       signupFunnel30Days: {
         accountsCreated: Number(signupFunnelResult.accountsCreated || 0),
         formsIncomplete: Number(signupFunnelResult.formsIncomplete || 0),
@@ -2494,9 +2654,11 @@ export class DatabaseStorage implements IStorage {
 
   async getDiscoveryFunnelReport(filters: { days?: number; locale?: "en" | "es"; from?: Date; to?: Date; timezone?: string } = {}) {
     const { from, to, days, timezone } = reportRange(filters, 90);
-    const recentUsers = await db.select({
+    const rawRecentUsers = await db.select({
       id: users.id,
       locale: users.locale,
+      emailVerifiedAt: users.emailVerifiedAt,
+      accountStatus: users.accountStatus,
     }).from(users).where(and(
       eq(users.role, "member"),
       gte(users.createdAt, from),
@@ -2504,6 +2666,11 @@ export class DatabaseStorage implements IStorage {
       not(ilike(users.email, INTERNAL_TEST_EMAIL_PATTERN)),
       filters.locale ? eq(users.locale, filters.locale) : sql`true`,
     ));
+    const recentUsers = rawRecentUsers.filter((user) =>
+      Boolean(user.emailVerifiedAt) &&
+      !["unverified", "suspicious", "needs_review", "archived"].includes(user.accountStatus),
+    );
+    const filteredOut = rawRecentUsers.length - recentUsers.length;
     const userIds = recentUsers.map((user) => user.id);
     const requiredForms = await db.select({ id: forms.id }).from(forms).where(eq(forms.requiredBeforeBooking, true));
     const requiredFormIds = requiredForms.map((form) => form.id);
@@ -2649,6 +2816,11 @@ export class DatabaseStorage implements IStorage {
       stages,
       conversion,
       diagnostics,
+      filteredOut: {
+        rawAccountsCreated: rawRecentUsers.length,
+        excludedAccounts: filteredOut,
+        reason: "unverified, needs_review, suspicious, and archived accounts are excluded from conversion totals",
+      },
       consented: {
         sessions: consentedSessions.size,
         stages: Object.fromEntries(Array.from(consentedSteps.entries()).map(([stage, sessions]) => [stage, sessions.size])),

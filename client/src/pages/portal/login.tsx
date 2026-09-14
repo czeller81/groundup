@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useLocation } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,8 @@ import { usePortalAuth } from "@/lib/portal-auth";
 import { Loader2 } from "lucide-react";
 import { localizeApiError, useLocale } from "@/lib/locale";
 import { track, trackEvent } from "@/lib/analytics";
+import { TurnstileField } from "@/components/turnstile";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function PortalLogin() {
   const [location, setLocation] = useLocation();
@@ -17,6 +19,9 @@ export default function PortalLogin() {
   const { locale, copy } = useLocale();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [verificationSent, setVerificationSent] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState("");
+  const [formStartedAt] = useState(() => Date.now());
   const routePath = location.split("?")[0];
   const isSpanishRoute = routePath === "/es/portal/login" || routePath === "/es/portal/signup";
   const isSignupRoute = routePath === "/portal/signup" || routePath === "/es/portal/signup";
@@ -36,6 +41,7 @@ export default function PortalLogin() {
   const discoveryVariant = typeof window !== "undefined"
     ? (window.localStorage.getItem("groundup-discovery-variant") === "B" || discoveryClaimContext?.variant === "B" ? "B" : "A")
     : "A";
+  const onTurnstileToken = useCallback((token: string) => setTurnstileToken(token), []);
 
   useEffect(() => {
     if (!discoveryIntent) return;
@@ -101,6 +107,20 @@ export default function PortalLogin() {
     }
   };
 
+  const resendVerification = async () => {
+    if (!loginData.email.trim()) {
+      toast({ title: copy.error, description: locale === "es" ? "Escribe tu correo primero." : "Enter your email first.", variant: "destructive" });
+      return;
+    }
+    try {
+      const response = await apiRequest("POST", "/api/portal/email-verification/resend", { email: loginData.email, locale });
+      const result = await response.json();
+      toast({ title: locale === "es" ? "Revisa tu correo" : "Check your email", description: result.message });
+    } catch (error: any) {
+      toast({ title: copy.error, description: localizeApiError(error.message, locale, copy.failedToCreateAccount), variant: "destructive" });
+    }
+  };
+
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     if (signupData.password !== signupData.confirmPassword) {
@@ -113,7 +133,8 @@ export default function PortalLogin() {
     }
     setIsLoading(true);
     try {
-      await signup({
+      const honeypot = ((e.currentTarget as HTMLFormElement).elements.namedItem("website") as HTMLInputElement | null)?.value || "";
+      const result = await signup({
         email: signupData.email,
         password: signupData.password,
         firstName: signupData.firstName,
@@ -121,15 +142,16 @@ export default function PortalLogin() {
         phone: signupData.phone || undefined,
         locale,
         discoveryIntent,
+        website: honeypot,
+        formStartedAt,
+        turnstileToken,
       });
       trackEvent("member_signup_completed", { method: "password", locale });
-      if (discoveryIntent) {
-        window.localStorage.setItem("groundup-discovery-onboarding", "1");
-        trackEvent("discovery_account_created", { locale, variant: discoveryVariant });
-        track("discovery_account_created", "training", { funnel_kind: "discovery_pass", locale, variant: discoveryVariant });
-      }
-      toast({ title: copy.accountCreated, description: copy.welcomeToGroundUp });
-      setLocation(postAuthPath());
+      setVerificationSent(true);
+      toast({
+        title: copy.accountCreated,
+        description: result?.message || (locale === "es" ? "Revisa tu correo para verificar tu cuenta." : "Check your email to verify your account."),
+      });
     } catch (error: any) {
       toast({
         title: copy.signupFailed,
@@ -205,6 +227,24 @@ export default function PortalLogin() {
             
             <TabsContent value="signup">
               <form onSubmit={handleSignup} className="space-y-4">
+                {verificationSent ? (
+                  <div className="rounded-lg border border-[#5EEBFF]/30 bg-[#5EEBFF]/10 p-4 text-sm text-gray-200">
+                    {locale === "es"
+                      ? "Revisa tu correo y confirma tu cuenta. El enlace vence en 60 minutos."
+                      : "Check your email and verify your account. The link expires in 60 minutes."}
+                    <button
+                      type="button"
+                      className="mt-2 block text-[#5EEBFF] underline"
+                      onClick={() => setLocation(locale === "es" ? "/es/portal/login" : "/portal/login")}
+                    >
+                      {locale === "es" ? "Volver a iniciar sesión" : "Return to sign in"}
+                    </button>
+                    <button type="button" className="mt-2 block text-[#5EEBFF] underline" onClick={() => void resendVerification()}>
+                      {locale === "es" ? "Reenviar correo de verificación" : "Resend verification email"}
+                    </button>
+                  </div>
+                ) : null}
+                <input type="text" name="website" tabIndex={-1} autoComplete="off" className="absolute -left-[10000px] h-px w-px opacity-0" aria-hidden="true" />
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="firstName">{copy.firstName}</Label>
@@ -280,6 +320,7 @@ export default function PortalLogin() {
                     data-testid="input-signup-confirm"
                   />
                 </div>
+                <TurnstileField onToken={onTurnstileToken} />
                 <Button type="submit" className="w-full" disabled={isLoading} data-testid="button-signup">
                   {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                   {copy.createAccount}

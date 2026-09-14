@@ -13,8 +13,9 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { MapPin, Phone, Mail, Clock, Send } from "lucide-react";
 import { motion, useInView } from "framer-motion";
-import { useRef } from "react";
+import { useCallback, useRef, useState } from "react";
 import { localizeApiError, localizedPublicPath, useLocale } from "@/lib/locale";
+import { TurnstileField } from "@/components/turnstile";
 
 type ContactFormData = {
   firstName: string;
@@ -23,6 +24,7 @@ type ContactFormData = {
   phone?: string;
   subject: string;
   message: string;
+  website?: string;
 };
 
 function Section({ children, className = "" }: { children: React.ReactNode; className?: string }) {
@@ -77,6 +79,7 @@ export default function Contact() {
     phone: z.string().optional(),
     subject: z.string().min(1, copy.validation.subject),
     message: z.string().min(1, copy.validation.message),
+    website: z.string().max(0).optional(),
   });
 
   const form = useForm<ContactFormData>({
@@ -88,12 +91,16 @@ export default function Contact() {
       phone: "",
       subject: "",
       message: "",
+      website: "",
     },
   });
+  const [formStartedAt] = useState(() => Date.now());
+  const [turnstileToken, setTurnstileToken] = useState("");
+  const onTurnstileToken = useCallback((token: string) => setTurnstileToken(token), []);
 
   const contactMutation = useMutation({
     mutationFn: async (data: ContactFormData) => {
-      return await apiRequest("POST", "/api/contact", { ...data, locale });
+      return await apiRequest("POST", "/api/contact", { ...data, locale, formStartedAt, turnstileToken });
     },
     onSuccess: async (response) => {
       const result = await response.json();
@@ -137,6 +144,7 @@ export default function Contact() {
                 <h2 className="text-2xl font-bold text-white mb-6" style={{ fontFamily: 'var(--font-display)' }}>{copy.sendTitle}</h2>
                 <Form {...form}>
                   <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+                    <input type="text" {...form.register("website")} tabIndex={-1} autoComplete="off" className="absolute -left-[10000px] h-px w-px opacity-0" aria-hidden="true" />
                     <div className="grid md:grid-cols-2 gap-4">
                       <FormField
                         control={form.control}
@@ -257,6 +265,7 @@ export default function Contact() {
                       )}
                     />
 
+                    <TurnstileField onToken={onTurnstileToken} />
                     <Button
                       type="submit"
                       className="w-full bg-[#FFB199] text-[#0B0F14] font-bold uppercase tracking-wider hover:bg-[#FFB199]/90 h-12"

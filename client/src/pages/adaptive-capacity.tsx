@@ -13,6 +13,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { getAttribution, track } from "@/lib/analytics";
 import { localizedPublicPath, useLocale } from "@/lib/locale";
+import { TurnstileField } from "@/components/turnstile";
 
 type Values = {
   firstName: string;
@@ -25,12 +26,15 @@ type Values = {
   cohortTiming?: string;
   company?: string;
   consent: boolean;
+  website?: string;
 };
 
 export default function AdaptiveCapacity() {
   const { locale } = useLocale();
   const { toast } = useToast();
   const [submitted, setSubmitted] = useState(false);
+  const [formStartedAt] = useState(() => Date.now());
+  const [turnstileToken, setTurnstileToken] = useState("");
 
   const copy = locale === "es" ? {
     seoTitle: "Capacidad Adaptativa — Desarrolla tu capacidad de adaptarte | Ground Up",
@@ -87,6 +91,9 @@ export default function AdaptiveCapacity() {
       ...values, program: "adaptive-capacity", phone: "not-provided", locale,
       source: "adaptive-capacity", consentedAt: new Date().toISOString(),
       attribution: getAttribution(),
+      website: values.website || "",
+      formStartedAt,
+      turnstileToken,
     }),
     onSuccess: () => { setSubmitted(true); track("lead_form_succeeded", "adaptive_capacity"); toast({ title: copy.successToast }); },
     onError: () => { track("lead_form_failed", "adaptive_capacity"); toast({ title: copy.errorToast, description: copy.errorDescription, variant: "destructive" }); },
@@ -129,6 +136,7 @@ export default function AdaptiveCapacity() {
           <h2 className="text-4xl md:text-5xl font-bold mb-5" style={{ fontFamily: "var(--font-display)" }}>{copy.formTitle}</h2>
           {submitted ? <div className="p-8 rounded-2xl border border-[#5EEBFF]/30 bg-[#5EEBFF]/5"><CheckCircle2 className="text-[#5EEBFF] h-8 w-8 mb-4" /><h3 className="text-2xl font-bold">{copy.submittedTitle}</h3><p className="text-gray-300 mt-2">{copy.submittedText}</p></div> :
             <form onFocus={() => track("lead_form_started", "adaptive_capacity")} onSubmit={form.handleSubmit((v) => { track("lead_form_submitted", "adaptive_capacity"); mutation.mutate(v); })} className="space-y-5">
+              <input type="text" {...form.register("website")} tabIndex={-1} autoComplete="off" className="absolute -left-[10000px] h-px w-px opacity-0" aria-hidden="true" />
               <div className="grid sm:grid-cols-2 gap-4"><Field label={copy.fields[0]} error={form.formState.errors.firstName?.message}><Input {...form.register("firstName")} /></Field><Field label={copy.fields[1]} error={form.formState.errors.lastName?.message}><Input {...form.register("lastName")} /></Field></div>
               <Field label={copy.fields[2]} error={form.formState.errors.email?.message}><Input type="email" {...form.register("email")} /></Field>
               <div className="grid sm:grid-cols-2 gap-4"><Field label={copy.fields[3]}><Input {...form.register("occupation")} /></Field><Field label={copy.fields[4]}><Input {...form.register("company")} /></Field></div>
@@ -136,6 +144,7 @@ export default function AdaptiveCapacity() {
               <Field label={copy.fields[6]} error={form.formState.errors.capabilityGoal?.message}><Textarea {...form.register("capabilityGoal")} /></Field>
               <Field label={copy.fields[7]} error={form.formState.errors.aiComfort?.message}><select {...form.register("aiComfort")} className="w-full h-10 rounded-md border border-white/10 bg-[#0B0F14] px-3 text-sm text-white"><option value="">{copy.choose}</option>{copy.options.map((option) => <option key={option}>{option}</option>)}</select></Field>
               <Field label={copy.fields[8]}><Input {...form.register("cohortTiming")} placeholder={copy.placeholders[1]} /></Field>
+              <TurnstileField onToken={setTurnstileToken} />
               <label className="flex gap-3 items-start text-sm text-gray-400"><input type="checkbox" {...form.register("consent")} className="mt-1 accent-[#5EEBFF]" /> {copy.consent}</label>
               {form.formState.errors.consent && <p className="text-sm text-red-300">{form.formState.errors.consent.message}</p>}
               <Button type="submit" disabled={mutation.isPending} className="bg-[#FFB199] text-[#0B0F14] font-bold uppercase tracking-wider">{mutation.isPending ? copy.saving : copy.join} <ArrowRight className="ml-2 h-4 w-4" /></Button>

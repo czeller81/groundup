@@ -2,7 +2,7 @@ import { createHash, randomBytes } from "crypto";
 import type { Express, Request, Response } from "express";
 import { z } from "zod";
 import { ClassBookingError, storage } from "./storage";
-import { createPublicRateLimit, requireAuth, requireRole } from "./route-security";
+import { accountCanUseMemberFeatures, createPublicRateLimit, requireAuth, requireRole } from "./route-security";
 import {
   availableGoogleCalendars,
   CalendarConfigurationError,
@@ -246,6 +246,8 @@ export function registerClassBookingRoutes(app: Express) {
       }).strict().parse(req.body);
       const user = await storage.getUserById(req.session.userId!);
       if (!user) return res.status(401).json({ message: "User not found" });
+      if (!user.emailVerifiedAt) return res.status(403).json({ code: "EMAIL_VERIFICATION_REQUIRED", message: "Verify your email before booking a class." });
+      if (!accountCanUseMemberFeatures(user)) return res.status(403).json({ code: "ACCOUNT_REVIEW_REQUIRED", message: "This account needs staff review before booking." });
       const result = await storage.reserveClassOccurrence({
         occurrenceId: data.occurrenceId,
         userId: user.id,

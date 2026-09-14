@@ -3,6 +3,9 @@ import { pgTable, text, varchar, integer, timestamp, jsonb, boolean, uniqueIndex
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+export const accountStatuses = ["unverified", "legitimate", "needs_review", "suspicious", "archived"] as const;
+export type AccountStatus = typeof accountStatuses[number];
+
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   email: text("email").notNull().unique(),
@@ -17,8 +20,26 @@ export const users = pgTable("users", {
   assignedCoachId: varchar("assigned_coach_id"),
   adminNotes: text("admin_notes"),
   stripeCustomerId: text("stripe_customer_id"),
+  accountStatus: text("account_status").notNull().default("unverified"),
+  emailVerifiedAt: timestamp("email_verified_at"),
+  signupIpHash: text("signup_ip_hash"),
+  signupDeviceHash: text("signup_device_hash"),
+  riskReasons: jsonb("risk_reasons").notNull().default(sql`'[]'::jsonb`),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
+
+export const emailVerificationTokens = pgTable("email_verification_tokens", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  tokenHash: text("token_hash").notNull().unique(),
+  expiresAt: timestamp("expires_at").notNull(),
+  usedAt: timestamp("used_at"),
+  discoveryPassClaimId: varchar("discovery_pass_claim_id"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  userIndex: index("email_verification_tokens_user_idx").on(table.userId),
+  expiryIndex: index("email_verification_tokens_expiry_idx").on(table.expiresAt),
+}));
 
 export const passwordResetTokens = pgTable("password_reset_tokens", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),

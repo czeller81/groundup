@@ -55,11 +55,22 @@ export default function PortalAdmin() {
   const [reportFunnel, setReportFunnel] = useState<"training" | "adaptive_capacity">("training");
   const [reportFilters, setReportFilters] = useState({ source: "", medium: "", campaign: "", landingPath: "" });
   const [billingStateFilter, setBillingStateFilter] = useState<"all" | "pending" | "active" | "past_due" | "cancel_at_period_end">("all");
+  const [reviewFilter, setReviewFilter] = useState<"all" | "unverified" | "legitimate" | "needs_review" | "suspicious" | "archived">("all");
   const membersSectionRef = useRef<HTMLDivElement>(null);
   const PAGE_SIZE = 15;
 
   const { data: stats, isLoading: statsLoading, isError: statsError } = useQuery<any>({
     queryKey: ["/api/portal/admin/stats"],
+    enabled: isAuthenticated && isAdmin,
+  });
+  const { data: accountReviewData, isLoading: accountReviewLoading } = useQuery<{ users: any[] }>({
+    queryKey: ["/api/portal/admin/account-review", reviewFilter],
+    queryFn: async () => {
+      const params = reviewFilter === "all" ? "" : `?status=${reviewFilter}`;
+      const response = await fetch(`/api/portal/admin/account-review${params}`);
+      if (!response.ok) throw new Error("Failed to load account review queue");
+      return response.json();
+    },
     enabled: isAuthenticated && isAdmin,
   });
   const { data: stripeStatus, isLoading: stripeStatusLoading, isError: stripeStatusError } = useQuery<StripeStatus>({
@@ -152,6 +163,19 @@ export default function PortalAdmin() {
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: [variables.kind === "lead" ? "/api/portal/admin/trial-leads" : "/api/portal/admin/contact-submissions"] });
       toast({ title: copy.statusUpdated });
+    },
+  });
+  const accountStatusMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: "legitimate" | "suspicious" | "needs_review" | "archived" }) =>
+      apiRequest("PATCH", `/api/portal/admin/members/${id}/account-status`, {
+        status,
+        reason: status === "legitimate" ? "Admin confirmed this account as legitimate." : `Admin marked this account ${status}.`,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/portal/admin/account-review"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/portal/admin/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/portal/admin/members"] });
+      toast({ title: locale === "es" ? "Estado de cuenta actualizado" : "Account status updated" });
     },
   });
 
@@ -775,6 +799,91 @@ export default function PortalAdmin() {
                   <p className="mt-1 text-xs leading-snug text-gray-400">{stage.label}</p>
                 </div>
               ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="mb-6 border-amber-400/20 bg-[#121826]" data-testid="account-review-card">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base text-white">
+              <Shield className="h-5 w-5 text-amber-300" />
+              {locale === "es" ? "Revisión de cuentas" : "Account review"}
+            </CardTitle>
+            <p className="text-xs text-gray-400">
+              {locale === "es"
+                ? "Las cuentas sin verificar o marcadas no cuentan como clientes operativos."
+                : "Unverified and flagged accounts are excluded from operational customer counts."}
+            </p>
+          </CardHeader>
+          <CardContent>
+            <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+              {[
+                [locale === "es" ? "Sin verificar" : "Unverified", stats?.accountBreakdown?.unverifiedUsers],
+                [locale === "es" ? "Legítimas verificadas" : "Verified legitimate", stats?.accountBreakdown?.legitimateUsers],
+                [locale === "es" ? "Sospechosas" : "Suspicious", stats?.accountBreakdown?.suspiciousUsers],
+                [locale === "es" ? "Pagadas" : "Paid", stats?.accountBreakdown?.paidCustomers],
+              ].map(([label, value]) => (
+                <div key={String(label)} className="rounded-lg border border-white/5 bg-white/[0.025] p-3">
+                  <p className="text-xl font-bold text-white">{statsLoading ? "..." : value ?? 0}</p>
+                  <p className="mt-1 text-xs text-gray-400">{label}</p>
+                </div>
+              ))}
+            </div>
+            <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-xs uppercase tracking-wide text-gray-500">
+                {locale === "es" ? "Cola de revisión" : "Review queue"}
+              </p>
+              <Select value={reviewFilter} onValueChange={(value) => setReviewFilter(value as typeof reviewFilter)}>
+                <SelectTrigger className="w-full border-white/10 bg-[#0B0F14] text-white sm:w-56">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{locale === "es" ? "Todos los estados" : "All statuses"}</SelectItem>
+                  <SelectItem value="unverified">{locale === "es" ? "Sin verificar" : "Unverified"}</SelectItem>
+                  <SelectItem value="legitimate">{locale === "es" ? "Legítimas" : "Legitimate"}</SelectItem>
+                  <SelectItem value="needs_review">{locale === "es" ? "Necesita revisión" : "Needs review"}</SelectItem>
+                  <SelectItem value="suspicious">{locale === "es" ? "Sospechosas" : "Suspicious"}</SelectItem>
+                  <SelectItem value="archived">{locale === "es" ? "Archivadas" : "Archived"}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {accountReviewLoading ? (
+              <div className="flex justify-center py-4"><Loader2 className="h-5 w-5 animate-spin text-amber-300" /></div>
+            ) : (
+              <div className="space-y-2">
+                {(accountReviewData?.users || []).slice(0, 12).map((member) => (
+                  <div key={member.id} className="flex flex-col gap-3 rounded-lg border border-white/5 bg-white/[0.02] p-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-white">{member.firstName} {member.lastName}</p>
+                      <p className="truncate text-xs text-gray-400">{member.email}</p>
+                      <p className="mt-1 text-[11px] text-amber-200">{member.accountStatus} · {Array.isArray(member.riskReasons) ? member.riskReasons.join(", ") : ""}</p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <Button size="sm" variant="outline" disabled={accountStatusMutation.isPending} onClick={() => accountStatusMutation.mutate({ id: member.id, status: "legitimate" })}>
+                        {locale === "es" ? "Legítima" : "Legitimate"}
+                      </Button>
+                      {member.accountStatus !== "needs_review" && (
+                        <Button size="sm" variant="outline" className="border-orange-300/30 text-orange-200" disabled={accountStatusMutation.isPending} onClick={() => accountStatusMutation.mutate({ id: member.id, status: "needs_review" })}>
+                          {locale === "es" ? "Revisar" : "Needs review"}
+                        </Button>
+                      )}
+                      {member.accountStatus !== "suspicious" && (
+                        <Button size="sm" variant="outline" className="border-amber-300/30 text-amber-200" disabled={accountStatusMutation.isPending} onClick={() => accountStatusMutation.mutate({ id: member.id, status: "suspicious" })}>
+                          {locale === "es" ? "Sospechosa" : "Suspicious"}
+                        </Button>
+                      )}
+                      {member.accountStatus !== "archived" && (
+                        <Button size="sm" variant="outline" className="border-red-300/30 text-red-200" disabled={accountStatusMutation.isPending} onClick={() => accountStatusMutation.mutate({ id: member.id, status: "archived" })}>
+                          {locale === "es" ? "Archivar" : "Archive"}
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                {!accountReviewData?.users?.length && (
+                  <p className="text-sm text-gray-400">{locale === "es" ? "No hay cuentas pendientes de revisión." : "No accounts currently need review."}</p>
+                )}
               </div>
             )}
           </CardContent>

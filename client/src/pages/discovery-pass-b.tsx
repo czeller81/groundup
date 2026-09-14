@@ -9,6 +9,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { captureAttribution, track, trackEvent } from "@/lib/analytics";
 import { localizedPortalEntryPath } from "@/lib/portal-navigation";
 import { useLocale } from "@/lib/locale";
+import { TurnstileField } from "@/components/turnstile";
 
 const CLICK_ID_KEYS = ["fbclid", "gclid", "ttclid"] as const;
 
@@ -99,6 +100,8 @@ export default function DiscoveryPassB() {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [formStartedAt] = useState(() => Date.now());
+  const [turnstileToken, setTurnstileToken] = useState("");
   const started = useRef(false);
 
   useEffect(() => {
@@ -123,10 +126,14 @@ export default function DiscoveryPassB() {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) return setError(copy.invalid);
     setLoading(true);
     try {
+      const honeypot = (((event.currentTarget as HTMLFormElement).elements.namedItem("website")) as HTMLInputElement | null)?.value || "";
       await apiRequest("POST", "/api/discovery-pass/claim", {
         ...form,
         locale,
         attribution: safeAttribution(),
+        website: honeypot,
+        formStartedAt,
+        turnstileToken,
       });
       setSubmitted(true);
       trackEvent("discovery_claim_submitted", { locale, variant: "B" });
@@ -166,6 +173,7 @@ export default function DiscoveryPassB() {
           <section className="rounded-3xl border border-white/15 bg-[#121826] p-6 shadow-2xl sm:p-8">
             {!submitted ? (
               <form onSubmit={submit} className="space-y-5">
+                <input type="text" name="website" tabIndex={-1} autoComplete="off" className="absolute -left-[10000px] h-px w-px opacity-0" aria-hidden="true" />
                 <div>
                   <h2 className="text-2xl font-black">{copy.submit}</h2>
                   <p className="mt-2 text-sm leading-6 text-gray-400">{copy.intro}</p>
@@ -183,6 +191,7 @@ export default function DiscoveryPassB() {
                   <Input id="discovery-b-phone" type="tel" maxLength={30} value={form.phone} onFocus={markStarted} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="mt-2 min-h-12 border-white/15 bg-white/5 text-white" autoComplete="tel" />
                 </div>
                 {error && <p role="alert" className="text-sm text-rose-300">{error}</p>}
+                <TurnstileField onToken={setTurnstileToken} />
                 <Button type="submit" disabled={loading} className="min-h-14 w-full bg-[#FFB199] text-sm font-black uppercase tracking-[0.12em] text-[#0B0F14] hover:bg-[#FFCDB9]">
                   {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />{copy.submitting}</> : <>{copy.submit}<ArrowRight className="ml-2 h-5 w-5" /></>}
                 </Button>

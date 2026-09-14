@@ -15,6 +15,18 @@ export function passwordResetEmailContent(locale: "en" | "es", resetUrl: string)
       };
 }
 
+export function emailVerificationContent(locale: "en" | "es", verificationUrl: string) {
+  return locale === "es"
+    ? {
+        subject: "Confirma tu correo de Ground Up",
+        text: `Confirma tu correo electrónico para activar tu cuenta de Ground Up.\n\nUsa este enlace dentro de 60 minutos:\n${verificationUrl}\n\nSi no creaste esta cuenta, puedes ignorar este correo.`,
+      }
+    : {
+        subject: "Verify your Ground Up email",
+        text: `Verify your email address to activate your Ground Up account.\n\nUse this link within 60 minutes:\n${verificationUrl}\n\nIf you did not create this account, you can ignore this email.`,
+      };
+}
+
 export function classLifecycleEmailContent(input: {
   classTitle: string;
   starts: string;
@@ -243,4 +255,22 @@ export async function sendPasswordResetEmail(input: {
   if (!response.ok) {
     throw new Error(`Resend returned HTTP ${response.status}`);
   }
+}
+
+export async function sendEmailVerificationEmail(input: {
+  to: string;
+  locale: "en" | "es";
+  verificationUrl: string;
+}) {
+  const content = emailVerificationContent(input.locale, input.verificationUrl);
+  await resend().proxy("resend", "/emails", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      from: "Ground Up <info@groundupbjj.com>",
+      to: [input.to],
+      subject: content.subject,
+      text: content.text,
+    }),
+  });
 }

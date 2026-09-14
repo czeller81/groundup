@@ -2,7 +2,7 @@ import type { Express, Request, Response, NextFunction } from "express";
 import express from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertBookingSchema } from "@shared/schema";
+import { insertBookingSchema, type AccountStatus, type SafeUser } from "@shared/schema";
 import { z } from "zod";
 import { discoveryPassClaimRequestSchema, normalizeDiscoveryPassClaimInput } from "./discovery-pass-b";
 import Stripe from "stripe";
@@ -11,9 +11,19 @@ import fs from "fs";
 import path from "path";
 import crypto from "node:crypto";
 import { parseRawJsonBody, verifyCalendlySignature, verifyStripeSignature } from "./webhook-security";
-import { bookingBelongsToUser, coachCanManageMember, createPublicRateLimit, requireAuth, requireRole } from "./route-security";
+import {
+  bookingBelongsToUser,
+  coachCanManageMember,
+  createPublicRateLimit,
+  getRequestSignalHashes,
+  hashClientSignal,
+  publicBotCheck,
+  requireAuth,
+  requireRole,
+} from "./route-security";
 import {
   sendContactAcknowledgementEmail,
+  sendEmailVerificationEmail,
   sendLeadAcknowledgementEmail,
   sendPasswordResetEmail,
   sendStaffNotificationEmail,
@@ -418,6 +428,48 @@ const bookingRateLimit = () => createPublicRateLimit(30, 15 * 60 * 1000);
 const staffMutationRateLimit = () => createPublicRateLimit(120, 15 * 60 * 1000);
 const metaServerTestRateLimit = () => createPublicRateLimit(1, 10 * 60 * 1000);
 
+async function verifyTurnstile(req: Request) {
+  const secret = process.env.TURNSTILE_SECRET_KEY;
+  const token = typeof req.body?.turnstileToken === "string" ? req.body.turnstileToken : "";
+  if (!secret || !token) {
+    return process.env.NODE_ENV !== "production";
+  }
+  try {
+    const response = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ secret, response: token, remoteip: req.ip }),
+    });
+    const result = await response.json() as { success?: boolean };
+    return result.success === true;
+  } catch (error) {
+    console.error("Turnstile verification failed:", error instanceof Error ? error.message : "unknown error");
+    return false;
+  }
+}
+
+function verificationToken() {
+  const token = crypto.randomBytes(32).toString("base64url");
+  return {
+    token,
+    tokenHash: crypto.createHash("sha256").update(token).digest("hex"),
+    expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+  };
+}
+
+async function sendVerificationForUser(req: Request, user: Pick<SafeUser, "id" | "email" | "locale">, discoveryPassClaimId?: string | null) {
+  const generated = verificationToken();
+  await storage.createEmailVerificationToken(user.id, generated.tokenHash, generated.expiresAt, discoveryPassClaimId);
+  const locale = user.locale === "es" ? "es" : "en";
+  const origin = `${req.protocol}://${req.get("host")}`;
+  const path = locale === "es" ? "/es/portal/verify-email" : "/portal/verify-email";
+  await sendEmailVerificationEmail({
+    to: user.email,
+    locale,
+    verificationUrl: `${origin}${path}?token=${encodeURIComponent(generated.token)}`,
+  });
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   app.use("/api/portal/admin", staffMutationRateLimit());
   app.use("/api/admin", staffMutationRateLimit());
@@ -786,8 +838,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ============================================
   // CONTACT ROUTE
   // ============================================
-  app.post("/api/contact", publicRateLimit(), async (req, res) => {
+  app.post(
+    "/api/contact",
+    publicRateLimit(8, 60 * 60 * 1000),
+    publicRateLimit(4, 24 * 60 * 60 * 1000, (request) => hashClientSignal(String(request.body?.email || "").trim().toLowerCase())),
+    async (req, res) => {
     try {
+      const botReason = publicBotCheck(req);
+      if (botReason) {
+        console.warn("Public form blocked", { form: "contact", reason: botReason, ipHash: getRequestSignalHashes(req).ipHash });
+        return res.status(400).json({ message: "Please complete the form normally and try again." });
+      }
+      if (!(await verifyTurnstile(req))) {
+        return res.status(403).json({ message: "We could not verify this submission. Please try again." });
+      }
       const { insertContactSubmissionSchema } = await import("@shared/schema");
       const parsed = insertContactSubmissionSchema.safeParse({
         ...req.body,
@@ -854,8 +918,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ============================================
   // TRIAL LEAD CAPTURE (public booking funnel)
   // ============================================
-  app.post("/api/trial-leads", publicRateLimit(), async (req, res) => {
+  app.post(
+    "/api/trial-leads",
+    publicRateLimit(8, 60 * 60 * 1000),
+    publicRateLimit(4, 24 * 60 * 60 * 1000, (request) => hashClientSignal(String(request.body?.email || "").trim().toLowerCase())),
+    async (req, res) => {
     try {
+      const botReason = publicBotCheck(req);
+      if (botReason) {
+        console.warn("Public form blocked", { form: "trial_lead", reason: botReason, ipHash: getRequestSignalHashes(req).ipHash });
+        return res.status(400).json({ message: "Please complete the form normally and try again." });
+      }
+      if (!(await verifyTurnstile(req))) {
+        return res.status(403).json({ message: "We could not verify this submission. Please try again." });
+      }
       const { insertTrialLeadSchema } = await import("@shared/schema");
       const parsed = insertTrialLeadSchema.safeParse(req.body);
       if (!parsed.success) {
@@ -929,7 +1005,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Variant B intentionally records only a minimal prospect claim. It does
   // not create an account, password, pass, entitlement, waiver, or timer.
-  app.post("/api/discovery-pass/claim", publicRateLimit(5, 60 * 60 * 1000), async (req, res) => {
+  app.post(
+    "/api/discovery-pass/claim",
+    publicRateLimit(5, 60 * 60 * 1000),
+    publicRateLimit(4, 24 * 60 * 60 * 1000, (request) => hashClientSignal(String(request.body?.email || "").trim().toLowerCase())),
+    async (req, res) => {
+    const botReason = publicBotCheck(req);
+    if (botReason) {
+      console.warn("Public form blocked", { form: "discovery_claim", reason: botReason, ipHash: getRequestSignalHashes(req).ipHash });
+      return res.status(400).json({ message: "Please complete the form normally and try again." });
+    }
+    if (!(await verifyTurnstile(req))) {
+      return res.status(403).json({ message: "We could not verify this submission. Please try again." });
+    }
     const parsed = discoveryPassClaimRequestSchema.safeParse(req.body);
     if (!parsed.success) {
       return res.status(400).json({ message: "Please provide a first name, valid email, and optional valid phone number." });
@@ -1235,13 +1323,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ============================================
   // PORTAL AUTHENTICATION ROUTES
   // ============================================
-  app.post("/api/portal/signup", authRateLimit(), async (req, res) => {
+  app.post(
+    "/api/portal/signup",
+    publicRateLimit(8, 60 * 60 * 1000),
+    publicRateLimit(4, 24 * 60 * 60 * 1000, (request) => hashClientSignal(String(request.body?.email || "").trim().toLowerCase())),
+    async (req, res) => {
     try {
       const { email, password, firstName, lastName, phone } = req.body;
       const discoveryIntent = req.body?.discoveryIntent === true;
       const locale = req.body.locale === "es" ? "es" : "en";
       const pendingDiscoveryClaimId = req.session.discoveryPassClaimId;
-      
+      const botReason = publicBotCheck(req);
+      if (botReason) {
+        console.warn("Public form blocked", { form: "signup", reason: botReason, ipHash: getRequestSignalHashes(req).ipHash });
+        return res.status(400).json({ message: "Please complete the form normally and try again." });
+      }
+      if (!(await verifyTurnstile(req))) {
+        return res.status(403).json({ message: "We could not verify this account creation. Please try again." });
+      }
       if (!email || !password || !firstName || !lastName) {
         return res.status(400).json({ message: "Email, password, first name, and last name are required" });
       }
@@ -1249,27 +1348,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Password must be at least 8 characters" });
       }
 
-      const existingUser = await storage.getUserByEmail(email);
+      const normalizedEmail = String(email).trim().toLowerCase();
+      const existingUser = await storage.getUserByEmail(normalizedEmail);
       if (existingUser) {
-        return res.status(400).json({ message: "Email already registered" });
+        if (!existingUser.emailVerifiedAt && existingUser.accountStatus !== "archived") {
+          try { await sendVerificationForUser(req, existingUser, pendingDiscoveryClaimId); } catch (error) {
+            console.error("Verification resend after duplicate signup failed:", error);
+          }
+        }
+        return res.status(202).json({ message: "If this email can be used, we sent next steps to it." });
       }
 
-      const user = await storage.createUser(email.trim().toLowerCase(), password, firstName.trim(), lastName.trim(), phone, locale);
-      await new Promise<void>((resolve, reject) => req.session.regenerate((error) => error ? reject(error) : resolve()));
-      req.session.userId = user.id;
-      req.session.userRole = user.role;
+      const signals = getRequestSignalHashes(req);
+      const dayStart = new Date();
+      dayStart.setHours(0, 0, 0, 0);
+      const [ipCount, deviceCount] = await Promise.all([
+        storage.countRecentSignupsBySignal("ip", signals.ipHash, dayStart),
+        storage.countRecentSignupsBySignal("device", signals.deviceHash, dayStart),
+      ]);
+      if (ipCount >= 5 || deviceCount >= 5) {
+        console.warn("Signup blocked", { reason: "daily_cap", ipHash: signals.ipHash, deviceHash: signals.deviceHash });
+        return res.status(429).json({ message: "We could not create more accounts from this connection today." });
+      }
+
+      const riskReasons: string[] = [];
+      const normalizedName = `${String(firstName).trim()} ${String(lastName).trim()}`;
+      if (/[bcdfghjklmnpqrstvwxyz]{5,}/i.test(normalizedName) || /[^aeiou\s]{8,}/i.test(normalizedName)) {
+        riskReasons.push("random-looking-name");
+      }
+      const domain = normalizedEmail.split("@")[1] || "";
+      if (["mailinator.com", "guerrillamail.com", "10minutemail.com", "yopmail.com", "txt.att.net", "vtext.com", "tmomail.net", "messaging.sprintpcs.com"].includes(domain)) {
+        riskReasons.push("disposable-or-sms-email");
+      }
+      const user = await storage.createUser(
+        normalizedEmail,
+        password,
+        String(firstName).trim(),
+        String(lastName).trim(),
+        phone,
+        locale,
+        { ipHash: signals.ipHash, deviceHash: signals.deviceHash, accountStatus: riskReasons.length ? "needs_review" : "unverified", riskReasons },
+      );
       if (pendingDiscoveryClaimId) {
         const linkedClaim = await storage.linkDiscoveryPassClaim(pendingDiscoveryClaimId, user.id, user.email);
         if (linkedClaim) {
-          req.session.discoveryPassClaimId = linkedClaim.id;
-          req.session.discoveryPassVariant = "B";
+          await storage.markDiscoveryOnboarding(user.id, "discovery_variant_b");
         }
       }
-      if (discoveryIntent || pendingDiscoveryClaimId) {
+      if (discoveryIntent && !pendingDiscoveryClaimId) {
         await storage.markDiscoveryOnboarding(user.id, pendingDiscoveryClaimId ? "discovery_variant_b" : "discovery_funnel");
       }
-      
-      res.status(201).json({ user });
+      try {
+        const verificationUser = await storage.getUserByEmail(user.email);
+        if (verificationUser) await sendVerificationForUser(req, verificationUser, pendingDiscoveryClaimId);
+      } catch (error) {
+        console.error("Verification email failed after signup:", error);
+      }
+      res.status(201).json({
+        verificationRequired: true,
+        message: locale === "es"
+          ? "Revisa tu correo para confirmar tu cuenta antes de continuar."
+          : "Check your email to verify your account before continuing.",
+      });
     } catch (error) {
       console.error("Signup error:", error);
       res.status(500).json({ message: "Failed to create account" });
@@ -1288,6 +1428,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.validateUserPassword(email, password);
       if (!user) {
         return res.status(401).json({ message: "Invalid email or password" });
+      }
+      if (user.accountStatus === "archived" || user.accountStatus === "suspicious") {
+        return res.status(403).json({ code: "ACCOUNT_REVIEW_REQUIRED", message: "This account needs staff review before it can be used." });
+      }
+      if (!user.emailVerifiedAt) {
+        try { await sendVerificationForUser(req, user); } catch (error) {
+          console.error("Verification resend after login failed:", error);
+        }
+        return res.status(403).json({
+          code: "EMAIL_VERIFICATION_REQUIRED",
+          message: "Verify your email before signing in. We sent a new verification link if the account exists.",
+        });
       }
 
       await new Promise<void>((resolve, reject) => req.session.regenerate((error) => error ? reject(error) : resolve()));
@@ -1308,6 +1460,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Login error:", error);
       res.status(500).json({ message: "Login failed" });
+    }
+  });
+
+  app.post(
+    "/api/portal/email-verification/resend",
+    publicRateLimit(5, 60 * 60 * 1000),
+    publicRateLimit(3, 24 * 60 * 60 * 1000, (request) => hashClientSignal(String(request.body?.email || "").trim().toLowerCase())),
+    async (req, res) => {
+      const genericResponse = {
+        message: "If an account matches that email, a verification link will be sent.",
+      };
+      try {
+        const email = z.string().trim().email().max(254).parse(req.body?.email).toLowerCase();
+        const user = await storage.getUserByEmail(email);
+        if (user && !user.emailVerifiedAt && user.accountStatus !== "archived") {
+          try { await sendVerificationForUser(req, user); } catch (error) {
+            console.error("Verification resend failed:", error);
+          }
+        }
+      } catch {
+        // Always return the same response so email existence is not disclosed.
+      }
+      return res.status(202).json(genericResponse);
+    },
+  );
+
+  app.post("/api/portal/email-verification/verify", async (req, res) => {
+    try {
+      const token = z.string().min(32).max(200).parse(req.body?.token);
+      const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+      const user = await storage.consumeEmailVerificationToken(tokenHash);
+      if (!user) return res.status(400).json({ message: "This verification link is invalid or expired." });
+      await new Promise<void>((resolve, reject) => req.session.regenerate((error) => error ? reject(error) : resolve()));
+      req.session.userId = user.id;
+      req.session.userRole = user.role;
+      const claim = await storage.getLinkedDiscoveryPassClaim(user.id);
+      if (claim) {
+        req.session.discoveryPassClaimId = claim.id;
+        req.session.discoveryPassVariant = claim.experimentVariant === "B" ? "B" : undefined;
+      }
+      return res.json({ user });
+    } catch {
+      return res.status(400).json({ message: "This verification link is invalid or expired." });
     }
   });
 
@@ -1379,6 +1574,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!user) {
         req.session.destroy(() => undefined);
         return res.status(401).json({ message: "User not found" });
+      }
+      if (!user.emailVerifiedAt) {
+        return res.status(403).json({ code: "EMAIL_VERIFICATION_REQUIRED", message: "Verify your email before using the member portal." });
+      }
+      if (user.accountStatus === "suspicious" || user.accountStatus === "archived") {
+        return res.status(403).json({ code: "ACCOUNT_REVIEW_REQUIRED", message: "This account needs staff review before using the member portal." });
       }
 
       const { passwordHash: _, ...safeUser } = user;
@@ -1577,6 +1778,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(result);
     } catch (error) {
       res.status(500).json({ message: "Failed to get members" });
+    }
+  });
+
+  app.get("/api/portal/admin/account-review", requireRole("admin"), async (req, res) => {
+    try {
+      const requested = typeof req.query.status === "string" ? req.query.status : undefined;
+      const status = requested && ["unverified", "legitimate", "needs_review", "suspicious", "archived"].includes(requested)
+        ? requested as AccountStatus
+        : undefined;
+      res.json({ users: await storage.getAccountReviewQueue(status) });
+    } catch (error) {
+      console.error("Get account review queue error:", error);
+      res.status(500).json({ message: "Failed to get account review queue" });
+    }
+  });
+
+  app.patch("/api/portal/admin/members/:id/account-status", requireRole("admin"), async (req, res) => {
+    try {
+      const status = z.enum(["legitimate", "suspicious", "archived", "needs_review"]).parse(req.body?.status);
+      const reason = z.string().trim().min(3).max(500).parse(req.body?.reason || `Admin marked account ${status}.`);
+      const user = await storage.updateAccountReview({
+        userId: req.params.id,
+        status,
+        actorId: req.session.userId!,
+        reason,
+      });
+      if (!user) return res.status(404).json({ message: "Member not found" });
+      res.json({ user });
+    } catch (error) {
+      if (error instanceof z.ZodError) return res.status(400).json({ message: "Choose a valid account status and reason." });
+      console.error("Update account status error:", error);
+      res.status(500).json({ message: "Failed to update account status" });
     }
   });
 

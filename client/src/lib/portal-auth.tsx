@@ -15,6 +15,9 @@ interface User {
   attendanceCount: number;
   assignedCoachId: string | null;
   adminNotes: string | null;
+  accountStatus: string;
+  emailVerifiedAt: string | null;
+  riskReasons: unknown;
   createdAt: string;
 }
 
@@ -26,7 +29,7 @@ interface AuthContextType {
   isCoach: boolean;
   isStaff: boolean;
   login: (email: string, password: string, discoveryIntent?: boolean) => Promise<void>;
-  signup: (data: SignupData) => Promise<void>;
+  signup: (data: SignupData) => Promise<{ message?: string }>;
   logout: () => Promise<void>;
 }
 
@@ -38,6 +41,9 @@ interface SignupData {
   phone?: string;
   locale?: Locale;
   discoveryIntent?: boolean;
+  website?: string;
+  formStartedAt?: number;
+  turnstileToken?: string;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -97,7 +103,7 @@ export function PortalAuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signup = async (data: SignupData) => {
-    await signupMutation.mutateAsync(data);
+    return signupMutation.mutateAsync(data);
   };
 
   const logout = async () => {

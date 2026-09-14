@@ -23,7 +23,7 @@ import {
 } from "@shared/schema";
 import { db } from "./db";
 import { storage } from "./storage";
-import { coachCanManageMember, requireAuth, requireRole } from "./route-security";
+import { accountCanUseMemberFeatures, coachCanManageMember, requireAuth, requireRole } from "./route-security";
 import { discoveryCategory, evaluateBookingEligibility, evaluateMinorBookingEligibilityWithExecutor, getMembershipWeekStart, minorAgeAt } from "./member-entitlements";
 import Stripe from "stripe";
 import {
@@ -331,6 +331,14 @@ export function registerMemberRoutes(app: Express) {
   app.post("/api/portal/billing/checkout", requireAuth, async (req, res) => {
     if (!stripe) return res.status(503).json({ code: "STRIPE_NOT_CONFIGURED", message: "Billing is not configured." });
     try {
+      const account = await storage.getUserById(req.session.userId!);
+      if (!account) return res.status(401).json({ code: "ACCOUNT_NOT_FOUND", message: "Please sign in again." });
+      if (!account.emailVerifiedAt) {
+        return res.status(403).json({ code: "EMAIL_VERIFICATION_REQUIRED", message: "Verify your email before starting checkout." });
+      }
+      if (!accountCanUseMemberFeatures(account)) {
+        return res.status(403).json({ code: "ACCOUNT_REVIEW_REQUIRED", message: "This account needs staff review before checkout." });
+      }
       const data = z.object({
         planKey: z.string().trim().refine(isBillingPlanKey, "Invalid membership plan"),
         minorProfileId: z.string().uuid().optional(),
@@ -910,6 +918,14 @@ export function registerMemberRoutes(app: Express) {
 
   app.post("/api/portal/discovery/claim", requireAuth, async (req, res) => {
     try {
+      const account = await storage.getUserById(req.session.userId!);
+      if (!account) return res.status(401).json({ code: "ACCOUNT_NOT_FOUND", message: "Please sign in again." });
+      if (!account.emailVerifiedAt) {
+        return res.status(403).json({ code: "EMAIL_VERIFICATION_REQUIRED", message: "Verify your email before activating a Discovery Pass." });
+      }
+      if (!accountCanUseMemberFeatures(account)) {
+        return res.status(403).json({ code: "ACCOUNT_REVIEW_REQUIRED", message: "This account needs staff review before activation." });
+      }
       const pass = await issueDiscoveryPass(req.session.userId!, req.session.userId!);
       await setLifecycle(req.session.userId!, "DISCOVERY_PASS", req.session.userId!, "Discovery Pass claimed", "member_claim");
       res.status(201).json(await getPass(req.session.userId!));

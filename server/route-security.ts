@@ -1,4 +1,5 @@
 import type { Request, Response, NextFunction } from "express";
+import { createHash } from "node:crypto";
 
 export function bookingBelongsToUser(booking: { userId: string | null } | undefined, userId: string | undefined) {
   return Boolean(booking && userId && booking.userId === userId);
@@ -16,6 +17,22 @@ export const INTERNAL_TEST_EMAIL_PATTERN = "%@example.invalid";
 
 export function isInternalTestEmail(email?: string | null) {
   return Boolean(email && email.toLowerCase().endsWith("@example.invalid"));
+}
+
+export function isOperationalAccount(user: { emailVerifiedAt?: Date | null; accountStatus?: string | null }) {
+  return Boolean(
+    user.emailVerifiedAt &&
+    user.accountStatus !== "unverified" &&
+    user.accountStatus !== "suspicious" &&
+    user.accountStatus !== "needs_review" &&
+    user.accountStatus !== "archived",
+  );
+}
+
+export function accountCanUseMemberFeatures(user: { emailVerifiedAt?: Date | null; accountStatus?: string | null }) {
+  return Boolean(
+    isOperationalAccount(user),
+  );
 }
 
 export function canRetryWebhook(status: string, lockedUntil: Date | null | undefined, now = new Date()) {
@@ -73,10 +90,33 @@ export function createOriginProtection() {
   };
 }
 
-export function createPublicRateLimit(limit = 12, windowMs = 60 * 60 * 1000) {
+export function hashClientSignal(value: string) {
+  return createHash("sha256")
+    .update(`${process.env.SESSION_SECRET || "ground-up-public-protection"}:${value}`)
+    .digest("hex");
+}
+
+export function getRequestSignalHashes(req: Request) {
+  const ip = req.ip || req.socket.remoteAddress || "unknown";
+  const userAgent = req.get("user-agent") || "unknown";
+  return {
+    ipHash: hashClientSignal(ip),
+    deviceHash: hashClientSignal(`${userAgent}|${req.get("accept-language") || ""}`),
+  };
+}
+
+export function publicBotCheck(req: Request, minimumCompletionMs = 1500) {
+  const honeypot = typeof req.body?.website === "string" ? req.body.website.trim() : "";
+  const startedAt = Number(req.body?.formStartedAt);
+  if (honeypot) return "honeypot";
+  if (!Number.isFinite(startedAt) || Date.now() - startedAt < minimumCompletionMs) return "completion_time";
+  return null;
+}
+
+export function createPublicRateLimit(limit = 12, windowMs = 60 * 60 * 1000, keyExtractor: (req: Request) => string = (req) => req.ip || "unknown") {
   const requestCounts = new Map<string, { count: number; resetAt: number }>();
   return (req: Request, res: Response, next: NextFunction) => {
-    const key = `${req.ip}:${req.path}`;
+    const key = `${keyExtractor(req)}:${req.path}`;
     const now = Date.now();
     if (requestCounts.size > 5000) {
       requestCounts.forEach((entry, storedKey) => {
