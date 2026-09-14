@@ -181,14 +181,14 @@ test("internal QA email markers stay out of production-facing admin data", () =>
   assert.equal(isInternalTestEmail(null), false);
 });
 
-test("public rate limits count per IP and path", () => {
+test("public rate limits count per IP and path", async () => {
   const limit = createPublicRateLimit(2, 60_000);
   const next = () => {};
   const request = { ip: "127.0.0.1", path: "/api/contact" } as any;
   let res = responseRecorder();
-  limit(request, res, next);
-  limit(request, res, next);
-  limit(request, res, next);
+  await limit(request, res, next);
+  await limit(request, res, next);
+  await limit(request, res, next);
   assert.equal(res.result.statusCode, 429);
 });
 

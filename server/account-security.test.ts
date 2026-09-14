@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import crypto from "node:crypto";
 import test from "node:test";
-import { accountCanUseMemberFeatures, createPublicRateLimit, isOperationalAccount, publicBotCheck } from "./route-security";
+import { accountCanUseMemberFeatures, consumePublicRateLimits, createPublicRateLimit, isOperationalAccount, publicBotCheck } from "./route-security";
 import { storage } from "./storage";
 
 function responseRecorder() {
@@ -20,16 +20,43 @@ test("public bot checks reject honeypot and instant submissions", () => {
   assert.equal(publicBotCheck({ body: { website: "", formStartedAt: Date.now() - 2000 } } as any), null);
 });
 
-test("public rate limiter rejects repeated requests for the same signal", () => {
-  const middleware = createPublicRateLimit(1, 60_000, () => "security-test");
+test("public rate limiter rejects repeated requests across separate middleware instances", async () => {
+  const signal = `security-test-${crypto.randomBytes(6).toString("hex")}`;
+  const firstMiddleware = createPublicRateLimit(1, 60_000, () => signal);
+  const secondMiddleware = createPublicRateLimit(1, 60_000, () => signal);
   let nextCalls = 0;
   const req = { ip: "127.0.0.1", path: "/api/portal/signup" } as any;
   const first = responseRecorder();
-  middleware(req, first, () => { nextCalls++; });
+  await firstMiddleware(req, first, () => { nextCalls++; });
   const second = responseRecorder();
-  middleware(req, second, () => { nextCalls++; });
+  await secondMiddleware(req, second, () => { nextCalls++; });
   assert.equal(nextCalls, 1);
   assert.equal(second.result.statusCode, 429);
+});
+
+test("daily signup caps are shared and atomically reserve related signals", async () => {
+  const signal = `daily-signup-test-${crypto.randomBytes(6).toString("hex")}`;
+  const first = await consumePublicRateLimits([
+    { key: `${signal}:ip`, limit: 1, windowMs: 60_000 },
+    { key: `${signal}:device`, limit: 1, windowMs: 60_000 },
+  ]);
+  const second = await consumePublicRateLimits([
+    { key: `${signal}:ip`, limit: 1, windowMs: 60_000 },
+    { key: `${signal}:device`, limit: 1, windowMs: 60_000 },
+  ]);
+  assert.equal(first.allowed, true);
+  assert.equal(second.allowed, false);
+});
+
+test("expired public counters no longer block a later request", async () => {
+  const signal = `expired-rate-limit-test-${crypto.randomBytes(6).toString("hex")}`;
+  const startedAt = new Date(Date.now() - 10_000);
+  await consumePublicRateLimits([{ key: signal, limit: 1, windowMs: 1_000 }], startedAt);
+  const later = await consumePublicRateLimits(
+    [{ key: signal, limit: 1, windowMs: 60_000 }],
+    new Date(startedAt.getTime() + 2_000),
+  );
+  assert.equal(later.allowed, true);
 });
 
 test("unverified and suspicious accounts cannot use member features", () => {

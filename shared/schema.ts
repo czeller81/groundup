@@ -124,6 +124,15 @@ export const webhookEvents = pgTable("webhook_events", {
   lastError: text("last_error"),
 });
 
+export const publicRateLimits = pgTable("public_rate_limits", {
+  key: text("key").primaryKey(),
+  count: integer("count").notNull().default(0),
+  resetAt: timestamp("reset_at").notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  resetAtIndex: index("public_rate_limits_reset_at_idx").on(table.resetAt),
+}));
+
 export const adminUsers = pgTable("admin_users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   email: text("email").notNull().unique(),

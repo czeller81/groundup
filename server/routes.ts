@@ -15,6 +15,7 @@ import {
   bookingBelongsToUser,
   coachCanManageMember,
   createPublicRateLimit,
+  consumePublicRateLimits,
   getRequestSignalHashes,
   hashClientSignal,
   publicBotCheck,
@@ -1362,12 +1363,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const signals = getRequestSignalHashes(req);
       const dayStart = new Date();
       dayStart.setHours(0, 0, 0, 0);
-      const [ipCount, deviceCount] = await Promise.all([
-        storage.countRecentSignupsBySignal("ip", signals.ipHash, dayStart),
-        storage.countRecentSignupsBySignal("device", signals.deviceHash, dayStart),
+      const dailyCap = await consumePublicRateLimits([
+        { key: `signup:ip:${signals.ipHash}`, limit: 5, windowMs: 24 * 60 * 60 * 1000, windowStart: dayStart },
+        { key: `signup:device:${signals.deviceHash}`, limit: 5, windowMs: 24 * 60 * 60 * 1000, windowStart: dayStart },
       ]);
-      if (ipCount >= 5 || deviceCount >= 5) {
+      if (!dailyCap.allowed) {
         console.warn("Signup blocked", { reason: "daily_cap", ipHash: signals.ipHash, deviceHash: signals.deviceHash });
+        if (dailyCap.resetAt) {
+          res.set("Retry-After", String(Math.max(1, Math.ceil((dailyCap.resetAt.getTime() - Date.now()) / 1000))));
+        }
         return res.status(429).json({ message: "We could not create more accounts from this connection today." });
       }
 

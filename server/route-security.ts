@@ -1,5 +1,8 @@
 import type { Request, Response, NextFunction } from "express";
 import { createHash } from "node:crypto";
+import { lte, sql } from "drizzle-orm";
+import { db } from "./db";
+import { publicRateLimits } from "@shared/schema";
 
 export function bookingBelongsToUser(booking: { userId: string | null } | undefined, userId: string | undefined) {
   return Boolean(booking && userId && booking.userId === userId);
@@ -113,27 +116,104 @@ export function publicBotCheck(req: Request, minimumCompletionMs = 1500) {
   return null;
 }
 
-export function createPublicRateLimit(limit = 12, windowMs = 60 * 60 * 1000, keyExtractor: (req: Request) => string = (req) => req.ip || "unknown") {
-  const requestCounts = new Map<string, { count: number; resetAt: number }>();
-  return (req: Request, res: Response, next: NextFunction) => {
-    const key = `${keyExtractor(req)}:${req.path}`;
-    const now = Date.now();
-    if (requestCounts.size > 5000) {
-      requestCounts.forEach((entry, storedKey) => {
-        if (entry.resetAt <= now) requestCounts.delete(storedKey);
-      });
+export type PublicRateLimitRule = {
+  key: string;
+  limit: number;
+  windowMs: number;
+  windowStart?: Date;
+};
+
+export type PublicRateLimitResult = {
+  allowed: boolean;
+  resetAt?: Date;
+};
+
+class PublicRateLimitExceeded extends Error {
+  constructor(public resetAt: Date) {
+    super("Public rate limit exceeded");
+    this.name = "PublicRateLimitExceeded";
+  }
+}
+
+function durablePublicRateLimitKey(key: string) {
+  return hashClientSignal(`public-rate-limit:${key}`);
+}
+
+/**
+ * Atomically consumes one or more public rate-limit counters.
+ *
+ * The counter key is hashed before it reaches the database. The transaction
+ * lets callers reserve several related limits (such as signup IP and device)
+ * without allowing a partial reservation when one of them is already full.
+ */
+export async function consumePublicRateLimits(rules: PublicRateLimitRule[], now = new Date()): Promise<PublicRateLimitResult> {
+  if (!rules.length) return { allowed: true };
+  if (rules.some((rule) => rule.limit < 1 || rule.windowMs < 1)) {
+    throw new Error("Public rate limit rules must have positive limits and windows");
+  }
+
+  try {
+    return await db.transaction(async (tx) => {
+      await tx.delete(publicRateLimits).where(lte(publicRateLimits.resetAt, now));
+
+      for (const rule of rules) {
+        const resetAt = new Date((rule.windowStart || now).getTime() + rule.windowMs);
+        const [counter] = await tx.insert(publicRateLimits).values({
+          key: durablePublicRateLimitKey(rule.key),
+          count: 1,
+          resetAt,
+          updatedAt: now,
+        }).onConflictDoUpdate({
+          target: publicRateLimits.key,
+          set: {
+            count: sql<number>`CASE WHEN ${publicRateLimits.resetAt} <= ${now} THEN 1 ELSE ${publicRateLimits.count} + 1 END`,
+            resetAt: sql<Date>`CASE WHEN ${publicRateLimits.resetAt} <= ${now} THEN ${resetAt} ELSE ${publicRateLimits.resetAt} END`,
+            updatedAt: now,
+          },
+        }).returning({
+          count: publicRateLimits.count,
+          resetAt: publicRateLimits.resetAt,
+        });
+
+        if (!counter) throw new Error("Public rate limit counter was not returned");
+        if (counter.count > rule.limit) {
+          throw new PublicRateLimitExceeded(counter.resetAt);
+        }
+      }
+
+      return { allowed: true } satisfies PublicRateLimitResult;
+    });
+  } catch (error) {
+    if (error instanceof PublicRateLimitExceeded) {
+      return { allowed: false, resetAt: error.resetAt };
     }
-    const current = requestCounts.get(key);
-    if (!current || current.resetAt <= now) {
-      requestCounts.set(key, { count: 1, resetAt: now + windowMs });
+    throw error;
+  }
+}
+
+export function createPublicRateLimit(
+  limit = 12,
+  windowMs = 60 * 60 * 1000,
+  keyExtractor: (req: Request) => string = (req) => req.ip || req.socket.remoteAddress || "unknown",
+) {
+  return async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const extractedKey = keyExtractor(req);
+      const result = await consumePublicRateLimits([{
+        key: `${req.path}:${extractedKey}`,
+        limit,
+        windowMs,
+      }]);
+      if (!result.allowed) {
+        const retryAfter = Math.max(1, Math.ceil(((result.resetAt?.getTime() || Date.now()) - Date.now()) / 1000));
+        res.set("Retry-After", String(retryAfter));
+        return res.status(429).json({ message: "Too many requests. Please try again later." });
+      }
       return next();
+    } catch (error) {
+      console.error("Public rate limiter unavailable:", error instanceof Error ? error.message : error);
+      return res.status(503).json({ message: "This request could not be processed. Please try again later." });
     }
-    if (current.count >= limit) {
-      res.set("Retry-After", String(Math.ceil((current.resetAt - now) / 1000)));
-      return res.status(429).json({ message: "Too many requests. Please try again later." });
-    }
-    current.count++;
-    next();
   };
 }
 
