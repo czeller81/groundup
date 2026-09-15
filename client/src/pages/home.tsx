@@ -565,14 +565,6 @@ export default function Home() {
                 img: personalTrainingImg,
                 accent: "#FFB199",
               },
-              {
-                title: t("Adaptive Capacity"),
-                desc: t("A separate learning path for clearer thinking, better decisions, and practical adaptability as work and life change."),
-                highlights: [t("Practical learning"), t("Decision tools"), t("Reflection"), t("Interest list now open")],
-                img: facilityLoungeImg,
-                accent: "#5EEBFF",
-                link: "/adaptive-capacity",
-              },
             ].map((program, i) => (
               <motion.div
                 key={program.title}

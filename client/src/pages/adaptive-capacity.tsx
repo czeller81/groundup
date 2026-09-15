@@ -29,6 +29,8 @@ type Values = {
   website?: string;
 };
 
+const ADAPTIVE_CAPACITY_ENABLED = false;
+
 export default function AdaptiveCapacity() {
   const { locale } = useLocale();
   const { toast } = useToast();
@@ -43,6 +45,7 @@ export default function AdaptiveCapacity() {
     title: <>DESARROLLA LA CAPACIDAD DE <span className="gradient-text-cyan">ADAPTARTE</span> A LO QUE SIGUE.</>,
     intro: "El trabajo y la vida cambian rápido. Capacidad Adaptativa es un producto separado de Ground Up para desarrollar pensamiento claro, mejores decisiones y la confianza para avanzar cuando el camino es incierto.",
     join: "Únete a la lista de interés", physical: "Explora el entrenamiento físico",
+    pausedEyebrow: "Programa pausado", pausedTitle: "Capacidad Adaptativa no está aceptando registros actualmente.", pausedText: "Estamos haciendo una pausa mientras revisamos la próxima fase de este programa. Mientras tanto, explora las opciones de entrenamiento físico de Ground Up.",
     firstDetails: "Los detalles de la primera cohorte se compartirán cuando estén confirmados.",
     cards: [["Ver con más claridad", "Comprende el cambio, la incertidumbre y las señales contradictorias sin necesitar información perfecta."], ["Practicar mejores decisiones", "Usa reflexión y herramientas prácticas para convertir la claridad en un siguiente paso que puedas tomar."], ["Desarrollar capacidad duradera", "Fortalece los hábitos, la confianza y la adaptabilidad que te ayudan a responder en vez de reaccionar."]],
     formEyebrow: "Sigue de cerca el proyecto", formTitle: "RECIBE LAS PRIMERAS NOTICIAS.",
@@ -61,6 +64,7 @@ export default function AdaptiveCapacity() {
     title: <>BUILD THE CAPACITY TO <span className="gradient-text-cyan">ADAPT</span> TO WHATEVER COMES NEXT.</>,
     intro: "Work and life are changing quickly. Adaptive Capacity is a separate Ground Up product for building clearer thinking, better decisions, and the confidence to keep moving when the path is uncertain.",
     join: "Join the interest list", physical: "Explore physical training",
+    pausedEyebrow: "Program paused", pausedTitle: "Adaptive Capacity is not currently accepting signups.", pausedText: "We’re taking a pause while we review the next phase of this program. Please explore Ground Up’s physical training offerings in the meantime.",
     firstDetails: "First cohort details will be shared as they are confirmed.",
     cards: [["See more clearly", "Make sense of change, uncertainty, and competing signals without needing perfect information."], ["Practice better decisions", "Use reflection and practical tools to turn insight into a next step you can actually take."], ["Build durable capacity", "Strengthen the habits, confidence, and adaptability that help you respond rather than react."]],
     formEyebrow: "Stay close to the build", formTitle: "GET THE FIRST WORD.",
@@ -112,10 +116,10 @@ export default function AdaptiveCapacity() {
             {copy.intro}
           </p>
           <div className="mt-10 flex flex-wrap gap-4">
-            <a href="#interest-list" onClick={() => track("cta_click", "adaptive_capacity", { cta: "hero_interest_list" })}><Button className="bg-[#FFB199] text-[#0B0F14] font-bold uppercase tracking-wider">{copy.join} <ArrowRight className="ml-2 h-4 w-4" /></Button></a>
+            {ADAPTIVE_CAPACITY_ENABLED && <a href="#interest-list" onClick={() => track("cta_click", "adaptive_capacity", { cta: "hero_interest_list" })}><Button className="bg-[#FFB199] text-[#0B0F14] font-bold uppercase tracking-wider">{copy.join} <ArrowRight className="ml-2 h-4 w-4" /></Button></a>}
             <Link href={localizedPublicPath("/", locale)}><Button variant="outline" className="border-white/20 text-white bg-transparent">{copy.physical}</Button></Link>
           </div>
-          <p className="mt-5 text-sm text-gray-500">{copy.firstDetails}</p>
+          <p className="mt-5 text-sm text-gray-500">{ADAPTIVE_CAPACITY_ENABLED ? copy.firstDetails : copy.pausedText}</p>
         </div>
       </section>
       <section className="max-w-6xl mx-auto px-6 py-20">
@@ -132,9 +136,9 @@ export default function AdaptiveCapacity() {
       </section>
       <section id="interest-list" className="bg-[#121826] border-y border-white/5">
         <div className="max-w-3xl mx-auto px-6 py-20">
-          <p className="text-[#FFB199] uppercase tracking-[.25em] text-xs font-semibold mb-4">{copy.formEyebrow}</p>
-          <h2 className="text-4xl md:text-5xl font-bold mb-5" style={{ fontFamily: "var(--font-display)" }}>{copy.formTitle}</h2>
-          {submitted ? <div className="p-8 rounded-2xl border border-[#5EEBFF]/30 bg-[#5EEBFF]/5"><CheckCircle2 className="text-[#5EEBFF] h-8 w-8 mb-4" /><h3 className="text-2xl font-bold">{copy.submittedTitle}</h3><p className="text-gray-300 mt-2">{copy.submittedText}</p></div> :
+          <p className="text-[#FFB199] uppercase tracking-[.25em] text-xs font-semibold mb-4">{ADAPTIVE_CAPACITY_ENABLED ? copy.formEyebrow : copy.pausedEyebrow}</p>
+          <h2 className="text-4xl md:text-5xl font-bold mb-5" style={{ fontFamily: "var(--font-display)" }}>{ADAPTIVE_CAPACITY_ENABLED ? copy.formTitle : copy.pausedTitle}</h2>
+          {!ADAPTIVE_CAPACITY_ENABLED ? <p className="text-gray-300 leading-relaxed">{copy.pausedText}</p> : submitted ? <div className="p-8 rounded-2xl border border-[#5EEBFF]/30 bg-[#5EEBFF]/5"><CheckCircle2 className="text-[#5EEBFF] h-8 w-8 mb-4" /><h3 className="text-2xl font-bold">{copy.submittedTitle}</h3><p className="text-gray-300 mt-2">{copy.submittedText}</p></div> :
             <form onFocus={() => track("lead_form_started", "adaptive_capacity")} onSubmit={form.handleSubmit((v) => { track("lead_form_submitted", "adaptive_capacity"); mutation.mutate(v); })} className="space-y-5">
               <input type="text" {...form.register("website")} tabIndex={-1} autoComplete="off" className="absolute -left-[10000px] h-px w-px opacity-0" aria-hidden="true" />
               <div className="grid sm:grid-cols-2 gap-4"><Field label={copy.fields[0]} error={form.formState.errors.firstName?.message}><Input {...form.register("firstName")} /></Field><Field label={copy.fields[1]} error={form.formState.errors.lastName?.message}><Input {...form.register("lastName")} /></Field></div>

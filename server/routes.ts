@@ -13,6 +13,7 @@ import crypto from "node:crypto";
 import { parseRawJsonBody, verifyCalendlySignature, verifyStripeSignature } from "./webhook-security";
 import {
   bookingBelongsToUser,
+  ADAPTIVE_CAPACITY_ENABLED,
   coachCanManageMember,
   createPublicRateLimit,
   consumePublicRateLimits,
@@ -845,6 +846,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     publicRateLimit(4, 24 * 60 * 60 * 1000, (request) => hashClientSignal(String(request.body?.email || "").trim().toLowerCase())),
     async (req, res) => {
     try {
+      if (req.body?.program === "adaptive-capacity" && !ADAPTIVE_CAPACITY_ENABLED) {
+        return res.status(410).json({ message: "Adaptive Capacity is not currently accepting signups." });
+      }
       const botReason = publicBotCheck(req);
       if (botReason) {
         console.warn("Public form blocked", { form: "contact", reason: botReason, ipHash: getRequestSignalHashes(req).ipHash });

@@ -4,6 +4,10 @@ import { lte, sql } from "drizzle-orm";
 import { db } from "./db";
 import { publicRateLimits } from "@shared/schema";
 
+// Adaptive Capacity is paused until the program is intentionally reopened.
+// Keep this server-side gate independent from the client so direct submissions cannot bypass it.
+export const ADAPTIVE_CAPACITY_ENABLED = false;
+
 export function bookingBelongsToUser(booking: { userId: string | null } | undefined, userId: string | undefined) {
   return Boolean(booking && userId && booking.userId === userId);
 }

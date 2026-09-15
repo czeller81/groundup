@@ -12,7 +12,7 @@ import {
   users,
 } from "@shared/schema";
 import { getStripeCheckoutReconciliationHealth } from "./membership-billing";
-import { INTERNAL_TEST_EMAIL_PATTERN } from "./route-security";
+import { ADAPTIVE_CAPACITY_ENABLED, INTERNAL_TEST_EMAIL_PATTERN } from "./route-security";
 
 const AI_API_PREFIX = "/api/ai/v1";
 const MAX_PAGE_SIZE = 100;
@@ -630,6 +630,9 @@ export function registerAiManagementRoutes(app: Express) {
       const leads = await storage.getTrialLeads(program === "training" ? undefined : program, {
         status: requestedStatus as typeof leadStatuses[number] | undefined,
       });
+      if (program === "adaptive-capacity" && !ADAPTIVE_CAPACITY_ENABLED) {
+        return res.json({ source: "application_database", rows: [], page: 1, limit: 20, total: 0, notice: "Adaptive Capacity is paused." });
+      }
       res.json(program === "training" ? leads.filter((lead) => lead.program !== "adaptive-capacity") : leads);
     } catch (error) {
       sendServerError(res, "Failed to load leads.", error);
