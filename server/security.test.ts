@@ -3,7 +3,7 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import test from "node:test";
 import Stripe from "stripe";
-import { bookingBelongsToUser, canRetryWebhook, coachCanManageMember, createOriginProtection, createPublicRateLimit, createScannerProbeGuard, isInternalTestEmail, isPublicOccurrenceText, isScannerProbePath, requireAuth, requireRole } from "./route-security";
+import { ADAPTIVE_CAPACITY_ENABLED, bookingBelongsToUser, canRetryWebhook, coachCanManageMember, createOriginProtection, createPublicRateLimit, createScannerProbeGuard, isInternalTestEmail, isPublicOccurrenceText, isScannerProbePath, requireAuth, requireRole } from "./route-security";
 import { applySecurityHeaders } from "./security-headers";
 import { verifyCalendlySignature, verifyStripeSignature } from "./webhook-security";
 import { FORM_COPY, PORTAL_COPY, localizeFormOption, localizeFormText } from "../client/src/lib/locale";
@@ -175,6 +175,10 @@ test("public occurrence filtering excludes test-marked records without deleting 
   assert.equal(isPublicOccurrenceText("Women’s BJJ", null, "TEST LOCATION"), false);
   assert.equal(isPublicOccurrenceText("QA Future Skill Class", "Skill", "Ground Up fixture"), false);
   assert.equal(isPublicOccurrenceText("Women’s BJJ", "Beginner class", "Fixture Coach"), false);
+});
+
+test("Adaptive Capacity is closed until explicitly reopened", () => {
+  assert.equal(ADAPTIVE_CAPACITY_ENABLED, false);
 });
 
 test("internal QA email markers stay out of production-facing admin data", () => {
