@@ -911,6 +911,7 @@ export class DatabaseStorage implements IStorage {
       paidCustomers: number;
       filteredOut: number;
     };
+    paidCustomers: number;
     newLegitimateProspects30Days: number;
     newPaidCustomers30Days: number;
     signupFunnel30Days: {
@@ -1009,7 +1010,7 @@ export class DatabaseStorage implements IStorage {
          gte(users.createdAt, thirtyDaysAgo),
          eq(memberships.status, "active"),
          inArray(memberships.billingSource, ["stripe", "stripe_checkout"]),
-         inArray(memberships.billingState, ["active", "past_due", "cancel_at_period_end"]),
+         inArray(memberships.billingState, ["active", "cancel_at_period_end"]),
        ));
     
     const requiredFormIds = await this.getRequiredFormIds();
@@ -1096,6 +1097,7 @@ export class DatabaseStorage implements IStorage {
          paidCustomers: Number(paidCustomersResult.count || 0),
          filteredOut: Math.max(0, Number(accountBreakdownResult.rawAccountsCreated || 0) - Number(totalUsersResult.count || 0)),
        },
+       paidCustomers: Number(paidCustomersResult.count || 0),
        newLegitimateProspects30Days: Number(newLegitimateProspectsResult.count || 0),
        newPaidCustomers30Days: Number(newPaidCustomersResult.count || 0),
       signupFunnel30Days: {
