@@ -350,7 +350,7 @@ export default function WomensSelfDefense() {
           <div className="space-y-3">
             <FAQ question="Do I need any martial arts experience?" answer="None at all. The program is designed from the ground up for complete beginners. Every technique is introduced step by step." />
             <FAQ question="Is it a women-only class?" answer="Yes. All Women's Self-Defense sessions are women-only spaces. The goal is for you to feel completely comfortable and focused on learning." />
-            <FAQ question="What should I wear to my first class?" answer="Comfortable athletic clothing — leggings, shorts, a t-shirt. No shoes on the mat. You don't need a gi or any special gear for your trial class." />
+            <FAQ question="What should I wear to my first class?" answer="Comfortable athletic clothing — leggings, shorts, a t-shirt. No shoes on the mat. You don't need a gi or any special gear for your Free Discovery Pass." />
             <FAQ question="Will I have to spar or fight anyone?" answer="No. Especially not in your first class. You'll drill techniques with a partner in a controlled, collaborative way — never competitive sparring until you're ready." />
             <FAQ question="What if I miss a class during the 8 weeks?" answer="Life happens. Coach Raymi works with students individually to make up missed material. The small class size makes this possible." />
           </div>

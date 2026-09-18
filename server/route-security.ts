@@ -8,6 +8,28 @@ import { publicRateLimits } from "@shared/schema";
 // Keep this server-side gate independent from the client so direct submissions cannot bypass it.
 export const ADAPTIVE_CAPACITY_ENABLED = false;
 
+// Reopening must remain a deliberate, fail-closed operation. A future implementation
+// must prove human completion, verified email ownership, and staff approval before
+// creating an account entitlement or activating access.
+export const ADAPTIVE_CAPACITY_REACTIVATION_REQUIREMENTS = Object.freeze({
+  turnstileVerified: true,
+  emailVerified: true,
+  adminApproved: true,
+});
+
+export function canReactivateAdaptiveCapacity(input: {
+  turnstileVerified: boolean;
+  emailVerified: boolean;
+  adminApproved: boolean;
+}) {
+  return Boolean(
+    ADAPTIVE_CAPACITY_ENABLED &&
+    input.turnstileVerified &&
+    input.emailVerified &&
+    input.adminApproved,
+  );
+}
+
 export function bookingBelongsToUser(booking: { userId: string | null } | undefined, userId: string | undefined) {
   return Boolean(booking && userId && booking.userId === userId);
 }

@@ -100,7 +100,7 @@ const HOME_COPY: Record<string, string> = {
   "One-on-one coaching tailored to your fitness, self-defense, or performance goals at your own pace.": "Coaching individualizado para tus objetivos de fitness, defensa personal o rendimiento, a tu propio ritmo.",
   "1-on-1 sessions": "Sesiones individuales",
   "Custom goals": "Objetivos personalizados",
-  "Flexible schedule": "Horario flexible",
+  "Availability by contact": "Disponibilidad por contacto",
   "All levels welcome": "Todos los niveles",
   "Adaptive Capacity": "Capacidad Adaptativa",
   "A separate learning path for clearer thinking, better decisions, and practical adaptability as work and life change.": "Un camino de aprendizaje separado para pensar con más claridad, tomar mejores decisiones y adaptarte mientras cambian el trabajo y la vida.",
@@ -176,7 +176,6 @@ const HOME_COPY: Record<string, string> = {
   "No gear. No membership commitment. Complete the steps online, then use your pass within seven days of activation.": "Sin equipo. Sin compromiso de membresía. Completa los pasos en línea y usa tu pase durante los siete días posteriores a la activación.",
   "Ask Us Anything": "Pregúntanos lo que quieras",
   "Small classes": "Clases pequeñas",
-  "No contracts": "Sin contratos",
   "Advanced Jiu-Jitsu — Drills & Submissions": "Jiu-jitsu avanzado — ejercicios y sumisiones",
   "Jiu-Jitsu — Beginner": "Jiu-jitsu — principiantes",
   "Kids Jiu-Jitsu": "Jiu-jitsu para niñas",
@@ -561,7 +560,7 @@ export default function Home() {
               {
                 title: t("Personal Training"),
                 desc: t("One-on-one coaching tailored to your fitness, self-defense, or performance goals at your own pace."),
-                highlights: [t("1-on-1 sessions"), t("Custom goals"), t("Flexible schedule"), t("All levels welcome")],
+                highlights: [t("1-on-1 sessions"), t("Custom goals"), t("Availability by contact"), t("All levels welcome")],
                 img: personalTrainingImg,
                 accent: "#FFB199",
               },
@@ -1026,7 +1025,7 @@ export default function Home() {
             </Button>
           </div>
           <p className="text-gray-500 text-sm mt-8">
-             Oxnard, CA &bull; {t("Personalized coaching")} &bull; {t("Small classes")} &bull; {t("No contracts")}
+             Oxnard, CA &bull; {t("Personalized coaching")} &bull; {t("Small classes")}
           </p>
         </div>
       </Section>

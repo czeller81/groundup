@@ -49,3 +49,35 @@ test("public free-entry CTA surfaces do not bypass the Discovery Pass", () => {
   assert.match(sources[8], /href="\/discovery-pass">Get Your Free Discovery Pass/);
   assert.doesNotMatch(sources[8], /href="\/book">Book Your Free First Visit/);
 });
+
+test("bilingual pricing keeps approved plans, fit guidance, trust proof, and contact routing", () => {
+  const pricingSource = readFileSync(new URL("../pages/pricing.tsx", import.meta.url), "utf8");
+  const personalTrainingSource = readFileSync(new URL("../pages/personal-training.tsx", import.meta.url), "utf8");
+  assert.match(pricingSource, /Ground Up 2[\s\S]*\$139/);
+  assert.match(pricingSource, /Ground Up 3[\s\S]*\$159/);
+  assert.match(pricingSource, /Ground Up Personal[\s\S]*\$250/);
+  assert.match(pricingSource, /Girls Program[\s\S]*\$119/);
+  assert.match(pricingSource, /Which plan/);
+  assert.match(pricingSource, /What’s/);
+  assert.match(pricingSource, /¿Qué plan/);
+  assert.match(pricingSource, /¿Qué <span[^>]*>incluye/);
+  assert.match(pricingSource, /Purple Belt, 3rd Degree/);
+  assert.match(pricingSource, /cinturón morado, tercer grado/);
+  assert.match(personalTrainingSource, /contactPath/);
+  assert.doesNotMatch(personalTrainingSource, /freeTrial|Flexible Hours|Horarios flexibles|Flexible booking/);
+});
+
+test("public marketing copy uses the Free Discovery Pass instead of legacy trial wording", () => {
+  const publicSources = [
+    "../pages/home.tsx",
+    "../pages/pricing.tsx",
+    "../pages/womens-self-defense.tsx",
+    "../pages/personal-training.tsx",
+    "../pages/privacy.tsx",
+  ].map((file) => readFileSync(new URL(file, import.meta.url), "utf8"));
+
+  for (const source of publicSources) {
+    assert.doesNotMatch(source, /trial class|freeTrial|No contracts|Flexible Hours|Flexible schedule|Horarios flexibles/i);
+  }
+  assert.match(publicSources[2], /Free Discovery Pass/);
+});

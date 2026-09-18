@@ -85,6 +85,26 @@ const MEMBERSHIP_PLANS = [
   },
 ] as const;
 
+const PLAN_FIT_GUIDANCE = [
+  ["Ground Up 2", "A clear fit if you want two adult group sessions each week.", "#5EEBFF"],
+  ["Ground Up 3", "A clear fit if you want three adult group sessions each week.", "#B06CFF"],
+  ["Ground Up Personal", "For one private coaching session each week. Group classes are not included.", "#FFB199"],
+  ["Girls Program", "For an approved minor participant attending two girls’ classes each week.", "#5EEBFF"],
+] as const;
+
+const TRUST_POINTS = [
+  "Coach Raymi is a Purple Belt, 3rd Degree.",
+  "Training is promoted under the Gracie Barra lineage.",
+  "Classes are kept small, with a maximum of six students.",
+] as const;
+
+const SPANISH_PLAN_FIT = [
+  ["Ground Up 2", "Para quienes quieren dos sesiones grupales para adultas cada semana.", "#5EEBFF"],
+  ["Ground Up 3", "Para quienes quieren tres sesiones grupales para adultas cada semana.", "#B06CFF"],
+  ["Ground Up Personal", "Para una sesión privada de coaching cada semana. No incluye clases grupales.", "#FFB199"],
+  ["Programa para niñas", "Para una participante menor aprobada que asiste a dos clases para niñas cada semana.", "#5EEBFF"],
+] as const;
+
 export default function Pricing() {
   const { locale } = useLocale();
   if (locale === "es") return <SpanishPricing />;
@@ -150,6 +170,89 @@ export default function Pricing() {
                   <h3 className="text-base font-bold text-white">{plan.name}</h3>
                   <p className="mt-4 text-3xl font-black text-white">{plan.price}<span className="text-sm font-normal text-gray-500"> / month</span></p>
                   <p className="mt-3 text-sm leading-relaxed text-gray-400">{plan.description}</p>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── PLAN FIT ── */}
+      <section className="border-t border-white/5 px-4 py-16">
+        <div className="mx-auto max-w-5xl">
+          <Reveal className="mb-10 text-center">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-gray-500">Choose your starting point</p>
+            <h2 className="text-2xl font-black uppercase tracking-tight text-white sm:text-3xl" style={{ fontFamily: 'var(--font-display)' }}>
+              Which plan <span className="text-[#B06CFF]">fits?</span>
+            </h2>
+            <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-gray-400">
+              Each plan is built around a specific weekly rhythm. Contact us if you want help confirming the right option before enrolling.
+            </p>
+          </Reveal>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {PLAN_FIT_GUIDANCE.map(([title, description, accent], index) => (
+              <Reveal key={title} delay={index * 0.06}>
+                <div className="h-full rounded-2xl border border-white/8 bg-[#121826] p-5">
+                  <div className="mb-4 h-1 w-10 rounded-full" style={{ backgroundColor: accent }} />
+                  <h3 className="text-base font-bold text-white">{title}</h3>
+                  <p className="mt-3 text-sm leading-relaxed text-gray-400">{description}</p>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── WHAT'S INCLUDED ── */}
+      <section className="border-t border-white/5 px-4 py-16">
+        <div className="mx-auto max-w-4xl">
+          <Reveal className="mb-10 text-center">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-gray-500">Before you enroll</p>
+            <h2 className="text-2xl font-black uppercase tracking-tight text-white sm:text-3xl" style={{ fontFamily: 'var(--font-display)' }}>
+              What’s <span className="text-[#5EEBFF]">included</span>
+            </h2>
+          </Reveal>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {[
+              ["Monthly plan access", "Memberships are billed monthly, with access determined by the plan you choose."],
+              ["Weekly session limits", "Ground Up 2, Ground Up 3, Ground Up Personal, and Girls Program each have the weekly rhythm shown above."],
+              ["Eligibility confirmed", "Girls Program participation is confirmed before enrollment. Contact us with questions about youth availability."],
+              ["Private training by contact", "Ground Up Personal availability is coordinated around your goals and confirmed before booking."],
+            ].map(([title, description], index) => (
+              <Reveal key={title} delay={index * 0.06}>
+                <div className="flex h-full gap-3 rounded-2xl border border-white/8 bg-[#121826] p-5">
+                  <CheckCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-[#5EEBFF]" />
+                  <div>
+                    <h3 className="text-sm font-bold text-white">{title}</h3>
+                    <p className="mt-2 text-sm leading-relaxed text-gray-400">{description}</p>
+                  </div>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+          <Reveal className="mt-8 text-center">
+            <Button asChild variant="outline" className="border-white/15 text-white hover:bg-white/5">
+              <Link href="/contact">Questions about fit or availability? Contact us</Link>
+            </Button>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* ── TRUST ── */}
+      <section className="border-t border-white/5 bg-[#121826] px-4 py-16">
+        <div className="mx-auto max-w-4xl">
+          <Reveal className="mb-10 text-center">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-gray-500">Real coaching, real community</p>
+            <h2 className="text-2xl font-black uppercase tracking-tight text-white sm:text-3xl" style={{ fontFamily: 'var(--font-display)' }}>
+              Train with <span className="text-[#FFB199]">confidence</span>
+            </h2>
+          </Reveal>
+          <div className="grid gap-4 sm:grid-cols-3">
+            {TRUST_POINTS.map((point, index) => (
+              <Reveal key={point} delay={index * 0.06}>
+                <div className="h-full rounded-2xl border border-white/8 bg-[#0B0F14] p-5">
+                  <CheckCircle className="mb-4 h-5 w-5 text-[#FFB199]" />
+                  <p className="text-sm leading-relaxed text-gray-300">{point}</p>
                 </div>
               </Reveal>
             ))}
@@ -358,6 +461,76 @@ export default function Pricing() {
   );
 }
 
+function SpanishPricingDetails({ contactPath }: { contactPath: string }) {
+  return (
+    <>
+      <section className="border-t border-white/5 px-4 py-16">
+        <div className="mx-auto max-w-5xl">
+          <Reveal className="mb-10 text-center">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-gray-500">Elige tu punto de partida</p>
+            <h2 className="text-2xl font-black uppercase tracking-tight text-white sm:text-3xl">¿Qué plan <span className="text-[#B06CFF]">te queda?</span></h2>
+            <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-gray-400">Cada plan está diseñado para un ritmo semanal específico. Contáctanos si quieres confirmar la opción correcta antes de inscribirte.</p>
+          </Reveal>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {SPANISH_PLAN_FIT.map(([title, description, accent], i) => (
+              <Reveal key={title} delay={i * 0.06}>
+                <div className="h-full rounded-2xl border border-white/8 bg-[#121826] p-5">
+                  <div className="mb-4 h-1 w-10 rounded-full" style={{ backgroundColor: accent }} />
+                  <h3 className="text-base font-bold text-white">{title}</h3>
+                  <p className="mt-3 text-sm leading-relaxed text-gray-400">{description}</p>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+      <section className="border-t border-white/5 px-4 py-16">
+        <div className="mx-auto max-w-4xl">
+          <Reveal className="mb-10 text-center">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-gray-500">Antes de inscribirte</p>
+            <h2 className="text-2xl font-black uppercase tracking-tight text-white sm:text-3xl">¿Qué <span className="text-[#5EEBFF]">incluye?</span></h2>
+          </Reveal>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {[
+              ["Acceso al plan mensual", "Las membresías se cobran mensualmente y el acceso depende del plan que elijas."],
+              ["Límites semanales", "Cada plan tiene el ritmo semanal mostrado arriba."],
+              ["Elegibilidad confirmada", "La participación en el Programa para niñas se confirma antes de inscribirse. Contáctanos sobre disponibilidad juvenil."],
+              ["Entrenamiento personal por contacto", "La disponibilidad de Ground Up Personal se coordina según tus objetivos y se confirma antes de reservar."],
+            ].map(([title, description], i) => (
+              <Reveal key={title} delay={i * 0.06}>
+                <div className="flex h-full gap-3 rounded-2xl border border-white/8 bg-[#121826] p-5">
+                  <CheckCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-[#5EEBFF]" />
+                  <div><h3 className="text-sm font-bold text-white">{title}</h3><p className="mt-2 text-sm leading-relaxed text-gray-400">{description}</p></div>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+          <Reveal className="mt-8 text-center">
+            <Button asChild variant="outline" className="border-white/15 text-white hover:bg-white/5">
+              <Link href={contactPath}>¿Preguntas sobre el plan o la disponibilidad? Contáctanos</Link>
+            </Button>
+          </Reveal>
+        </div>
+      </section>
+      <section className="border-t border-white/5 bg-[#121826] px-4 py-16">
+        <div className="mx-auto max-w-4xl">
+          <Reveal className="mb-10 text-center">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-gray-500">Coaching y comunidad reales</p>
+            <h2 className="text-2xl font-black uppercase tracking-tight text-white sm:text-3xl">Entrena con <span className="text-[#FFB199]">confianza</span></h2>
+          </Reveal>
+          <div className="grid gap-4 sm:grid-cols-3">
+            {["Coach Raymi es cinturón morado, tercer grado.", "Entrenamiento bajo el linaje Gracie Barra.", "Clases pequeñas, con un máximo de seis estudiantes."].map((point, i) => (
+              <Reveal key={point} delay={i * 0.06}>
+                <div className="h-full rounded-2xl border border-white/8 bg-[#0B0F14] p-5"><CheckCircle className="mb-4 h-5 w-5 text-[#FFB199]" /><p className="text-sm leading-relaxed text-gray-300">{point}</p></div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+    </>
+  );
+}
+
 function SpanishPricing() {
   const discoveryPassPath = localizedPublicPath("/discovery-pass", "es");
   const bookPath = discoveryPassPath;
@@ -395,6 +568,7 @@ function SpanishPricing() {
           </div>
         </div>
       </section>
+      <SpanishPricingDetails contactPath={contactPath} />
       <section className="border-t border-white/5 px-4 py-16">
         <div className="mx-auto max-w-5xl">
           <Reveal className="mb-10 text-center">

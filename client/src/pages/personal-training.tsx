@@ -30,44 +30,44 @@ export default function PersonalTraining() {
     seoTitle: "Entrenamiento Personal en Oxnard, CA — Coaching de BJJ y Fitness 1 a 1",
      seoDescription: "Pregunta por entrenamiento personal privado en Ground Up Jiu-Jitsu en Oxnard, CA. Coaching individualizado para mujeres; la disponibilidad se confirma antes de reservar.",
     title: "ENTRENAMIENTO", accent: "PERSONAL",
-    intro: "Instrucción de BJJ y fuerza y acondicionamiento 1 a 1, adaptados específicamente para mujeres. Entrena a tu ritmo y según tu horario.",
+    intro: "Instrucción de BJJ y fuerza y acondicionamiento 1 a 1, adaptados específicamente para mujeres. Entrena a tu ritmo; la disponibilidad se confirma antes de reservar.",
     bookSession: "Reserva tu sesión", whyTitle: "¿POR QUÉ ENTRENAR", whyAccent: "1 A 1?",
     whyDescription: "Recibe atención enfocada e instrucción personalizada para acelerar tu progreso.",
     features: [
       ["Personalizado", "Cada sesión se adapta a tu tipo de cuerpo, objetivos y nivel de habilidad."],
       ["Fuerza + BJJ", "Combina artes marciales con fuerza y acondicionamiento."],
-     ["Horarios flexibles", "La disponibilidad se coordina según tus objetivos y se confirma antes de reservar."],
+     ["Disponibilidad por contacto", "La disponibilidad se coordina según tus objetivos y se confirma antes de reservar."],
       ["Solo para mujeres", "Entrena en un ambiente seguro, cómodo y solo para mujeres."],
       ["Defensa personal", "Aprende técnicas prácticas que desarrollan confianza y seguridad."],
       ["Resultados rápidos", "Avanza más rápido con atención individual dedicada."],
     ],
     includedTitle: "¿QUÉ INCLUYE?",
-    included: ["Sesiones personalizadas de 60 minutos", "Instrucción técnica según tu nivel", "Ejercicios de fuerza y acondicionamiento", "Fundamentos de defensa personal", "Todo el equipo incluido (gis, cinturones y tatamis)", "Reserva flexible desde el portal de miembros", "Seguimiento de progreso y objetivos"],
+    included: ["Sesiones personalizadas de 60 minutos", "Instrucción técnica según tu nivel", "Ejercicios de fuerza y acondicionamiento", "Fundamentos de defensa personal", "Todo el equipo incluido (gis, cinturones y tatamis)", "Reserva coordinada después de confirmar disponibilidad", "Seguimiento de progreso y objetivos"],
     signUp: "Regístrate para reservar",
      freeTitle: "¿TE INTERESA EL", freeAccent: "ENTRENAMIENTO PERSONAL?",
      freeDescription: "Contáctanos para hablar sobre tus objetivos, disponibilidad y la mejor forma de comenzar. La disponibilidad se confirma antes de reservar.",
-     freeTrial: "Preguntar sobre entrenamiento personal", noCard: "Coaching individualizado · Solo para mujeres",
+     contactCta: "Preguntar sobre entrenamiento personal", noCard: "Coaching individualizado · Solo para mujeres",
   } : {
     seoTitle: "Personal Training in Oxnard, CA — 1-on-1 BJJ & Fitness Coaching",
      seoDescription: "Ask about private personal training at Ground Up Jiu-Jitsu in Oxnard, CA. Custom 1-on-1 coaching for women; availability is confirmed before booking.",
     title: "PERSONAL", accent: "TRAINING",
-    intro: "1-on-1 BJJ instruction and strength & conditioning tailored specifically for women. Train at your pace, on your schedule.",
+    intro: "1-on-1 BJJ instruction and strength & conditioning tailored specifically for women. Train at your pace; availability is confirmed before booking.",
     bookSession: "Book Your Session", whyTitle: "WHY", whyAccent: "1-ON-1", whySuffix: "TRAINING?",
     whyDescription: "Get focused attention and customized instruction to accelerate your progress.",
     features: [
       ["Personalized", "Every session is tailored to your body type, goals, and skill level."],
       ["Strength + BJJ", "Combined martial arts training with strength and conditioning."],
-       ["Flexible Hours", "Availability is coordinated around your goals and confirmed before booking."],
+      ["Availability by contact", "Availability is coordinated around your goals and confirmed before booking."],
       ["Women Only", "Train in a safe, comfortable, women-only environment."],
       ["Self-Defense", "Learn real-world techniques that build confidence and safety."],
       ["Fast Results", "See progress faster with dedicated 1-on-1 attention."],
     ],
     includedTitle: "WHAT'S INCLUDED",
-    included: ["60-minute personalized training sessions", "Technique instruction at your level", "Strength & conditioning exercises", "Self-defense fundamentals", "All equipment provided (gis, belts, mats)", "Flexible booking through member portal", "Progress tracking and goal setting"],
+    included: ["60-minute personalized training sessions", "Technique instruction at your level", "Strength & conditioning exercises", "Self-defense fundamentals", "All equipment provided (gis, belts, mats)", "Booking coordinated after availability is confirmed", "Progress tracking and goal setting"],
     signUp: "Sign Up to Book",
      freeTitle: "INTERESTED IN", freeAccent: "PERSONAL TRAINING?",
      freeDescription: "Contact us to discuss your goals, availability, and the best way to begin. Availability is confirmed before booking.",
-     freeTrial: "Ask About Personal Training", noCard: "Individualized coaching · Women only",
+     contactCta: "Ask About Personal Training", noCard: "Individualized coaching · Women only",
   };
   const contactPath = localizedPublicPath("/contact", locale);
   return (
@@ -193,7 +193,7 @@ export default function PersonalTraining() {
             className="bg-[#FFB199] text-[#0B0F14] font-bold uppercase tracking-wider hover:bg-[#FFB199]/90 text-base px-10 h-14"
           >
             <Link href={contactPath}>
-              {copy.freeTrial}
+              {copy.contactCta}
               <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
           </Button>
