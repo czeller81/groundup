@@ -25,6 +25,7 @@ import { db } from "./db";
 import { storage } from "./storage";
 import { accountCanUseMemberFeatures, coachCanManageMember, requireAuth, requireRole } from "./route-security";
 import { discoveryCategory, evaluateBookingEligibility, evaluateMinorBookingEligibilityWithExecutor, getMembershipWeekStart, minorAgeAt } from "./member-entitlements";
+import { BOOKING_OPERATIONS } from "@shared/booking-operations";
 import Stripe from "stripe";
 import {
   STRIPE_MEMBERSHIP_CATALOG,
@@ -1233,14 +1234,17 @@ export function registerMemberRoutes(app: Express) {
         timezone: z.string().min(1).max(80).optional(),
         rolloverPolicy: z.string().min(1).max(40).optional(),
         waitlistAllowed: z.boolean().optional(),
-        cancellationCutoffHours: z.number().int().nonnegative().max(168).optional(),
+        cancellationCutoffHours: z.literal(BOOKING_OPERATIONS.cancellationCutoffHours).optional(),
         lateCancelPolicy: z.string().min(1).max(40).optional(),
         noShowPolicy: z.string().min(1).max(40).optional(),
         privateSessionsPerMonth: z.number().int().nonnegative().optional(),
         personalizedProgram: z.boolean().optional(),
         displayPriceCents: z.number().int().nonnegative().nullable().optional(),
       }).strict().parse(req.body);
-      const [plan] = await db.insert(membershipPlans).values(data).returning();
+       const [plan] = await db.insert(membershipPlans).values({
+         ...data,
+         cancellationCutoffHours: BOOKING_OPERATIONS.cancellationCutoffHours,
+       }).returning();
       res.status(201).json(plan);
     } catch (error) {
       if (error instanceof z.ZodError) return res.status(400).json({ code: "INVALID_REQUEST", errors: error.flatten() });
@@ -1260,14 +1264,18 @@ export function registerMemberRoutes(app: Express) {
         timezone: z.string().min(1).max(80).optional(),
         rolloverPolicy: z.string().min(1).max(40).optional(),
         waitlistAllowed: z.boolean().optional(),
-        cancellationCutoffHours: z.number().int().nonnegative().max(168).optional(),
+        cancellationCutoffHours: z.literal(BOOKING_OPERATIONS.cancellationCutoffHours).optional(),
         lateCancelPolicy: z.string().min(1).max(40).optional(),
         noShowPolicy: z.string().min(1).max(40).optional(),
         privateSessionsPerMonth: z.number().int().nonnegative().optional(),
         personalizedProgram: z.boolean().optional(),
         displayPriceCents: z.number().int().nonnegative().nullable().optional(),
       }).strict().parse(req.body);
-      const [plan] = await db.update(membershipPlans).set({ ...data, updatedAt: new Date() })
+       const [plan] = await db.update(membershipPlans).set({
+         ...data,
+         cancellationCutoffHours: BOOKING_OPERATIONS.cancellationCutoffHours,
+         updatedAt: new Date(),
+       })
         .where(eq(membershipPlans.id, req.params.id)).returning();
       if (!plan) return res.status(404).json({ code: "PLAN_NOT_FOUND" });
       res.json(plan);

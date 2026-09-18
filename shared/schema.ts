@@ -124,6 +124,36 @@ export const webhookEvents = pgTable("webhook_events", {
   lastError: text("last_error"),
 });
 
+export const notificationOutboxStatuses = ["pending", "processing", "sent", "failed_retryable", "failed_terminal"] as const;
+export type NotificationOutboxStatus = typeof notificationOutboxStatuses[number];
+
+export const notificationOutbox = pgTable("notification_outbox", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  deduplicationKey: text("deduplication_key").notNull().unique(),
+  provider: text("provider").notNull().default("resend"),
+  kind: text("kind").notNull(),
+  recipient: text("recipient").notNull(),
+  fromAddress: text("from_address").notNull(),
+  replyTo: text("reply_to"),
+  subject: text("subject").notNull(),
+  body: text("body").notNull(),
+  metadata: jsonb("metadata").notNull().default(sql`'{}'::jsonb`),
+  status: text("status").notNull().default("pending"),
+  attempts: integer("attempts").notNull().default(0),
+  availableAt: timestamp("available_at").defaultNow().notNull(),
+  processingStartedAt: timestamp("processing_started_at"),
+  lockedUntil: timestamp("locked_until"),
+  sentAt: timestamp("sent_at"),
+  failedAt: timestamp("failed_at"),
+  providerMessageId: text("provider_message_id"),
+  lastError: text("last_error"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  statusAvailableIndex: index("notification_outbox_status_available_idx").on(table.status, table.availableAt),
+  lockExpiryIndex: index("notification_outbox_lock_expiry_idx").on(table.lockedUntil),
+}));
+
 export const publicRateLimits = pgTable("public_rate_limits", {
   key: text("key").primaryKey(),
   count: integer("count").notNull().default(0),
@@ -431,6 +461,12 @@ export const insertBookingSchema = createInsertSchema(bookings).omit({
   createdAt: true,
 });
 
+export const insertNotificationOutboxSchema = createInsertSchema(notificationOutbox).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export const insertAdminUserSchema = createInsertSchema(adminUsers).omit({
   id: true,
   createdAt: true,
@@ -534,6 +570,9 @@ export type Trainer = typeof trainers.$inferSelect;
 
 export type InsertBooking = z.infer<typeof insertBookingSchema>;
 export type Booking = typeof bookings.$inferSelect;
+
+export type InsertNotificationOutbox = z.infer<typeof insertNotificationOutboxSchema>;
+export type NotificationOutbox = typeof notificationOutbox.$inferSelect;
 
 export type InsertAdminUser = z.infer<typeof insertAdminUserSchema>;
 export type AdminUser = typeof adminUsers.$inferSelect;
@@ -862,6 +901,8 @@ export const classReservations = pgTable("class_reservations", {
   attendanceUpdatedAt: timestamp("attendance_updated_at"),
   cancellationReason: text("cancellation_reason"),
   manageTokenHash: text("manage_token_hash"),
+  manageTokenEncrypted: text("manage_token_encrypted"),
+  idempotencyKey: text("idempotency_key").unique(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   cancelledAt: timestamp("cancelled_at"),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -869,6 +910,7 @@ export const classReservations = pgTable("class_reservations", {
   occurrenceIndex: index("class_reservations_occurrence_idx").on(table.occurrenceId),
   userIndex: index("class_reservations_user_idx").on(table.userId),
   visitorEmailIndex: index("class_reservations_visitor_email_idx").on(table.visitorEmail),
+  idempotencyIndex: index("class_reservations_idempotency_idx").on(table.idempotencyKey),
 }));
 
 export const classReservationEvents = pgTable("class_reservation_events", {

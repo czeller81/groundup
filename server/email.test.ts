@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { classLifecycleEmailContent, contactAcknowledgementEmailContent, GROUND_UP_ADDRESS, leadAcknowledgementEmailContent } from "./email";
+import { classLifecycleEmailContent, contactAcknowledgementEmailContent, deliverResendEmailWithProxy, GROUND_UP_ADDRESS, leadAcknowledgementEmailContent } from "./email";
 
 test("lead acknowledgement copy matches the visitor language", () => {
   const english = leadAcknowledgementEmailContent({
@@ -99,4 +99,27 @@ test("confirmed Jiu-Jitsu emails explain the two-person minimum in both language
   assert.match(spanish.body, /próxima clase programada de jiu-jitsu/i);
   assert.doesNotMatch(strength.body, /at least two registered participants/i);
   assert.doesNotMatch(waitlist.body, /at least two registered participants/i);
+});
+
+test("mocked Resend delivery carries the outbox idempotency key and sender payload", async () => {
+  let captured: { service: string; path: string; options: { headers: Record<string, string>; body: string } } | undefined;
+  const id = await deliverResendEmailWithProxy(async (service, path, options) => {
+    captured = { service, path, options };
+    return { ok: true, status: 200, text: async () => JSON.stringify({ id: "msg_test_123" }) };
+  }, {
+    to: "qa@example.invalid",
+    subject: "Booking confirmation",
+    text: "A test booking",
+  }, "member:reservation:occurrence:reservation_confirmed:1");
+
+  assert.equal(id, "msg_test_123");
+  assert.equal(captured?.service, "resend");
+  assert.equal(captured?.path, "/emails");
+  assert.equal(captured?.options.headers["Idempotency-Key"], "member:reservation:occurrence:reservation_confirmed:1");
+  assert.deepEqual(JSON.parse(captured!.options.body), {
+    from: "Ground Up <info@groundupbjj.com>",
+    to: ["qa@example.invalid"],
+    subject: "Booking confirmation",
+    text: "A test booking",
+  });
 });

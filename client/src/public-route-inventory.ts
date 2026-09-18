@@ -19,6 +19,8 @@ export const PUBLIC_ROUTE_INVENTORY = [
   { id: "adaptive-capacity", englishPath: "/adaptive-capacity", spanishPath: "/es/adaptive-capacity", englishComponent: "AdaptiveCapacity", spanishComponent: "AdaptiveCapacity" },
   { id: "discovery-pass", englishPath: "/discovery-pass", spanishPath: "/es/discovery-pass", englishComponent: "DiscoveryPass", spanishComponent: "DiscoveryPass" },
   { id: "discovery-pass-b", englishPath: "/discovery-pass-b", spanishPath: "/es/discovery-pass-b", englishComponent: "DiscoveryPassB", spanishComponent: "DiscoveryPassB" },
+  { id: "booking-confirmation", englishPath: "/booking/confirmation", spanishPath: "/es/booking/confirmation", englishComponent: "BookingManage", spanishComponent: "BookingManage" },
+  { id: "booking-manage", englishPath: "/booking/manage", spanishPath: "/es/booking/manage", englishComponent: "BookingManage", spanishComponent: "BookingManage" },
 ] as const;
 
 /**

@@ -15,6 +15,7 @@ import {
   reconcileStalePendingStripeCheckouts,
   withStripeCheckoutReconciliationLease,
 } from "./membership-billing";
+import { startNotificationOutboxMaintenance } from "./notification-outbox";
 
 const MemStore = MemoryStore(session);
 const require = createRequire(import.meta.url);
@@ -179,6 +180,7 @@ app.use((req, res, next) => {
   }, () => {
     log(`serving on port ${port}`);
     startStripeCheckoutMaintenance();
+    startNotificationOutboxMaintenance(log);
   });
 
   // Do not delay the HTTP listener for this non-critical maintenance sync.

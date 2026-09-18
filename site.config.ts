@@ -51,7 +51,7 @@ export const siteConfig = {
     // Booking Settings
     booking: {
       maxAdvanceDays: 90, // How far in advance bookings can be made
-      minNoticeHours: 24, // Minimum notice for cancellations
+      minNoticeHours: 4, // Minimum notice for cancellations
       sessionTypes: {
         PT60: {
           name: "60-Minute 1:1 Training",

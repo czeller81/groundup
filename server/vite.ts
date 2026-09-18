@@ -66,7 +66,8 @@ export async function setupVite(app: Express, server: Server) {
         "/", "/schedule", "/pricing", "/coaches", "/personal-training",
          "/contact", "/privacy", "/book", "/womens-self-defense", "/kids", "/girls", "/adaptive-capacity", "/discovery-pass",
           "/", "/admin", "/ln/login", "/es", "/es/personal-training", "/es/coaches", "/es/pricing", "/es/programas", "/es/horario", "/es/reservar", "/es/contacto", "/es/privacidad", "/es/womens-self-defense", "/es/girls", "/es/kids", "/es/adaptive-capacity", "/es/portal/login", "/es/portal/reset-password",
-          "/es/discovery-pass", "/discovery-pass-b", "/es/discovery-pass-b",
+           "/es/discovery-pass", "/discovery-pass-b", "/es/discovery-pass-b",
+           "/booking/confirmation", "/booking/manage", "/es/booking/confirmation", "/es/booking/manage",
       ]);
       const isPortalPath = requestPath === "/portal" || requestPath.startsWith("/portal/") ||
         requestPath === "/es/portal" || requestPath.startsWith("/es/portal/");
@@ -103,7 +104,8 @@ export function serveStatic(app: Express) {
       "/", "/schedule", "/pricing", "/coaches", "/personal-training",
        "/contact", "/privacy", "/book", "/womens-self-defense", "/kids", "/girls", "/adaptive-capacity", "/discovery-pass",
        "/", "/admin", "/ln/login", "/es", "/es/personal-training", "/es/coaches", "/es/pricing", "/es/programas", "/es/horario", "/es/reservar", "/es/contacto", "/es/privacidad", "/es/womens-self-defense", "/es/girls", "/es/kids", "/es/adaptive-capacity", "/es/portal/login", "/es/portal/reset-password",
-       "/es/discovery-pass", "/discovery-pass-b", "/es/discovery-pass-b",
+        "/es/discovery-pass", "/discovery-pass-b", "/es/discovery-pass-b",
+        "/booking/confirmation", "/booking/manage", "/es/booking/confirmation", "/es/booking/manage",
     ]);
     const isPortalPath = requestPath === "/portal" || requestPath.startsWith("/portal/") ||
       requestPath === "/es/portal" || requestPath.startsWith("/es/portal/");

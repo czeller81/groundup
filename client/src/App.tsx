@@ -36,6 +36,7 @@ import DiscoveryPass from "@/pages/discovery-pass";
 import DiscoveryPassB from "@/pages/discovery-pass-b";
 import MetaPixel from "@/components/meta-pixel";
 import { LocaleProvider } from "@/lib/locale";
+import BookingManage from "@/pages/booking-manage";
 
 function MainLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -213,6 +214,10 @@ function Router() {
       <Route path="/portal/schedule">
         <PortalLayout><PortalClasses /></PortalLayout>
       </Route>
+      <Route path="/booking/confirmation" component={BookingManage} />
+      <Route path="/booking/manage" component={BookingManage} />
+      <Route path="/es/booking/confirmation" component={BookingManage} />
+      <Route path="/es/booking/manage" component={BookingManage} />
       
       <Route>
         <MainLayout><NotFound /></MainLayout>

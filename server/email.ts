@@ -1,7 +1,27 @@
 import { ReplitConnectors } from "@replit/connectors-sdk";
+import { BOOKING_OPERATIONS, formatBookingDateTime } from "@shared/booking-operations";
 
 const STAFF_EMAIL = "info@groundupbjj.com";
-export const GROUND_UP_ADDRESS = "2364 Sturgis Rd, Unit A, Oxnard, CA 93030";
+export const GROUND_UP_ADDRESS = BOOKING_OPERATIONS.location.address;
+export const BOOKING_FROM = "Ground Up <info@groundupbjj.com>";
+
+export function getBookingStaffEmail() {
+  return process.env.BOOKING_STAFF_EMAIL || process.env.ADMIN_EMAIL || STAFF_EMAIL;
+}
+
+export type ResendEmailPayload = {
+  to: string;
+  subject: string;
+  text: string;
+  replyTo?: string;
+  from?: string;
+};
+
+export type ResendProxy = (
+  service: string,
+  path: string,
+  options: { method: string; headers: Record<string, string>; body: string },
+) => Promise<{ ok: boolean; status: number; text(): Promise<string> }>;
 
 export function passwordResetEmailContent(locale: "en" | "es", resetUrl: string) {
   return locale === "es"
@@ -30,6 +50,9 @@ export function emailVerificationContent(locale: "en" | "es", verificationUrl: s
 export function classLifecycleEmailContent(input: {
   classTitle: string;
   starts: string;
+  ends?: string;
+  manageUrl?: string;
+  participantName?: string;
   status: "confirmed" | "waitlisted" | "cancelled" | "promoted";
   waitlistPosition?: number | null;
   locale: "en" | "es";
@@ -49,6 +72,15 @@ export function classLifecycleEmailContent(input: {
         promoted: { subject: `A spot opened in ${input.classTitle}`, body: `You have been moved from the waitlist into the class on ${input.starts}. Your spot is now confirmed.` },
       })[input.status];
 
+  const details = [
+    input.ends ? (input.locale === "es" ? `Termina: ${input.ends}` : `Ends: ${input.ends}`) : "",
+    input.manageUrl ? (input.locale === "es" ? `Administrar reserva: ${input.manageUrl}` : `Manage reservation: ${input.manageUrl}`) : "",
+    input.locale === "es"
+      ? `${BOOKING_OPERATIONS.guidance.es.arrival}\n${BOOKING_OPERATIONS.guidance.es.whatToBring}`
+      : `${BOOKING_OPERATIONS.guidance.en.arrival}\n${BOOKING_OPERATIONS.guidance.en.whatToBring}`,
+    input.locale === "es" ? BOOKING_OPERATIONS.policy.es : BOOKING_OPERATIONS.policy.en,
+  ].filter(Boolean).join("\n\n");
+
   if (input.status === "confirmed" || input.status === "promoted") {
     const minimumAttendanceReminder = !isJiuJitsuClass
       ? ""
@@ -58,16 +90,56 @@ export function classLifecycleEmailContent(input: {
     return {
       ...copy,
       body: input.locale === "es"
-        ? `${copy.body}\n\nDirección de Ground Up: ${GROUND_UP_ADDRESS}${minimumAttendanceReminder}`
-        : `${copy.body}\n\nGround Up address: ${GROUND_UP_ADDRESS}${minimumAttendanceReminder}`,
+        ? `${copy.body}\n\nDirección de Ground Up: ${GROUND_UP_ADDRESS}\n\n${details}${minimumAttendanceReminder}`
+        : `${copy.body}\n\nGround Up address: ${GROUND_UP_ADDRESS}\n\n${details}${minimumAttendanceReminder}`,
     };
   }
 
-  return copy;
+  return { ...copy, body: `${copy.body}\n\n${details}` };
 }
 
 function resend() {
   return new ReplitConnectors();
+}
+
+export async function deliverResendEmailWithProxy(
+  proxy: ResendProxy,
+  input: ResendEmailPayload,
+  idempotencyKey?: string,
+) {
+  const response = await proxy("resend", "/emails", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(idempotencyKey ? { "Idempotency-Key": idempotencyKey } : {}),
+    },
+    body: JSON.stringify({
+      from: input.from || BOOKING_FROM,
+      to: [input.to],
+      ...(input.replyTo ? { reply_to: input.replyTo } : {}),
+      subject: input.subject,
+      text: input.text,
+    }),
+  });
+  const responseText = await response.text().catch(() => "");
+  if (!response.ok) {
+    throw new Error(`Resend returned HTTP ${response.status}${responseText ? `: ${responseText.slice(0, 300)}` : ""}`);
+  }
+  try {
+    const parsed = responseText ? JSON.parse(responseText) : {};
+    return typeof parsed?.id === "string" ? parsed.id : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+export async function deliverResendEmail(input: ResendEmailPayload, idempotencyKey?: string) {
+  const connector = resend();
+  return deliverResendEmailWithProxy(
+    connector.proxy.bind(connector) as unknown as ResendProxy,
+    input,
+    idempotencyKey,
+  );
 }
 
 export async function sendStaffNotificationEmail(input: {
@@ -202,16 +274,15 @@ export async function sendClassLifecycleEmail(input: {
   waitlistPosition?: number | null;
   locale?: "en" | "es";
 }) {
-  const locale = input.locale === "es" ? "es-US" : "en-US";
-  const starts = new Intl.DateTimeFormat(locale, {
-    timeZone: "America/Los_Angeles",
+  const locale = input.locale === "es" ? "es" : "en";
+  const starts = formatBookingDateTime(input.startsAt, locale, {
     weekday: "long",
     month: "long",
     day: "numeric",
     hour: "numeric",
     minute: "2-digit",
     timeZoneName: "short",
-  }).format(input.startsAt);
+  });
   const copy = classLifecycleEmailContent({
     classTitle: input.classTitle,
     starts,
@@ -219,21 +290,13 @@ export async function sendClassLifecycleEmail(input: {
     waitlistPosition: input.waitlistPosition,
     locale: input.locale === "es" ? "es" : "en",
   });
-  const response = await resend().proxy("resend", "/emails", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      from: "Ground Up <info@groundupbjj.com>",
-      to: [input.to],
-      subject: copy.subject,
-      text: input.locale === "es"
-        ? `Hola ${input.firstName},\n\n${copy.body}\n\nGround Up Jiu-Jitsu & Fitness`
-        : `Hi ${input.firstName},\n\n${copy.body}\n\nGround Up Jiu-Jitsu & Fitness`,
-    }),
+  await deliverResendEmail({
+    to: input.to,
+    subject: copy.subject,
+    text: input.locale === "es"
+      ? `Hola ${input.firstName},\n\n${copy.body}\n\nGround Up Jiu-Jitsu & Fitness`
+      : `Hi ${input.firstName},\n\n${copy.body}\n\nGround Up Jiu-Jitsu & Fitness`,
   });
-  if (!response.ok) {
-    throw new Error(`Resend returned HTTP ${response.status}`);
-  }
 }
 
 export async function sendPasswordResetEmail(input: {

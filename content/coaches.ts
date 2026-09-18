@@ -79,7 +79,7 @@ export const coachingFAQ = [
   },
   {
     question: "Can I cancel or reschedule?",
-    answer: "Yes, you can reschedule with 24 hours notice. Cancellations within 24 hours are subject to a 50% fee."
+    answer: "Yes. Cancel at least 4 hours before the session starts to avoid using your session entitlement."
   },
   {
     question: "Is personal training suitable for beginners?",

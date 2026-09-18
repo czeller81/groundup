@@ -9,12 +9,14 @@ import { AlertCircle, Loader2, RefreshCw } from "lucide-react";
 import { localizeApiError, useLocale } from "@/lib/locale";
 import { localizedPortalPath } from "@/lib/portal-navigation";
 import { usePortalAuth } from "@/lib/portal-auth";
+import { bookingOperationsForLocale } from "@shared/booking-operations";
 
 export default function MyClasses() {
   const [, setLocation] = useLocation();
   const { isAuthenticated, isLoading: authLoading } = usePortalAuth();
   const { locale, copy } = useLocale();
   const portalPath = (path: string) => localizedPortalPath(path, locale);
+  const operations = bookingOperationsForLocale(locale);
   const { toast } = useToast();
   const { data = [], isLoading, isError, refetch } = useQuery<any[]>({
     queryKey: ["/api/portal/my-classes"],
@@ -51,6 +53,7 @@ export default function MyClasses() {
               <div className="min-w-0">
                 <p className="break-words font-bold text-white">{item.occurrence.title}</p>
                 <p className="mt-1 text-sm text-gray-400">{classDateLabel(item.occurrence.start, locale)} · {classTimeLabel(item.occurrence.start, item.occurrence.end, locale)}</p>
+                 <p className="mt-1 text-xs text-gray-500">{operations.address}</p>
                 <p className={`mt-2 text-sm font-semibold ${item.status === "confirmed" ? "text-emerald-300" : item.status === "waitlisted" ? "text-amber-300" : "text-gray-500"}`}>
                   {item.status === "waitlisted" ? `${copy.waitlistPosition} ${item.waitlistPosition}` : statusLabel(item.status)}
                 </p>
@@ -67,6 +70,11 @@ export default function MyClasses() {
        <p className="text-xs font-bold uppercase tracking-[0.3em] text-[#B06CFF]">{copy.yourReservations}</p>
       <h1 className="mt-3 text-3xl font-black uppercase text-white sm:text-4xl">{copy.myClasses}</h1>
        <p className="mt-3 text-gray-400">{copy.reservationHistory}</p>
+       <div className="mt-5 grid gap-3 rounded-2xl border border-white/10 bg-[#121826] p-4 text-sm text-gray-300 sm:grid-cols-2">
+         <p>{operations.arrival}</p>
+         <p>{operations.whatToBring}</p>
+         <p className="text-amber-200 sm:col-span-2">{operations.cancellationPolicy}</p>
+       </div>
       {isError ? (
         <div className="mt-8 rounded-2xl border border-red-500/20 bg-red-500/5 p-6" role="alert">
           <div className="flex items-start gap-3">

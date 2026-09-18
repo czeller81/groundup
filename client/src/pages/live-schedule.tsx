@@ -59,7 +59,7 @@ export default function LiveSchedule() {
     } else {
       window.location.href = occurrence.firstVisitEligible
         ? localizedPublicPath("/discovery-pass", locale)
-        : switchLocalePath("/portal/booking", locale);
+        : switchLocalePath("/portal/schedule", locale);
     }
   };
 

@@ -15,7 +15,7 @@ import {
   isGirlsClass,
   MEMBER_BOOKING_WINDOW_MS,
 } from "./member-entitlements";
-import { sendClassLifecycleEmail } from "./email";
+import { BOOKING_OPERATIONS } from "@shared/booking-operations";
 
 const reservationSchema = z.object({
   occurrenceId: z.string().uuid(),
@@ -103,8 +103,8 @@ function publicOccurrence(occurrence: PublicOccurrenceSource) {
   };
 }
 
-function safeReservation<T extends { manageTokenHash?: string | null }>(reservation: T) {
-  const { manageTokenHash: _manageTokenHash, ...safe } = reservation;
+function safeReservation<T extends { manageTokenHash?: string | null; manageTokenEncrypted?: string | null }>(reservation: T) {
+  const { manageTokenHash: _manageTokenHash, manageTokenEncrypted: _manageTokenEncrypted, ...safe } = reservation;
   if ("minorProfile" in safe && safe.minorProfile) {
     const profile = safe.minorProfile as { id: string; firstName: string; lastName: string };
     return {
@@ -129,29 +129,8 @@ function respondError(res: Response, error: unknown, fallback: string) {
   return res.status(500).json({ code: "INTERNAL_ERROR", message: fallback });
 }
 
-async function notifyReservation(
-  reservation: { visitorEmail: string | null; visitorFirstName: string | null; status: string; waitlistPosition: number | null; locale?: string | null },
-  occurrence: { title: string; start: Date },
-  status?: "confirmed" | "waitlisted" | "cancelled" | "promoted",
-) {
-  if (!reservation.visitorEmail) return;
-  try {
-    await sendClassLifecycleEmail({
-      to: reservation.visitorEmail,
-      firstName: reservation.visitorFirstName || "there",
-      classTitle: occurrence.title,
-      startsAt: occurrence.start,
-      status: status || (reservation.status === "waitlisted" ? "waitlisted" : "confirmed"),
-      waitlistPosition: reservation.waitlistPosition,
-      locale: reservation.locale === "es" ? "es" : "en",
-    });
-  } catch (error) {
-    console.error(JSON.stringify({
-      event: "class_email_failed",
-      reservationStatus: reservation.status,
-      error: error instanceof Error ? error.message : "Unknown email error",
-    }));
-  }
+function requestOrigin(req: Request) {
+  return `${req.protocol}://${req.get("host")}`;
 }
 
 export function registerClassBookingRoutes(app: Express) {
@@ -163,7 +142,7 @@ export function registerClassBookingRoutes(app: Express) {
       const occurrences = await storage.listClassOccurrences(from, to, req.query.firstVisit === "true", false, "all");
       const connection = await storage.getCalendarConnection();
       res.json({
-        timezone: "America/Los_Angeles",
+        timezone: BOOKING_OPERATIONS.timezone,
         source: "google_calendar",
         sync: {
           configured: Boolean(connection?.calendarId),
@@ -181,11 +160,18 @@ export function registerClassBookingRoutes(app: Express) {
     try {
       const data = reservationSchema.parse(req.body);
       const manageToken = randomBytes(32).toString("base64url");
+      const idempotencyKey = typeof req.get("Idempotency-Key") === "string"
+        ? req.get("Idempotency-Key")!.trim().slice(0, 180)
+        : undefined;
       const result = await storage.reserveClassOccurrence({
         ...data,
         manageTokenHash: hashManageToken(manageToken),
+        manageToken,
+        idempotencyKey,
+        manageUrl: `${requestOrigin(req)}/booking/manage`,
+        source: "public",
       });
-      void notifyReservation(result.reservation, result.occurrence);
+      const manageUrl = `${requestOrigin(req)}/booking/manage?id=${encodeURIComponent(result.reservation.id)}&manageToken=${encodeURIComponent(result.manageToken || manageToken)}`;
       res.status(201).json({
         reservation: safeReservation(result.reservation),
         occurrence: publicOccurrence({
@@ -197,7 +183,8 @@ export function registerClassBookingRoutes(app: Express) {
           strengthFocus: null,
           audienceGroup: "ALL",
         }),
-        manageToken,
+        manageToken: result.manageToken || manageToken,
+        confirmationUrl: `${requestOrigin(req)}/booking/confirmation?id=${encodeURIComponent(result.reservation.id)}&manageToken=${encodeURIComponent(result.manageToken || manageToken)}`,
       });
     } catch (error) {
       respondError(res, error, "Failed to reserve this class.");
@@ -210,17 +197,48 @@ export function registerClassBookingRoutes(app: Express) {
       if (!data.manageToken) {
         throw new ClassBookingError("MANAGE_TOKEN_REQUIRED", "A reservation management token is required.", 401);
       }
-      const existing = await storage.getClassReservation(req.params.id);
       const result = await storage.cancelClassReservation({
         reservationId: req.params.id,
         manageTokenHash: hashManageToken(data.manageToken),
         reason: data.reason,
+        source: "public",
+        manageUrl: `${requestOrigin(req)}/booking/manage?id=${encodeURIComponent(req.params.id)}&manageToken=${encodeURIComponent(data.manageToken)}`,
       });
-      if (existing) void notifyReservation(result.reservation, existing.occurrence, "cancelled");
-      if (result.promoted && existing) void notifyReservation(result.promoted, existing.occurrence, "promoted");
       res.json(safeReservation(result.reservation));
     } catch (error) {
       respondError(res, error, "Failed to cancel this reservation.");
+    }
+  });
+
+  app.get("/api/classes/reservations/:id/manage", publicBookingLimit, async (req, res) => {
+    try {
+      const token = typeof req.query.manageToken === "string" ? req.query.manageToken : "";
+      if (!token) throw new ClassBookingError("MANAGE_TOKEN_REQUIRED", "A reservation management token is required.", 401);
+      const reservation = await storage.getClassReservation(req.params.id);
+      if (!reservation || !reservation.manageTokenHash || reservation.manageTokenHash !== hashManageToken(token)) {
+        throw new ClassBookingError("RESERVATION_NOT_FOUND", "Reservation not found.", 404);
+      }
+      res.json({
+        reservation: safeReservation(reservation),
+        occurrence: publicOccurrence({
+          ...reservation.occurrence,
+          confirmedCount: 0,
+          trainer: null,
+          classType: null,
+          canonicalCategory: "LEGACY",
+          strengthFocus: null,
+          audienceGroup: "ALL",
+        }),
+        operations: {
+          timezone: BOOKING_OPERATIONS.timezone,
+          address: BOOKING_OPERATIONS.location.address,
+          cancellationCutoffHours: BOOKING_OPERATIONS.cancellationCutoffHours,
+          guidance: BOOKING_OPERATIONS.guidance[reservation.locale === "es" ? "es" : "en"],
+          cancellationPolicy: BOOKING_OPERATIONS.policy[reservation.locale === "es" ? "es" : "en"],
+        },
+      });
+    } catch (error) {
+      respondError(res, error, "Failed to load this reservation.");
     }
   });
 
@@ -257,8 +275,10 @@ export function registerClassBookingRoutes(app: Express) {
         email: user.email,
         phone: user.phone || "Not provided",
         locale: user.locale === "es" ? "es" : "en",
+        idempotencyKey: typeof req.get("Idempotency-Key") === "string" ? req.get("Idempotency-Key")!.trim().slice(0, 180) : undefined,
+        manageUrl: `${requestOrigin(req)}${user.locale === "es" ? "/es/portal/my-classes" : "/portal/my-classes"}`,
+        source: "member",
       });
-      void notifyReservation(result.reservation, result.occurrence);
       res.status(201).json(safeReservation(result.reservation));
     } catch (error) {
       respondError(res, error, "Failed to reserve this class.");
@@ -277,14 +297,28 @@ export function registerClassBookingRoutes(app: Express) {
   app.post("/api/portal/class-reservations/:id/cancel", requireAuth, async (req, res) => {
     try {
       const data = z.object({ reason: z.string().trim().max(240).optional() }).strict().parse(req.body);
-      const existing = await storage.getClassReservation(req.params.id);
       const result = await storage.cancelClassReservation({
         reservationId: req.params.id,
         userId: req.session.userId!,
         reason: data.reason,
+        source: "member",
+        manageUrl: `${requestOrigin(req)}${(await storage.getUserById(req.session.userId!))?.locale === "es" ? "/es/portal/my-classes" : "/portal/my-classes"}`,
       });
-      if (existing) void notifyReservation(result.reservation, existing.occurrence, "cancelled");
-      if (result.promoted && existing) void notifyReservation(result.promoted, existing.occurrence, "promoted");
+      res.json(safeReservation(result.reservation));
+    } catch (error) {
+      respondError(res, error, "Failed to cancel this reservation.");
+    }
+  });
+
+  app.post("/api/portal/admin/class-booking/reservations/:id/cancel", requireRole("admin"), async (req, res) => {
+    try {
+      const data = z.object({ reason: z.string().trim().max(240).optional() }).strict().parse(req.body);
+      const result = await storage.cancelClassReservation({
+        reservationId: req.params.id,
+        reason: data.reason,
+        source: "admin",
+        staffActorId: req.session.userId!,
+      });
       res.json(safeReservation(result.reservation));
     } catch (error) {
       respondError(res, error, "Failed to cancel this reservation.");
@@ -413,7 +447,6 @@ export function registerClassBookingRoutes(app: Express) {
         actorId: req.session.userId!,
         reason: data.reason,
       });
-      void notifyReservation(result.reservation, result.occurrence);
       res.status(201).json({
         reservation: safeReservation(result.reservation),
         discoveryExceptionApplied: result.discoveryExceptionApplied,

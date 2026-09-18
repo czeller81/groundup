@@ -1,10 +1,11 @@
 import { createContext, createElement, useContext, useEffect, useLayoutEffect, useMemo, useState, type ReactNode } from "react";
+import { BOOKING_OPERATIONS } from "@shared/booking-operations";
 
 export type Locale = "en" | "es";
 
 const LOCALE_KEY = "groundup-locale";
 const LOCALE_EVENT = "groundup-locale-change";
-export const GROUND_UP_ADDRESS = "2364 Sturgis Rd, Unit A, Oxnard, CA 93030";
+export const GROUND_UP_ADDRESS = BOOKING_OPERATIONS.location.address;
 
 const PUBLIC_ROUTE_PAIRS: Record<string, string> = {
   "/": "/es",

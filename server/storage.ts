@@ -27,6 +27,7 @@ import {
   classReservationEvents,
   analyticsEvents,
   discoveryPassClaims,
+  notificationOutbox,
   type Trainer, 
   type InsertTrainer,
   type Booking,
@@ -59,6 +60,7 @@ import {
   type ClassReservation,
   type MinorProfile
   , type DiscoveryPassClaim
+  , type NotificationOutbox
 } from "@shared/schema";
 import { db } from "./db";
  import { eq, and, gte, gt, lte, desc, asc, sql, count, sum, or, ilike, inArray, isNotNull, isNull, not } from "drizzle-orm";
@@ -80,8 +82,143 @@ import {
   isWithinMemberBookingWindow,
   type BookingEligibility,
 } from "./member-entitlements";
+import { enqueueNotification } from "./notification-outbox";
+import { classLifecycleEmailContent, getBookingStaffEmail } from "./email";
+import { BOOKING_OPERATIONS, formatBookingDateTime } from "@shared/booking-operations";
+import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto";
 
 const DEFAULT_REPORT_TIMEZONE = "America/Los_Angeles";
+const BOOKING_EMAIL_FROM = "Ground Up <info@groundupbjj.com>";
+const NOTIFICATION_EMAIL_SUPPRESSION = /@example\.invalid$/i;
+
+function bookingTokenKey() {
+  return createHash("sha256")
+    .update(process.env.SESSION_SECRET || "development-only-session-secret")
+    .digest();
+}
+
+function encryptManageToken(token?: string) {
+  if (!token) return null;
+  const iv = randomBytes(12);
+  const cipher = createCipheriv("aes-256-gcm", bookingTokenKey(), iv);
+  const encrypted = Buffer.concat([cipher.update(token, "utf8"), cipher.final()]);
+  return `${iv.toString("base64url")}.${cipher.getAuthTag().toString("base64url")}.${encrypted.toString("base64url")}`;
+}
+
+function decryptManageToken(value?: string | null) {
+  if (!value) return undefined;
+  try {
+    const [ivValue, tagValue, encryptedValue] = value.split(".");
+    const decipher = createDecipheriv("aes-256-gcm", bookingTokenKey(), Buffer.from(ivValue, "base64url"));
+    decipher.setAuthTag(Buffer.from(tagValue, "base64url"));
+    return Buffer.concat([decipher.update(Buffer.from(encryptedValue, "base64url")), decipher.final()]).toString("utf8");
+  } catch {
+    return undefined;
+  }
+}
+
+function suppressBookingEmail(email?: string | null) {
+  return !email || NOTIFICATION_EMAIL_SUPPRESSION.test(email);
+}
+
+function displayParticipantName(
+  reservation: { visitorFirstName: string | null; visitorLastName: string | null },
+  minor?: { firstName: string; lastName: string } | null,
+) {
+  return minor ? `${minor.firstName} ${minor.lastName}` : `${reservation.visitorFirstName || ""} ${reservation.visitorLastName || ""}`.trim();
+}
+
+function absoluteManageUrl(path?: string) {
+  return path || undefined;
+}
+
+async function enqueueClassMemberNotification(
+  tx: any,
+  input: {
+    reservation: ClassReservation;
+    occurrence: ClassOccurrence;
+    participantName: string;
+    status: "confirmed" | "waitlisted" | "cancelled" | "promoted";
+    event: string;
+    manageUrl?: string;
+  },
+) {
+  const recipient = input.reservation.visitorEmail || "";
+  if (suppressBookingEmail(recipient)) return;
+  const locale = input.reservation.locale === "es" ? "es" : "en";
+  const starts = formatBookingDateTime(input.occurrence.start, locale, {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    timeZoneName: "short",
+  });
+  const ends = formatBookingDateTime(input.occurrence.end, locale, {
+    hour: "numeric",
+    minute: "2-digit",
+    timeZoneName: "short",
+  });
+  const copy = classLifecycleEmailContent({
+    classTitle: input.occurrence.title,
+    starts,
+    ends,
+    manageUrl: absoluteManageUrl(input.manageUrl),
+    participantName: input.participantName,
+    status: input.status,
+    waitlistPosition: input.reservation.waitlistPosition,
+    locale,
+  });
+  await enqueueNotification(tx, {
+    deduplicationKey: `member:${input.reservation.id}:${input.occurrence.id}:${input.event}:1`,
+    kind: "class_member_lifecycle",
+    recipient,
+    subject: copy.subject,
+    body: locale === "es"
+      ? `Hola ${input.participantName || "there"},\n\n${copy.body}\n\nGround Up Jiu-Jitsu & Fitness`
+      : `Hi ${input.participantName || "there"},\n\n${copy.body}\n\nGround Up Jiu-Jitsu & Fitness`,
+    metadata: {
+      reservationId: input.reservation.id,
+      occurrenceId: input.occurrence.id,
+      event: input.event,
+      status: input.status,
+    },
+  });
+}
+
+async function enqueueStaffNotification(
+  tx: any,
+  input: {
+    reservation: ClassReservation;
+    occurrence: ClassOccurrence;
+    participantName: string;
+    event: string;
+    message: string;
+  },
+) {
+  const recipient = getBookingStaffEmail();
+  if (suppressBookingEmail(recipient)) return;
+  await enqueueNotification(tx, {
+    deduplicationKey: `staff:${input.reservation.id}:${input.occurrence.id}:${input.event}:1`,
+    kind: "class_staff_lifecycle",
+    recipient,
+    subject: input.message,
+    body: [
+      input.message,
+      "",
+      `Participant: ${input.participantName || "Unknown"}`,
+      `Class: ${input.occurrence.title}`,
+      `Starts: ${input.occurrence.start.toISOString()}`,
+      `Reservation: ${input.reservation.id}`,
+      `Address: ${BOOKING_OPERATIONS.location.address}`,
+    ].join("\n"),
+    metadata: {
+      reservationId: input.reservation.id,
+      occurrenceId: input.occurrence.id,
+      event: input.event,
+    },
+  });
+}
 
 const operationalMemberCondition = () => and(
   eq(users.role, "member"),
@@ -221,7 +358,11 @@ export interface IStorage {
     locale?: "en" | "es";
     experience?: string;
     manageTokenHash?: string;
-  }): Promise<{ reservation: ClassReservation; occurrence: ClassOccurrence; promoted?: ClassReservation }>;
+    manageToken?: string;
+    manageUrl?: string;
+    idempotencyKey?: string;
+    source?: string;
+  }): Promise<{ reservation: ClassReservation; occurrence: ClassOccurrence; promoted?: ClassReservation; manageToken?: string }>;
   getUserClassReservations(userId: string): Promise<Array<ClassReservation & { occurrence: ClassOccurrence; trainer: Trainer | null; classType: ClassType | null; minorProfile: MinorProfile | null }>>;
   getGuardianMinorReservations(guardianUserId: string): Promise<Array<ClassReservation & {
     occurrence: ClassOccurrence;
@@ -233,7 +374,7 @@ export interface IStorage {
     user: Pick<User, "id" | "firstName" | "lastName" | "email"> | null;
     minorProfile: Pick<MinorProfile, "id" | "firstName" | "lastName"> | null;
   }>>;
-  cancelClassReservation(input: { reservationId: string; userId?: string; manageTokenHash?: string; reason?: string }): Promise<{ reservation: ClassReservation; promoted?: ClassReservation }>;
+  cancelClassReservation(input: { reservationId: string; userId?: string; manageTokenHash?: string; reason?: string; source?: "member" | "public" | "provider_calendar" | "admin"; staffActorId?: string; manageUrl?: string }): Promise<{ reservation: ClassReservation; promoted?: ClassReservation }>;
   moveClassReservation(input: { reservationId: string; replacementOccurrenceId: string; actorId: string; reason: string }): Promise<{ reservation: ClassReservation; occurrence: ClassOccurrence; discoveryExceptionApplied: boolean }>;
   getOccurrenceReservations(occurrenceId: string): Promise<{
     confirmed: Array<ClassReservation & { minorProfile: Pick<MinorProfile, "id" | "firstName" | "lastName"> | null; moveCompleted: boolean }>;
@@ -1413,11 +1554,28 @@ export class DatabaseStorage implements IStorage {
     locale?: "en" | "es";
     experience?: string;
     manageTokenHash?: string;
-  }): Promise<{ reservation: ClassReservation; occurrence: ClassOccurrence; promoted?: ClassReservation }> {
+    manageToken?: string;
+    manageUrl?: string;
+    idempotencyKey?: string;
+    source?: string;
+  }): Promise<{ reservation: ClassReservation; occurrence: ClassOccurrence; promoted?: ClassReservation; manageToken?: string }> {
     return db.transaction(async (tx) => {
       await tx.execute(sql`select id from class_occurrences where id = ${input.occurrenceId} for update`);
       const [occurrence] = await tx.select().from(classOccurrences).where(eq(classOccurrences.id, input.occurrenceId));
       if (!occurrence) throw new ClassBookingError("OCCURRENCE_NOT_FOUND", "This class occurrence does not exist.", 404);
+      if (input.idempotencyKey) {
+        const [existing] = await tx.select().from(classReservations).where(eq(classReservations.idempotencyKey, input.idempotencyKey));
+        if (existing) {
+          if (existing.occurrenceId !== input.occurrenceId || (input.userId && existing.userId !== input.userId)) {
+            throw new ClassBookingError("IDEMPOTENCY_KEY_REUSED", "This booking request key was already used for a different reservation.", 409);
+          }
+          return {
+            reservation: existing,
+            occurrence,
+            manageToken: decryptManageToken(existing.manageTokenEncrypted),
+          };
+        }
+      }
       if (occurrence.status !== "active" || !occurrence.bookingEnabled) {
         throw new ClassBookingError("OCCURRENCE_UNAVAILABLE", "This class is not available for booking.", 409);
       }
@@ -1521,13 +1679,15 @@ export class DatabaseStorage implements IStorage {
         status,
         waitlistPosition,
         manageTokenHash: input.manageTokenHash,
+        manageTokenEncrypted: encryptManageToken(input.manageToken),
+        idempotencyKey: input.idempotencyKey,
       }).returning();
       await tx.insert(classReservationEvents).values({
         reservationId: reservation.id,
         occurrenceId: occurrence.id,
         event: status === "confirmed" ? "reservation_confirmed" : "waitlist_joined",
         metadata: {
-          source: input.minorProfileId ? "guardian_portal" : input.userId ? "member_portal" : "first_visit",
+          source: input.source || (input.minorProfileId ? "guardian_portal" : input.userId ? "member_portal" : "first_visit"),
           minorProfileId: input.minorProfileId || null,
         },
       });
@@ -1554,7 +1714,18 @@ export class DatabaseStorage implements IStorage {
           });
         }
       }
-      return { reservation, occurrence };
+      const participantName = displayParticipantName(reservation, minorProfile);
+      await enqueueClassMemberNotification(tx, {
+        reservation,
+        occurrence,
+        participantName,
+        status: status === "waitlisted" ? "waitlisted" : "confirmed",
+        event: status === "waitlisted" ? "waitlist_joined" : "reservation_confirmed",
+        manageUrl: input.manageToken && input.manageUrl
+          ? `${input.manageUrl}?id=${encodeURIComponent(reservation.id)}&manageToken=${encodeURIComponent(input.manageToken)}`
+          : input.manageUrl,
+      });
+      return { reservation, occurrence, manageToken: input.manageToken };
     });
   }
 
@@ -1649,14 +1820,18 @@ export class DatabaseStorage implements IStorage {
     }));
   }
 
-  async cancelClassReservation(input: { reservationId: string; userId?: string; manageTokenHash?: string; reason?: string }): Promise<{ reservation: ClassReservation; promoted?: ClassReservation }> {
+  async cancelClassReservation(input: { reservationId: string; userId?: string; manageTokenHash?: string; reason?: string; source?: "member" | "public" | "provider_calendar" | "admin"; staffActorId?: string; manageUrl?: string }): Promise<{ reservation: ClassReservation; promoted?: ClassReservation }> {
     return db.transaction(async (tx) => {
+      const [reservationReference] = await tx.select({ occurrenceId: classReservations.occurrenceId })
+        .from(classReservations).where(eq(classReservations.id, input.reservationId));
+      if (!reservationReference) throw new ClassBookingError("RESERVATION_NOT_FOUND", "Reservation not found.", 404);
+      await tx.execute(sql`select id from class_occurrences where id = ${reservationReference.occurrenceId} for update`);
       const [current] = await tx.select().from(classReservations).where(eq(classReservations.id, input.reservationId));
       if (!current) throw new ClassBookingError("RESERVATION_NOT_FOUND", "Reservation not found.", 404);
-      await tx.execute(sql`select id from class_occurrences where id = ${current.occurrenceId} for update`);
       const [occurrence] = await tx.select().from(classOccurrences).where(eq(classOccurrences.id, current.occurrenceId));
       const authorized = (input.userId && current.userId === input.userId)
-        || (input.manageTokenHash && current.manageTokenHash === input.manageTokenHash);
+        || (input.manageTokenHash && current.manageTokenHash === input.manageTokenHash)
+        || Boolean(input.staffActorId);
       if (!authorized) throw new ClassBookingError("RESERVATION_FORBIDDEN", "You cannot manage this reservation.", 403);
       if (!["confirmed", "waitlisted"].includes(current.status)) {
         throw new ClassBookingError("RESERVATION_ALREADY_CLOSED", "This reservation is already closed.", 409);
@@ -1668,7 +1843,11 @@ export class DatabaseStorage implements IStorage {
         cancellationReason: input.reason?.slice(0, 240),
         waitlistPosition: null,
         updatedAt: new Date(),
-      }).where(eq(classReservations.id, current.id)).returning();
+      }).where(and(
+        eq(classReservations.id, current.id),
+        inArray(classReservations.status, ["confirmed", "waitlisted"]),
+      )).returning();
+      if (!reservation) throw new ClassBookingError("RESERVATION_ALREADY_CLOSED", "This reservation is already closed.", 409);
       await tx.insert(classReservationEvents).values({
         reservationId: reservation.id,
         occurrenceId: reservation.occurrenceId,
@@ -1693,7 +1872,7 @@ export class DatabaseStorage implements IStorage {
             lte(memberships.startDate, occurrence?.start || new Date()),
             or(isNull(memberships.endDate), gte(memberships.endDate, occurrence?.start || new Date())),
           )).orderBy(desc(memberships.startDate)).limit(1);
-        const cutoffHours = member?.plan?.cancellationCutoffHours ?? 4;
+        const cutoffHours = BOOKING_OPERATIONS.cancellationCutoffHours;
         const late = Boolean(occurrence && occurrence.start.getTime() - Date.now() < cutoffHours * 60 * 60 * 1000);
         consumesCancellation = late && (member?.plan?.lateCancelPolicy || "consume") === "consume";
         if (reservationLedger && !consumesCancellation) {
@@ -1830,6 +2009,47 @@ export class DatabaseStorage implements IStorage {
         from ranked
         where class_reservations.id = ranked.id
       `);
+      const [minor] = current.minorProfileId
+        ? await tx.select({ firstName: minorProfiles.firstName, lastName: minorProfiles.lastName })
+          .from(minorProfiles).where(eq(minorProfiles.id, current.minorProfileId))
+        : [];
+      const participantName = displayParticipantName(current, minor || null);
+      await enqueueClassMemberNotification(tx, {
+        reservation,
+        occurrence,
+        participantName,
+        status: "cancelled",
+        event: "reservation_cancelled",
+        manageUrl: input.manageUrl,
+      });
+      await enqueueStaffNotification(tx, {
+        reservation,
+        occurrence,
+        participantName,
+        event: "reservation_cancelled_staff",
+        message: `Class reservation cancelled (${input.source || "member"})`,
+      });
+      if (promoted) {
+        const [promotedMinor] = promoted.minorProfileId
+          ? await tx.select({ firstName: minorProfiles.firstName, lastName: minorProfiles.lastName })
+            .from(minorProfiles).where(eq(minorProfiles.id, promoted.minorProfileId))
+          : [];
+        await enqueueClassMemberNotification(tx, {
+          reservation: promoted,
+          occurrence,
+          participantName: displayParticipantName(promoted, promotedMinor || null),
+          status: "promoted",
+          event: "waitlist_promoted",
+          manageUrl: input.manageUrl,
+        });
+        await enqueueStaffNotification(tx, {
+          reservation: promoted,
+          occurrence,
+          participantName: displayParticipantName(promoted, promotedMinor || null),
+          event: "waitlist_promoted_staff",
+          message: "A waitlisted class reservation was promoted",
+        });
+      }
       return { reservation, promoted };
     });
   }
@@ -2041,6 +2261,25 @@ export class DatabaseStorage implements IStorage {
         after: { reservationId: reservation.id, occurrenceId: replacement.id, status, discoveryExceptionApplied },
         reason: input.reason,
       });
+      const [minor] = current.minorProfileId
+        ? await tx.select({ firstName: minorProfiles.firstName, lastName: minorProfiles.lastName })
+          .from(minorProfiles).where(eq(minorProfiles.id, current.minorProfileId))
+        : [];
+      const participantName = displayParticipantName(current, minor || null);
+      await enqueueClassMemberNotification(tx, {
+        reservation,
+        occurrence: replacement,
+        participantName,
+        status: status === "waitlisted" ? "waitlisted" : "confirmed",
+        event: "reservation_moved_to",
+      });
+      await enqueueStaffNotification(tx, {
+        reservation,
+        occurrence: replacement,
+        participantName,
+        event: "reservation_moved_staff",
+        message: "A class reservation was moved by staff",
+      });
       return { reservation, occurrence: replacement, discoveryExceptionApplied };
     });
   }
@@ -2085,6 +2324,7 @@ export class DatabaseStorage implements IStorage {
   async cancelOccurrenceReservations(occurrenceId: string, reason: string): Promise<ClassReservation[]> {
     return db.transaction(async (tx) => {
       await tx.execute(sql`select id from class_occurrences where id = ${occurrenceId} for update`);
+      const [occurrence] = await tx.select().from(classOccurrences).where(eq(classOccurrences.id, occurrenceId));
       const cancelled = await tx.update(classReservations).set({
         status: "cancelled",
         cancellationReason: reason.slice(0, 240),
@@ -2120,6 +2360,29 @@ export class DatabaseStorage implements IStorage {
               released: 1,
               reason: "occurrence_cancelled",
             })));
+          }
+        }
+        for (const reservation of cancelled) {
+          const [minor] = reservation.minorProfileId
+            ? await tx.select({ firstName: minorProfiles.firstName, lastName: minorProfiles.lastName })
+              .from(minorProfiles).where(eq(minorProfiles.id, reservation.minorProfileId))
+            : [];
+          const participantName = displayParticipantName(reservation, minor || null);
+          if (occurrence) {
+            await enqueueClassMemberNotification(tx, {
+              reservation,
+              occurrence,
+              participantName,
+              status: "cancelled",
+              event: "occurrence_cancelled",
+            });
+            await enqueueStaffNotification(tx, {
+              reservation,
+              occurrence,
+              participantName,
+              event: "occurrence_cancelled_staff",
+              message: "A provider/calendar change cancelled a class reservation",
+            });
           }
         }
       }
