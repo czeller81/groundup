@@ -76,6 +76,19 @@ export default function Footer() {
                 <MapPin className="h-4 w-4 flex-shrink-0" />
                 <span>Oxnard, CA</span>
               </div>
+              <div className="mt-6 border-t border-white/5 pt-5">
+                <p className="text-white text-sm font-semibold">{publicCopy.partnerLabel}</p>
+                <p className="mt-2 text-gray-400 text-sm leading-relaxed">{publicCopy.partnerDescription}</p>
+                <a
+                  href="https://www.elitesports.com/collections/brazilian-jiu-jitsu-bjj-gis"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-3 inline-flex min-h-11 items-center text-[#5EEBFF] hover:text-white text-sm transition-colors"
+                >
+                  {publicCopy.partnerLinkLabel}
+                  <span aria-hidden="true" className="ml-1">↗</span>
+                </a>
+              </div>
             </div>
           </div>
         </div>
