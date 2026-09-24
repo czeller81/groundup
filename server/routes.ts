@@ -435,6 +435,10 @@ const bookingRateLimit = () => createPublicRateLimit(30, 15 * 60 * 1000);
 const staffMutationRateLimit = () => createPublicRateLimit(120, 15 * 60 * 1000);
 const metaServerTestRateLimit = () => createPublicRateLimit(1, 10 * 60 * 1000);
 
+export interface RouteDependencies {
+  stripe?: Stripe | null;
+}
+
 async function verifyTurnstile(req: Request) {
   const secret = process.env.TURNSTILE_SECRET_KEY;
   const token = typeof req.body?.turnstileToken === "string" ? req.body.turnstileToken : "";
@@ -477,7 +481,8 @@ async function sendVerificationForUser(req: Request, user: Pick<SafeUser, "id" |
   });
 }
 
-export async function registerRoutes(app: Express): Promise<Server> {
+export async function registerRoutes(app: Express, dependencies: RouteDependencies = {}): Promise<Server> {
+  const routeStripe = dependencies.stripe === undefined ? stripe : dependencies.stripe;
   app.use("/api/portal/admin", staffMutationRateLimit());
   app.use("/api/admin", staffMutationRateLimit());
   app.use("/api/bookings", staffMutationRateLimit());
@@ -668,7 +673,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ? "unknown"
           : "unconfigured";
 
-    if (!stripe || !secretKey) {
+    if (!routeStripe || !secretKey) {
       return res.json({
         configured: false,
         connected: false,
@@ -680,7 +685,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     try {
-      const account = await stripe.accounts.retrieve();
+      const account = await routeStripe.accounts.retrieve();
       return res.json({
         configured: true,
         connected: true,
@@ -709,7 +714,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.post("/api/create-payment-intent", bookingRateLimit(), requireAuth, async (req, res) => {
-    if (!stripe) {
+    if (!routeStripe) {
       return res.status(500).json({ message: "Stripe is not configured" });
     }
     try {
@@ -731,7 +736,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (booking.amountCents !== sessionConfig.price * 100 || booking.currency.toLowerCase() !== "usd") {
         return res.status(409).json({ message: "This booking has invalid payment configuration." });
       }
-      const paymentIntent = await stripe.paymentIntents.create({
+      const paymentIntent = await routeStripe.paymentIntents.create({
         amount: booking.amountCents,
         currency: booking.currency.toLowerCase(),
         metadata: { sessionType: booking.sessionType, bookingId: booking.id },
@@ -749,7 +754,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.post("/api/stripe/webhook", express.raw({ type: "application/json", limit: "256kb" }), async (req, res) => {
-    if (!stripe) {
+    if (!routeStripe) {
       return res.status(503).json({
         code: process.env.NODE_ENV === "production" && stripeSecretMode !== "live"
           ? "STRIPE_LIVE_CONFIGURATION_REQUIRED"
@@ -763,7 +768,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     let event;
     try {
-      event = verifyStripeSignature(stripe, req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
+      event = verifyStripeSignature(routeStripe, req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
     } catch (err) {
       console.error("Stripe webhook signature verification failed:", err);
       return res.status(400).json({ message: "Invalid webhook signature" });
@@ -802,11 +807,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const session = event.data.object as Stripe.Checkout.Session;
           if (session.mode !== "subscription" || !session.subscription) break;
           const subscriptionId = typeof session.subscription === "string" ? session.subscription : session.subscription.id;
-          let subscription = await stripe.subscriptions.retrieve(subscriptionId, {
+          let subscription = await routeStripe.subscriptions.retrieve(subscriptionId, {
             expand: ["items.data.price"],
           });
           if (!subscription.metadata?.ground_up_user_id && Object.keys(session.metadata || {}).length) {
-            subscription = await stripe.subscriptions.update(subscription.id, {
+            subscription = await routeStripe.subscriptions.update(subscription.id, {
               metadata: session.metadata || {},
             });
           }
@@ -820,7 +825,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         case "customer.subscription.updated":
         case "customer.subscription.deleted": {
            const eventSubscription = event.data.object as Stripe.Subscription;
-           const subscription = await stripe.subscriptions.retrieve(eventSubscription.id, {
+           const subscription = await routeStripe.subscriptions.retrieve(eventSubscription.id, {
              expand: ["items.data.price"],
            });
            await applyStripeSubscription(subscription);
@@ -831,7 +836,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const subscription = invoice.parent?.subscription_details?.subscription;
           const subscriptionId = typeof subscription === "string" ? subscription : subscription?.id;
           if (subscriptionId) {
-            const subscription = await stripe.subscriptions.retrieve(subscriptionId, {
+            const subscription = await routeStripe.subscriptions.retrieve(subscriptionId, {
               expand: ["items.data.price"],
             });
             await applyStripeSubscription(subscription, {
@@ -845,7 +850,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const subscription = invoice.parent?.subscription_details?.subscription;
           const subscriptionId = typeof subscription === "string" ? subscription : subscription?.id;
           if (subscriptionId) {
-            const subscription = await stripe.subscriptions.retrieve(subscriptionId, {
+            const subscription = await routeStripe.subscriptions.retrieve(subscriptionId, {
               expand: ["items.data.price"],
             });
             await applyStripeSubscription(subscription, {
