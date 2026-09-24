@@ -63,7 +63,7 @@ import {
   , type NotificationOutbox
 } from "@shared/schema";
 import { db } from "./db";
- import { eq, and, gte, gt, lte, desc, asc, sql, count, sum, or, ilike, inArray, isNotNull, isNull, not } from "drizzle-orm";
+ import { eq, and, gte, gt, lt, lte, desc, asc, sql, count, sum, or, ilike, inArray, isNotNull, isNull, not } from "drizzle-orm";
 
 export class ClassBookingError extends Error {
   constructor(public code: string, message: string, public status = 400) {
@@ -749,11 +749,36 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createUserBooking(userId: string, booking: Omit<InsertBooking, 'userId'>): Promise<Booking> {
-    const [newBooking] = await db.insert(bookings).values({
-      ...booking,
-      userId
-    }).returning();
-    return newBooking;
+    return await db.transaction(async (tx) => {
+      const [trainer] = await tx
+        .select({ id: trainers.id })
+        .from(trainers)
+        .where(eq(trainers.id, booking.trainerId))
+        .for("update");
+      if (!trainer) {
+        throw new ClassBookingError("TRAINER_NOT_FOUND", "Trainer not found.", 404);
+      }
+
+      const [conflict] = await tx
+        .select({ id: bookings.id })
+        .from(bookings)
+        .where(and(
+          eq(bookings.trainerId, booking.trainerId),
+          lt(bookings.start, booking.end),
+          gt(bookings.end, booking.start),
+          inArray(bookings.status, ["pending", "paid"]),
+        ))
+        .limit(1);
+      if (conflict) {
+        throw new ClassBookingError("TIME_SLOT_UNAVAILABLE", "Time slot is already booked.", 409);
+      }
+
+      const [newBooking] = await tx.insert(bookings).values({
+        ...booking,
+        userId,
+      }).returning();
+      return newBooking;
+    });
   }
 
   async cancelUserBooking(userId: string, bookingId: string): Promise<Booking | undefined> {

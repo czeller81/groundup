@@ -7,6 +7,8 @@ import { createOriginProtection, createScannerProbeGuard } from "./route-securit
 import { applySecurityHeaders } from "./security-headers";
 import { createRequire } from "module";
 import { storage } from "./storage";
+import { db } from "./db";
+import { sql } from "drizzle-orm";
 import Stripe from "stripe";
 import {
   PENDING_CHECKOUT_RECONCILIATION_LIMIT,
@@ -26,6 +28,18 @@ const STRIPE_CHECKOUT_RECONCILIATION_INTERVAL_MS = 15 * 60 * 1000;
 const app = express();
 app.disable("x-powered-by");
 app.set("trust proxy", 1);
+app.get("/healthz", (_req, res) => {
+  res.status(200).json({ status: "ok" });
+});
+app.get("/readyz", async (_req, res) => {
+  try {
+    await db.execute(sql`select 1`);
+    res.status(200).json({ status: "ready" });
+  } catch (error) {
+    console.error("Readiness check failed:", error instanceof Error ? error.message : "unknown error");
+    res.status(503).json({ status: "not_ready" });
+  }
+});
 app.use((req, res, next) => {
   if (
     process.env.NODE_ENV === "production" &&

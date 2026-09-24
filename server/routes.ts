@@ -2,7 +2,7 @@ import type { Express, Request, Response, NextFunction } from "express";
 import express from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertBookingSchema, type AccountStatus, type SafeUser } from "@shared/schema";
+import { type AccountStatus, type SafeUser } from "@shared/schema";
 import { z } from "zod";
 import { discoveryPassClaimRequestSchema, normalizeDiscoveryPassClaimInput } from "./discovery-pass-b";
 import Stripe from "stripe";
@@ -23,6 +23,14 @@ import {
   requireAuth,
   requireRole,
 } from "./route-security";
+import {
+  getLegacySessionConfig,
+  legacyBookingRequestSchema,
+  legacyBookingStatusSchema,
+  legacyPortalBookingRequestSchema,
+  legacyPaymentIntentRequestSchema,
+  LEGACY_SESSION_TYPES,
+} from "./legacy-booking";
 import {
   sendContactAcknowledgementEmail,
   sendEmailVerificationEmail,
@@ -420,10 +428,7 @@ const stripe = stripeSecretKey && stripeUsableInEnvironment ? new Stripe(stripeS
   apiVersion: "2025-08-27.basil",
 }) : null;
 
-const SESSION_TYPES: Record<string, { name: string; duration: number; price: number }> = {
-  PT60: { name: "60-Minute 1:1 Training", duration: 60, price: 20 },
-  UNLIMITED: { name: "Monthly Unlimited", duration: 0, price: 280 }
-};
+const SESSION_TYPES = LEGACY_SESSION_TYPES;
 const publicRateLimit = createPublicRateLimit;
 const authRateLimit = () => createPublicRateLimit(10, 15 * 60 * 1000);
 const bookingRateLimit = () => createPublicRateLimit(30, 15 * 60 * 1000);
@@ -587,27 +592,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/bookings", bookingRateLimit(), requireAuth, async (req, res) => {
     try {
-      const bookingData = insertBookingSchema.parse(req.body);
-      
-      if (!SESSION_TYPES[bookingData.sessionType]) {
-        return res.status(400).json({ message: "Invalid session type" });
+      const request = legacyBookingRequestSchema.parse(req.body);
+      const sessionConfig = getLegacySessionConfig(request.sessionType);
+      const user = await storage.getUserById(req.session.userId!);
+      if (!user) return res.status(401).json({ message: "Account not found" });
+      if (!user.emailVerifiedAt || ["unverified", "needs_review", "suspicious", "archived"].includes(user.accountStatus)) {
+        return res.status(403).json({ message: "Verify your account before booking a paid session." });
       }
-
-      const existingBookings = await storage.getTrainerBookings(
-        bookingData.trainerId,
-        new Date(bookingData.start),
-        new Date(bookingData.end)
-      );
-
-      if (existingBookings.length > 0) {
-        return res.status(400).json({ message: "Time slot is already booked" });
+      if (request.start <= new Date()) {
+        return res.status(400).json({ message: "Choose a future time for this booking." });
       }
-
-      const booking = await storage.createUserBooking(req.session.userId!, bookingData);
+      const trainer = await storage.getTrainer(request.trainerId);
+      if (!trainer) return res.status(404).json({ message: "Trainer not found" });
+      const end = addMinutes(request.start, sessionConfig.duration || 60);
+      const booking = await storage.createUserBooking(req.session.userId!, {
+        sessionType: request.sessionType,
+        trainerId: request.trainerId,
+        start: request.start,
+        end,
+        customerName: `${user.firstName} ${user.lastName}`.trim(),
+        customerEmail: user.email,
+        customerPhone: user.phone || "Not provided",
+        notes: request.notes || "",
+        amountCents: sessionConfig.price * 100,
+        currency: "usd",
+        status: "pending",
+      });
       res.status(201).json(booking);
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Validation error", errors: error.errors });
+      }
+      if (error instanceof Error && error.name === "ClassBookingError") {
+        return res.status((error as { status?: number }).status || 409).json({ message: error.message });
       }
       res.status(500).json({ message: "Failed to create booking" });
     }
@@ -615,10 +632,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/bookings/:id/status", requireRole("admin", "coach"), async (req, res) => {
     try {
-      const { status, stripeSessionId } = req.body;
-      if (!["pending", "paid", "canceled"].includes(status)) {
-        return res.status(400).json({ message: "Invalid booking status" });
-      }
+      const { status, stripeSessionId } = legacyBookingStatusSchema.parse(req.body);
       const booking = req.session.userRole === "admin"
         ? await storage.updateBookingStatus(req.params.id, status, stripeSessionId)
         : await storage.updateBookingStatusForCoach(req.params.id, req.session.userId!, status, stripeSessionId);
@@ -627,6 +641,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       res.json(booking);
     } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid booking status update", errors: error.errors });
+      }
       res.status(500).json({ message: "Failed to update booking" });
     }
   });
@@ -696,24 +713,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(500).json({ message: "Stripe is not configured" });
     }
     try {
-      const { sessionType, bookingId } = req.body;
-      const sessionConfig = SESSION_TYPES[sessionType];
-      if (!sessionConfig) {
-        return res.status(400).json({ message: "Invalid session type" });
+      const request = legacyPaymentIntentRequestSchema.parse(req.body);
+      const booking = await storage.getBooking(request.bookingId);
+      if (!bookingBelongsToUser(booking, req.session.userId)) {
+        return res.status(404).json({ message: "Booking not found" });
       }
-      if (bookingId) {
-        const booking = await storage.getBooking(bookingId);
-        if (!bookingBelongsToUser(booking, req.session.userId)) {
-          return res.status(404).json({ message: "Booking not found" });
-        }
+      if (!booking || booking.status !== "pending" || booking.paymentStatus === "paid") {
+        return res.status(409).json({ message: "This booking is not available for payment." });
+      }
+      if (request.sessionType && request.sessionType !== booking.sessionType) {
+        return res.status(400).json({ message: "Payment session does not match the booking." });
+      }
+      if (!(booking.sessionType in SESSION_TYPES)) {
+        return res.status(409).json({ message: "This booking has an unsupported session type." });
+      }
+      const sessionConfig = getLegacySessionConfig(booking.sessionType as keyof typeof SESSION_TYPES);
+      if (booking.amountCents !== sessionConfig.price * 100 || booking.currency.toLowerCase() !== "usd") {
+        return res.status(409).json({ message: "This booking has invalid payment configuration." });
       }
       const paymentIntent = await stripe.paymentIntents.create({
-        amount: sessionConfig.price * 100,
-        currency: "usd",
-        metadata: { sessionType, bookingId: bookingId || "" },
+        amount: booking.amountCents,
+        currency: booking.currency.toLowerCase(),
+        metadata: { sessionType: booking.sessionType, bookingId: booking.id },
+      }, {
+        idempotencyKey: `legacy-booking-payment-intent:${booking.id}`,
       });
       res.json({ clientSecret: paymentIntent.client_secret });
     } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid payment request", errors: error.errors });
+      }
       console.error("Payment intent error:", error);
       res.status(500).json({ message: "Failed to create payment intent" });
     }
@@ -1712,33 +1741,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "User not found" });
       }
 
-      const { trainerId, sessionType, date, time, notes } = req.body;
-      if (!trainerId || !sessionType || !date || !time) {
-        return res.status(400).json({ message: "Trainer, session type, date, and time are required" });
+      const request = legacyPortalBookingRequestSchema.parse(req.body);
+      const sessionConfig = getLegacySessionConfig(request.sessionType);
+      const startDateTime = new Date(`${request.date}T${request.time}`);
+      if (Number.isNaN(startDateTime.getTime()) || startDateTime <= new Date()) {
+        return res.status(400).json({ message: "Choose a valid future time for this booking." });
       }
-
-      const sessionConfig = SESSION_TYPES[sessionType];
-      if (!sessionConfig) {
-        return res.status(400).json({ message: "Invalid session type" });
-      }
-
-      const startDateTime = new Date(`${date}T${time}`);
       const endDateTime = addMinutes(startDateTime, sessionConfig.duration || 60);
 
-      const existingBookings = await storage.getTrainerBookings(trainerId, startDateTime, endDateTime);
-      if (existingBookings.length > 0) {
-        return res.status(400).json({ message: "Time slot is not available" });
-      }
-
       const booking = await storage.createUserBooking(userId, {
-        trainerId,
-        sessionType,
+        trainerId: request.trainerId,
+        sessionType: request.sessionType,
         start: startDateTime,
         end: endDateTime,
         customerName: `${user.firstName} ${user.lastName}`,
         customerEmail: user.email,
-        customerPhone: user.phone || "",
-        notes: notes || "",
+        customerPhone: user.phone || "Not provided",
+        notes: request.notes || "",
         amountCents: sessionConfig.price * 100,
         currency: "usd",
         status: "pending"
@@ -1746,6 +1765,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.status(201).json(booking);
     } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid booking request", errors: error.errors });
+      }
+      if (error instanceof Error && error.name === "ClassBookingError") {
+        return res.status((error as { status?: number }).status || 409).json({ message: error.message });
+      }
       res.status(500).json({ message: "Failed to create booking" });
     }
   });

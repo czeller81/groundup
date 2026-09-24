@@ -15,7 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import Calendar from "./calendar";
 import CheckoutForm from "@/components/stripe/checkout-form";
-import { addMinutes, format, parseISO } from "date-fns";
+import { format, parseISO } from "date-fns";
 
 const SESSION_TYPES = {
   PT60: { name: "60-Minute 1:1 Training", description: "Perfect for focused skill development", price: 20 },
@@ -43,6 +43,7 @@ export default function BookingForm({ trainers }: BookingFormProps) {
   const [step, setStep] = useState(1); // 1: booking form, 2: payment
   const [bookingId, setBookingId] = useState<string>("");
   const [clientSecret, setClientSecret] = useState<string>("");
+  const [bookingAmountCents, setBookingAmountCents] = useState<number>(0);
   const { toast } = useToast();
 
   const form = useForm<BookingFormData>({
@@ -63,20 +64,12 @@ export default function BookingForm({ trainers }: BookingFormProps) {
     mutationFn: async (data: BookingFormData) => {
       const sessionConfig = SESSION_TYPES[data.sessionType];
       const startDateTime = new Date(`${data.date}T${data.time}`);
-      const endDateTime = addMinutes(startDateTime, sessionConfig.name.includes("90") ? 90 : 60);
 
       const booking = {
         sessionType: data.sessionType,
         trainerId: data.trainerId,
         start: startDateTime,
-        end: endDateTime,
-        customerName: data.customerName,
-        customerEmail: data.customerEmail,
-        customerPhone: data.customerPhone,
         notes: data.notes || "",
-        amountCents: sessionConfig.price * 100,
-        currency: "usd",
-        status: "pending",
       };
 
       return await apiRequest("POST", "/api/bookings", booking);
@@ -84,10 +77,10 @@ export default function BookingForm({ trainers }: BookingFormProps) {
     onSuccess: async (response) => {
       const booking = await response.json();
       setBookingId(booking.id);
+      setBookingAmountCents(booking.amountCents);
 
       // Create payment intent
       const paymentResponse = await apiRequest("POST", "/api/create-payment-intent", {
-        sessionType: form.getValues("sessionType"),
         bookingId: booking.id,
       });
 
@@ -116,7 +109,7 @@ export default function BookingForm({ trainers }: BookingFormProps) {
       <CheckoutForm
         clientSecret={clientSecret}
         bookingId={bookingId}
-        amount={selectedPrice}
+        amount={bookingAmountCents / 100}
         onSuccess={() => {
           toast({
             title: "Payment Successful!",
@@ -127,6 +120,7 @@ export default function BookingForm({ trainers }: BookingFormProps) {
           setStep(1);
           setClientSecret("");
           setBookingId("");
+          setBookingAmountCents(0);
         }}
       />
     );
