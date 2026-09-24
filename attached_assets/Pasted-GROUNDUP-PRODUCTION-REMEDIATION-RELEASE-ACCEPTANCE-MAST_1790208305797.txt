@@ -1,0 +1,853 @@
+GROUNDUP — PRODUCTION REMEDIATION + RELEASE ACCEPTANCE MASTER PROMPT
+Date: September 23, 2026
+
+ROLE
+
+You are acting as the senior production engineer, security engineer, QA engineer, and release engineer for the existing GroundUP application.
+
+This is an EXISTING PRODUCTION APPLICATION.
+
+Do not redesign GroundUP.
+Do not replace working architecture.
+Do not create a new application.
+Do not reset the production database.
+Do not delete production customer records.
+Do not recreate the Stripe integration.
+Do not rotate working Stripe credentials.
+Do not create Stripe products, prices, subscriptions, invoices, customers, or charges unless explicitly instructed later.
+Do not send bulk emails.
+Do not perform destructive cleanup.
+
+Your objective is:
+
+FIX → TEST → VERIFY → DOCUMENT
+
+the findings from the September 23, 2026 GroundUP production acceptance audit and move GroundUP toward production acceptance.
+
+==================================================
+CURRENT PRODUCTION CONTEXT
+==================================================
+
+Production:
+https://www.groundupbjj.com
+
+Stripe production webhook:
+https://www.groundupbjj.com/api/stripe/webhook
+
+Stripe is LIVE and currently configured.
+
+The production Stripe configuration has already been verified:
+
+- live publishable key
+- live secret key
+- webhook signing secret
+- production webhook
+- required Stripe webhook events
+- signature validation
+- mode validation
+- replay/idempotency protection
+
+DO NOT break or unnecessarily modify this configuration.
+
+Stripe currently handles:
+
+- membership Checkout
+- Stripe customers
+- subscriptions
+- recurring invoices
+- customer portal
+- subscription cancellation
+- reconciliation
+- one-time booking PaymentIntent confirmation
+
+A real one-off $75 facility rental invoice has also been sent manually through Stripe.
+
+That manual rental invoice does NOT currently have a corresponding GroundUP rental-invoice model.
+
+Do not attempt to retroactively convert that invoice into a membership or booking.
+
+==================================================
+PRIMARY BUSINESS ACCEPTANCE GOAL
+==================================================
+
+A legitimate new customer must be able to complete this journey:
+
+PUBLIC WEBSITE
+    ↓
+CREATE ACCOUNT
+    ↓
+PASS BOT/ABUSE PROTECTION
+    ↓
+VERIFY EMAIL
+    ↓
+CLAIM FREE DISCOVERY PASS
+    ↓
+COMPLETE REQUIRED FORMS
+    ↓
+ACTIVATE DISCOVERY PASS
+    ↓
+VIEW CLASS SCHEDULE
+    ↓
+BOOK ELIGIBLE CLASS
+    ↓
+RECEIVE CONFIRMATION EMAIL
+    ↓
+SEE BOOKING IN CUSTOMER PORTAL
+    ↓
+ADMIN SEES USER + PASS + BOOKING
+    ↓
+CUSTOMER CAN CANCEL IF POLICY ALLOWS
+    ↓
+DISCOVERY ENTITLEMENT RESTORES WHEN APPROPRIATE
+
+Separately, a paid customer must be able to complete:
+
+MEMBERSHIP SELECTION
+    ↓
+STRIPE CHECKOUT
+    ↓
+PAYMENT
+    ↓
+WEBHOOK
+    ↓
+MEMBERSHIP ACTIVATION
+    ↓
+GROUNDUP DATABASE RECONCILIATION
+    ↓
+CUSTOMER BILLING PORTAL
+    ↓
+CANCELLATION / PAST-DUE LIFECYCLE
+
+Do not declare release acceptance until these flows are either actually verified or clearly marked as requiring a controlled live test.
+
+==================================================
+PHASE 0 — SAFETY / BASELINE
+==================================================
+
+Before changing anything:
+
+1. Inspect the current deployed branch/revision.
+2. Record current production health.
+3. Record current relevant database migration state.
+4. Confirm existing automated tests.
+5. Identify current production environment variable NAMES only.
+
+NEVER print secret values.
+
+Confirm presence/configuration state of at least:
+
+- STRIPE_PUBLISHABLE_KEY
+- STRIPE_SECRET_KEY
+- STRIPE_WEBHOOK_SECRET
+- SESSION_SECRET
+- TURNSTILE_SECRET_KEY
+- BOOKING_NOTIFICATIONS_ENABLED
+- Resend/email configuration
+- NEON_DATABASE_URL
+
+Do not expose their values.
+
+Establish a rollback point before changing application code or schema.
+
+Do not reset or reseed production.
+
+==================================================
+P0-1 — FIX TURNSTILE / CUSTOMER SIGNUP
+==================================================
+
+The acceptance audit found that production signup currently fails closed because:
+
+TURNSTILE_SECRET_KEY
+
+is not configured in production.
+
+Existing controls already include:
+
+- honeypot
+- minimum completion time
+- Cloudflare Turnstile
+- route/IP rate limits
+- email rate limits
+- durable daily IP/device signup limits
+- duplicate email protection
+- suspicious/random name detection
+- disposable/SMS email-domain detection
+- needs_review handling
+
+Preserve these protections.
+
+DO NOT weaken or bypass Turnstile just to make signup work.
+
+Determine whether the Turnstile site key and secret are correctly configured for:
+
+groundupbjj.com
+www.groundupbjj.com
+
+If a secret must be manually supplied by the owner, STOP that specific configuration step and report exactly:
+
+OWNER ACTION REQUIRED:
+<environment variable/configuration required>
+
+Never invent a Turnstile secret.
+
+Once configuration is available, verify:
+
+VALID HUMAN:
+legitimate signup accepted
+
+MISSING TOKEN:
+rejected
+
+INVALID TOKEN:
+rejected
+
+HONEYPOT:
+rejected
+
+TOO-FAST SUBMISSION:
+rejected
+
+RATE-LIMITED:
+rejected appropriately
+
+DUPLICATE EMAIL:
+handled without account enumeration
+
+SUSPICIOUS REGISTRATION:
+flagged/reviewed according to current policy
+
+Do not create unnecessary production accounts during automated testing.
+
+==================================================
+P0-2 — DISCOVERY PASS
+==================================================
+
+Preserve the existing Discovery Pass behavior.
+
+It must remain:
+
+FREE
+
+No Stripe Checkout.
+No credit card.
+No accidental $0 Stripe subscription.
+
+Verify:
+
+- operational/verified account requirement
+- required forms
+- claim flow
+- activation flow
+- seven-day expiration
+- SKILL entitlement
+- STRENGTH entitlement
+- duplicate-claim protection
+- account/email/phone/prior-use checks
+- expiration handling
+- claim-to-account linkage
+
+Verify that one legitimate Discovery Pass creates the intended entitlements exactly once.
+
+Test duplicate/concurrent requests for accidental duplicate entitlements.
+
+Do not weaken fraud protections.
+
+==================================================
+P0-3 — CANONICAL CLASS BOOKING FLOW
+==================================================
+
+The newer Discovery/class reservation architecture has stronger controls than the legacy booking architecture.
+
+Make the secure reservation flow the canonical implementation.
+
+Preserve:
+
+- schedule discovery
+- class capacity
+- waitlist behavior
+- category/audience eligibility
+- booking windows
+- duplicate booking protection
+- overlap protection
+- occurrence/capacity locking
+- idempotency
+- member ownership
+- guardian/minor ownership
+- cancellation cutoff
+- late cancellation policy
+- waitlist promotion
+- Discovery entitlement consumption
+- reservation linkage
+- entitlement restoration following eligible cancellation
+
+Verify timezone behavior using the GroundUP business timezone.
+
+Test DST/date boundaries where appropriate.
+
+==================================================
+P0-4 — FIX OR RETIRE UNSAFE LEGACY BOOKING/PAYMENT ROUTES
+==================================================
+
+This is a security-critical remediation.
+
+The audit found legacy routes where:
+
+- client-supplied financial fields are trusted
+- amount may originate from the client
+- currency may originate from the client
+- customer/payment information may originate from the client
+- availability is not protected with the stronger atomic reservation mechanism
+- PaymentIntent may be created without a valid booking
+- Stripe references are insufficiently validated
+- stripeSessionId semantics are mixed with PaymentIntent identifiers
+
+Do NOT leave an alternate insecure payment path publicly usable.
+
+Preferred strategy:
+
+If the legacy endpoints are no longer needed:
+DEPRECATE / DISABLE THEM SAFELY.
+
+If they are still required:
+HARDEN THEM.
+
+For any surviving paid-booking flow:
+
+1. Require an authenticated/authorized booking context where appropriate.
+2. Require a valid server-side booking/reservation before PaymentIntent creation.
+3. Derive price SERVER-SIDE.
+4. Derive currency SERVER-SIDE.
+5. Derive customer identity SERVER-SIDE.
+6. Never trust browser-submitted price.
+7. Never trust browser-submitted payment status.
+8. Validate Stripe object identifiers.
+9. Add appropriate idempotency.
+10. Use atomic capacity/availability protection.
+11. Prevent concurrent double booking.
+12. Verify amount/currency again before marking paid.
+
+Do not break the secure modern reservation flow while removing legacy behavior.
+
+Search the frontend for callers before disabling any route.
+
+==================================================
+P0-5 — BOOKING EMAIL NOTIFICATIONS
+==================================================
+
+The audit found:
+
+BOOKING_NOTIFICATIONS_ENABLED
+
+is not enabled/present in production.
+
+Existing infrastructure includes:
+
+Resend
+notification_outbox
+SKIP LOCKED claiming
+processing leases
+retryable/terminal failures
+up to five attempts
+deduplication keys
+Resend idempotency
+provider message IDs
+
+Existing sender:
+
+Ground Up <info@groundupbjj.com>
+
+Preserve this architecture.
+
+Do NOT create another email provider.
+
+Configure/verify:
+
+BOOKING_NOTIFICATIONS_ENABLED=true
+
+If changing the production environment requires owner action, report it instead of inventing configuration.
+
+Verify the sender/domain is configured correctly.
+
+Booking lifecycle emails should correctly cover existing supported behavior such as:
+
+- booking confirmation
+- cancellation
+- waitlist promotion
+- related existing class notifications
+
+Ensure exactly-once logical delivery through durable deduplication.
+
+Do not send test email to real customers.
+
+Use an approved internal/test recipient for controlled testing.
+
+==================================================
+P0-6 — CUSTOMER EMAIL EXPERIENCE
+==================================================
+
+Audit and verify:
+
+ACCOUNT:
+- verification email
+- password reset
+
+DISCOVERY:
+- appropriate activation/confirmation communication if currently intended
+
+BOOKING:
+- confirmation
+- cancellation
+- waitlist/promotion where implemented
+
+MEMBERSHIP:
+- appropriate Stripe/GroundUP communication boundaries
+
+Do not duplicate Stripe's own transactional receipts unnecessarily.
+
+Where direct Resend calls currently exist, do NOT perform a broad rewrite during P0 unless required for correctness.
+
+Document direct-send paths for later durable-outbox migration.
+
+==================================================
+P0-7 — ADMIN PORTAL CLEANUP
+==================================================
+
+Do NOT redesign the admin portal.
+
+Clean it up operationally.
+
+Identify:
+
+- canonical admin APIs
+- legacy admin APIs
+- dead admin login routes
+- duplicate functionality
+- stale UI
+- broken links
+- confusing payment/booking views
+
+Prefer:
+
+/api/portal/admin/*
+
+where that is the current canonical architecture.
+
+Do not remove a legacy endpoint until you have verified no active UI or integration still depends on it.
+
+Verify admin access controls for:
+
+- users/members
+- Discovery Passes
+- bookings/reservations
+- class/schedule management
+- memberships
+- Stripe status
+- billing
+- reconciliation
+- staff notes
+
+Fix clearly unsafe issues including:
+
+- last-admin protection
+- self-demotion safeguards
+- role/session invalidation where required
+- notification ownership scoping
+- reasonable input validation/length constraints
+
+Do not expose sensitive customer data unnecessarily.
+
+==================================================
+P0-8 — BOT / SYNTHETIC ACCOUNT CLEANUP PREPARATION
+==================================================
+
+DO NOT DELETE ACCOUNTS IN THIS PHASE.
+
+Current audit snapshot showed approximately:
+
+92 users
+80 @example.invalid accounts
+21 test-signal risk occurrences
+5 suspicious users
+21 unverified users
+
+These categories overlap.
+
+The @example.invalid population strongly suggests synthetic/internal test data, but that alone is NOT authorization to delete.
+
+Create a READ-ONLY cleanup candidate report.
+
+Classification:
+
+A. HIGH-CONFIDENCE SYNTHETIC/TEST
+B. SUSPICIOUS / REQUIRES HUMAN REVIEW
+C. LEGITIMATE / PROTECTED
+
+Automatically PROTECT any account with:
+
+- membership
+- Stripe payment
+- booking
+- reservation
+- attendance
+- Discovery activity that appears legitimate
+- submitted required forms
+- staff notes
+- support history
+- other plausible customer activity
+
+Recommended future cleanup lifecycle:
+
+EXPORT
+→ QUARANTINE/DISABLE
+→ OBSERVE
+→ HUMAN REVIEW
+→ DELETE ONLY WITH EXPLICIT APPROVAL
+
+Do not perform deletion now.
+
+==================================================
+P1-1 — HISTORICAL STRIPE WEBHOOK RECORDS
+==================================================
+
+The audit found:
+
+126 completed
+23 failed_retryable
+3 stale processing
+
+The failed rows are historical, ending September 14, 2026.
+
+Known error patterns include:
+
+- STRIPE_SUBSCRIPTION_CUSTOMER_MISMATCH
+- missing-user foreign-key failures
+- duplicate membership subscription unique constraint failures
+
+The stored Stripe event IDs return 404 against the CURRENT live Stripe account.
+
+Possible causes include previous Stripe account/mode/environment data.
+
+DO NOT BLINDLY REPLAY THEM.
+
+Investigate and produce a reconciliation report.
+
+Determine:
+
+- whether affected users still exist
+- whether memberships exist
+- whether current Stripe subscriptions exist
+- whether records belong to an old Stripe account/mode
+- whether any current customer is financially affected
+
+Only after reconciliation may an event be:
+
+resolved,
+archived,
+or marked terminal.
+
+Every such action must be auditable.
+
+Do not mutate historical rows unless the remediation is clearly justified and safe.
+
+==================================================
+P1-2 — PRODUCTION HEALTH / NEON
+==================================================
+
+The audit found intermittent:
+
+connection refused to 127.0.0.1:1104
+HTTP 500 health checks
+a Neon serverless driver stack trace
+
+The public application currently responds successfully.
+
+Add an appropriate lightweight health/readiness architecture.
+
+Prefer separate concepts:
+
+LIVENESS:
+process/listener is alive
+
+READINESS:
+application is ready to serve
+
+Avoid making a simple platform liveness probe depend on a full page render.
+
+Where appropriate add:
+
+/health
+and/or
+/ready
+
+following the application's conventions.
+
+Do not expose secrets, internal stack traces, database URLs, or sensitive infrastructure details.
+
+Improve Neon reliability with:
+
+- bounded retry/backoff where justified
+- structured errors
+- graceful connection handling
+- graceful shutdown behavior where applicable
+
+Do not create infinite retries.
+
+==================================================
+P1-3 — STRIPE REGRESSION PROTECTION
+==================================================
+
+Do not alter the verified live Stripe configuration unnecessarily.
+
+Regression-test:
+
+- Checkout Session creation
+- Stripe customer reuse
+- ownership metadata
+- subscription creation
+- invoice lifecycle
+- customer portal
+- cancellation at period end
+- past-due behavior
+- checkout reconciliation
+- webhook signature verification
+- live/test mode mismatch rejection
+- webhook replay/idempotency
+- booking PaymentIntent amount verification
+- booking PaymentIntent currency verification
+
+Automated tests MUST NOT create real live charges.
+
+==================================================
+P2 — RENTAL INVOICE THANK-YOU EMAIL
+==================================================
+
+This is NOT a launch blocker.
+
+Do not build a large rental-management system.
+
+Ground Up occasionally creates one-off facility rental invoices directly in Stripe.
+
+Example:
+
+2-hour facility rental
+$75
+
+Future requirement:
+
+After a VERIFIED live Stripe invoice.paid event for an explicitly tagged facility-rental invoice, GroundUP should send exactly ONE branded thank-you email.
+
+Never infer a rental from:
+
+- amount
+- customer name
+- email
+- description alone
+
+Use explicit Stripe metadata.
+
+Recommended metadata:
+
+ground_up_invoice_type = rental_space
+
+and a stable reference such as:
+
+ground_up_rental_invoice_id = <stable-reference>
+
+The handler must require:
+
+- valid Stripe webhook signature
+- live mode matches server mode
+- event = invoice.paid
+- invoice actually paid
+- metadata exactly identifies rental_space
+- invoice is not a membership/subscription invoice
+- unique Stripe invoice ID
+- durable notification deduplication
+
+Recommended dedupe key:
+
+stripe:rental-payment-thank-you:<stripe_invoice_id>
+
+Use the existing notification_outbox + Resend infrastructure.
+
+Sender:
+
+Ground Up <info@groundupbjj.com>
+
+Suggested subject:
+
+Thank you for your Ground Up facility rental payment
+
+Suggested body:
+
+Hi [First Name],
+
+Thank you for your payment for your Ground Up facility rental.
+
+Your payment has been confirmed. We appreciate you choosing Ground Up and look forward to having you with us.
+
+If you have any questions before your rental, simply reply to this email.
+
+Thank you,
+Ground Up Jiu Jitsu & Fitness
+
+Do not send this email for:
+
+- invoice.created
+- invoice.finalized
+- invoice.sent
+- invoice.payment_failed
+- membership recurring invoices
+- unrelated invoices
+- duplicate/replayed webhook events
+
+IMPORTANT:
+
+There is already a real rental invoice currently outstanding.
+
+Do NOT retroactively send an automated email for an already-paid invoice unless its metadata and notification state make the action unquestionably safe.
+
+==================================================
+TESTING
+==================================================
+
+Run the strongest NON-DESTRUCTIVE automated test suite available.
+
+Add targeted regression tests for every code change.
+
+At minimum test:
+
+SIGNUP:
+valid flow
+missing Turnstile
+invalid Turnstile
+honeypot
+rate limit
+duplicate email
+
+DISCOVERY:
+free activation
+no Stripe dependency
+duplicate prevention
+seven-day expiration
+two intended entitlements
+
+BOOKING:
+valid reservation
+capacity
+duplicate booking
+overlap
+authorization
+Discovery entitlement consumption
+cancellation restoration
+waitlist behavior
+concurrent booking protection
+
+PAYMENTS:
+server-derived price
+server-derived currency
+valid booking requirement
+Stripe reference validation
+amount mismatch rejection
+currency mismatch rejection
+
+WEBHOOK:
+unsigned rejected
+invalid signature rejected
+wrong mode rejected
+duplicate event ignored
+valid event processed once
+
+EMAIL:
+notification dedupe
+retry behavior
+no duplicate confirmation
+disabled flag behavior
+enabled flag behavior
+
+ADMIN:
+unauthorized rejected
+member cannot access admin
+coach boundaries
+admin access
+role-change protections
+
+Do not perform destructive production testing.
+
+==================================================
+CONTROLLED ACCEPTANCE TEST PLAN
+==================================================
+
+After fixes are deployed, DO NOT automatically execute real-world transactions.
+
+Instead provide an owner-ready checklist for one controlled human test.
+
+TEST 1 — CUSTOMER / DISCOVERY
+
+Designated tester:
+→ signup
+→ Turnstile
+→ verify email
+→ required forms
+→ free Discovery Pass
+→ verify seven-day expiration
+→ verify SKILL + STRENGTH entitlement
+
+TEST 2 — BOOKING
+
+→ view schedule
+→ select eligible controlled class
+→ book once
+→ confirm entitlement consumption
+→ confirm customer portal
+→ confirm admin visibility
+→ confirm email
+→ attempt duplicate and verify rejection
+→ cancel
+→ verify entitlement restoration
+
+TEST 3 — LIVE MEMBERSHIP
+
+Only with explicit owner approval:
+
+→ designated member
+→ existing lowest-priced live plan
+→ one legitimate payment
+→ Stripe Checkout
+→ subscription
+→ invoice
+→ webhook
+→ membership activation
+→ admin reconciliation
+
+Never retry if Stripe already reports the payment successful.
+
+TEST 4 — BILLING
+
+→ customer portal
+→ verify subscription
+→ test cancellation-at-period-end only with explicit owner approval
+→ verify GroundUP/admin state
+
+==================================================
+ACCEPTANCE MATRIX
+==================================================
+
+At completion report:
+
+1. New client signup
+2. Email verification
+3. Discovery Pass acquisition
+4. Required forms
+5. Discovery activation
+6. Class discovery
+7. Class booking
+8. Booking confirmation email
+9. Customer booking visibility
+10. Admin customer/pass/booking visibility
+11. Booking cancellation
+12. Discovery entitlement restoration
+13. Paid membership Checkout
+14. Stripe webhook reconciliation
+15. Customer billing portal
+16
