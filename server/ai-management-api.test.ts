@@ -10,6 +10,7 @@ import { storage } from "./storage";
 import { bookings, membershipPlans, memberships, trainers, users } from "@shared/schema";
 
 const TEST_KEY = "ai-management-regression-key";
+const TEST_PROVIDER_KEY = "lime-provider-regression-key";
 const previousKey = process.env.AI_MANAGEMENT_API_KEY;
 process.env.AI_MANAGEMENT_API_KEY = TEST_KEY;
 
@@ -188,5 +189,119 @@ test("AI management CSV export is bounded, redacts fixtures, and escapes formula
   } finally {
     await new Promise<void>((resolve) => server.close(() => resolve()));
     await cleanupFixtures(fixture);
+  }
+});
+
+test("Lime provider credentials enforce scopes while the legacy AI key remains broad", { concurrency: false }, async () => {
+  const previousProviderKey = process.env.LIME_AGENT_API_KEY;
+  const previousProviderScopes = process.env.LIME_AGENT_API_SCOPES;
+  const previousLegacyKey = process.env.AI_MANAGEMENT_API_KEY;
+  const previousInfo = console.info;
+  const auditLines: string[] = [];
+  process.env.LIME_AGENT_API_KEY = TEST_PROVIDER_KEY;
+  process.env.LIME_AGENT_API_SCOPES = "schedule:read";
+  console.info = (...values: unknown[]) => auditLines.push(values.map(String).join(" "));
+  const { server, baseUrl } = await startManagementApp();
+  try {
+    const openApiResponse = await fetch(`${baseUrl}/openapi.json`);
+    assert.equal(openApiResponse.status, 200, "the OpenAPI document stays public");
+    const openApi = await openApiResponse.json() as any;
+    assert.ok(openApi["x-provider-scopes"].includes("schedule:read"));
+    assert.deepEqual(openApi.paths["/api/ai/v1/operations/schedule"].get["x-required-scopes"], ["schedule:read"]);
+    assert.deepEqual(openApi.paths["/api/ai/v1/operations/bookings"].get["x-required-scopes"], ["booking:read"]);
+    assert.doesNotMatch(JSON.stringify(openApi), new RegExp(TEST_PROVIDER_KEY));
+
+    const missingCredential = await fetch(`${baseUrl}/operations/schedule`);
+    assert.equal(missingCredential.status, 401);
+    assert.equal((await missingCredential.json()).code, "AI_MANAGEMENT_UNAUTHORIZED");
+    assert.match(missingCredential.headers.get("x-request-id") || "", /^[\da-f-]{36}$/i);
+
+    const invalidCredential = await fetch(`${baseUrl}/operations/schedule`, {
+      headers: { Authorization: "Bearer invalid-provider-test-credential" },
+    });
+    assert.equal(invalidCredential.status, 401);
+
+    const requestId = "3c54b25e-51d2-4807-a33e-ae34debcfe87";
+    const allowedSchedule = await fetch(`${baseUrl}/operations/schedule`, {
+      headers: {
+        Authorization: `Bearer ${TEST_PROVIDER_KEY}`,
+        "X-Request-Id": requestId,
+      },
+    });
+    assert.equal(allowedSchedule.status, 200);
+    assert.equal(allowedSchedule.headers.get("x-request-id"), requestId);
+
+    const deniedBookings = await fetch(`${baseUrl}/operations/bookings`, {
+      headers: { Authorization: `Bearer ${TEST_PROVIDER_KEY}` },
+    });
+    assert.equal(deniedBookings.status, 403);
+    const deniedBody = await deniedBookings.json();
+    assert.equal(deniedBody.code, "AI_SCOPE_FORBIDDEN");
+    assert.deepEqual(deniedBody.requiredScopes, ["booking:read"]);
+    assert.ok(deniedBody.requestId);
+
+    for (const [documentedPath, pathItem] of Object.entries(openApi.paths)) {
+      for (const [method, operation] of Object.entries(pathItem as Record<string, any>)) {
+        const requiredScopes = operation["x-required-scopes"] as string[];
+        assert.ok(requiredScopes.length > 0, `${method.toUpperCase()} ${documentedPath} must declare a scope`);
+        if (documentedPath === "/api/ai/v1/operations/schedule" && method === "get") continue;
+        const relativePath = documentedPath
+          .slice("/api/ai/v1".length)
+          .replace(/\{[^}]+\}/g, "not-a-real-record");
+        const methodUpper = method.toUpperCase();
+        const response = await fetch(`${baseUrl}${relativePath}`, {
+          method: methodUpper,
+          headers: {
+            Authorization: `Bearer ${TEST_PROVIDER_KEY}`,
+            ...(methodUpper === "PATCH" ? { "Content-Type": "application/json" } : {}),
+          },
+          ...(methodUpper === "PATCH" ? { body: JSON.stringify({ status: "canceled" }) } : {}),
+        });
+        assert.equal(response.status, 403, `${methodUpper} ${documentedPath} must deny a schedule-only credential`);
+        assert.equal((await response.json()).code, "AI_SCOPE_FORBIDDEN");
+      }
+    }
+
+    const legacyStillWorks = await fetch(`${baseUrl}/operations/payments`, { headers: authHeaders() });
+    assert.equal(legacyStillWorks.status, 200, "the existing AI key retains backward-compatible access");
+
+    delete process.env.LIME_AGENT_API_SCOPES;
+    const missingScopeConfig = await fetch(`${baseUrl}/operations/schedule`, {
+      headers: { Authorization: `Bearer ${TEST_PROVIDER_KEY}` },
+    });
+    assert.equal(missingScopeConfig.status, 403, "a missing scope configuration grants no provider capabilities");
+    assert.equal((await missingScopeConfig.json()).code, "AI_SCOPE_FORBIDDEN");
+
+    process.env.LIME_AGENT_API_SCOPES = "schedule:read,unrecognized:read";
+    const unknownConfiguredScope = await fetch(`${baseUrl}/operations/schedule`, {
+      headers: { Authorization: `Bearer ${TEST_PROVIDER_KEY}` },
+    });
+    assert.equal(unknownConfiguredScope.status, 503, "unknown configured scopes fail closed");
+    assert.equal((await unknownConfiguredScope.json()).code, "AI_PROVIDER_SCOPE_CONFIGURATION_INVALID");
+
+    process.env.AI_MANAGEMENT_API_KEY = TEST_PROVIDER_KEY;
+    process.env.LIME_AGENT_API_SCOPES = "schedule:read";
+    const credentialCollision = await fetch(`${baseUrl}/operations/schedule`, {
+      headers: { Authorization: `Bearer ${TEST_PROVIDER_KEY}` },
+    });
+    assert.equal(credentialCollision.status, 503, "a scoped key may not silently inherit legacy broad access");
+    assert.equal((await credentialCollision.json()).code, "AI_PROVIDER_CREDENTIAL_COLLISION");
+
+    const parsedAudit = auditLines.map((line) => JSON.parse(line));
+    const providerAudit = parsedAudit.find((entry) => entry.event === "ai_api_request" && entry.requestId === requestId);
+    assert.ok(providerAudit, "authenticated provider requests emit an audit record");
+    assert.equal(providerAudit.credentialClass, "lime_scoped");
+    assert.equal(providerAudit.route, "/api/ai/v1/operations/schedule");
+    assert.deepEqual(providerAudit.requiredScopes, ["schedule:read"]);
+    assert.doesNotMatch(auditLines.join("\n"), new RegExp(TEST_PROVIDER_KEY));
+  } finally {
+    console.info = previousInfo;
+    if (previousProviderKey === undefined) delete process.env.LIME_AGENT_API_KEY;
+    else process.env.LIME_AGENT_API_KEY = previousProviderKey;
+    if (previousProviderScopes === undefined) delete process.env.LIME_AGENT_API_SCOPES;
+    else process.env.LIME_AGENT_API_SCOPES = previousProviderScopes;
+    if (previousLegacyKey === undefined) delete process.env.AI_MANAGEMENT_API_KEY;
+    else process.env.AI_MANAGEMENT_API_KEY = previousLegacyKey;
+    await new Promise<void>((resolve) => server.close(() => resolve()));
   }
 });

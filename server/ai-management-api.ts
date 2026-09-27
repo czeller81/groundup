@@ -16,6 +16,61 @@ import { ADAPTIVE_CAPACITY_ENABLED, INTERNAL_TEST_EMAIL_PATTERN } from "./route-
 
 const AI_API_PREFIX = "/api/ai/v1";
 const MAX_PAGE_SIZE = 100;
+const AI_PROVIDER_SCOPES = [
+  "operations:summary:read",
+  "schedule:read",
+  "member:read",
+  "booking:read",
+  "booking:status:update",
+  "reservation:read",
+  "membership:read",
+  "payment:read",
+  "payment:reconciliation:read",
+  "lead:read",
+  "lead:status:update",
+  "contact:read",
+  "contact:status:update",
+  "discovery-pass:report:read",
+  "marketing:campaign-report:read",
+] as const;
+type AiProviderScope = typeof AI_PROVIDER_SCOPES[number];
+
+const AI_API_ROUTE_SCOPES: Record<string, readonly AiProviderScope[]> = {
+  "GET /operations/summary": ["operations:summary:read", "discovery-pass:report:read"],
+  "GET /operations/schedule": ["schedule:read"],
+  "GET /operations/members": ["member:read"],
+  "GET /operations/bookings": ["booking:read"],
+  "GET /operations/reservations": ["reservation:read"],
+  "PATCH /operations/bookings/:id/status": ["booking:status:update"],
+  "GET /operations/memberships": ["membership:read"],
+  "GET /operations/payments": ["payment:read"],
+  "GET /operations/payments.csv": ["payment:read"],
+  "GET /operations/reconciliation-health": ["payment:reconciliation:read"],
+  "GET /operations/leads": ["lead:read"],
+  "PATCH /operations/leads/:id/status": ["lead:status:update"],
+  "GET /operations/contacts": ["contact:read"],
+  "PATCH /operations/contacts/:id/status": ["contact:status:update"],
+  "GET /marketing/discovery-funnel": ["discovery-pass:report:read"],
+  "GET /marketing/discovery-ab": ["discovery-pass:report:read"],
+  "GET /marketing/campaign-report": ["marketing:campaign-report:read"],
+};
+const AI_SCOPED_ROUTES = Object.entries(AI_API_ROUTE_SCOPES).map(([routeKey, scopes]) => {
+  const separator = routeKey.indexOf(" ");
+  const method = routeKey.slice(0, separator);
+  const path = routeKey.slice(separator + 1);
+  const pattern = path
+    .split("/")
+    .map((segment) => segment.startsWith(":")
+      ? "[^/]+"
+      : segment.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+    .join("/");
+  return { method, path, scopes, pattern: new RegExp(`^${pattern}/?$`, "i") };
+});
+
+type AiAuthContext = {
+  credential: "lime_scoped" | "legacy_broad";
+  scopes: ReadonlySet<string>;
+};
 
 function bearerToken(req: Request) {
   const header = req.get("authorization") || "";
@@ -31,23 +86,138 @@ function tokensMatch(provided: string, expected: string) {
 }
 
 function requireAiManagementKey(req: Request, res: Response, next: NextFunction) {
-  const expected = process.env.AI_MANAGEMENT_API_KEY?.trim();
-  if (!expected) {
+  const providerKey = process.env.LIME_AGENT_API_KEY?.trim();
+  const legacyKey = process.env.AI_MANAGEMENT_API_KEY?.trim();
+  if (!providerKey && !legacyKey) {
     return res.status(503).json({
       code: "AI_MANAGEMENT_API_NOT_CONFIGURED",
       message: "AI management API is not configured.",
+      requestId: res.locals.aiRequestId,
     });
   }
 
-  if (!tokensMatch(bearerToken(req), expected)) {
+  const supplied = bearerToken(req);
+  if (!supplied || (!tokensMatch(supplied, providerKey || "") && !tokensMatch(supplied, legacyKey || ""))) {
     return res.status(401).json({
       code: "AI_MANAGEMENT_UNAUTHORIZED",
-      message: "A valid bearer token is required.",
+      message: "A valid bearer credential is required.",
+      requestId: res.locals.aiRequestId,
     });
+  }
+
+  const matchesProviderKey = Boolean(providerKey && tokensMatch(supplied, providerKey));
+  const matchesLegacyKey = Boolean(legacyKey && tokensMatch(supplied, legacyKey));
+  if (matchesProviderKey && matchesLegacyKey) {
+    return res.status(503).json({
+      code: "AI_PROVIDER_CREDENTIAL_COLLISION",
+      message: "Provider and legacy credentials must be distinct.",
+      requestId: res.locals.aiRequestId,
+    });
+  }
+
+  if (matchesProviderKey) {
+    const configuredScopes = (process.env.LIME_AGENT_API_SCOPES || "")
+      .split(",")
+      .map((scope) => scope.trim())
+      .filter(Boolean);
+    const unknownScopes = configuredScopes.filter(
+      (scope) => !AI_PROVIDER_SCOPES.includes(scope as AiProviderScope),
+    );
+    if (unknownScopes.length > 0) {
+      return res.status(503).json({
+        code: "AI_PROVIDER_SCOPE_CONFIGURATION_INVALID",
+        message: "Provider scope configuration contains unsupported scopes.",
+        requestId: res.locals.aiRequestId,
+      });
+    }
+    res.locals.aiAuth = {
+      credential: "lime_scoped",
+      scopes: new Set(configuredScopes),
+    } satisfies AiAuthContext;
+  } else {
+    res.locals.aiAuth = {
+      credential: "legacy_broad",
+      scopes: new Set(AI_PROVIDER_SCOPES),
+    } satisfies AiAuthContext;
   }
 
   res.set("Cache-Control", "no-store");
   next();
+}
+
+function assignAiRequestId(req: Request, res: Response, next: NextFunction) {
+  const suppliedId = req.get("x-request-id")?.trim();
+  const requestId = suppliedId && /^[\da-f]{8}-(?:[\da-f]{4}-){3}[\da-f]{12}$/i.test(suppliedId)
+    ? suppliedId.toLowerCase()
+    : crypto.randomUUID();
+  res.locals.aiRequestId = requestId;
+  res.set("X-Request-Id", requestId);
+  next();
+}
+
+function auditAiRequest(req: Request, res: Response, next: NextFunction) {
+  const startedAt = Date.now();
+  res.once("finish", () => {
+    if (req.route?.path === "/openapi.json") return;
+    const auth = res.locals.aiAuth as AiAuthContext | undefined;
+    const routeTemplate = res.locals.aiRouteTemplate
+      || (typeof req.route?.path === "string" ? `${AI_API_PREFIX}${req.route.path}` : AI_API_PREFIX);
+    console.info(JSON.stringify({
+      event: "ai_api_request",
+      requestId: res.locals.aiRequestId,
+      credentialClass: auth?.credential || "unverified",
+      method: req.method,
+      route: routeTemplate,
+      requiredScopes: res.locals.aiRequiredScopes || [],
+      statusCode: res.statusCode,
+      durationMs: Math.max(0, Date.now() - startedAt),
+    }));
+  });
+  next();
+}
+
+function resolveAiRoute(req: Request, res: Response, next: NextFunction) {
+  const requestPath = req.originalUrl.split(/[?#]/, 1)[0] || "";
+  const routePath = requestPath.startsWith(AI_API_PREFIX)
+    ? requestPath.slice(AI_API_PREFIX.length)
+    : req.path;
+  const routeMethod = req.method === "HEAD" ? "GET" : req.method;
+  const matchedRoute = AI_SCOPED_ROUTES.find((route) =>
+    route.method === routeMethod && route.pattern.test(routePath),
+  );
+  res.locals.aiRouteMapped = Boolean(matchedRoute);
+  res.locals.aiRequiredScopes = matchedRoute?.scopes || [];
+  res.locals.aiRouteTemplate = matchedRoute ? `${AI_API_PREFIX}${matchedRoute.path}` : AI_API_PREFIX;
+  next();
+}
+
+function authorizeAiRoute(_req: Request, res: Response, next: NextFunction) {
+  const requiredScopes = res.locals.aiRequiredScopes as readonly string[] | undefined;
+  if (!res.locals.aiRouteMapped || !requiredScopes?.length) {
+    return res.status(403).json({
+      code: "AI_SCOPE_MAPPING_MISSING",
+      message: "This operation has no provider authorization mapping.",
+      requestId: res.locals.aiRequestId,
+    });
+  }
+
+  const auth = res.locals.aiAuth as AiAuthContext | undefined;
+  if (!auth) {
+    return res.status(401).json({
+      code: "AI_MANAGEMENT_UNAUTHORIZED",
+      message: "A valid bearer credential is required.",
+      requestId: res.locals.aiRequestId,
+    });
+  }
+  if (auth.credential === "legacy_broad" || requiredScopes.every((scope) => auth.scopes.has(scope))) {
+    return next();
+  }
+  return res.status(403).json({
+    code: "AI_SCOPE_FORBIDDEN",
+    message: "The bearer credential lacks a required capability scope.",
+    requiredScopes,
+    requestId: res.locals.aiRequestId,
+  });
 }
 
 function parseDate(value: unknown) {
@@ -232,8 +402,9 @@ const openApiTemplate = {
   info: {
     title: "Ground Up AI Management API",
     version: "1.0.0",
-    description: "Scoped operations and marketing management for the Ground Up member portal.",
+    description: "HTTPS REST operations and marketing management. Protected operations require a bearer credential and the listed x-required-scopes. The OpenAPI document is public; credentials are never included here.",
   },
+  "x-provider-scopes": AI_PROVIDER_SCOPES,
   tags: [
     { name: "Operations" },
     { name: "Marketing" },
@@ -243,7 +414,19 @@ const openApiTemplate = {
       bearerAuth: {
         type: "http",
         scheme: "bearer",
-        bearerFormat: "AI_MANAGEMENT_API_KEY",
+        bearerFormat: "Bearer",
+      },
+    },
+    schemas: {
+      AiApiError: {
+        type: "object",
+        required: ["code", "message", "requestId"],
+        properties: {
+          code: { type: "string" },
+          message: { type: "string" },
+          requestId: { type: "string", format: "uuid" },
+          requiredScopes: { type: "array", items: { type: "string" } },
+        },
       },
     },
   },
@@ -416,12 +599,45 @@ const openApiTemplate = {
 } as const;
 
 export function getAiManagementOpenApi(origin: string) {
-  return { ...openApiTemplate, servers: [{ url: origin }] };
+  const paths = Object.fromEntries(
+    Object.entries(openApiTemplate.paths).map(([path, pathItem]) => {
+      const routePath = path.slice(AI_API_PREFIX.length).replace(/\{([^}]+)\}/g, ":$1");
+      const operations = Object.fromEntries(
+        Object.entries(pathItem).map(([method, operation]) => {
+          const requiredScopes = AI_API_ROUTE_SCOPES[`${method.toUpperCase()} ${routePath}`] || [];
+          const responses = (operation as { responses?: Record<string, unknown> }).responses || {};
+          return [method, {
+            ...operation,
+            "x-required-scopes": requiredScopes,
+            responses: {
+              ...responses,
+              "401": {
+                description: "Missing or invalid bearer credential.",
+                content: { "application/json": { schema: { $ref: "#/components/schemas/AiApiError" } } },
+              },
+              "403": {
+                description: "Bearer credential is missing a required scope or route mapping.",
+                content: { "application/json": { schema: { $ref: "#/components/schemas/AiApiError" } } },
+              },
+              "503": {
+                description: "Provider credential or scope configuration is unavailable or invalid.",
+                content: { "application/json": { schema: { $ref: "#/components/schemas/AiApiError" } } },
+              },
+            },
+          }];
+        }),
+      );
+      return [path, operations];
+    }),
+  );
+  return { ...openApiTemplate, paths, servers: [{ url: origin }] };
 }
 
 export function registerAiManagementRoutes(app: Express) {
   const router = Router();
   const rateLimit = new Map<string, { count: number; resetAt: number }>();
+
+  router.use(assignAiRequestId, auditAiRequest);
 
   router.get("/openapi.json", (req: Request, res: Response) => {
     const origin = `${req.protocol}://${req.get("host")}`;
@@ -436,13 +652,17 @@ export function registerAiManagementRoutes(app: Express) {
       rateLimit.set(key, { count: 1, resetAt: now + 15 * 60 * 1000 });
     } else if (current.count >= 120) {
       res.set("Retry-After", String(Math.ceil((current.resetAt - now) / 1000)));
-      return res.status(429).json({ code: "AI_MANAGEMENT_RATE_LIMITED", message: "Too many API requests." });
+      return res.status(429).json({
+        code: "AI_MANAGEMENT_RATE_LIMITED",
+        message: "Too many API requests.",
+        requestId: res.locals.aiRequestId,
+      });
     } else {
       current.count++;
     }
     next();
   });
-  router.use(requireAiManagementKey);
+  router.use(resolveAiRoute, requireAiManagementKey, authorizeAiRoute);
 
   router.get("/operations/summary", async (req: Request, res: Response) => {
     try {
