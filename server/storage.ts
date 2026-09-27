@@ -84,7 +84,7 @@ import {
 } from "./member-entitlements";
 import { enqueueNotification } from "./notification-outbox";
 import { classLifecycleEmailContent, getBookingStaffEmail } from "./email";
-import { BOOKING_OPERATIONS, formatBookingDateTime } from "@shared/booking-operations";
+import { BOOKING_OPERATIONS, formatBookingDateTime, isAllowedClassWeekday } from "@shared/booking-operations";
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto";
 
 const DEFAULT_REPORT_TIMEZONE = "America/Los_Angeles";
@@ -1466,7 +1466,10 @@ export class DatabaseStorage implements IStorage {
       ))
       .orderBy(asc(classOccurrences.start));
 
-    const visibleRows = rows.filter(({ occurrence }) => includeDisabled || isPublicOccurrenceText(occurrence.title, occurrence.description, occurrence.location));
+    const visibleRows = rows.filter(({ occurrence }) =>
+      includeDisabled
+      || (isAllowedClassWeekday(occurrence.start) && isPublicOccurrenceText(occurrence.title, occurrence.description, occurrence.location))
+    );
     if (!visibleRows.length) return [];
     const ids = visibleRows.map(({ occurrence }) => occurrence.id);
     const totals = await db.select({
@@ -1600,6 +1603,13 @@ export class DatabaseStorage implements IStorage {
             manageToken: decryptManageToken(existing.manageTokenEncrypted),
           };
         }
+      }
+      if (!isAllowedClassWeekday(occurrence.start)) {
+        throw new ClassBookingError(
+          "CLASS_DAY_UNAVAILABLE",
+          "Classes are only available on Monday, Wednesday, and Friday.",
+          409,
+        );
       }
       if (occurrence.status !== "active" || !occurrence.bookingEnabled) {
         throw new ClassBookingError("OCCURRENCE_UNAVAILABLE", "This class is not available for booking.", 409);
@@ -2113,6 +2123,13 @@ export class DatabaseStorage implements IStorage {
       const replacement = occurrenceRows.find((occurrence) => occurrence.id === input.replacementOccurrenceId);
       if (!oldOccurrence || !replacement) {
         throw new ClassBookingError("OCCURRENCE_NOT_FOUND", "The original or replacement class occurrence does not exist.", 404);
+      }
+      if (!isAllowedClassWeekday(replacement.start)) {
+        throw new ClassBookingError(
+          "CLASS_DAY_UNAVAILABLE",
+          "Classes are only available on Monday, Wednesday, and Friday.",
+          409,
+        );
       }
       if (replacement.status !== "active" || !replacement.bookingEnabled || replacement.start <= new Date()) {
         throw new ClassBookingError("OCCURRENCE_UNAVAILABLE", "The replacement class is not available for booking.", 409);

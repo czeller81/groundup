@@ -23,7 +23,7 @@ export interface ClassEntry {
   description?: string;
 }
 
-export const DAYS: DayOfWeek[] = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+export const DAYS: DayOfWeek[] = ["Monday", "Wednesday", "Friday"];
 
 export const CATEGORY_CONFIG: Record<ClassCategory, { label: string; color: string; bg: string; border: string; glow: string; icon: string }> = {
   "jiu-jitsu":  { label: "Jiu-Jitsu",          color: "text-[#B06CFF]",   bg: "bg-[#B06CFF]/15",   border: "border-[#B06CFF]/30",   glow: "shadow-[#B06CFF]/20",   icon: "🥋" },
@@ -39,30 +39,16 @@ export const SCHEDULE: ClassEntry[] = [
   { id: "mon-2", day: "Monday",    startTime: "4:30 PM",  endTime: "5:30 PM",  title: "Strength & Conditioning",                   category: "strength",  audience: ["adults"], tags: ["All Levels"] },
   { id: "mon-3", day: "Monday",    startTime: "5:30 PM",  endTime: "6:30 PM",  title: "Jiu-Jitsu — Beginner",                      category: "jiu-jitsu", audience: ["all"],    tags: ["Beginner", "All Levels"], featured: true },
 
-  // TUESDAY
-  { id: "tue-1", day: "Tuesday",   startTime: "4:00 PM",  endTime: "5:00 PM",  title: "Strength & Conditioning",                   category: "strength",  audience: ["adults"], tags: ["All Levels"] },
-  { id: "tue-2", day: "Tuesday",   startTime: "5:00 PM",  endTime: "6:00 PM",  title: "Kids Jiu-Jitsu",                            category: "kids",      audience: ["kids"],   tags: ["Kids", "Beginners"], featured: true },
-
   // WEDNESDAY
   { id: "wed-1", day: "Wednesday", startTime: "12:00 PM", endTime: "1:00 PM",  title: "Jiu-Jitsu — Transitions & Technique",       category: "jiu-jitsu", audience: ["adults"], tags: ["Transitions & Technique"], advanced: true },
   { id: "wed-2", day: "Wednesday", startTime: "5:30 PM",  endTime: "6:30 PM",  title: "Athletes Strength & Conditioning",          category: "strength",  audience: ["adults"], tags: ["Athletes"] },
   { id: "wed-3", day: "Wednesday", startTime: "6:30 PM",  endTime: "7:30 PM",  title: "Jiu-Jitsu — Beginner",                      category: "jiu-jitsu", audience: ["all"],    tags: ["Beginner", "All Levels"], featured: true },
-
-  // THURSDAY
-  { id: "thu-1", day: "Thursday",  startTime: "4:00 PM",  endTime: "5:00 PM",  title: "Stretch & Recovery",                        category: "recovery",  audience: ["all"],    tags: ["All Levels", "Mobility"] },
-  { id: "thu-2", day: "Thursday",  startTime: "5:00 PM",  endTime: "6:00 PM",  title: "Kids Jiu-Jitsu",                            category: "kids",      audience: ["kids"],   tags: ["Kids", "Beginners"], featured: true },
 
   // FRIDAY
   { id: "fri-1", day: "Friday",    startTime: "12:00 PM", endTime: "1:00 PM",  title: "Jiu-Jitsu — Ecological Approach",           category: "jiu-jitsu", audience: ["adults"], tags: ["Ecological Approach"], advanced: true },
   { id: "fri-2", day: "Friday",    startTime: "4:30 PM",  endTime: "5:30 PM",  title: "Strength & Conditioning",                   category: "strength",  audience: ["adults"], tags: ["All Levels"] },
   { id: "fri-3", day: "Friday",    startTime: "5:30 PM",  endTime: "6:30 PM",  title: "Jiu-Jitsu — Beginner",                      category: "jiu-jitsu", audience: ["all"],    tags: ["Beginner", "All Levels"], featured: true },
 
-  // SATURDAY
-  { id: "sat-1", day: "Saturday",  startTime: "9:00 AM",  endTime: "10:00 AM", title: "Strength & Conditioning",                   category: "strength",  audience: ["all"],    tags: ["All Levels"] },
-  { id: "sat-2", day: "Saturday",  startTime: "11:30 AM", endTime: "12:30 PM", title: "Athletes Strength & Conditioning",          category: "strength",  audience: ["adults"], tags: ["Athletes"], advanced: true },
-
-  // SUNDAY
-  { id: "sun-1", day: "Sunday",    startTime: "10:00 AM", endTime: "",         title: "Open Mat",                                  category: "open-mat",  audience: ["all"],    tags: ["Open to All"] },
 ];
 
 export function getClassesForDay(day: DayOfWeek): ClassEntry[] {

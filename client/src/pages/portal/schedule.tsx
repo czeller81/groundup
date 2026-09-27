@@ -36,7 +36,7 @@ type MinorReservation = {
 };
 
 type DayOfWeek = "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday" | "Sunday";
-const DAYS: DayOfWeek[] = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+const DAYS: DayOfWeek[] = ["Monday", "Wednesday", "Friday"];
 const DAY_SHORT: Record<DayOfWeek, { en: string; es: string }> = {
   Monday: { en: "Mon", es: "Lun" }, Tuesday: { en: "Tue", es: "Mar" }, Wednesday: { en: "Wed", es: "Mié" },
   Thursday: { en: "Thu", es: "Jue" }, Friday: { en: "Fri", es: "Vie" }, Saturday: { en: "Sat", es: "Sáb" },

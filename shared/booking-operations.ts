@@ -28,6 +28,18 @@ export const BOOKING_OPERATIONS = {
   },
 } as const;
 
+export const ALLOWED_CLASS_WEEKDAYS = ["Monday", "Wednesday", "Friday"] as const;
+
+export function isAllowedClassWeekday(value: Date | string) {
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return false;
+  const weekday = new Intl.DateTimeFormat("en-US", {
+    timeZone: BOOKING_OPERATIONS.timezone,
+    weekday: "long",
+  }).format(date);
+  return ALLOWED_CLASS_WEEKDAYS.includes(weekday as (typeof ALLOWED_CLASS_WEEKDAYS)[number]);
+}
+
 export function bookingOperationsForLocale(locale: BookingLocale) {
   return {
     timezone: BOOKING_OPERATIONS.timezone,

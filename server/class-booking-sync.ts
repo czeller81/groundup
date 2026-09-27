@@ -1,4 +1,5 @@
 import type { ClassOccurrence, ClassType } from "@shared/schema";
+import { isAllowedClassWeekday } from "@shared/booking-operations";
 import { storage } from "./storage";
 import {
   GOOGLE_SYNC_WINDOW_DAYS,
@@ -26,17 +27,10 @@ export const FINAL_SCHEDULE_TAXONOMY = {
 export const FINAL_WEEKLY_SCHEDULE = [
   { day: "Monday", time: "17:00", durationMinutes: 55, canonicalCategory: FINAL_SCHEDULE_TAXONOMY.adultSkill },
   { day: "Monday", time: "18:00", durationMinutes: 55, canonicalCategory: FINAL_SCHEDULE_TAXONOMY.strength, strengthFocus: FINAL_SCHEDULE_TAXONOMY.lowerBody },
-  { day: "Tuesday", time: "16:15", durationMinutes: 45, canonicalCategory: FINAL_SCHEDULE_TAXONOMY.girlsSkill },
-  { day: "Tuesday", time: "17:00", durationMinutes: 55, canonicalCategory: FINAL_SCHEDULE_TAXONOMY.adultSkill },
-  { day: "Tuesday", time: "18:00", durationMinutes: 55, canonicalCategory: FINAL_SCHEDULE_TAXONOMY.strength, strengthFocus: FINAL_SCHEDULE_TAXONOMY.upperBodyCore },
   { day: "Wednesday", time: "17:00", durationMinutes: 55, canonicalCategory: FINAL_SCHEDULE_TAXONOMY.adultSkill },
   { day: "Wednesday", time: "18:00", durationMinutes: 55, canonicalCategory: FINAL_SCHEDULE_TAXONOMY.strength, strengthFocus: FINAL_SCHEDULE_TAXONOMY.lowerBody },
-  { day: "Thursday", time: "16:15", durationMinutes: 45, canonicalCategory: FINAL_SCHEDULE_TAXONOMY.girlsSkill },
-  { day: "Thursday", time: "17:00", durationMinutes: 55, canonicalCategory: FINAL_SCHEDULE_TAXONOMY.adultSkill },
-  { day: "Thursday", time: "18:00", durationMinutes: 55, canonicalCategory: FINAL_SCHEDULE_TAXONOMY.strength, strengthFocus: FINAL_SCHEDULE_TAXONOMY.upperBodyCore },
   { day: "Friday", time: "17:00", durationMinutes: 55, canonicalCategory: FINAL_SCHEDULE_TAXONOMY.adultSkill },
   { day: "Friday", time: "18:00", durationMinutes: 55, canonicalCategory: FINAL_SCHEDULE_TAXONOMY.strength, strengthFocus: FINAL_SCHEDULE_TAXONOMY.fullBody },
-  { day: "Saturday", time: "09:00", durationMinutes: 55, canonicalCategory: FINAL_SCHEDULE_TAXONOMY.strength, strengthFocus: FINAL_SCHEDULE_TAXONOMY.fullBody },
 ] as const;
 
 const CANONICAL_CLASS_TYPES = [
@@ -252,8 +246,9 @@ export async function syncGoogleClassSchedule(
       const classType = mappedType || matchClassType(title, classTypes);
       const preserveManual = existing?.syncState === "manual";
       const preserveHistory = Boolean(existing && times.start < now);
+      const offDayClass = Boolean(classType) && !preserveHistory && !isAllowedClassWeekday(times.start);
       const originalStart = googleDateToDate(event.originalStartTime);
-      await storage.upsertClassOccurrence({
+      const occurrence = await storage.upsertClassOccurrence({
         calendarConnectionId: connection.id,
         googleCalendarId: connection.calendarId,
         googleEventId: event.id,
@@ -270,17 +265,34 @@ export async function syncGoogleClassSchedule(
         canonicalCategory: preserveHistory ? existing!.canonicalCategory : classType?.canonicalCategory || "LEGACY",
         strengthFocus: preserveHistory ? existing!.strengthFocus : classType?.strengthFocus || null,
         audienceGroup: preserveHistory ? existing!.audienceGroup : classType?.audienceGroup || "ALL",
-        status: preserveHistory ? existing!.status : "active",
+        status: preserveHistory ? existing!.status : offDayClass ? "cancelled" : "active",
         syncState: preserveHistory ? existing!.syncState : preserveManual ? "manual" : classType ? "synced" : "unmapped",
-        syncError: preserveHistory ? existing!.syncError : classType ? null : "No class type mapping matched this Google event title.",
+        syncError: preserveHistory
+          ? existing!.syncError
+          : offDayClass
+            ? "Classes are only scheduled on Monday, Wednesday, and Friday."
+            : classType
+              ? null
+              : "No class type mapping matched this Google event title.",
         capacity: preserveHistory || preserveManual ? existing!.capacity : (classType?.defaultCapacity || 6),
         firstVisitEligible: preserveHistory || preserveManual ? existing!.firstVisitEligible : (classType?.firstVisitEligible || false),
-        bookingEnabled: preserveHistory || preserveManual ? existing!.bookingEnabled : Boolean(classType?.bookingEnabled),
+        bookingEnabled: preserveHistory
+          ? existing!.bookingEnabled
+          : offDayClass
+            ? false
+            : preserveManual
+              ? existing!.bookingEnabled
+              : Boolean(classType?.bookingEnabled),
         audience: preserveHistory || preserveManual ? existing!.audience : "all",
         remoteUpdatedAt: event.updated ? new Date(event.updated) : null,
         lastSyncedAt: now,
       });
-      classType ? synced++ : unmapped++;
+      if (offDayClass) {
+        await storage.cancelOccurrenceReservations(occurrence.id, "Classes are only scheduled on Monday, Wednesday, and Friday.");
+        cancelled++;
+      } else {
+        classType ? synced++ : unmapped++;
+      }
     }
 
     const removedOccurrences = await storage.reconcileMissingClassOccurrences(connection.calendarId, from, to, seenEventIds);
