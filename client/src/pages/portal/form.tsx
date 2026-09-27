@@ -50,14 +50,23 @@ export default function PortalForm({ formSlug, embedded = false, onSubmitted }: 
       || window.localStorage.getItem("groundup-discovery-onboarding") === "1");
   const trackedFormStart = useRef(false);
 
-  const { data, isLoading } = useQuery<{ form: any; response: any }>({
+  const { data, isLoading } = useQuery<{
+    form: any;
+    response: any;
+    currentAcceptance?: { accepted: boolean; acceptedAt?: string; termsVersionHash?: string };
+  }>({
     queryKey: ["/api/portal/forms", slug],
     enabled: isAuthenticated && !!slug,
   });
 
   const form = data?.form;
   const existingResponse = data?.response;
-  const isSubmitted = existingResponse?.status === "submitted";
+  const needsCurrentWaiverAcceptance = import.meta.env.DEV
+    && slug === "liability-waiver"
+    && data?.currentAcceptance?.accepted === false;
+  const reacceptingSubmittedWaiver = needsCurrentWaiverAcceptance
+    && existingResponse?.status === "submitted";
+  const isSubmitted = existingResponse?.status === "submitted" && !reacceptingSubmittedWaiver;
 
   useEffect(() => {
     if (!form || !slug) return;
@@ -75,8 +84,20 @@ export default function PortalForm({ formSlug, embedded = false, onSubmitted }: 
       }
     }
 
+    if (slug === "liability-waiver"
+      && existingResponse?.status === "submitted"
+      && data?.currentAcceptance?.accepted === false) {
+      for (const field of form.fields || []) {
+        const fieldKey = field.name || field.id;
+        if (!fieldKey) continue;
+        if (field.type === "checkbox" && field.required) nextAnswers[fieldKey] = false;
+        if (fieldKey === "fullName" || fieldKey === "digitalSignature") nextAnswers[fieldKey] = "";
+        if (fieldKey === "signatureDate") nextAnswers[fieldKey] = today;
+      }
+    }
+
     setAnswers(nextAnswers);
-  }, [existingResponse?.id, form?.id, slug]);
+  }, [data?.currentAcceptance?.accepted, existingResponse?.id, form?.id, slug]);
 
   const saveMutation = useMutation({
     mutationFn: async () => {
@@ -143,10 +164,10 @@ export default function PortalForm({ formSlug, embedded = false, onSubmitted }: 
   });
 
   const debouncedSave = useCallback(() => {
-    if (!isSubmitted && !isSubmitting && !submitMutation.isPending && Object.keys(answers).length > 0) {
+    if (!isSubmitted && !reacceptingSubmittedWaiver && !isSubmitting && !submitMutation.isPending && Object.keys(answers).length > 0) {
       saveMutation.mutate();
     }
-  }, [answers, isSubmitted, isSubmitting, submitMutation.isPending]);
+  }, [answers, isSubmitted, reacceptingSubmittedWaiver, isSubmitting, submitMutation.isPending]);
 
   useEffect(() => {
     const timer = setTimeout(debouncedSave, 2000);
@@ -373,6 +394,14 @@ export default function PortalForm({ formSlug, embedded = false, onSubmitted }: 
       </div>
 
       <main className="max-w-3xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
+        {reacceptingSubmittedWaiver && (
+          <Card className="mb-6 bg-[#121826] border-amber-500/30">
+            <CardContent className="p-4 flex items-center gap-3">
+              <Lock className="h-5 w-5 text-amber-400 flex-shrink-0" />
+              <p className="text-gray-300 text-sm">{copy.currentWaiverReacceptNotice}</p>
+            </CardContent>
+          </Card>
+        )}
         {isSubmitted && (
           form?.retakeable ? (
             <Card className="mb-6 bg-[#121826] border-[#5EEBFF]/30">
@@ -445,16 +474,18 @@ export default function PortalForm({ formSlug, embedded = false, onSubmitted }: 
                     )}
                   </div>
                    <div className="flex flex-col gap-2 sm:flex-row">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => saveMutation.mutate()}
-                      disabled={saveMutation.isPending}
-                      data-testid="button-save-draft"
-                    >
-                      <Save className="h-4 w-4 mr-2" />
-                       {copy.saveDraft}
-                    </Button>
+                    {!reacceptingSubmittedWaiver && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => saveMutation.mutate()}
+                        disabled={saveMutation.isPending}
+                        data-testid="button-save-draft"
+                      >
+                        <Save className="h-4 w-4 mr-2" />
+                         {copy.saveDraft}
+                      </Button>
+                    )}
                     <Button
                       type="submit"
                       disabled={submitMutation.isPending || isSubmitting}

@@ -79,6 +79,25 @@ export const formResponses = pgTable("form_responses", {
   userFormUnique: uniqueIndex("form_responses_user_form_unique").on(table.userId, table.formId),
 }));
 
+export const waiverAcceptances = pgTable("waiver_acceptances", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  formId: varchar("form_id").notNull().references(() => forms.id),
+  formResponseId: varchar("form_response_id"),
+  termsVersionHash: text("terms_version_hash").notNull(),
+  termsSnapshot: jsonb("terms_snapshot").notNull(),
+  evidence: jsonb("evidence").notNull(),
+  signerName: text("signer_name").notNull(),
+  acceptedAt: timestamp("accepted_at").notNull(),
+  acceptedVia: text("accepted_via").notNull().default("member_portal"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  userFormVersionUnique: uniqueIndex("waiver_acceptances_user_form_version_unique")
+    .on(table.userId, table.formId, table.termsVersionHash),
+  userFormIndex: index("waiver_acceptances_user_form_idx").on(table.userId, table.formId),
+  acceptedAtIndex: index("waiver_acceptances_accepted_at_idx").on(table.acceptedAt),
+}));
+
 export const trainers = pgTable("trainers", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name").notNull(),
@@ -357,6 +376,22 @@ export const memberAuditEvents = pgTable("member_audit_events", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => ({
   userIndex: index("member_audit_events_user_idx").on(table.userId),
+}));
+
+export const memberAiDelegations = pgTable("member_ai_delegations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  label: text("label"),
+  tokenHash: text("token_hash").notNull().unique(),
+  scopes: jsonb("scopes").notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  revokedAt: timestamp("revoked_at"),
+  lastUsedAt: timestamp("last_used_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  userIndex: index("member_ai_delegations_user_idx").on(table.userId),
+  expiryIndex: index("member_ai_delegations_expiry_idx").on(table.expiresAt),
+  revokedIndex: index("member_ai_delegations_revoked_idx").on(table.revokedAt),
 }));
 
 export const sessionNotes = pgTable("session_notes", {

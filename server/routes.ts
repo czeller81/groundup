@@ -41,6 +41,10 @@ import {
 import { registerClassBookingRoutes } from "./class-booking-routes";
 import { registerMemberRoutes } from "./member-routes";
 import { registerAiManagementRoutes } from "./ai-management-api";
+import {
+  isMemberAiSelfServiceEnabled,
+  registerMemberAiSelfServiceRoutes,
+} from "./ai-member-self-service";
 import { applyStripeSubscription, expirePendingCheckoutSession } from "./membership-billing";
 import { applyDocumentLocale } from "./document-locale";
 import {
@@ -487,6 +491,7 @@ export async function registerRoutes(app: Express, dependencies: RouteDependenci
   app.use("/api/admin", staffMutationRateLimit());
   app.use("/api/bookings", staffMutationRateLimit());
   registerAiManagementRoutes(app);
+  registerMemberAiSelfServiceRoutes(app);
   registerClassBookingRoutes(app);
   registerMemberRoutes(app);
 
@@ -1651,13 +1656,24 @@ export async function registerRoutes(app: Express, dependencies: RouteDependenci
       const userId = req.session.userId!;
       const allForms = await storage.getForms();
       const userResponses = await storage.getUserFormResponses(userId);
-      
+      const liabilityWaiver = isMemberAiSelfServiceEnabled()
+        ? allForms.find((form) => form.slug === "liability-waiver")
+        : undefined;
+      const currentWaiverAcceptance = liabilityWaiver
+        ? await storage.getCurrentWaiverAcceptance(userId, liabilityWaiver)
+        : undefined;
       const formsWithStatus = allForms.map(form => {
         const response = userResponses.find(r => r.formId === form.id);
+        const requiresCurrentAcceptance = isMemberAiSelfServiceEnabled()
+          && form.slug === "liability-waiver";
         return {
           ...form,
-          responseStatus: response?.status || "not_started",
-          responseId: response?.id
+          responseStatus: requiresCurrentAcceptance && !currentWaiverAcceptance
+            ? "needs_current_acceptance"
+            : response?.status || "not_started",
+          responseId: response?.id,
+          currentAcceptanceRequired: requiresCurrentAcceptance,
+          currentAcceptanceAccepted: requiresCurrentAcceptance ? Boolean(currentWaiverAcceptance) : undefined,
         };
       });
 
@@ -1675,7 +1691,23 @@ export async function registerRoutes(app: Express, dependencies: RouteDependenci
         return res.status(404).json({ message: "Form not found" });
       }
       const response = await storage.getFormResponse(userId, form.id);
-      res.json({ form, response: response || null });
+      const currentAcceptance = isMemberAiSelfServiceEnabled() && form.slug === "liability-waiver"
+        ? await storage.getCurrentWaiverAcceptance(userId, form)
+        : undefined;
+      res.json({
+        form,
+        response: response || null,
+        currentAcceptance: currentAcceptance
+          ? {
+              accepted: true,
+              acceptedAt: currentAcceptance.acceptedAt,
+              signerName: currentAcceptance.signerName,
+              termsVersionHash: currentAcceptance.termsVersionHash,
+            }
+          : isMemberAiSelfServiceEnabled() && form.slug === "liability-waiver"
+            ? { accepted: false }
+            : undefined,
+      });
     } catch (error) {
       res.status(500).json({ message: "Failed to get form" });
     }
@@ -1717,6 +1749,16 @@ export async function registerRoutes(app: Express, dependencies: RouteDependenci
         return res.status(404).json({ message: "Form not found" });
       }
       const { answers } = req.body;
+      if (isMemberAiSelfServiceEnabled() && form.slug === "liability-waiver") {
+        const acceptance = await storage.acceptCurrentWaiver(userId, form.id, answers);
+        return res.json({
+          status: "submitted",
+          currentAcceptance: true,
+          acceptedAt: acceptance.acceptedAt,
+          signerName: acceptance.signerName,
+          termsVersionHash: acceptance.termsVersionHash,
+        });
+      }
       await storage.saveFormResponse(userId, form.id, answers, "draft");
       const response = await storage.submitFormResponse(userId, form.id);
       res.json(response);

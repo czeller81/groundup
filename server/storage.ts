@@ -7,6 +7,7 @@ import {
   passwordResetTokens,
   forms,
   formResponses,
+  waiverAcceptances,
   memberships,
   membershipPlans,
   memberLifecycles,
@@ -18,6 +19,7 @@ import {
   discoveryEntitlements,
   entitlementLedger,
   memberAuditEvents,
+  memberAiDelegations,
   sessionNotes,
   webhookEvents,
   calendarConnections,
@@ -73,7 +75,7 @@ export class ClassBookingError extends Error {
 }
 import { randomUUID } from "crypto";
 import bcrypt from "bcryptjs";
-import { canRetryWebhook, INTERNAL_TEST_EMAIL_PATTERN, isPublicOccurrenceText } from "./route-security";
+import { accountCanUseMemberFeatures, canRetryWebhook, INTERNAL_TEST_EMAIL_PATTERN, isPublicOccurrenceText } from "./route-security";
 import {
   canRestoreDiscoveryEntitlement,
   discoveryCategory,
@@ -87,6 +89,13 @@ import { enqueueNotification } from "./notification-outbox";
 import { classLifecycleEmailContent, getBookingStaffEmail } from "./email";
 import { BOOKING_OPERATIONS, formatBookingDateTime, isAllowedClassWeekday } from "@shared/booking-operations";
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto";
+import {
+  getWaiverTermsSnapshot,
+  getWaiverTermsVersionHash,
+  isVersionedWaiver,
+  validateWaiverAcceptanceAnswers,
+} from "./waiver-acceptance";
+import { reservationReplayMatches } from "./class-booking-idempotency";
 
 const DEFAULT_REPORT_TIMEZONE = "America/Los_Angeles";
 const BOOKING_EMAIL_FROM = "Ground Up <info@groundupbjj.com>";
@@ -274,6 +283,8 @@ export interface IStorage {
   getFormResponse(userId: string, formId: string): Promise<FormResponse | undefined>;
   saveFormResponse(userId: string, formId: string, answers: any, status: string): Promise<FormResponse>;
   submitFormResponse(userId: string, formId: string): Promise<FormResponse | undefined>;
+  getCurrentWaiverAcceptance(userId: string, form: Form): Promise<typeof waiverAcceptances.$inferSelect | undefined>;
+  acceptCurrentWaiver(userId: string, formId: string, answers: unknown): Promise<typeof waiverAcceptances.$inferSelect>;
   getAllFormResponses(): Promise<(FormResponse & { user: SafeUser; form: Form })[]>;
   
   getUserBookings(userId: string): Promise<BookingWithTrainer[]>;
@@ -659,6 +670,102 @@ export class DatabaseStorage implements IStorage {
       .from(formResponses)
       .where(and(eq(formResponses.userId, userId), eq(formResponses.formId, formId)));
     return response;
+  }
+
+  async getCurrentWaiverAcceptance(userId: string, form: Form): Promise<typeof waiverAcceptances.$inferSelect | undefined> {
+    if (!isVersionedWaiver(form)) return undefined;
+    const versionHash = getWaiverTermsVersionHash(form);
+    const [acceptance] = await db.select().from(waiverAcceptances).where(and(
+      eq(waiverAcceptances.userId, userId),
+      eq(waiverAcceptances.formId, form.id),
+      eq(waiverAcceptances.termsVersionHash, versionHash),
+    )).limit(1);
+    return acceptance;
+  }
+
+  async acceptCurrentWaiver(
+    userId: string,
+    formId: string,
+    answers: unknown,
+  ): Promise<typeof waiverAcceptances.$inferSelect> {
+    return db.transaction(async (tx) => {
+      const [form] = await tx.select().from(forms)
+        .where(eq(forms.id, formId))
+        .for("share")
+        .limit(1);
+      if (!form || !isVersionedWaiver(form)) throw new Error("Current waiver form is unavailable.");
+
+      const validated = validateWaiverAcceptanceAnswers(form, answers);
+      const versionHash = getWaiverTermsVersionHash(form);
+      const [priorAcceptance] = await tx.select().from(waiverAcceptances).where(and(
+        eq(waiverAcceptances.userId, userId),
+        eq(waiverAcceptances.formId, formId),
+        eq(waiverAcceptances.termsVersionHash, versionHash),
+      )).limit(1);
+      if (priorAcceptance) return priorAcceptance;
+
+      const [priorResponse] = await tx.select().from(formResponses).where(and(
+        eq(formResponses.userId, userId),
+        eq(formResponses.formId, formId),
+      )).limit(1);
+
+      let formResponseId: string | null = null;
+      const now = new Date();
+      if (!priorResponse) {
+        const [response] = await tx.insert(formResponses).values({
+          userId,
+          formId,
+          answers,
+          status: "submitted",
+          submittedAt: now,
+          updatedAt: now,
+        }).returning();
+        formResponseId = response.id;
+      } else if (priorResponse.status !== "submitted") {
+        const [response] = await tx.update(formResponses).set({
+          answers,
+          status: "submitted",
+          submittedAt: now,
+          updatedAt: now,
+        }).where(eq(formResponses.id, priorResponse.id)).returning();
+        formResponseId = response.id;
+      }
+
+      await tx.insert(waiverAcceptances).values({
+        userId,
+        formId,
+        formResponseId,
+        termsVersionHash: versionHash,
+        termsSnapshot: getWaiverTermsSnapshot(form),
+        evidence: validated.evidence,
+        signerName: validated.signerName,
+        acceptedAt: now,
+        acceptedVia: "member_portal",
+      }).onConflictDoNothing({
+        target: [waiverAcceptances.userId, waiverAcceptances.formId, waiverAcceptances.termsVersionHash],
+      });
+
+      const [acceptance] = await tx.select().from(waiverAcceptances).where(and(
+        eq(waiverAcceptances.userId, userId),
+        eq(waiverAcceptances.formId, formId),
+        eq(waiverAcceptances.termsVersionHash, versionHash),
+      )).limit(1);
+      if (!acceptance) throw new Error("Unable to record current waiver acceptance.");
+
+      await tx.insert(memberAuditEvents).values({
+        actorId: userId,
+        userId,
+        targetType: "waiver_acceptance",
+        targetId: acceptance.id,
+        action: "accepted_current_waiver",
+        after: {
+          formId,
+          termsVersionHash: versionHash,
+          acceptedAt: acceptance.acceptedAt.toISOString(),
+        },
+      });
+      return acceptance;
+    });
   }
 
   async saveFormResponse(userId: string, formId: string, answers: any, status: string): Promise<FormResponse> {
@@ -1575,6 +1682,8 @@ export class DatabaseStorage implements IStorage {
   async reserveClassOccurrence(input: {
     occurrenceId: string;
     userId?: string;
+    delegationId?: string;
+    requireCurrentWaiver?: boolean;
     minorProfileId?: string;
     firstName: string;
     lastName: string;
@@ -1590,12 +1699,39 @@ export class DatabaseStorage implements IStorage {
   }): Promise<{ reservation: ClassReservation; occurrence: ClassOccurrence; promoted?: ClassReservation; manageToken?: string }> {
     return db.transaction(async (tx) => {
       await tx.execute(sql`select id from class_occurrences where id = ${input.occurrenceId} for update`);
+      if (input.idempotencyKey) {
+        await tx.execute(sql`select pg_advisory_xact_lock(hashtextextended(${input.idempotencyKey}, 0))`);
+      }
+      if (input.delegationId && input.userId) {
+        const now = new Date();
+        const [activeDelegation] = await tx.select({ id: memberAiDelegations.id })
+          .from(memberAiDelegations)
+          .where(and(
+            eq(memberAiDelegations.id, input.delegationId),
+            eq(memberAiDelegations.userId, input.userId),
+            isNull(memberAiDelegations.revokedAt),
+            gt(memberAiDelegations.expiresAt, now),
+          ))
+          .for("update")
+          .limit(1);
+        if (!activeDelegation) {
+          throw new ClassBookingError("DELEGATION_INVALID", "This member delegation is no longer active.", 403);
+        }
+      }
       const [occurrence] = await tx.select().from(classOccurrences).where(eq(classOccurrences.id, input.occurrenceId));
       if (!occurrence) throw new ClassBookingError("OCCURRENCE_NOT_FOUND", "This class occurrence does not exist.", 404);
       if (input.idempotencyKey) {
         const [existing] = await tx.select().from(classReservations).where(eq(classReservations.idempotencyKey, input.idempotencyKey));
         if (existing) {
-          if (existing.occurrenceId !== input.occurrenceId || (input.userId && existing.userId !== input.userId)) {
+          if (!reservationReplayMatches({
+            occurrenceId: existing.occurrenceId,
+            userId: existing.userId,
+            minorProfileId: existing.minorProfileId,
+            firstName: existing.visitorFirstName || "",
+            lastName: existing.visitorLastName || "",
+            email: existing.visitorEmail || "",
+            phone: existing.visitorPhone || "",
+          }, input)) {
             throw new ClassBookingError("IDEMPOTENCY_KEY_REUSED", "This booking request key was already used for a different reservation.", 409);
           }
           return {
@@ -1632,8 +1768,35 @@ export class DatabaseStorage implements IStorage {
       let eligibility: BookingEligibility | undefined;
       let minorProfile: MinorProfile | undefined;
       if (input.userId) {
-        const user = await this.getUserById(input.userId);
+        const [user] = await tx.select().from(users)
+          .where(eq(users.id, input.userId))
+          .for("update")
+          .limit(1);
         if (!user) throw new ClassBookingError("USER_NOT_FOUND", "This member account could not be found.", 401);
+        if (input.delegationId && (user.role !== "member" || !accountCanUseMemberFeatures(user))) {
+          throw new ClassBookingError("MEMBER_ACCOUNT_UNAVAILABLE", "This member account cannot use delegated booking.", 403);
+        }
+        if (input.requireCurrentWaiver) {
+          const [waiverForm] = await tx.select().from(forms)
+            .where(eq(forms.slug, "liability-waiver"))
+            .for("share")
+            .limit(1);
+          if (!waiverForm || !isVersionedWaiver(waiverForm)) {
+            throw new ClassBookingError("CURRENT_WAIVER_UNAVAILABLE", "The current member waiver is unavailable.", 503);
+          }
+          const versionHash = getWaiverTermsVersionHash(waiverForm);
+          const [acceptance] = await tx.select({ id: waiverAcceptances.id })
+            .from(waiverAcceptances)
+            .where(and(
+              eq(waiverAcceptances.userId, input.userId),
+              eq(waiverAcceptances.formId, waiverForm.id),
+              eq(waiverAcceptances.termsVersionHash, versionHash),
+            ))
+            .limit(1);
+          if (!acceptance) {
+            throw new ClassBookingError("CURRENT_WAIVER_REQUIRED", "Complete the current waiver in the member portal before booking.", 409);
+          }
+        }
         if (input.minorProfileId) {
           [minorProfile] = await tx.select().from(minorProfiles).where(and(
             eq(minorProfiles.id, input.minorProfileId),

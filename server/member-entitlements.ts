@@ -1,4 +1,4 @@
-import { and, asc, count, eq, gte, inArray, isNull, lte, or, sql, sum } from "drizzle-orm";
+import { and, asc, count, eq, gte, inArray, isNotNull, isNull, lte, or, sql, sum } from "drizzle-orm";
 import {
   classOccurrences,
   classReservations,
@@ -200,6 +200,63 @@ function includesCategory(eligibleCategories: unknown, categories: string[]) {
   return categories.some((category) => normalized.includes(category.toLowerCase().replace(/[-_]/g, " ")));
 }
 
+export function isPlanEffectiveAt(plan: Pick<MembershipPlan, "active" | "effectiveStart" | "effectiveEnd">, at: Date) {
+  return plan.active
+    && (!plan.effectiveStart || plan.effectiveStart <= at)
+    && (!plan.effectiveEnd || plan.effectiveEnd >= at);
+}
+
+export function isMembershipBillingAllowed(
+  membership: Pick<typeof memberships.$inferSelect, "billingState" | "billingSource" | "stripeSubscriptionId" | "stripeCheckoutSessionId">,
+) {
+  // Stripe trialing is normalized to "active" by the billing webhook handler. Do
+  // not accept raw provider states here, or a stale/pending subscription can book.
+  const stripeBacked = membership.billingSource === "stripe"
+    || membership.billingSource === "stripe_checkout"
+    || Boolean(membership.stripeSubscriptionId)
+    || Boolean(membership.stripeCheckoutSessionId);
+  if (stripeBacked) {
+    return membership.billingState === "active" || membership.billingState === "cancel_at_period_end";
+  }
+  return membership.billingSource === "manual"
+    && membership.billingState === "manual"
+    && !membership.stripeSubscriptionId
+    && !membership.stripeCheckoutSessionId;
+}
+
+export function isMembershipEligibleForPlan(
+  membership: Pick<typeof memberships.$inferSelect, "status" | "startDate" | "endDate" | "billingState" | "billingSource" | "stripeSubscriptionId" | "stripeCheckoutSessionId" | "cancelAtPeriodEnd" | "currentPeriodEnd" | "pausedAt">,
+  plan: Pick<MembershipPlan, "active" | "effectiveStart" | "effectiveEnd">,
+  at: Date,
+) {
+  if (!["active", "ACTIVE"].includes(membership.status)) return false;
+  if (membership.startDate > at || (membership.endDate && membership.endDate < at)) return false;
+  if (membership.pausedAt) return false;
+  if (!isPlanEffectiveAt(plan, at) || !isMembershipBillingAllowed(membership)) return false;
+  const stripeBacked = membership.billingSource === "stripe"
+    || membership.billingSource === "stripe_checkout"
+    || Boolean(membership.stripeSubscriptionId)
+    || Boolean(membership.stripeCheckoutSessionId);
+  if (stripeBacked) {
+    if (membership.billingState === "cancel_at_period_end"
+      && (!membership.currentPeriodEnd || membership.currentPeriodEnd < at)) return false;
+    if (membership.billingState === "active"
+      && membership.currentPeriodEnd
+      && membership.currentPeriodEnd < at) return false;
+    if (membership.cancelAtPeriodEnd && (!membership.currentPeriodEnd || membership.currentPeriodEnd < at)) return false;
+  }
+  return true;
+}
+
+export function planAllowsGirls(plan: Pick<MembershipPlan, "eligibleClassCategories">) {
+  if (!Array.isArray(plan.eligibleClassCategories) || plan.eligibleClassCategories.length === 0) return false;
+  return includesCategory(plan.eligibleClassCategories, [
+    "girls_skill",
+    "girls jiu jitsu self defense",
+    GIRLS_CLASS_CATEGORY,
+  ]);
+}
+
 async function activeMembership(userId: string, at: Date, executor: SelectExecutor) {
   const rows = await executor.select({
     membership: memberships,
@@ -211,6 +268,51 @@ async function activeMembership(userId: string, at: Date, executor: SelectExecut
       inArray(memberships.status, ["active", "ACTIVE"]),
       lte(memberships.startDate, at),
       or(isNull(memberships.endDate), gte(memberships.endDate, at)),
+      or(
+        isNull(memberships.planId),
+        and(
+          eq(membershipPlans.active, true),
+          or(isNull(membershipPlans.effectiveStart), lte(membershipPlans.effectiveStart, at)),
+          or(isNull(membershipPlans.effectiveEnd), gte(membershipPlans.effectiveEnd, at)),
+          isNull(memberships.pausedAt),
+          or(
+            and(
+              eq(memberships.billingSource, "manual"),
+              eq(memberships.billingState, "manual"),
+              isNull(memberships.stripeSubscriptionId),
+              isNull(memberships.stripeCheckoutSessionId),
+            ),
+            and(
+              or(
+                inArray(memberships.billingSource, ["stripe", "stripe_checkout"]),
+                isNotNull(memberships.stripeSubscriptionId),
+                isNotNull(memberships.stripeCheckoutSessionId),
+              ),
+              or(
+                and(
+                  eq(memberships.billingState, "active"),
+                  or(
+                    and(
+                      eq(memberships.cancelAtPeriodEnd, false),
+                      or(isNull(memberships.currentPeriodEnd), gte(memberships.currentPeriodEnd, at)),
+                    ),
+                    and(
+                      eq(memberships.cancelAtPeriodEnd, true),
+                      isNotNull(memberships.currentPeriodEnd),
+                      gte(memberships.currentPeriodEnd, at),
+                    ),
+                  ),
+                ),
+                and(
+                  eq(memberships.billingState, "cancel_at_period_end"),
+                  isNotNull(memberships.currentPeriodEnd),
+                  gte(memberships.currentPeriodEnd, at),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
     ))
     .orderBy(asc(memberships.startDate));
   return rows.at(-1);
@@ -382,6 +484,84 @@ export async function evaluateMinorBookingEligibilityWithExecutor(
     return result("MINOR_AGE_RESTRICTED", { source: "minor", minorProfileId: minorProfile.id });
   }
 
+  const classType = occurrence.classTypeId
+    ? (await executor.select().from(classTypes).where(eq(classTypes.id, occurrence.classTypeId))).at(0) || null
+    : null;
+  const guardianMembership = await activeMembership(minorProfile.guardianUserId, occurrence.start, executor);
+  if (!guardianMembership) {
+    return result("MEMBERSHIP_INACTIVE", { source: "minor", minorProfileId: minorProfile.id });
+  }
+  const plan = guardianMembership.plan;
+  // A minor reservation consumes the guardian's membership entitlement. It
+  // never falls back to a Discovery Pass belonging to either party.
+  if (!plan || !planAllowsGirls(plan)) {
+    return result("PLAN_NOT_ELIGIBLE", {
+      source: "minor",
+      minorProfileId: minorProfile.id,
+      membershipId: guardianMembership.membership.id,
+      plan: plan || undefined,
+    });
+  }
+  const categories = normalizedClassCategories(classType);
+  if (!isGirlsClass(occurrence) || !includesCategory(plan.eligibleClassCategories, categories.length
+    ? categories
+    : [GIRLS_CLASS_CATEGORY])) {
+    return result("PLAN_NOT_ELIGIBLE", {
+      source: "minor",
+      minorProfileId: minorProfile.id,
+      membershipId: guardianMembership.membership.id,
+      plan,
+    });
+  }
+  if (occurrence.start.getTime() - now.getTime() > plan.bookingWindowHours * 60 * 60 * 1000) {
+    return result("BOOKING_WINDOW_CLOSED", {
+      source: "minor",
+      minorProfileId: minorProfile.id,
+      membershipId: guardianMembership.membership.id,
+      plan,
+    });
+  }
+  const requiredBookingForms = await executor.select({ id: forms.id })
+    .from(forms)
+    .where(eq(forms.requiredBeforeBooking, true));
+  if (requiredBookingForms.length) {
+    const submittedForms = await executor.select({ formId: formResponses.formId })
+      .from(formResponses)
+      .where(and(
+        eq(formResponses.userId, minorProfile.guardianUserId),
+        eq(formResponses.status, "submitted"),
+        inArray(formResponses.formId, requiredBookingForms.map((form) => form.id)),
+      ));
+    if (new Set(submittedForms.map((response) => response.formId)).size < requiredBookingForms.length) {
+      return result("REQUIRED_FORM_INCOMPLETE", {
+        source: "minor",
+        minorProfileId: minorProfile.id,
+        membershipId: guardianMembership.membership.id,
+        plan,
+      });
+    }
+  }
+  const weekStart = getMembershipWeekStart(occurrence.start, plan.weekStartDay, plan.timezone);
+  if (plan.weeklySessionLimit !== null) {
+    const [usage] = await executor.select({
+      reserved: sum(entitlementLedger.reserved),
+      released: sum(entitlementLedger.released),
+    }).from(entitlementLedger).where(and(
+      eq(entitlementLedger.userId, minorProfile.guardianUserId),
+      eq(entitlementLedger.membershipId, guardianMembership.membership.id),
+      eq(entitlementLedger.weekStart, weekStart),
+    ));
+    if (Number(usage?.reserved || 0) - Number(usage?.released || 0) >= plan.weeklySessionLimit) {
+      return result("WEEKLY_LIMIT_REACHED", {
+        source: "minor",
+        minorProfileId: minorProfile.id,
+        membershipId: guardianMembership.membership.id,
+        plan,
+        weekStart,
+      });
+    }
+  }
+
   const duplicate = await executor.select({ id: classReservations.id }).from(classReservations).where(and(
     eq(classReservations.occurrenceId, occurrence.id),
     eq(classReservations.minorProfileId, minorProfile.id),
@@ -405,8 +585,17 @@ export async function evaluateMinorBookingEligibilityWithExecutor(
     eq(classReservations.status, "confirmed"),
   ));
   return result(
-    Number(confirmed?.value || 0) >= occurrence.capacity ? "CLASS_FULL_WAITLIST_AVAILABLE" : "ELIGIBLE",
-    { source: "minor", minorProfileId: minorProfile.id, waitlistAllowed: true },
+    Number(confirmed?.value || 0) >= occurrence.capacity
+      ? (plan.waitlistAllowed ? "CLASS_FULL_WAITLIST_AVAILABLE" : "PLAN_NOT_ELIGIBLE")
+      : "ELIGIBLE",
+    {
+      source: "minor",
+      minorProfileId: minorProfile.id,
+      membershipId: guardianMembership.membership.id,
+      plan,
+      waitlistAllowed: plan.waitlistAllowed,
+      weekStart,
+    },
   );
 }
 

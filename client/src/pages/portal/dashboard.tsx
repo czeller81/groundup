@@ -46,6 +46,27 @@ const MEMBERSHIP_LABELS: Record<string, { name: string; price: string; classes: 
   "monthly_unlimited": { name: "", price: "$60/mo", classes: "Unlimited" },
 };
 
+const AI_DELEGATION_SCOPES = [
+  "self:profile:read",
+  "self:schedule:read",
+  "self:reservations:read",
+  "self:booking:preview",
+  "self:waiver:initiate",
+  "self:reservation:create",
+  "self:dependents:read",
+] as const;
+type AiDelegationScope = typeof AI_DELEGATION_SCOPES[number];
+type AiDelegation = {
+  id: string;
+  label?: string | null;
+  scopes: string[];
+  expiresAt: string;
+  revokedAt?: string | null;
+  createdAt: string;
+  lastUsedAt?: string | null;
+  active: boolean;
+};
+
 function getMembershipInfo(type: string, copy: ReturnType<typeof useLocale>["copy"]) {
   const info = MEMBERSHIP_LABELS[type] || { name: type.replace(/_/g, " "), price: copy.contactGym, classes: copy.varies };
   const names: Record<string, string> = {
@@ -106,6 +127,57 @@ export default function PortalDashboard() {
   const { data: memberProgram } = useQuery<any>({
     queryKey: ["/api/portal/member-program"],
     enabled: isAuthenticated,
+  });
+
+  const { data: aiDelegationsData, isLoading: aiDelegationsLoading, isError: aiDelegationsError } = useQuery<{ delegations: AiDelegation[] }>({
+    queryKey: ["/api/portal/me/ai-delegations"],
+    enabled: import.meta.env.DEV
+      && import.meta.env.VITE_MEMBER_AI_SELF_SERVICE_ENABLED === "true"
+      && isAuthenticated
+      && user?.role === "member",
+  });
+  const [delegationLabel, setDelegationLabel] = useState("");
+  const [delegationScopes, setDelegationScopes] = useState<AiDelegationScope[]>([
+    "self:profile:read",
+    "self:schedule:read",
+    "self:reservations:read",
+    "self:booking:preview",
+  ]);
+  const [delegationExpiresInHours, setDelegationExpiresInHours] = useState("24");
+  const [newDelegationToken, setNewDelegationToken] = useState<string | null>(null);
+  const [tokenCopied, setTokenCopied] = useState(false);
+
+  const createAiDelegation = useMutation({
+    mutationFn: async () => (await apiRequest("POST", "/api/portal/me/ai-delegations", {
+      label: delegationLabel.trim() || undefined,
+      scopes: delegationScopes,
+      expiresInHours: Number(delegationExpiresInHours),
+    })).json(),
+    onSuccess: (result: { token: string }) => {
+      setNewDelegationToken(result.token);
+      setTokenCopied(false);
+      setDelegationLabel("");
+      queryClient.invalidateQueries({ queryKey: ["/api/portal/me/ai-delegations"] });
+      toast({ title: copy.aiDelegationCreated });
+    },
+    onError: (error: Error) => toast({
+      title: copy.error,
+      description: localizeApiError(error.message, locale, copy.aiDelegationFailed),
+      variant: "destructive",
+    }),
+  });
+  const revokeAiDelegation = useMutation({
+    mutationFn: async (id: string) => (await apiRequest("DELETE", `/api/portal/me/ai-delegations/${id}`)).json(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/portal/me/ai-delegations"] });
+      setNewDelegationToken(null);
+      toast({ title: copy.aiDelegationRevoked });
+    },
+    onError: (error: Error) => toast({
+      title: copy.error,
+      description: localizeApiError(error.message, locale, copy.aiDelegationFailed),
+      variant: "destructive",
+    }),
   });
 
   const claimDiscovery = useMutation({
@@ -340,6 +412,107 @@ export default function PortalDashboard() {
             </div>
           </Link>
         </div>
+
+        {import.meta.env.DEV
+          && import.meta.env.VITE_MEMBER_AI_SELF_SERVICE_ENABLED === "true"
+          && user?.role === "member"
+          && <Card className="mb-4 border-[#B06CFF]/20 bg-[#121826]" data-testid="ai-delegation-card">
+          <CardHeader className="pb-2 pt-4 px-4">
+            <CardTitle className="flex items-center gap-2 text-base text-white">
+              <Shield className="h-4 w-4 text-[#B06CFF]" />
+              {copy.aiDelegationTitle}
+            </CardTitle>
+            <CardDescription className="text-xs text-gray-400">{copy.aiDelegationDescription}</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4 px-4 pb-4">
+            <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-200">
+              {copy.aiDelegationSecurityWarning}
+            </div>
+            {newDelegationToken && (
+              <div className="space-y-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3">
+                <p className="text-sm font-semibold text-emerald-200">{copy.aiDelegationTokenTitle}</p>
+                <p className="text-xs text-emerald-100/80">{copy.aiDelegationTokenWarning}</p>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <input readOnly value={newDelegationToken} className="min-w-0 flex-1 rounded-md border border-white/10 bg-black/30 px-3 py-2 text-xs text-white" aria-label={copy.aiDelegationTokenTitle} />
+                  <Button type="button" size="sm" variant="outline" className="border-white/15 text-gray-200 hover:bg-white/5" onClick={async () => {
+                    try {
+                      if (!navigator.clipboard?.writeText) throw new Error("Clipboard unavailable");
+                      await navigator.clipboard.writeText(newDelegationToken);
+                      setTokenCopied(true);
+                    } catch {
+                      setTokenCopied(false);
+                      toast({
+                        title: copy.error,
+                        description: copy.aiDelegationCopyFailed,
+                        variant: "destructive",
+                      });
+                    }
+                  }}>
+                    {tokenCopied ? copy.aiDelegationCopied : copy.aiDelegationCopy}
+                  </Button>
+                </div>
+              </div>
+            )}
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="text-xs text-gray-300">
+                {copy.aiDelegationLabel}
+                <input value={delegationLabel} onChange={(event) => setDelegationLabel(event.target.value)} placeholder={copy.aiDelegationLabelPlaceholder} maxLength={80} className="mt-1 w-full rounded-md border border-white/10 bg-black/20 px-3 py-2 text-sm text-white placeholder:text-gray-600" />
+              </label>
+              <label className="text-xs text-gray-300">
+                {copy.aiDelegationExpiration}
+                <select value={delegationExpiresInHours} onChange={(event) => setDelegationExpiresInHours(event.target.value)} className="mt-1 w-full rounded-md border border-white/10 bg-[#0B0F14] px-3 py-2 text-sm text-white">
+                  <option value="1">1 {copy.aiDelegationHour}</option>
+                  <option value="24">24 {copy.aiDelegationHours}</option>
+                  <option value="72">72 {copy.aiDelegationHours}</option>
+                  <option value="168">7 {copy.aiDelegationDays}</option>
+                </select>
+              </label>
+            </div>
+            <fieldset>
+              <legend className="mb-2 text-xs text-gray-300">{copy.aiDelegationScopes}</legend>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {AI_DELEGATION_SCOPES.map((scope) => (
+                  <label key={scope} className="flex items-start gap-2 rounded-md border border-white/5 bg-white/[0.02] p-2 text-xs text-gray-300">
+                    <input type="checkbox" checked={delegationScopes.includes(scope)} onChange={(event) => setDelegationScopes((current) => event.target.checked ? [...current, scope] : current.filter((item) => item !== scope))} className="mt-0.5 accent-[#5EEBFF]" />
+                    <span>
+                      <span className="font-medium">{copy.aiDelegationScopeLabels[scope]}</span>
+                      {scope === "self:dependents:read" && <span className="mt-0.5 block text-[11px] text-gray-500">{copy.aiDelegationDependentsDescription}</span>}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+            <Button type="button" disabled={createAiDelegation.isPending || delegationScopes.length === 0} onClick={() => createAiDelegation.mutate()} className="bg-[#B06CFF] text-white hover:bg-[#B06CFF]/90">
+              {createAiDelegation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {createAiDelegation.isPending ? copy.aiDelegationCreating : copy.aiDelegationCreate}
+            </Button>
+            <div className="border-t border-white/10 pt-3">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">{copy.aiDelegationCurrent}</p>
+              {aiDelegationsLoading ? <p className="text-xs text-gray-500">{copy.loading}…</p> :
+                aiDelegationsError ? <p className="text-xs text-amber-300">{copy.aiDelegationLoadError}</p> :
+                !(aiDelegationsData?.delegations || []).length ? <p className="text-xs text-gray-500">{copy.aiDelegationNone}</p> :
+                <div className="space-y-2">{aiDelegationsData?.delegations.map((delegation) => (
+                  <div key={delegation.id} className="flex flex-col gap-2 rounded-lg border border-white/5 bg-white/[0.02] p-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-white">{delegation.label || copy.aiDelegationUnnamed}</p>
+                      <p className="text-xs text-gray-400">{delegation.scopes.map((scope) => copy.aiDelegationScopeLabels[scope as AiDelegationScope] || scope).join(" · ")}</p>
+                      <p className="mt-1 text-xs text-gray-500">
+                        {delegation.revokedAt
+                          ? copy.aiDelegationRevokedStatus
+                          : delegation.active
+                            ? copy.aiDelegationExpires
+                            : copy.aiDelegationExpiredStatus}
+                        : {new Date(delegation.expiresAt).toLocaleString(locale)}
+                      </p>
+                    </div>
+                    {delegation.active && <Button type="button" size="sm" variant="outline" disabled={revokeAiDelegation.isPending} className="border-red-500/30 text-red-300 hover:bg-red-500/10" onClick={() => {
+                      if (window.confirm(copy.aiDelegationRevokeConfirm)) revokeAiDelegation.mutate(delegation.id);
+                    }}>{revokeAiDelegation.isPending && <Loader2 className="mr-2 h-3 w-3 animate-spin" />}{copy.aiDelegationRevoke}</Button>}
+                  </div>
+                ))}</div>}
+            </div>
+          </CardContent>
+        </Card>}
 
         <Card className="mb-4 border-[#5EEBFF]/20 bg-gradient-to-r from-[#5EEBFF]/10 to-[#B06CFF]/10">
           <CardHeader className="pb-2 pt-4 px-4">
