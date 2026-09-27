@@ -1,18 +1,33 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
+import { isAllowedClassWeekday } from "@shared/booking-operations";
 import { db } from "./db";
 import { calendarConnections, classOccurrences, classReservationEvents, classReservations, classTypes, discoveryEntitlements, discoveryPassClaims, discoveryPasses, formResponses, forms, insertAnalyticsEventSchema, memberAuditEvents, memberLifecycleEvents, memberLifecycles, users } from "@shared/schema";
 import { storage } from "./storage";
 import { discoveryReservationCountsAsPriorUse, issueDiscoveryPass, missingRequiredBookingForms } from "./member-routes";
 import { discoveryPassClaimRequestSchema, normalizeDiscoveryPassClaimInput } from "./discovery-pass-b";
-import { evaluateBookingEligibility } from "./member-entitlements";
+import { canRestoreDiscoveryEntitlement, evaluateBookingEligibility } from "./member-entitlements";
 
 test("Discovery Pass treats prior interest and cancelled unused reservations as new-user eligible", () => {
   assert.equal(discoveryReservationCountsAsPriorUse("cancelled", null), false);
   assert.equal(discoveryReservationCountsAsPriorUse("cancelled", "NO_SHOW"), true);
   assert.equal(discoveryReservationCountsAsPriorUse("confirmed", null), true);
   assert.equal(discoveryReservationCountsAsPriorUse("waitlisted", null), true);
+});
+
+test("Discovery Pass entitlement restoration requires an active, unconverted pass", () => {
+  const at = new Date("2026-09-27T12:00:00Z");
+  const pass = {
+    convertedAt: null,
+    status: "PARTIALLY_BOOKED",
+    expirationTimestamp: new Date("2026-09-28T12:00:00Z"),
+  };
+
+  assert.equal(canRestoreDiscoveryEntitlement(pass, at), true);
+  assert.equal(canRestoreDiscoveryEntitlement({ ...pass, expirationTimestamp: at }, at), false);
+  assert.equal(canRestoreDiscoveryEntitlement({ ...pass, convertedAt: at }, at), false);
+  assert.equal(canRestoreDiscoveryEntitlement({ ...pass, status: "EXPIRED" }, at), false);
 });
 
 test("Discovery funnel event contract preserves consented attribution fields", () => {
@@ -60,7 +75,7 @@ test("Variant B claim validation and duplicate handling stay account-free", asyn
   }
 });
 
-test("Discovery booking requires activation guidance but bypasses membership after activation", async () => {
+test("Discovery bookings bypass membership after activation and provider cancellations restore valid credit", async () => {
   assert.notEqual(process.env.NODE_ENV, "production", "fixture activation tests must never run in production");
   const suffix = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
   const user = await storage.createUser(
@@ -141,8 +156,8 @@ test("Discovery booking requires activation guidance but bypasses membership aft
         googleEventId: `discovery-qa-${suffix}-${label}`,
         title: `Discovery QA ${label}`,
         description: "Fixture",
-        start: new Date(Date.now() + (dayOffset + 1) * 24 * 60 * 60 * 1000),
-        end: new Date(Date.now() + (dayOffset + 1) * 24 * 60 * 60 * 1000 + 60 * 60 * 1000),
+        start: new Date(Date.now() + dayOffset * 24 * 60 * 60 * 1000),
+        end: new Date(Date.now() + dayOffset * 24 * 60 * 60 * 1000 + 60 * 60 * 1000),
         classTypeId,
         canonicalCategory: label === "Skill" ? "JIU_JITSU_SELF_DEFENSE" : "STRENGTH_CONDITIONING",
         capacity: 4,
@@ -155,9 +170,15 @@ test("Discovery booking requires activation guidance but bypasses membership aft
       occurrenceIds.push(created.id);
       return created;
     };
-    const skillOccurrence = await makeOccurrence(skillType.id, "Skill", 1);
-    const strengthOccurrence = await makeOccurrence(strengthType.id, "Strength", 2);
-    await storage.reserveClassOccurrence({
+    const allowedDayOffsets: number[] = [];
+    for (let dayOffset = 1; dayOffset <= 6 && allowedDayOffsets.length < 2; dayOffset += 1) {
+      const candidate = new Date(Date.now() + dayOffset * 24 * 60 * 60 * 1000);
+      if (isAllowedClassWeekday(candidate)) allowedDayOffsets.push(dayOffset);
+    }
+    assert.equal(allowedDayOffsets.length, 2, "two allowed class days must fit inside the booking horizon");
+    const skillOccurrence = await makeOccurrence(skillType.id, "Skill", allowedDayOffsets[0]);
+    const strengthOccurrence = await makeOccurrence(strengthType.id, "Strength", allowedDayOffsets[1]);
+    const skillReservation = await storage.reserveClassOccurrence({
       occurrenceId: skillOccurrence.id,
       userId: user.id,
       firstName: user.firstName,
@@ -165,7 +186,7 @@ test("Discovery booking requires activation guidance but bypasses membership aft
       email: user.email,
       phone: user.phone || "5550000399",
     });
-    await storage.reserveClassOccurrence({
+    const strengthReservation = await storage.reserveClassOccurrence({
       occurrenceId: strengthOccurrence.id,
       userId: user.id,
       firstName: user.firstName,
@@ -179,6 +200,36 @@ test("Discovery booking requires activation guidance but bypasses membership aft
       bookedEntitlements.map((entitlement) => [entitlement.category, entitlement.status]).sort(),
       [["SKILL", "BOOKED"], ["STRENGTH", "BOOKED"]],
     );
+    const [passBeforeProviderCancellation] = await db.select().from(discoveryPasses).where(eq(discoveryPasses.id, pass.id));
+
+    const cancelledReservations = await storage.cancelOccurrenceReservations(
+      skillOccurrence.id,
+      "The class was cancelled on the academy calendar.",
+    );
+    assert.ok(cancelledReservations.some((reservation) => reservation.id === skillReservation.reservation.id));
+    const [restoredSkill] = await db.select().from(discoveryEntitlements).where(and(
+      eq(discoveryEntitlements.discoveryPassId, pass.id),
+      eq(discoveryEntitlements.category, "SKILL"),
+    ));
+    assert.equal(restoredSkill.status, "AVAILABLE");
+    assert.equal(restoredSkill.reservationId, null);
+    assert.ok(restoredSkill.cancelledAt);
+    const [passAfterFirstCancellation] = await db.select().from(discoveryPasses).where(eq(discoveryPasses.id, pass.id));
+    assert.equal(passAfterFirstCancellation.status, passBeforeProviderCancellation.status);
+
+    const cancelledStrengthReservations = await storage.cancelOccurrenceReservations(
+      strengthOccurrence.id,
+      "The class was cancelled on the academy calendar.",
+    );
+    assert.ok(cancelledStrengthReservations.some((reservation) => reservation.id === strengthReservation.reservation.id));
+    const [restoredStrength] = await db.select().from(discoveryEntitlements).where(and(
+      eq(discoveryEntitlements.discoveryPassId, pass.id),
+      eq(discoveryEntitlements.category, "STRENGTH"),
+    ));
+    assert.equal(restoredStrength.status, "AVAILABLE");
+    assert.equal(restoredStrength.reservationId, null);
+    const [restoredPass] = await db.select().from(discoveryPasses).where(eq(discoveryPasses.id, pass.id));
+    assert.equal(restoredPass.status, passBeforeProviderCancellation.status);
   } finally {
     await db.delete(memberAuditEvents).where(eq(memberAuditEvents.userId, user.id));
     await db.delete(memberLifecycleEvents).where(eq(memberLifecycleEvents.userId, user.id));

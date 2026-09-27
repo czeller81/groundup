@@ -15,6 +15,7 @@ import {
   type MinorProfile,
   type ClassOccurrence,
   type MembershipPlan,
+  type DiscoveryPass,
   type User,
 } from "@shared/schema";
 import { db } from "./db";
@@ -23,6 +24,18 @@ export const DISCOVERY_CATEGORIES = ["SKILL", "STRENGTH"] as const;
 export type DiscoveryCategory = typeof DISCOVERY_CATEGORIES[number];
 
 export const MEMBER_BOOKING_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
+
+export function canRestoreDiscoveryEntitlement(
+  pass: Pick<DiscoveryPass, "convertedAt" | "status" | "expirationTimestamp"> | undefined,
+  at = new Date(),
+) {
+  return Boolean(
+    pass
+    && !pass.convertedAt
+    && ["CLAIMED", "PARTIALLY_BOOKED", "PARTIALLY_ATTENDED"].includes(pass.status)
+    && pass.expirationTimestamp > at,
+  );
+}
 
 export function isWithinMemberBookingWindow(start: Date, now = new Date()) {
   return start.getTime() <= now.getTime() + MEMBER_BOOKING_WINDOW_MS;

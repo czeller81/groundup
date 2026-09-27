@@ -75,6 +75,7 @@ import { randomUUID } from "crypto";
 import bcrypt from "bcryptjs";
 import { canRetryWebhook, INTERNAL_TEST_EMAIL_PATTERN, isPublicOccurrenceText } from "./route-security";
 import {
+  canRestoreDiscoveryEntitlement,
   discoveryCategory,
   evaluateBookingEligibilityWithExecutor,
   evaluateMinorBookingEligibilityWithExecutor,
@@ -1930,11 +1931,7 @@ export class DatabaseStorage implements IStorage {
         ));
         if (discoveryEntitlement) {
           const [pass] = await tx.select().from(discoveryPasses).where(eq(discoveryPasses.id, discoveryEntitlement.discoveryPassId));
-          const passCanRestore = pass
-            && !pass.convertedAt
-            && ["CLAIMED", "PARTIALLY_BOOKED", "PARTIALLY_ATTENDED"].includes(pass.status)
-            && pass.expirationTimestamp > new Date();
-          if (passCanRestore) {
+          if (canRestoreDiscoveryEntitlement(pass)) {
             await tx.update(discoveryEntitlements).set({
               status: "AVAILABLE",
               reservationId: null,
@@ -2402,6 +2399,40 @@ export class DatabaseStorage implements IStorage {
               released: 1,
               reason: "occurrence_cancelled",
             })));
+          }
+          const bookedDiscoveryEntitlements = await tx.select({
+            entitlement: discoveryEntitlements,
+            pass: discoveryPasses,
+          }).from(discoveryEntitlements)
+            .innerJoin(discoveryPasses, eq(discoveryEntitlements.discoveryPassId, discoveryPasses.id))
+            .where(and(
+              inArray(discoveryEntitlements.reservationId, confirmedReservationIds),
+              eq(discoveryEntitlements.status, "BOOKED"),
+            ));
+          for (const { entitlement, pass } of bookedDiscoveryEntitlements) {
+            if (!canRestoreDiscoveryEntitlement(pass)) continue;
+            await tx.update(discoveryEntitlements).set({
+              status: "AVAILABLE",
+              reservationId: null,
+              cancelledAt: new Date(),
+              updatedAt: new Date(),
+            }).where(and(
+              eq(discoveryEntitlements.id, entitlement.id),
+              eq(discoveryEntitlements.status, "BOOKED"),
+            ));
+            const [remainingUsedEntitlement] = await tx.select({ id: discoveryEntitlements.id })
+              .from(discoveryEntitlements)
+              .where(and(
+                eq(discoveryEntitlements.discoveryPassId, pass.id),
+                inArray(discoveryEntitlements.status, ["BOOKED", "ATTENDED"]),
+              ))
+              .limit(1);
+            if (!remainingUsedEntitlement) {
+              await tx.update(discoveryPasses).set({
+                status: "CLAIMED",
+                updatedAt: new Date(),
+              }).where(eq(discoveryPasses.id, pass.id));
+            }
           }
         }
         for (const reservation of cancelled) {

@@ -7,4 +7,4 @@ Booking-window evidence fixtures must place their first several occurrences insi
 
 **Why:** The booking-window guard runs before form and entitlement assertions, so calendar-relative fixtures can fail for timing reasons unrelated to the behavior under test.
 
-**How to apply:** Derive fixture dates from the current weekday, using the current week when its remaining days fit the scenario and the next Monday only for late-week runs.
+**How to apply:** Derive fixture dates from the current weekday, using the current week when its remaining days fit the scenario and the next Monday only for late-week runs. When schedule rules use a business timezone, validate each exact candidate with that timezone-aware helper and pass its day offset through unchanged; UTC dates and an extra implicit day can shift a valid fixture onto a disallowed local weekday.
