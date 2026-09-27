@@ -10,6 +10,7 @@ import {
   memberAuditEvents,
   minorProfiles,
   users,
+  waiverAcceptances,
   type User,
 } from "@shared/schema";
 import { db } from "./db";
@@ -18,16 +19,17 @@ import {
   evaluateBookingEligibilityWithExecutor,
   evaluateMinorBookingEligibilityWithExecutor,
   minorAgeAt,
+  type BookingEligibility,
 } from "./member-entitlements";
 import { accountCanUseMemberFeatures, requireAuth } from "./route-security";
 import { getWaiverTermsVersionHash } from "./waiver-acceptance";
 
 const MEMBER_AI_API_PREFIX = "/api/ai/member/v1";
-const MEMBER_AI_FEATURE_FLAG = "VITE_MEMBER_AI_SELF_SERVICE_ENABLED";
+const MEMBER_AI_FEATURE_FLAG = "MEMBER_AI_SELF_SERVICE_ENABLED";
 
 export function isMemberAiSelfServiceEnabled() {
-  return process.env.NODE_ENV === "development"
-    && process.env[MEMBER_AI_FEATURE_FLAG] === "true";
+  return process.env[MEMBER_AI_FEATURE_FLAG] === "true"
+    && Boolean(process.env.NEON_DATABASE_URL || process.env.DATABASE_URL);
 }
 
 export const MEMBER_AI_SCOPES = [
@@ -43,6 +45,27 @@ export type MemberAiScope = typeof MEMBER_AI_SCOPES[number];
 
 export function hasDependentBookingScope(scopes: ReadonlySet<MemberAiScope>, minorProfileId?: string) {
   return !minorProfileId || scopes.has("self:dependents:read");
+}
+
+export function buildBookingPreviewResponse(
+  eligibility: BookingEligibility,
+  currentWaiverAccepted = true,
+) {
+  const eligible = currentWaiverAccepted && eligibility.eligible;
+  return {
+    eligible,
+    code: currentWaiverAccepted ? eligibility.code : "CURRENT_WAIVER_REQUIRED",
+    message: currentWaiverAccepted
+      ? eligibility.message
+      : "Complete the current waiver in the member portal before booking.",
+    waitlistAllowed: eligible && eligibility.waitlistAllowed,
+    bookingOutcome: eligible
+      ? eligibility.code === "CLASS_FULL_WAITLIST_AVAILABLE" ? "waitlisted" as const : "confirmed" as const
+      : null,
+    requiresExplicitConfirmation: eligible,
+    currentWaiverAccepted,
+    requiresHumanAction: !currentWaiverAccepted,
+  };
 }
 
 export const createDelegationSchema = z.object({
@@ -104,6 +127,56 @@ function sendError(res: Response, status: number, code: string, message: string)
   return res.status(status).json({ code, message, requestId: res.locals.memberAiRequestId });
 }
 
+let schemaReadinessCache: { ready: boolean; expiresAt: number } | null = null;
+let schemaReadinessCheck: Promise<boolean> | null = null;
+
+export async function isMemberAiSelfServiceSchemaReady() {
+  if (schemaReadinessCache && schemaReadinessCache.expiresAt > Date.now()) {
+    return schemaReadinessCache.ready;
+  }
+  if (!schemaReadinessCheck) {
+    schemaReadinessCheck = (async () => {
+      try {
+        await db.select().from(memberAiDelegations).limit(0);
+        await db.select().from(waiverAcceptances).limit(0);
+        await db.select({
+          id: memberAuditEvents.id,
+          actorId: memberAuditEvents.actorId,
+          userId: memberAuditEvents.userId,
+          targetType: memberAuditEvents.targetType,
+          targetId: memberAuditEvents.targetId,
+          action: memberAuditEvents.action,
+          before: memberAuditEvents.before,
+          after: memberAuditEvents.after,
+          reason: memberAuditEvents.reason,
+          createdAt: memberAuditEvents.createdAt,
+        }).from(memberAuditEvents).limit(0);
+        return true;
+      } catch {
+        return false;
+      }
+    })();
+  }
+  const ready = await schemaReadinessCheck;
+  schemaReadinessCheck = null;
+  schemaReadinessCache = { ready, expiresAt: Date.now() + (ready ? 15_000 : 2_000) };
+  return ready;
+}
+
+export function memberAiSchemaReadyMiddleware(_req: Request, res: Response, next: NextFunction) {
+  if (!isMemberAiSelfServiceEnabled()) return next();
+  if (!res.locals.memberAiRequestId) {
+    res.locals.memberAiRequestId = requestIdFor(_req);
+    res.set("X-Request-Id", res.locals.memberAiRequestId);
+  }
+  void isMemberAiSelfServiceSchemaReady().then((ready) => {
+    if (ready) return next();
+    sendError(res, 503, "MEMBER_SELF_SERVICE_SCHEMA_NOT_READY", "Member self-service prerequisites are not ready.");
+  }).catch(() => {
+    sendError(res, 503, "MEMBER_SELF_SERVICE_SCHEMA_NOT_READY", "Member self-service prerequisites are not ready.");
+  });
+}
+
 function safeDatabaseError(res: Response, error: unknown, message: string) {
   const code = (error as { code?: string } | null)?.code;
   if (code === "42P01" || code === "42703") {
@@ -162,6 +235,83 @@ function delegationContext(res: Response): DelegationContext {
   return res.locals.memberAiDelegation as DelegationContext;
 }
 
+type DelegatedApiOperation = { operation: string; capability: MemberAiScope };
+
+const delegatedApiOperations: Record<string, DelegatedApiOperation> = {
+  "GET /me": { operation: "GET /me", capability: "self:profile:read" },
+  "GET /schedule": { operation: "GET /schedule", capability: "self:schedule:read" },
+  "GET /reservations": { operation: "GET /reservations", capability: "self:reservations:read" },
+  "GET /dependents": { operation: "GET /dependents", capability: "self:dependents:read" },
+  "GET /waiver": { operation: "GET /waiver", capability: "self:waiver:initiate" },
+  "POST /booking-preview": { operation: "POST /booking-preview", capability: "self:booking:preview" },
+  "POST /reservations": { operation: "POST /reservations", capability: "self:reservation:create" },
+};
+
+async function persistDelegatedApiAudit(
+  req: Request,
+  res: Response,
+  operation: DelegatedApiOperation,
+  body: unknown,
+) {
+  const identity = res.locals.memberAiAuditIdentity as { grantId: string; userId: string } | undefined;
+  const status = res.statusCode;
+  const response = body && typeof body === "object" ? body as Record<string, unknown> : {};
+  const resultCode = typeof response.code === "string" ? response.code : null;
+  const result = status >= 500
+    ? "error"
+    : status >= 400 || response.eligible === false
+      ? "denied"
+      : "success";
+  await db.insert(memberAuditEvents).values({
+    actorId: null,
+    userId: identity?.userId || null,
+    targetType: identity ? "member_ai_delegation" : "member_ai_api_attempt",
+    targetId: identity?.grantId || null,
+    action: "ai_delegated_api_operation",
+    after: {
+      operation: operation.operation,
+      capability: operation.capability,
+      result,
+      status,
+      resultCode,
+      requestId: res.locals.memberAiRequestId,
+    },
+  });
+}
+
+function auditDelegatedApiResponses(_req: Request, res: Response, next: NextFunction) {
+  const request = _req;
+  const operation = delegatedApiOperations[`${request.method.toUpperCase()} ${request.path}`];
+  if (!operation) return next();
+
+  const originalJson = res.json.bind(res);
+  let responseStarted = false;
+  res.json = ((body: unknown) => {
+    if (responseStarted) return res;
+    responseStarted = true;
+    const status = res.statusCode;
+    // A successful delegated booking writes its audit row in the reservation
+    // transaction; do not create a second, non-atomic success record here.
+    if (operation.operation === "POST /reservations" && status >= 200 && status < 300) {
+      originalJson(body);
+      return res;
+    }
+    void persistDelegatedApiAudit(request, res, operation, body)
+      .then(() => originalJson(body))
+      .catch(() => {
+        if (res.headersSent) return;
+        res.status(503);
+        originalJson({
+          code: "MEMBER_AI_AUDIT_UNAVAILABLE",
+          message: "The delegated operation could not be durably audited.",
+          requestId: res.locals.memberAiRequestId,
+        });
+      });
+    return res;
+  }) as Response["json"];
+  next();
+}
+
 function requireScope(scope: MemberAiScope) {
   return (req: Request, res: Response, next: NextFunction) => {
     if (!delegationContext(res).scopes.has(scope)) {
@@ -191,6 +341,9 @@ async function authenticateDelegation(req: Request, res: Response, next: NextFun
       .limit(1);
 
     const now = new Date();
+    if (row) {
+      res.locals.memberAiAuditIdentity = { grantId: row.grant.id, userId: row.user.id };
+    }
     if (!row || row.grant.revokedAt || row.grant.expiresAt <= now || !isValidStoredScopeList(row.grant.scopes)) {
       return sendError(res, 401, "DELEGATION_INVALID", "A valid member delegation is required.");
     }
@@ -245,15 +398,18 @@ function addRateLimit(router: Router) {
 }
 
 export function registerMemberAiSelfServiceRoutes(app: Express) {
-  // Keep the integration surface disabled until a development database has the
-  // additive tables. Production never registers delegated endpoints.
+  // Registration requires a dedicated server-side opt-in and a database
+  // connection. NODE_ENV alone can never activate this integration.
   if (!isMemberAiSelfServiceEnabled()) return;
 
   const portalRouter = Router();
-  portalRouter.use((_req, res, next) => {
+  portalRouter.use((req, res, next) => {
+    res.locals.memberAiRequestId = requestIdFor(req);
+    res.set("X-Request-Id", res.locals.memberAiRequestId);
     res.set("Cache-Control", "no-store");
     next();
   });
+  portalRouter.use(memberAiSchemaReadyMiddleware);
   portalRouter.get("/me/ai-delegations", requireAuth, async (req, res) => {
     const userId = req.session.userId!;
     try {
@@ -312,7 +468,15 @@ export function registerMemberAiSelfServiceRoutes(app: Express) {
           targetType: "member_ai_delegation",
           targetId: grant.id,
           action: "ai_delegation_created",
-          after: { scopes: parsed.data.scopes, expiresAt: grant.expiresAt.toISOString() },
+          after: {
+            operation: "POST /api/portal/me/ai-delegations",
+            capability: "member:delegation:manage",
+            result: "success",
+            status: 201,
+            requestId: res.locals.memberAiRequestId,
+            scopes: parsed.data.scopes,
+            expiresAt: grant.expiresAt.toISOString(),
+          },
         });
         return { grant, token, now };
       });
@@ -354,7 +518,14 @@ export function registerMemberAiSelfServiceRoutes(app: Express) {
           targetType: "member_ai_delegation",
           targetId: grant.id,
           action: "ai_delegation_revoked",
-          after: { revokedAt: revokedAt.toISOString() },
+          after: {
+            operation: "DELETE /api/portal/me/ai-delegations/:id",
+            capability: "member:delegation:manage",
+            result: "success",
+            status: 200,
+            requestId: res.locals.memberAiRequestId,
+            revokedAt: revokedAt.toISOString(),
+          },
         });
         return true;
       });
@@ -369,8 +540,9 @@ export function registerMemberAiSelfServiceRoutes(app: Express) {
   app.use("/api/portal", portalRouter);
 
   const apiRouter = Router();
-  apiRouter.use((_req, res, next) => {
-    res.locals.memberAiRequestId = requestIdFor(_req);
+  apiRouter.use((req, res, next) => {
+    res.locals.memberAiRequestId = requestIdFor(req);
+    res.set("X-Request-Id", res.locals.memberAiRequestId);
     res.set("Cache-Control", "no-store");
     next();
   });
@@ -408,6 +580,8 @@ export function registerMemberAiSelfServiceRoutes(app: Express) {
     });
   });
 
+  apiRouter.use(auditDelegatedApiResponses);
+  apiRouter.use(memberAiSchemaReadyMiddleware);
   apiRouter.use(authenticateDelegation);
   apiRouter.get("/me", requireScope("self:profile:read"), (_req, res) => {
     const { user } = delegationContext(res);
@@ -581,7 +755,10 @@ export function registerMemberAiSelfServiceRoutes(app: Express) {
           message: "Complete the current waiver in the member portal before booking.",
           requiresHumanAction: true,
           waiverUrl: currentWaiverUrl(normalizeLocale(user.locale)),
-          requiresExplicitConfirmation: true,
+          waitlistAllowed: false,
+          bookingOutcome: null,
+          requiresExplicitConfirmation: false,
+          currentWaiverAccepted: false,
         });
       }
 
@@ -593,15 +770,7 @@ export function registerMemberAiSelfServiceRoutes(app: Express) {
       } else {
         eligibility = await evaluateBookingEligibilityWithExecutor(user, occurrence, db);
       }
-      res.json({
-        eligible: eligibility.eligible,
-        code: eligibility.code,
-        message: eligibility.message,
-        waitlistAllowed: eligibility.waitlistAllowed,
-        bookingOutcome: eligibility.code === "CLASS_FULL_WAITLIST_AVAILABLE" ? "waitlisted" : "confirmed",
-        requiresExplicitConfirmation: true,
-        currentWaiverAccepted: true,
-      });
+      res.json(buildBookingPreviewResponse(eligibility));
     } catch (error) {
       safeDatabaseError(res, error, "Unable to check booking eligibility.");
     }
@@ -637,6 +806,7 @@ export function registerMemberAiSelfServiceRoutes(app: Express) {
         idempotencyKey,
         source: "member_ai_self_service",
         requireCurrentWaiver: true,
+        delegatedAuditRequestId: res.locals.memberAiRequestId,
       });
       const confirmed = result.reservation.status === "confirmed";
       res.status(confirmed ? 201 : 202).json({

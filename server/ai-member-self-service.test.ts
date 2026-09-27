@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
   bookingInputSchema,
+  buildBookingPreviewResponse,
   confirmedBookingInputSchema,
   createDelegationSchema,
   hasDependentBookingScope,
@@ -52,34 +53,83 @@ test("delegation tokens are stored as a one-way SHA-256 digest", () => {
   assert.notEqual(digest, hashDelegationToken(`${token}-different`));
 });
 
-test("delegated routes cannot be enabled in production", () => {
-  const previousMode = process.env.NODE_ENV;
-  const previousFlag = process.env.VITE_MEMBER_AI_SELF_SERVICE_ENABLED;
+test("ineligible booking previews never claim a reservation outcome", () => {
+  const ineligible = {
+    eligible: false,
+    code: "WEEKLY_LIMIT_REACHED",
+    message: "Weekly limit reached.",
+    waitlistAllowed: false,
+  } as Parameters<typeof buildBookingPreviewResponse>[0];
+  const preview = buildBookingPreviewResponse(ineligible);
+  assert.equal(preview.eligible, false);
+  assert.equal(preview.bookingOutcome, null);
+  assert.equal(preview.requiresExplicitConfirmation, false);
+  assert.equal(preview.waitlistAllowed, false);
+});
+
+test("eligible booking previews distinguish confirmed and waitlisted outcomes", () => {
+  const eligible = {
+    eligible: true,
+    code: "ELIGIBLE",
+    message: "Eligible.",
+    waitlistAllowed: true,
+  } as Parameters<typeof buildBookingPreviewResponse>[0];
+  const waitlist = {
+    ...eligible,
+    code: "CLASS_FULL_WAITLIST_AVAILABLE",
+  } as Parameters<typeof buildBookingPreviewResponse>[0];
+  assert.equal(buildBookingPreviewResponse(eligible).bookingOutcome, "confirmed");
+  assert.equal(buildBookingPreviewResponse(eligible).requiresExplicitConfirmation, true);
+  assert.equal(buildBookingPreviewResponse(waitlist).bookingOutcome, "waitlisted");
+});
+
+test("a missing human waiver keeps booking preview ineligible", () => {
+  const eligible = {
+    eligible: true,
+    code: "ELIGIBLE",
+    message: "Eligible.",
+    waitlistAllowed: true,
+  } as Parameters<typeof buildBookingPreviewResponse>[0];
+  const preview = buildBookingPreviewResponse(eligible, false);
+  assert.equal(preview.eligible, false);
+  assert.equal(preview.code, "CURRENT_WAIVER_REQUIRED");
+  assert.equal(preview.bookingOutcome, null);
+  assert.equal(preview.requiresHumanAction, true);
+});
+
+test("production activation requires the dedicated server opt-in and a database configuration", () => {
+  const keys = ["NODE_ENV", "MEMBER_AI_SELF_SERVICE_ENABLED", "VITE_MEMBER_AI_SELF_SERVICE_ENABLED", "DATABASE_URL", "NEON_DATABASE_URL"] as const;
+  const previous = Object.fromEntries(keys.map((key) => [key, process.env[key]]));
   process.env.NODE_ENV = "production";
+  delete process.env.MEMBER_AI_SELF_SERVICE_ENABLED;
   process.env.VITE_MEMBER_AI_SELF_SERVICE_ENABLED = "true";
+  process.env.DATABASE_URL = "configured-for-test";
+  delete process.env.NEON_DATABASE_URL;
   try {
     assert.equal(isMemberAiSelfServiceEnabled(), false);
   } finally {
-    if (previousMode === undefined) delete process.env.NODE_ENV;
-    else process.env.NODE_ENV = previousMode;
-    if (previousFlag === undefined) delete process.env.VITE_MEMBER_AI_SELF_SERVICE_ENABLED;
-    else process.env.VITE_MEMBER_AI_SELF_SERVICE_ENABLED = previousFlag;
+    for (const key of keys) {
+      if (previous[key] === undefined) delete process.env[key];
+      else process.env[key] = previous[key];
+    }
   }
 });
 
-test("delegated routes require the explicit development opt-in", () => {
-  const previousMode = process.env.NODE_ENV;
-  const previousFlag = process.env.VITE_MEMBER_AI_SELF_SERVICE_ENABLED;
-  process.env.NODE_ENV = "development";
-  delete process.env.VITE_MEMBER_AI_SELF_SERVICE_ENABLED;
+test("the dedicated server opt-in works in production but fails closed without a database", () => {
+  const keys = ["NODE_ENV", "MEMBER_AI_SELF_SERVICE_ENABLED", "DATABASE_URL", "NEON_DATABASE_URL"] as const;
+  const previous = Object.fromEntries(keys.map((key) => [key, process.env[key]]));
+  process.env.NODE_ENV = "production";
+  process.env.MEMBER_AI_SELF_SERVICE_ENABLED = "true";
+  process.env.DATABASE_URL = "configured-for-test";
+  delete process.env.NEON_DATABASE_URL;
   try {
-    assert.equal(isMemberAiSelfServiceEnabled(), false);
-    process.env.VITE_MEMBER_AI_SELF_SERVICE_ENABLED = "true";
     assert.equal(isMemberAiSelfServiceEnabled(), true);
+    delete process.env.DATABASE_URL;
+    assert.equal(isMemberAiSelfServiceEnabled(), false);
   } finally {
-    if (previousMode === undefined) delete process.env.NODE_ENV;
-    else process.env.NODE_ENV = previousMode;
-    if (previousFlag === undefined) delete process.env.VITE_MEMBER_AI_SELF_SERVICE_ENABLED;
-    else process.env.VITE_MEMBER_AI_SELF_SERVICE_ENABLED = previousFlag;
+    for (const key of keys) {
+      if (previous[key] === undefined) delete process.env[key];
+      else process.env[key] = previous[key];
+    }
   }
 });

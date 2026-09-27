@@ -1,5 +1,5 @@
 import { sql, relations } from "drizzle-orm";
-import { pgTable, text, varchar, integer, timestamp, jsonb, boolean, uniqueIndex, index } from "drizzle-orm/pg-core";
+import { check, pgTable, text, varchar, integer, timestamp, jsonb, boolean, uniqueIndex, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -31,7 +31,7 @@ export const users = pgTable("users", {
 export const emailVerificationTokens = pgTable("email_verification_tokens", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id),
-  tokenHash: text("token_hash").notNull().unique(),
+  tokenHash: text("token_hash").notNull(),
   expiresAt: timestamp("expires_at").notNull(),
   usedAt: timestamp("used_at"),
   discoveryPassClaimId: varchar("discovery_pass_claim_id"),
@@ -96,6 +96,18 @@ export const waiverAcceptances = pgTable("waiver_acceptances", {
     .on(table.userId, table.formId, table.termsVersionHash),
   userFormIndex: index("waiver_acceptances_user_form_idx").on(table.userId, table.formId),
   acceptedAtIndex: index("waiver_acceptances_accepted_at_idx").on(table.acceptedAt),
+  humanAcceptanceOnly: check(
+    "waiver_acceptances_human_acceptance_only_check",
+    sql`${table.acceptedVia} = 'member_portal'`,
+  ),
+  termsSnapshotObject: check(
+    "waiver_acceptances_terms_snapshot_object_check",
+    sql`jsonb_typeof(${table.termsSnapshot}) = 'object'`,
+  ),
+  evidenceObject: check(
+    "waiver_acceptances_evidence_object_check",
+    sql`jsonb_typeof(${table.evidence}) = 'object'`,
+  ),
 }));
 
 export const trainers = pgTable("trainers", {
@@ -382,16 +394,32 @@ export const memberAiDelegations = pgTable("member_ai_delegations", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id),
   label: text("label"),
-  tokenHash: text("token_hash").notNull().unique(),
+  tokenHash: text("token_hash").notNull(),
   scopes: jsonb("scopes").notNull(),
   expiresAt: timestamp("expires_at").notNull(),
   revokedAt: timestamp("revoked_at"),
   lastUsedAt: timestamp("last_used_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => ({
+  tokenHashUnique: uniqueIndex("member_ai_delegations_token_hash_unique").on(table.tokenHash),
   userIndex: index("member_ai_delegations_user_idx").on(table.userId),
   expiryIndex: index("member_ai_delegations_expiry_idx").on(table.expiresAt),
   revokedIndex: index("member_ai_delegations_revoked_idx").on(table.revokedAt),
+  hashFormat: check(
+    "member_ai_delegations_token_hash_format_check",
+    sql`${table.tokenHash} ~ '^[a-f0-9]{64}$'`,
+  ),
+  scopesValid: check(
+    "member_ai_delegations_scopes_valid_check",
+    sql`jsonb_typeof(${table.scopes}) = 'array'
+      AND jsonb_array_length(${table.scopes}) BETWEEN 1 AND 7
+      AND ${table.scopes} <@ '["self:profile:read","self:schedule:read","self:reservations:read","self:dependents:read","self:booking:preview","self:waiver:initiate","self:reservation:create"]'::jsonb`,
+  ),
+  expiryValid: check(
+    "member_ai_delegations_expiry_valid_check",
+    sql`${table.expiresAt} > ${table.createdAt}
+      AND ${table.expiresAt} <= ${table.createdAt} + interval '7 days 1 minute'`,
+  ),
 }));
 
 export const sessionNotes = pgTable("session_notes", {

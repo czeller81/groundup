@@ -1695,9 +1695,28 @@ export class DatabaseStorage implements IStorage {
     manageToken?: string;
     manageUrl?: string;
     idempotencyKey?: string;
+    delegatedAuditRequestId?: string;
     source?: string;
   }): Promise<{ reservation: ClassReservation; occurrence: ClassOccurrence; promoted?: ClassReservation; manageToken?: string }> {
     return db.transaction(async (tx) => {
+      const recordDelegatedBookingAudit = async (reservation: ClassReservation) => {
+        if (!input.delegationId || !input.userId || !input.delegatedAuditRequestId) return;
+        await tx.insert(memberAuditEvents).values({
+          actorId: null,
+          userId: input.userId,
+          targetType: "member_ai_delegation",
+          targetId: input.delegationId,
+          action: "ai_delegated_api_operation",
+          after: {
+            operation: "POST /reservations",
+            capability: "self:reservation:create",
+            result: "success",
+            status: reservation.status === "waitlisted" ? 202 : 201,
+            requestId: input.delegatedAuditRequestId,
+            reservationId: reservation.id,
+          },
+        });
+      };
       await tx.execute(sql`select id from class_occurrences where id = ${input.occurrenceId} for update`);
       if (input.idempotencyKey) {
         await tx.execute(sql`select pg_advisory_xact_lock(hashtextextended(${input.idempotencyKey}, 0))`);
@@ -1734,6 +1753,7 @@ export class DatabaseStorage implements IStorage {
           }, input)) {
             throw new ClassBookingError("IDEMPOTENCY_KEY_REUSED", "This booking request key was already used for a different reservation.", 409);
           }
+          await recordDelegatedBookingAudit(existing);
           return {
             reservation: existing,
             occurrence,
@@ -1924,6 +1944,7 @@ export class DatabaseStorage implements IStorage {
           ? `${input.manageUrl}?id=${encodeURIComponent(reservation.id)}&manageToken=${encodeURIComponent(input.manageToken)}`
           : input.manageUrl,
       });
+      await recordDelegatedBookingAudit(reservation);
       return { reservation, occurrence, manageToken: input.manageToken };
     });
   }

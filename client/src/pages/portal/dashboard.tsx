@@ -131,8 +131,7 @@ export default function PortalDashboard() {
 
   const { data: aiDelegationsData, isLoading: aiDelegationsLoading, isError: aiDelegationsError } = useQuery<{ delegations: AiDelegation[] }>({
     queryKey: ["/api/portal/me/ai-delegations"],
-    enabled: import.meta.env.DEV
-      && import.meta.env.VITE_MEMBER_AI_SELF_SERVICE_ENABLED === "true"
+    enabled: import.meta.env.VITE_MEMBER_AI_SELF_SERVICE_ENABLED === "true"
       && isAuthenticated
       && user?.role === "member",
   });
@@ -413,8 +412,7 @@ export default function PortalDashboard() {
           </Link>
         </div>
 
-        {import.meta.env.DEV
-          && import.meta.env.VITE_MEMBER_AI_SELF_SERVICE_ENABLED === "true"
+        {import.meta.env.VITE_MEMBER_AI_SELF_SERVICE_ENABLED === "true"
           && user?.role === "member"
           && <Card className="mb-4 border-[#B06CFF]/20 bg-[#121826]" data-testid="ai-delegation-card">
           <CardHeader className="pb-2 pt-4 px-4">

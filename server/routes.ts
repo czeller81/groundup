@@ -42,9 +42,9 @@ import { registerClassBookingRoutes } from "./class-booking-routes";
 import { registerMemberRoutes } from "./member-routes";
 import { registerAiManagementRoutes } from "./ai-management-api";
 import {
-  isMemberAiSelfServiceEnabled,
   registerMemberAiSelfServiceRoutes,
 } from "./ai-member-self-service";
+import { registerPortalFormRoutes } from "./portal-form-routes";
 import { applyStripeSubscription, expirePendingCheckoutSession } from "./membership-billing";
 import { applyDocumentLocale } from "./document-locale";
 import {
@@ -492,6 +492,7 @@ export async function registerRoutes(app: Express, dependencies: RouteDependenci
   app.use("/api/bookings", staffMutationRateLimit());
   registerAiManagementRoutes(app);
   registerMemberAiSelfServiceRoutes(app);
+  registerPortalFormRoutes(app);
   registerClassBookingRoutes(app);
   registerMemberRoutes(app);
 
@@ -1645,125 +1646,6 @@ export async function registerRoutes(app: Express, dependencies: RouteDependenci
     } catch (error) {
       if (error instanceof z.ZodError) return res.status(400).json({ message: "Invalid locale" });
       res.status(500).json({ message: "Failed to save language preference" });
-    }
-  });
-
-  // ============================================
-  // PORTAL FORMS ROUTES
-  // ============================================
-  app.get("/api/portal/forms", requireAuth, async (req, res) => {
-    try {
-      const userId = req.session.userId!;
-      const allForms = await storage.getForms();
-      const userResponses = await storage.getUserFormResponses(userId);
-      const liabilityWaiver = isMemberAiSelfServiceEnabled()
-        ? allForms.find((form) => form.slug === "liability-waiver")
-        : undefined;
-      const currentWaiverAcceptance = liabilityWaiver
-        ? await storage.getCurrentWaiverAcceptance(userId, liabilityWaiver)
-        : undefined;
-      const formsWithStatus = allForms.map(form => {
-        const response = userResponses.find(r => r.formId === form.id);
-        const requiresCurrentAcceptance = isMemberAiSelfServiceEnabled()
-          && form.slug === "liability-waiver";
-        return {
-          ...form,
-          responseStatus: requiresCurrentAcceptance && !currentWaiverAcceptance
-            ? "needs_current_acceptance"
-            : response?.status || "not_started",
-          responseId: response?.id,
-          currentAcceptanceRequired: requiresCurrentAcceptance,
-          currentAcceptanceAccepted: requiresCurrentAcceptance ? Boolean(currentWaiverAcceptance) : undefined,
-        };
-      });
-
-      res.json(formsWithStatus);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to get forms" });
-    }
-  });
-
-  app.get("/api/portal/forms/:slug", requireAuth, async (req, res) => {
-    try {
-      const userId = req.session.userId!;
-      const form = await storage.getFormBySlug(req.params.slug);
-      if (!form) {
-        return res.status(404).json({ message: "Form not found" });
-      }
-      const response = await storage.getFormResponse(userId, form.id);
-      const currentAcceptance = isMemberAiSelfServiceEnabled() && form.slug === "liability-waiver"
-        ? await storage.getCurrentWaiverAcceptance(userId, form)
-        : undefined;
-      res.json({
-        form,
-        response: response || null,
-        currentAcceptance: currentAcceptance
-          ? {
-              accepted: true,
-              acceptedAt: currentAcceptance.acceptedAt,
-              signerName: currentAcceptance.signerName,
-              termsVersionHash: currentAcceptance.termsVersionHash,
-            }
-          : isMemberAiSelfServiceEnabled() && form.slug === "liability-waiver"
-            ? { accepted: false }
-            : undefined,
-      });
-    } catch (error) {
-      res.status(500).json({ message: "Failed to get form" });
-    }
-  });
-
-  app.post("/api/portal/forms/:slug/save", requireAuth, async (req, res) => {
-    try {
-      const userId = req.session.userId!;
-      const form = await storage.getFormBySlug(req.params.slug);
-      if (!form) {
-        return res.status(404).json({ message: "Form not found" });
-      }
-      const { answers } = req.body;
-      const response = await storage.saveFormResponse(userId, form.id, answers, "draft");
-      res.json(response);
-    } catch (error: any) {
-      res.status(400).json({ message: error.message || "Failed to save form" });
-    }
-  });
-
-  app.post("/api/portal/forms/:slug/retake", requireAuth, async (req, res) => {
-    try {
-      const userId = req.session.userId!;
-      const form = await storage.getFormBySlug(req.params.slug);
-      if (!form) return res.status(404).json({ message: "Form not found" });
-      if (!form.retakeable) return res.status(403).json({ message: "This form cannot be retaken" });
-      await storage.deleteFormResponse(userId, form.id);
-      res.json({ success: true });
-    } catch (error) {
-      res.status(500).json({ message: "Failed to reset form" });
-    }
-  });
-
-  app.post("/api/portal/forms/:slug/submit", requireAuth, async (req, res) => {
-    try {
-      const userId = req.session.userId!;
-      const form = await storage.getFormBySlug(req.params.slug);
-      if (!form) {
-        return res.status(404).json({ message: "Form not found" });
-      }
-      const { answers } = req.body;
-      if (isMemberAiSelfServiceEnabled() && form.slug === "liability-waiver") {
-        const acceptance = await storage.acceptCurrentWaiver(userId, form.id, answers);
-        return res.json({
-          status: "submitted",
-          currentAcceptance: true,
-          acceptedAt: acceptance.acceptedAt,
-          signerName: acceptance.signerName,
-          termsVersionHash: acceptance.termsVersionHash,
-        });
-      }
-      await storage.saveFormResponse(userId, form.id, answers, "draft");
-      const response = await storage.submitFormResponse(userId, form.id);
-      res.json(response);
-    } catch (error: any) {
-      res.status(400).json({ message: error.message || "Failed to submit form" });
     }
   });
 

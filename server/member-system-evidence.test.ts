@@ -116,21 +116,33 @@ test("member system evidence: Discovery to membership with weekly limits, waitli
     classTypeStrengthId = strengthType.id;
     classTypeGirlsId = girlsType.id;
 
-    // Keep day 0, 1, 2, and 3 in one configured Monday week while ensuring
-    // every fixture stays inside the seven-day booking window on any run day.
-    const fixtureNow = new Date();
-    const weekday = fixtureNow.getUTCDay();
-    const base = new Date(fixtureNow);
-    if (weekday === 0 || weekday >= 5) {
-      base.setUTCHours(0, 0, 0, 0);
-      base.setUTCDate(base.getUTCDate() + ((1 - weekday + 7) % 7 || 7));
-    } else if (weekday < 4) {
-      // Keep the first class outside the late-cancellation cutoff so the
-      // cancellation below releases the membership entitlement.
-      base.setTime(base.getTime() + 8 * 60 * 60 * 1000);
+    // Keep the booking fixtures on supported weekdays and in one billing week.
+    const isFixtureClassDay = (date: Date) => {
+      const day = new Intl.DateTimeFormat("en-US", {
+        timeZone: "America/Los_Angeles",
+        weekday: "long",
+      }).format(date);
+      return day === "Monday" || day === "Wednesday" || day === "Friday";
+    };
+    const base = new Date();
+    base.setUTCHours(18, 0, 0, 0);
+    while (!isFixtureClassDay(base) || base.getTime() <= Date.now() + 8 * 60 * 60 * 1000) {
+      base.setTime(base.getTime() + 24 * 60 * 60 * 1000);
     }
-    const makeOccurrence = async (typeId: string, offsetDays: number, title: string, capacity: number) => {
-      const start = new Date(base.getTime() + offsetDays * 24 * 60 * 60 * 1000);
+    const nextClassDayOffset = (minimumDays: number) => {
+      for (let offset = minimumDays; offset <= minimumDays + 7; offset++) {
+        if (isFixtureClassDay(new Date(base.getTime() + offset * 24 * 60 * 60 * 1000))) return offset;
+      }
+      throw new Error("Unable to schedule a fixture on an allowed class weekday.");
+    };
+    const makeOccurrence = async (
+      typeId: string,
+      offsetDays: number,
+      title: string,
+      capacity: number,
+      startOffsetHours = 0,
+    ) => {
+      const start = new Date(base.getTime() + offsetDays * 24 * 60 * 60 * 1000 + startOffsetHours * 60 * 60 * 1000);
       const canonicalCategory = typeId === classTypeSkillId
         ? "JIU_JITSU_SELF_DEFENSE"
         : typeId === classTypeStrengthId
@@ -139,7 +151,7 @@ test("member system evidence: Discovery to membership with weekly limits, waitli
       const [occurrence] = await db.insert(classOccurrences).values({
         calendarConnectionId: connection.id,
         googleCalendarId: `qa-calendar-${suffix}`,
-        googleEventId: `qa-event-${suffix}-${offsetDays}`,
+        googleEventId: `qa-event-${suffix}-${offsetDays}-${startOffsetHours}`,
         title,
         description: "Ground Up fixture evidence",
         start,
@@ -162,13 +174,28 @@ test("member system evidence: Discovery to membership with weekly limits, waitli
       return occurrence;
     };
     const skill = await makeOccurrence(classTypeSkillId, 0, "QA Skill Class", 1);
-    const strength = await makeOccurrence(classTypeStrengthId, 1, "QA Strength Class", 4);
-    const extra = await makeOccurrence(classTypeSkillId, 2, "QA Extra Skill Class", 4);
-    const limitCheck = await makeOccurrence(classTypeSkillId, 3, "QA Limit Check Class", 4);
-    const outsideMemberWindow = await makeOccurrence(classTypeSkillId, 8, "QA Future Skill Class", 4);
-    const discoveryReplacement = await makeOccurrence(classTypeSkillId, 9, "QA Discovery Replacement", 4);
-    const minorOriginalOccurrence = await makeOccurrence(classTypeGirlsId, 4, "QA Girls Original", 4);
-    const minorReplacementOccurrence = await makeOccurrence(classTypeGirlsId, 5, "QA Girls Replacement", 4);
+    const strength = await makeOccurrence(classTypeStrengthId, 0, "QA Strength Class", 4, 2);
+    const extra = await makeOccurrence(classTypeSkillId, 0, "QA Extra Skill Class", 4, 4);
+    const limitCheck = await makeOccurrence(classTypeSkillId, 0, "QA Limit Check Class", 4, 6);
+    const outsideMemberWindow = await makeOccurrence(
+      classTypeSkillId,
+      nextClassDayOffset(8),
+      "QA Future Skill Class",
+      4,
+    );
+    const discoveryReplacement = await makeOccurrence(
+      classTypeSkillId,
+      nextClassDayOffset(10),
+      "QA Discovery Replacement",
+      4,
+    );
+    const minorOriginalOccurrence = await makeOccurrence(classTypeGirlsId, 0, "QA Girls Original", 4, 8);
+    const minorReplacementOccurrence = await makeOccurrence(
+      classTypeGirlsId,
+      nextClassDayOffset(2),
+      "QA Girls Replacement",
+      4,
+    );
 
     await db.insert(formResponses).values(bookingForms.map((form) => ({
       userId: discoveryMember.id,

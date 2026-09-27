@@ -121,12 +121,12 @@ function result(
   extra: Partial<BookingEligibility> = {},
 ): BookingEligibility {
   return {
+    ...extra,
     eligible: code === "ELIGIBLE" || code === "CLASS_FULL_WAITLIST_AVAILABLE",
     code,
     message: messages[code],
-    waitlistAllowed: false,
-    source: "legacy",
-    ...extra,
+    waitlistAllowed: extra.waitlistAllowed ?? false,
+    source: extra.source ?? "legacy",
   };
 }
 

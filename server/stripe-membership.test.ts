@@ -737,8 +737,8 @@ test("development database has one Stripe mapping for each approved plan", async
   }
 });
 
-test("test-mode Stripe catalog has one exact monthly price per approved plan", { skip: !process.env.STRIPE_SECRET_KEY }, async () => {
-  const key = process.env.STRIPE_SECRET_KEY!;
+test("test-mode Stripe catalog has one exact monthly price per approved plan", { skip: !process.env.STRIPE_TEST_SECRET_KEY }, async () => {
+  const key = process.env.STRIPE_TEST_SECRET_KEY!;
   assert.ok(key.startsWith("sk_test_"), "membership evidence must run against Stripe test mode");
   const stripe = new Stripe(key, { apiVersion: "2025-08-27.basil", typescript: true });
   const products = await stripe.products.list({ active: true, limit: 100 });
