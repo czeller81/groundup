@@ -42,8 +42,17 @@ async function createFixtures() {
   const excludedEmail = `ai-management-${suffix}@example.invalid`;
   const includedUser = await storage.createUser(includedEmail, "Regression-only-password", "Report", "Member", "5550000201", "en");
   const excludedUser = await storage.createUser(excludedEmail, "Regression-only-password", "Internal", "Fixture", "5550000202", "en");
-  const [plan] = await db.select().from(membershipPlans).where(eq(membershipPlans.internalKey, "ground_up_2")).limit(1);
-  assert.ok(plan, "approved Ground Up 2 plan is required for report fixtures");
+  const testPriceId = `price_test_report_${suffix}`;
+  const testProductId = `prod_test_report_${suffix}`;
+  const [plan] = await db.insert(membershipPlans).values({
+    internalKey: `report-fixture-${suffix}`,
+    displayName: `Report Fixture ${suffix}`,
+    weeklySessionLimit: 2,
+    eligibleClassCategories: ["skill", "strength"],
+    displayPriceCents: 13900,
+    stripeProductId: testProductId,
+    stripePriceId: testPriceId,
+  }).returning();
   const [trainer] = await db.insert(trainers).values({
     name: `Report Fixture Coach ${suffix}`,
     bio: "Regression fixture",
@@ -55,14 +64,14 @@ async function createFixtures() {
     userId: includedUser.id,
     planId: plan.id,
     type: plan.internalKey,
-    status: "active",
+    status: `report_fixture_${suffix}`,
     priceCents: plan.displayPriceCents || 13900,
     source: "stripe_checkout",
     billingSource: "stripe_checkout",
-    billingState: "active",
+    billingState: `report_fixture_${suffix}`,
     stripeCustomerId: `cus_report_${suffix}`,
-    stripeProductId: plan.stripeProductId,
-    stripePriceId: plan.stripePriceId,
+    stripeProductId: testProductId,
+    stripePriceId: testPriceId,
     stripeSubscriptionId: `sub_report_${suffix}`,
   }).returning();
   const now = new Date("2099-01-01T00:00:00.000Z").getTime();
@@ -105,6 +114,9 @@ async function createFixtures() {
     excludedUserId: excludedUser.id,
     trainerId: trainer.id,
     membershipId: membership.id,
+    planId: plan.id,
+    membershipStatus: `report_fixture_${suffix}`,
+    membershipBillingState: `report_fixture_${suffix}`,
     includedBookingId: includedBooking.id,
     excludedBookingId: excludedBooking.id,
     createdAt: new Date(now),
@@ -116,6 +128,7 @@ async function cleanupFixtures(fixture: Awaited<ReturnType<typeof createFixtures
   await db.delete(memberships).where(eq(memberships.id, fixture.membershipId));
   await db.delete(trainers).where(eq(trainers.id, fixture.trainerId));
   await db.delete(users).where(inArray(users.id, [fixture.includedUserId, fixture.excludedUserId]));
+  await db.delete(membershipPlans).where(eq(membershipPlans.id, fixture.planId));
 }
 
 function authHeaders() {
@@ -133,7 +146,9 @@ test("AI management reports enforce permissions, pagination, date filters, and f
     });
     assert.equal(wrongToken.status, 401);
 
-    const payments = await fetch(`${baseUrl}/operations/payments?page=1&limit=1000`, { headers: authHeaders() });
+    const paymentFrom = encodeURIComponent(new Date(fixture.createdAt.getTime() - 1_000).toISOString());
+    const paymentTo = encodeURIComponent(new Date(fixture.createdAt.getTime() + 1_000).toISOString());
+    const payments = await fetch(`${baseUrl}/operations/payments?from=${paymentFrom}&to=${paymentTo}&page=1&limit=1000`, { headers: authHeaders() });
     assert.equal(payments.status, 200);
     const paymentReport = await payments.json();
     assert.equal(paymentReport.limit, 100, "pagination must clamp to the documented maximum");
@@ -143,12 +158,15 @@ test("AI management reports enforce permissions, pagination, date filters, and f
     assert.equal(paymentReport.rows[0].refundStatus, "unavailable");
     assert.equal(paymentReport.rows[0].accountingNote, undefined, "accounting notes belong at report level");
 
-    const secondPage = await fetch(`${baseUrl}/operations/payments?page=2&limit=1`, { headers: authHeaders() });
+    const secondPage = await fetch(`${baseUrl}/operations/payments?from=${paymentFrom}&to=${paymentTo}&page=2&limit=1`, { headers: authHeaders() });
     const secondPageReport = await secondPage.json();
     assert.equal(secondPageReport.total, 1);
     assert.deepEqual(secondPageReport.rows, []);
 
-    const membershipsReportResponse = await fetch(`${baseUrl}/operations/memberships?page=1&limit=1`, { headers: authHeaders() });
+    const membershipsReportResponse = await fetch(
+      `${baseUrl}/operations/memberships?page=1&limit=1&status=${fixture.membershipStatus}&billingState=${fixture.membershipBillingState}`,
+      { headers: authHeaders() },
+    );
     assert.equal(membershipsReportResponse.status, 200);
     const membershipsReport = await membershipsReportResponse.json();
     assert.equal(membershipsReport.total, 1);

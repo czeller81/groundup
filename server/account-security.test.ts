@@ -1,8 +1,11 @@
 import assert from "node:assert/strict";
 import crypto from "node:crypto";
 import test from "node:test";
+import { eq, inArray } from "drizzle-orm";
 import { accountCanUseMemberFeatures, consumePublicRateLimits, createPublicRateLimit, isOperationalAccount, publicBotCheck } from "./route-security";
+import { db } from "./db";
 import { storage } from "./storage";
+import { emailVerificationTokens, memberAuditEvents, trialLeads, users } from "@shared/schema";
 
 function responseRecorder() {
   const result: { statusCode: number; body?: unknown } = { statusCode: 200 };
@@ -66,20 +69,53 @@ test("unverified and suspicious accounts cannot use member features", () => {
 });
 
 test("suspicious accounts are counted as filtered out of the Discovery funnel", async () => {
-  const report = await storage.getDiscoveryFunnelReport({ days: 30 });
-  assert.ok(report.filteredOut.excludedAccounts >= 6);
-  assert.ok(report.stages.accountCreated <= report.filteredOut.rawAccountsCreated);
+  const suffix = crypto.randomBytes(6).toString("hex");
+  const fixtureCreatedAt = new Date(Date.now() + 10 * 365 * 24 * 60 * 60 * 1000);
+  const fixtureUserIds: string[] = [];
+  try {
+    for (let index = 0; index < 6; index += 1) {
+      const user = await storage.createUser(
+        `suspicious-report-${suffix}-${index}@groundup.test`,
+        "GroundUp-Report-Password",
+        "Suspicious",
+        `Fixture ${index}`,
+        undefined,
+        "en",
+        { accountStatus: "suspicious", riskReasons: ["report-fixture"] },
+      );
+      fixtureUserIds.push(user.id);
+      await db.update(users).set({
+        emailVerifiedAt: new Date(),
+        createdAt: fixtureCreatedAt,
+      }).where(eq(users.id, user.id));
+    }
+
+    const report = await storage.getDiscoveryFunnelReport({
+      from: new Date(fixtureCreatedAt.getTime() - 1_000),
+      to: new Date(fixtureCreatedAt.getTime() + 1_000),
+    });
+    assert.equal(report.filteredOut.rawAccountsCreated, fixtureUserIds.length);
+    assert.equal(report.filteredOut.excludedAccounts, fixtureUserIds.length);
+    assert.equal(report.stages.accountCreated, 0);
+  } finally {
+    if (fixtureUserIds.length) await db.delete(users).where(inArray(users.id, fixtureUserIds));
+  }
 });
 
 test("email verification tokens expire, are one-time, and activate a normal account", async () => {
   const suffix = crypto.randomBytes(6).toString("hex");
   const user = await storage.createUser(`verification-${suffix}@example.invalid`, "GroundUp-Verification-Password", "Verify", "Member");
   const tokenHash = crypto.createHash("sha256").update(`token-${suffix}`).digest("hex");
-  await storage.createEmailVerificationToken(user.id, tokenHash, new Date(Date.now() + 60_000));
-  const verified = await storage.consumeEmailVerificationToken(tokenHash);
-  assert.equal(verified?.emailVerifiedAt !== null, true);
-  assert.equal(verified?.accountStatus, "legitimate");
-  assert.equal(await storage.consumeEmailVerificationToken(tokenHash), undefined);
+  try {
+    await storage.createEmailVerificationToken(user.id, tokenHash, new Date(Date.now() + 60_000));
+    const verified = await storage.consumeEmailVerificationToken(tokenHash);
+    assert.equal(verified?.emailVerifiedAt !== null, true);
+    assert.equal(verified?.accountStatus, "legitimate");
+    assert.equal(await storage.consumeEmailVerificationToken(tokenHash), undefined);
+  } finally {
+    await db.delete(emailVerificationTokens).where(eq(emailVerificationTokens.userId, user.id));
+    await db.delete(users).where(eq(users.id, user.id));
+  }
 });
 
 test("admin review can restore a suspicious account to legitimate", async () => {
@@ -94,14 +130,21 @@ test("admin review can restore a suspicious account to legitimate", async () => 
     "en",
     { accountStatus: "suspicious", riskReasons: ["test-signal"] },
   );
-  const updated = await storage.updateAccountReview({
-    userId: member.id,
-    status: "legitimate",
-    actorId: actor.id,
-    reason: "Admin confirmed the account belongs to a real member.",
-  });
-  assert.equal(updated?.accountStatus, "legitimate");
-  assert.deepEqual(updated?.riskReasons, ["test-signal"]);
+  try {
+    const updated = await storage.updateAccountReview({
+      userId: member.id,
+      status: "legitimate",
+      actorId: actor.id,
+      reason: "Admin confirmed the account belongs to a real member.",
+    });
+    assert.equal(updated?.accountStatus, "legitimate");
+    assert.deepEqual(updated?.riskReasons, ["test-signal"]);
+  } finally {
+    await db.delete(memberAuditEvents).where(eq(memberAuditEvents.actorId, actor.id));
+    await db.delete(memberAuditEvents).where(eq(memberAuditEvents.userId, member.id));
+    await db.delete(users).where(eq(users.id, member.id));
+    await db.delete(users).where(eq(users.id, actor.id));
+  }
 });
 
 test("suppressed leads stay out of active lead queues", async () => {
@@ -114,9 +157,13 @@ test("suppressed leads stay out of active lead queues", async () => {
     program: "adaptive-capacity",
     experience: "none",
   });
-  await storage.updateTrialLeadStatus(lead.id, "suspicious");
-  const activeLeads = await storage.getTrialLeads("adaptive-capacity");
-  const allLeads = await storage.getTrialLeads("adaptive-capacity", { includeSuppressed: true });
-  assert.equal(activeLeads.some((item) => item.id === lead.id), false);
-  assert.equal(allLeads.some((item) => item.id === lead.id && item.status === "suspicious"), true);
+  try {
+    await storage.updateTrialLeadStatus(lead.id, "suspicious");
+    const activeLeads = await storage.getTrialLeads("adaptive-capacity");
+    const allLeads = await storage.getTrialLeads("adaptive-capacity", { includeSuppressed: true });
+    assert.equal(activeLeads.some((item) => item.id === lead.id), false);
+    assert.equal(allLeads.some((item) => item.id === lead.id && item.status === "suspicious"), true);
+  } finally {
+    await db.delete(trialLeads).where(eq(trialLeads.id, lead.id));
+  }
 });

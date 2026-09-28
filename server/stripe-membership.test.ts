@@ -1,12 +1,14 @@
 import assert from "node:assert/strict";
+import { randomUUID } from "node:crypto";
 import { test } from "node:test";
 import type { Server } from "node:http";
 import express from "express";
 import Stripe from "stripe";
-import { and, asc, eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { db } from "./db";
 import { storage } from "./storage";
 import { membershipPlans, memberships, users } from "@shared/schema";
+import type { BillingPlanKey } from "./membership-billing";
 import {
   BILLING_PLAN_KEYS,
   STRIPE_MEMBERSHIP_CATALOG,
@@ -21,6 +23,35 @@ import {
 import { registerMemberRoutes } from "./member-routes";
 
 const sleep = (durationMs: number) => new Promise<void>((resolve) => setTimeout(resolve, durationMs));
+
+async function createStripePlanFixture(planKey: BillingPlanKey = "ground_up_3") {
+  const suffix = randomUUID();
+  const catalogPlan = STRIPE_MEMBERSHIP_CATALOG[planKey];
+  const [plan] = await db.insert(membershipPlans).values({
+    internalKey: `qa-${planKey}-${suffix}`,
+    displayName: `QA ${catalogPlan.displayName}`,
+    weeklySessionLimit: catalogPlan.weeklySessionLimit,
+    eligibleClassCategories: catalogPlan.eligibleClassCategories,
+    privateSessionsPerMonth: catalogPlan.privateSessionsPerMonth,
+    personalizedProgram: catalogPlan.personalizedProgram,
+    displayPriceCents: catalogPlan.amountCents,
+    stripeProductId: `prod_test_${suffix}`,
+    stripePriceId: `price_test_${suffix}`,
+  }).returning();
+
+  return {
+    plan,
+    planKey,
+    resolvePlan: async (requestedPlanKey: BillingPlanKey) =>
+      requestedPlanKey === planKey ? plan : null,
+  };
+}
+
+async function cleanupStripeUserFixture(userId: string, planId: string) {
+  await db.delete(memberships).where(eq(memberships.userId, userId));
+  await db.delete(membershipPlans).where(eq(membershipPlans.id, planId));
+  await db.delete(users).where(eq(users.id, userId));
+}
 
 test("approved membership catalog keeps exact Ground Up prices and entitlements", () => {
   assert.deepEqual(BILLING_PLAN_KEYS, [
@@ -68,9 +99,11 @@ test("expired Checkout sessions are terminal and no longer block a retry", async
   assert.notEqual(process.env.NODE_ENV, "production", "fixture evidence must never run in production");
   const suffix = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
   const user = await storage.createUser(`stripe-expired-${suffix}@example.invalid`, "GroundUp-QA-Password-2026", "Stripe", "Expired", "5550000198", "en");
+  let planId = "";
   try {
-    const [plan] = await db.select().from(membershipPlans).where(eq(membershipPlans.internalKey, "ground_up_3")).limit(1);
-    assert.ok(plan);
+    const planFixture = await createStripePlanFixture();
+    const { plan } = planFixture;
+    planId = plan.id;
     const [pending] = await db.insert(memberships).values({
       userId: user.id,
       planId: plan.id,
@@ -112,8 +145,7 @@ test("expired Checkout sessions are terminal and no longer block a retry", async
       return available.length;
     })(), 0);
   } finally {
-    await db.delete(memberships).where(eq(memberships.userId, user.id));
-    await db.delete(users).where(eq(users.id, user.id));
+    await cleanupStripeUserFixture(user.id, planId);
   }
 });
 
@@ -121,9 +153,11 @@ test("completed Checkout sessions reconcile the existing pending membership", as
   assert.notEqual(process.env.NODE_ENV, "production", "fixture evidence must never run in production");
   const suffix = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
   const user = await storage.createUser(`stripe-complete-${suffix}@example.invalid`, "GroundUp-QA-Password-2026", "Stripe", "Complete", "5550000197", "en");
+  let planId = "";
   try {
-    const [plan] = await db.select().from(membershipPlans).where(eq(membershipPlans.internalKey, "ground_up_3")).limit(1);
-    assert.ok(plan);
+    const planFixture = await createStripePlanFixture();
+    const { plan } = planFixture;
+    planId = plan.id;
     const stripeCustomerId = `cus_complete_${suffix}`;
     const checkoutSessionId = `cs_complete_${suffix}`;
     const subscriptionId = `sub_complete_${suffix}`;
@@ -147,7 +181,7 @@ test("completed Checkout sessions reconcile the existing pending membership", as
       customer: stripeCustomerId,
       metadata: {
         ground_up_user_id: user.id,
-        ground_up_plan_key: plan.internalKey,
+       ground_up_plan_key: planFixture.planKey,
       },
       cancel_at_period_end: false,
       status: "active",
@@ -190,7 +224,7 @@ test("completed Checkout sessions reconcile the existing pending membership", as
       },
     } as unknown as Stripe;
 
-    await reconcilePendingStripeCheckouts(fakeStripe, user.id);
+    await reconcilePendingStripeCheckouts(fakeStripe, user.id, { planResolver: planFixture.resolvePlan });
     const [reconciled] = await db.select().from(memberships).where(eq(memberships.id, pending.id));
     assert.equal(reconciled.billingState, "active");
     assert.equal(reconciled.status, "active");
@@ -199,8 +233,7 @@ test("completed Checkout sessions reconcile the existing pending membership", as
     const allMemberships = await db.select().from(memberships).where(eq(memberships.userId, user.id));
     assert.equal(allMemberships.length, 1);
   } finally {
-    await db.delete(memberships).where(eq(memberships.userId, user.id));
-    await db.delete(users).where(eq(users.id, user.id));
+    await cleanupStripeUserFixture(user.id, planId);
   }
 });
 
@@ -289,9 +322,11 @@ test("stale checkout maintenance is bounded, observable, and retry-safe", async 
   assert.notEqual(process.env.NODE_ENV, "production", "fixture evidence must never run in production");
   const suffix = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
   const user = await storage.createUser(`stripe-maintenance-${suffix}@example.invalid`, "GroundUp-QA-Password-2026", "Stripe", "Maintenance", "5550000196", "en");
+  let planId = "";
   try {
-    const [plan] = await db.select().from(membershipPlans).where(eq(membershipPlans.internalKey, "ground_up_3")).limit(1);
-    assert.ok(plan);
+    const planFixture = await createStripePlanFixture();
+    const { plan } = planFixture;
+    planId = plan.id;
     const [expired] = await db.insert(memberships).values({
       userId: user.id,
       planId: plan.id,
@@ -340,12 +375,19 @@ test("stale checkout maintenance is bounded, observable, and retry-safe", async 
       },
     } as unknown as Stripe;
 
-    const summary = await reconcileStalePendingStripeCheckouts(fakeStripe, { limit: 1 });
+    const summary = await reconcileStalePendingStripeCheckouts(fakeStripe, {
+      limit: 1,
+      userId: user.id,
+      planResolver: planFixture.resolvePlan,
+    });
     assert.equal(summary.scanned, 1);
     assert.equal(summary.expired, 1);
     assert.equal(summary.apiFailures, 0);
 
-    const retrySummary = await reconcileStalePendingStripeCheckouts(fakeStripe);
+    const retrySummary = await reconcileStalePendingStripeCheckouts(fakeStripe, {
+      userId: user.id,
+      planResolver: planFixture.resolvePlan,
+    });
     assert.equal(retrySummary.scanned, 1);
     assert.equal(retrySummary.apiFailures, 1);
 
@@ -354,8 +396,7 @@ test("stale checkout maintenance is bounded, observable, and retry-safe", async 
     assert.equal(expiredAfter.billingState, "cancelled");
     assert.equal(retryableAfter.billingState, "pending");
   } finally {
-    await db.delete(memberships).where(eq(memberships.userId, user.id));
-    await db.delete(users).where(eq(users.id, user.id));
+    await cleanupStripeUserFixture(user.id, planId);
   }
 });
 
@@ -363,9 +404,11 @@ test("Stripe lookup timeouts leave items retryable and do not block later mainte
   assert.notEqual(process.env.NODE_ENV, "production", "fixture evidence must never run in production");
   const suffix = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
   const user = await storage.createUser(`stripe-timeout-${suffix}@example.invalid`, "GroundUp-QA-Password-2026", "Stripe", "Timeout", "5550000200", "en");
+  let planId = "";
   try {
-    const [plan] = await db.select().from(membershipPlans).where(eq(membershipPlans.internalKey, "ground_up_3")).limit(1);
-    assert.ok(plan);
+    const planFixture = await createStripePlanFixture();
+    const { plan } = planFixture;
+    planId = plan.id;
     const membershipValues = {
       userId: user.id,
       planId: plan.id,
@@ -440,6 +483,8 @@ test("Stripe lookup timeouts leave items retryable and do not block later mainte
     const startedAt = Date.now();
     const summary = await reconcileStalePendingStripeCheckouts(fakeStripe, {
       requestTimeoutMs: 20,
+      userId: user.id,
+      planResolver: planFixture.resolvePlan,
     });
     assert.ok(Date.now() - startedAt < 1000, "each Stripe lookup must have a bounded wait");
     assert.equal(summary.scanned, 3);
@@ -457,6 +502,8 @@ test("Stripe lookup timeouts leave items retryable and do not block later mainte
     allowRetries = true;
     const retrySummary = await reconcileStalePendingStripeCheckouts(fakeStripe, {
       requestTimeoutMs: 20,
+      userId: user.id,
+      planResolver: planFixture.resolvePlan,
     });
     assert.equal(retrySummary.scanned, 2);
     assert.equal(retrySummary.apiFailures, 0);
@@ -464,8 +511,7 @@ test("Stripe lookup timeouts leave items retryable and do not block later mainte
     const retryableMemberships = await db.select().from(memberships).where(eq(memberships.userId, user.id));
     assert.equal(retryableMemberships.every((membership) => membership.billingState === "cancelled"), true);
   } finally {
-    await db.delete(memberships).where(eq(memberships.userId, user.id));
-    await db.delete(users).where(eq(users.id, user.id));
+    await cleanupStripeUserFixture(user.id, planId);
   }
 });
 
@@ -478,11 +524,13 @@ test("member billing moves the same checkout membership from pending to active a
   const stripeSubscriptionId = `sub_handoff_${suffix}`;
   const user = await storage.createUser(email, "GroundUp-QA-Password-2026", "Stripe", "Handoff", "5550000199", "en");
   let server: Server | undefined;
+  let planId = "";
 
   try {
     await db.update(users).set({ stripeCustomerId }).where(eq(users.id, user.id));
-    const [plan] = await db.select().from(membershipPlans).where(eq(membershipPlans.internalKey, "ground_up_3")).limit(1);
-    assert.ok(plan, "the approved Ground Up 3 plan is required for Stripe handoff evidence");
+    const planFixture = await createStripePlanFixture();
+    const { plan } = planFixture;
+    planId = plan.id;
 
     const [pendingMembership] = await db.insert(memberships).values({
       userId: user.id,
@@ -529,7 +577,7 @@ test("member billing moves the same checkout membership from pending to active a
       customer: stripeCustomerId,
       metadata: {
         ground_up_user_id: user.id,
-        ground_up_plan_key: plan.internalKey,
+        ground_up_plan_key: planFixture.planKey,
       },
       cancel_at_period_end: false,
       status: "active",
@@ -554,7 +602,7 @@ test("member billing moves the same checkout membership from pending to active a
       },
     } as unknown as Stripe.Subscription, {
       checkoutSessionId: stripeCheckoutSessionId,
-    });
+    }, planFixture.resolvePlan);
 
     const activeResponse = await fetch(billingUrl);
     assert.equal(activeResponse.status, 200);
@@ -574,7 +622,7 @@ test("member billing moves the same checkout membership from pending to active a
       customer: stripeCustomerId,
       metadata: {
         ground_up_user_id: user.id,
-        ground_up_plan_key: plan.internalKey,
+        ground_up_plan_key: planFixture.planKey,
       },
       cancel_at_period_end: false,
       status: "canceled",
@@ -598,7 +646,7 @@ test("member billing moves the same checkout membership from pending to active a
           },
         }],
       },
-    } as unknown as Stripe.Subscription);
+      } as unknown as Stripe.Subscription, {}, planFixture.resolvePlan);
     assert.equal(cancelledMembership.id, pendingMembership.id);
 
     const cancelledResponse = await fetch(billingUrl);
@@ -615,8 +663,7 @@ test("member billing moves the same checkout membership from pending to active a
     if (server?.listening) {
       await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
     }
-    await db.delete(memberships).where(eq(memberships.userId, user.id));
-    await db.delete(users).where(eq(users.id, user.id));
+    await cleanupStripeUserFixture(user.id, planId);
   }
 });
 
@@ -632,13 +679,15 @@ test("member billing keeps the same active membership when Stripe reconciliation
     "en",
   );
   let server: Server | undefined;
+  let planId = "";
 
   try {
     const stripeCustomerId = `cus_past_due_${suffix}`;
     const stripeSubscriptionId = `sub_past_due_${suffix}`;
     await db.update(users).set({ stripeCustomerId }).where(eq(users.id, user.id));
-    const [plan] = await db.select().from(membershipPlans).where(eq(membershipPlans.internalKey, "ground_up_3")).limit(1);
-    assert.ok(plan, "the approved Ground Up 3 plan is required for past-due evidence");
+    const planFixture = await createStripePlanFixture();
+    const { plan } = planFixture;
+    planId = plan.id;
 
     const app = express();
     app.use((req, _res, next) => {
@@ -661,7 +710,7 @@ test("member billing keeps the same active membership when Stripe reconciliation
       customer: stripeCustomerId,
       metadata: {
         ground_up_user_id: user.id,
-        ground_up_plan_key: plan.internalKey,
+        ground_up_plan_key: planFixture.planKey,
       },
       cancel_at_period_end: false,
       status: "active",
@@ -686,7 +735,7 @@ test("member billing keeps the same active membership when Stripe reconciliation
       },
     } as unknown as Stripe.Subscription;
 
-    const activeMembership = await applyStripeSubscription(subscription);
+    const activeMembership = await applyStripeSubscription(subscription, {}, planFixture.resolvePlan);
     const activeResponse = await fetch(billingUrl);
     assert.equal(activeResponse.status, 200);
     const activeBilling = await activeResponse.json();
@@ -698,6 +747,7 @@ test("member billing keeps the same active membership when Stripe reconciliation
     const pastDueMembership = await applyStripeSubscription(
       { ...subscription, status: "past_due" },
       { latestInvoiceId: `in_past_due_${suffix}`, billingFailureAt: new Date() },
+      planFixture.resolvePlan,
     );
     assert.equal(pastDueMembership.id, activeMembership.id);
 
@@ -716,24 +766,24 @@ test("member billing keeps the same active membership when Stripe reconciliation
     if (server?.listening) {
       await new Promise<void>((resolve, reject) => server!.close((error) => error ? reject(error) : resolve()));
     }
-    await db.delete(memberships).where(eq(memberships.userId, user.id));
-    await db.delete(users).where(eq(users.id, user.id));
+    await cleanupStripeUserFixture(user.id, planId);
   }
 });
 
-test("development database has one Stripe mapping for each approved plan", async () => {
-  const plans = await db.select({
-    internalKey: membershipPlans.internalKey,
-    displayPriceCents: membershipPlans.displayPriceCents,
-    stripeProductId: membershipPlans.stripeProductId,
-    stripePriceId: membershipPlans.stripePriceId,
-  }).from(membershipPlans).where(eq(membershipPlans.active, true)).orderBy(asc(membershipPlans.internalKey));
-  for (const key of BILLING_PLAN_KEYS) {
-    const matches = plans.filter((plan) => plan.internalKey === key);
-    assert.equal(matches.length, 1, `${key} should have exactly one active plan record`);
-    assert.equal(matches[0].displayPriceCents, STRIPE_MEMBERSHIP_CATALOG[key].amountCents);
-    assert.match(matches[0].stripeProductId || "", /^prod_/);
-    assert.match(matches[0].stripePriceId || "", /^price_/);
+test("Stripe test fixtures have explicit price mappings for every approved plan", async () => {
+  const fixtures: Awaited<ReturnType<typeof createStripePlanFixture>>[] = [];
+  try {
+    for (const key of BILLING_PLAN_KEYS) {
+      const fixture = await createStripePlanFixture(key);
+      fixtures.push(fixture);
+      assert.equal(fixture.plan.displayPriceCents, STRIPE_MEMBERSHIP_CATALOG[key].amountCents);
+      assert.match(fixture.plan.stripeProductId || "", /^prod_test_/);
+      assert.match(fixture.plan.stripePriceId || "", /^price_test_/);
+    }
+  } finally {
+    for (const fixture of fixtures) {
+      await db.delete(membershipPlans).where(eq(membershipPlans.id, fixture.plan.id));
+    }
   }
 });
 

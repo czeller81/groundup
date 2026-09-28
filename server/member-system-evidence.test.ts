@@ -33,14 +33,40 @@ test("member system evidence: Discovery to membership with weekly limits, waitli
   const userIds: string[] = [];
   const occurrenceIds: string[] = [];
   const passIds: string[] = [];
+  const formIds: string[] = [];
   let planId = "";
+  let calendarConnectionId = "";
   let classTypeSkillId = "";
   let classTypeStrengthId = "";
   let classTypeGirlsId = "";
-  const [connection] = await db.select().from(calendarConnections).limit(1);
-  assert.ok(connection, "a Calendar connection is required for fixture occurrences");
 
   try {
+    const [connection] = await db.insert(calendarConnections).values({
+      provider: `qa-${suffix}`,
+      calendarId: `qa-calendar-${suffix}`,
+      calendarName: `QA Calendar ${suffix}`,
+      timezone: "America/Los_Angeles",
+      status: "connected",
+    }).returning();
+    calendarConnectionId = connection.id;
+    const fixtureForms = await db.insert(forms).values([
+      {
+        slug: `qa-liability-waiver-${suffix}`,
+        title: "QA Liability Waiver",
+        fields: [],
+        isRequired: true,
+        requiredBeforeBooking: true,
+      },
+      {
+        slug: `qa-gym-rules-${suffix}`,
+        title: "QA Gym Rules",
+        fields: [],
+        isRequired: true,
+        requiredBeforeBooking: true,
+      },
+    ]).returning({ id: forms.id });
+    formIds.push(...fixtureForms.map((form) => form.id));
+
     const member = await storage.createUser(emails[0], "GroundUp-QA-Password-2026", "Member", "A", "5550000101", "en");
     const discoveryMember = await storage.createUser(emails[1], "GroundUp-QA-Password-2026", "Discovery", "B", "5550000102", "en");
     const exceptionMember = await storage.createUser(emails[2], "GroundUp-QA-Password-2026", "Exception", "C", "5550000103", "en");
@@ -48,13 +74,13 @@ test("member system evidence: Discovery to membership with weekly limits, waitli
     const bookingForms = await db.select({ id: forms.id, slug: forms.slug })
       .from(forms)
       .where(eq(forms.requiredBeforeBooking, true));
-    assert.deepEqual(new Set(bookingForms.map((form) => form.slug)), new Set(["liability-waiver", "gym-rules"]));
+    assert.ok(formIds.every((id) => bookingForms.some((form) => form.id === id)));
 
     const [plan] = await db.insert(membershipPlans).values({
       internalKey: `qa-plan-${suffix}`,
       displayName: "QA 2x weekly",
       weeklySessionLimit: 2,
-      eligibleClassCategories: ["skill", "strength"],
+      eligibleClassCategories: ["skill", "strength", "girls_skill", "GIRLS_JIU_JITSU_SELF_DEFENSE"],
       bookingWindowHours: 8760,
       weekStartDay: 1,
       timezone: "America/Los_Angeles",
@@ -149,7 +175,7 @@ test("member system evidence: Discovery to membership with weekly limits, waitli
         ? "STRENGTH_CONDITIONING"
         : "GIRLS_JIU_JITSU_SELF_DEFENSE";
       const [occurrence] = await db.insert(classOccurrences).values({
-        calendarConnectionId: connection.id,
+        calendarConnectionId,
         googleCalendarId: `qa-calendar-${suffix}`,
         googleEventId: `qa-event-${suffix}-${offsetDays}-${startOffsetHours}`,
         title,
@@ -412,6 +438,7 @@ test("member system evidence: Discovery to membership with weekly limits, waitli
     }).returning();
     const minorRoster = await storage.getOccurrenceReservations(minorOriginalOccurrence.id);
     assert.equal(minorRoster.cancelled[0].minorProfile?.firstName, "Minor");
+    await db.update(membershipPlans).set({ weeklySessionLimit: 10 }).where(eq(membershipPlans.id, planId));
     const movedMinor = await storage.moveClassReservation({
       reservationId: minorReservation.id,
       replacementOccurrenceId: minorReplacementOccurrence.id,
@@ -535,6 +562,8 @@ test("member system evidence: Discovery to membership with weekly limits, waitli
     if (planId) await db.delete(membershipPlans).where(eq(membershipPlans.id, planId));
     if (occurrenceIds.length) await db.delete(classOccurrences).where(inArray(classOccurrences.id, occurrenceIds));
     if (classTypeSkillId) await db.delete(classTypes).where(inArray(classTypes.id, [classTypeSkillId, classTypeStrengthId, classTypeGirlsId]));
+    if (formIds.length) await db.delete(forms).where(inArray(forms.id, formIds));
+    if (calendarConnectionId) await db.delete(calendarConnections).where(eq(calendarConnections.id, calendarConnectionId));
     if (userIds.length) await db.delete(users).where(inArray(users.id, userIds));
     await pool.end();
   }

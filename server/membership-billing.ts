@@ -184,7 +184,20 @@ type StripeCheckoutReconciliationOptions = {
   now?: number;
   limit?: number;
   requestTimeoutMs?: number;
+  userId?: string;
+  planResolver?: StripePlanResolver;
 };
+
+type StripePlanResolver = (
+  planKey: BillingPlanKey,
+) => Promise<typeof membershipPlans.$inferSelect | null>;
+
+async function resolveConfiguredStripePlan(planKey: BillingPlanKey) {
+  const [plan] = await db.select().from(membershipPlans)
+    .where(eq(membershipPlans.internalKey, planKey))
+    .limit(1);
+  return plan || null;
+}
 
 export type StripeCheckoutReconciliationSummary = {
   scanned: number;
@@ -378,6 +391,7 @@ async function reconcilePendingCheckoutMemberships(
   pendingMemberships: Array<typeof memberships.$inferSelect>,
   now = Date.now(),
   requestTimeoutMs = STRIPE_RECONCILIATION_REQUEST_TIMEOUT_MS,
+  planResolver: StripePlanResolver = resolveConfiguredStripePlan,
 ): Promise<StripeCheckoutReconciliationSummary> {
   validateStripeReconciliationRequestTimeout(requestTimeoutMs);
   const summary: StripeCheckoutReconciliationSummary = {
@@ -456,7 +470,7 @@ async function reconcilePendingCheckoutMemberships(
           latestInvoiceId: typeof subscription.latest_invoice === "string"
             ? subscription.latest_invoice
             : subscription.latest_invoice?.id,
-        });
+        }, planResolver);
         summary.completed++;
       } catch {
         // A local processing error must not turn a still-reconcilable checkout
@@ -477,7 +491,7 @@ async function reconcilePendingCheckoutMemberships(
 export async function reconcilePendingStripeCheckouts(
   stripe: Stripe,
   userId: string,
-  options: Pick<StripeCheckoutReconciliationOptions, "requestTimeoutMs"> = {},
+  options: Pick<StripeCheckoutReconciliationOptions, "requestTimeoutMs" | "planResolver"> = {},
 ) {
   const pendingMemberships = await db.select().from(memberships).where(and(
     eq(memberships.userId, userId),
@@ -490,6 +504,7 @@ export async function reconcilePendingStripeCheckouts(
     pendingMemberships,
     Date.now(),
     options.requestTimeoutMs ?? STRIPE_RECONCILIATION_REQUEST_TIMEOUT_MS,
+    options.planResolver,
   );
 }
 
@@ -503,6 +518,7 @@ export async function reconcileStalePendingStripeCheckouts(
     eq(memberships.billingState, "pending"),
     eq(memberships.billingSource, "stripe_checkout"),
     lte(memberships.createdAt, new Date(now - PENDING_CHECKOUT_STALE_AFTER_MS)),
+    options.userId ? eq(memberships.userId, options.userId) : sql`true`,
   )).orderBy(asc(memberships.createdAt)).limit(limit);
 
   return reconcilePendingCheckoutMemberships(
@@ -510,6 +526,7 @@ export async function reconcileStalePendingStripeCheckouts(
     pendingMemberships,
     now,
     options.requestTimeoutMs ?? STRIPE_RECONCILIATION_REQUEST_TIMEOUT_MS,
+    options.planResolver,
   );
 }
 
@@ -596,14 +613,13 @@ export async function applyStripeSubscription(subscription: Stripe.Subscription,
   latestInvoiceId?: string | null;
   billingStateOverride?: string;
   billingFailureAt?: Date | null;
-} = {}) {
+} = {}, planResolver: StripePlanResolver = resolveConfiguredStripePlan) {
   const userId = subscription.metadata?.ground_up_user_id;
   const planKey = subscription.metadata?.ground_up_plan_key;
   if (!userId || !isBillingPlanKey(planKey)) {
     throw new Error("STRIPE_SUBSCRIPTION_METADATA_INVALID");
   }
-  const plan = await db.select().from(membershipPlans).where(eq(membershipPlans.internalKey, planKey)).limit(1);
-  const membershipPlan = plan[0];
+  const membershipPlan = await planResolver(planKey);
   if (!membershipPlan || !membershipPlan.active) throw new Error("MEMBERSHIP_PLAN_NOT_CONFIGURED");
   const stripeCustomerId = stripeSubscriptionCustomerId(subscription);
   if (!stripeCustomerId) throw new Error("STRIPE_SUBSCRIPTION_CUSTOMER_INVALID");
