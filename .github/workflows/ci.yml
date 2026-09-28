@@ -49,8 +49,18 @@ jobs:
       - name: Type and route checks
         run: npm run check
 
-      - name: Apply committed member-AI migration
-        run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f migrations/20260927_member_ai_self_service.sql
+      - name: Validate committed member-AI migration in isolated database
+        env:
+          PGPASSWORD: groundup
+        run: |
+          createdb -h 127.0.0.1 -U groundup groundup_migration_check
+          psql -h 127.0.0.1 -U groundup -d groundup_migration_check -v ON_ERROR_STOP=1 <<'SQL'
+          CREATE TABLE users (id varchar PRIMARY KEY);
+          CREATE TABLE forms (id varchar PRIMARY KEY);
+          SQL
+          psql -h 127.0.0.1 -U groundup -d groundup_migration_check -v ON_ERROR_STOP=1 -f migrations/20260927_member_ai_self_service.sql
+          psql -h 127.0.0.1 -U groundup -d groundup_migration_check -v ON_ERROR_STOP=1 -c "\\d waiver_acceptances"
+          psql -h 127.0.0.1 -U groundup -d groundup_migration_check -v ON_ERROR_STOP=1 -c "\\d member_ai_delegations"
 
       - name: Test
         run: npm test
