@@ -1,127 +1,70 @@
-# Overview
+# Ground Up BJJ
 
-Ground Up Jiu-Jitsu & Fitness — a boutique BJJ and fitness academy in Oxnard, CA focused on women, kids, and beginners. Offers small group classes (max 6 students), women's self-defense, BJJ fundamentals, kids jiu-jitsu, strength & conditioning, and personal training. Brand positioning: empowering, safe, community-driven, premium but approachable. Includes a complete member portal with authentication, intake forms, session booking, and a comprehensive admin + coach management system.
+Ground Up is the production web application and member platform for Ground Up Jiu-Jitsu & Fitness in Oxnard, California.
 
-# User Preferences
+## Architecture
 
-Preferred communication style: Simple, everyday language.
+- React 18 + TypeScript + Vite frontend
+- Express + TypeScript backend
+- PostgreSQL / Neon through Drizzle ORM
+- Session-authenticated member, coach, and admin portal
+- Google Calendar-backed class schedule and Ground Up-owned reservation boundary
+- Stripe membership/payment integration
+- Discovery Pass onboarding
+- Scoped service-to-service AI management API
+- Delegated member AI self-service foundation (default off)
 
-# Design System — "Midnight Neon"
+## Scheduling and reservations
 
-## Color Palette
-- Base dark: `#0B0F14` (hsl 220 20% 7%), `#121826` (hsl 222 30% 10%)
-- Primary (cyan neon): `#5EEBFF` (hsl 189 100% 68%)
-- Secondary (purple neon): `#B06CFF` (hsl 266 100% 71%)
-- Warm CTA: `#FFB199` (hsl 15 100% 80%)
-- Text: light gray on dark backgrounds
+Google Calendar is the schedule source. Ground Up stores normalized class occurrences and is authoritative for reservation eligibility, capacity, duplicate/overlap checks, waitlists, membership/Discovery Pass entitlement use, and reservation audit events.
 
-## Typography
-- Display/headings: **Oswald** (bold, condensed, uppercase, tracking-wide)
-- Body: **Inter** (clean sans-serif)
-- Headings use `font-family: var(--font-display)` inline style
+Legacy private-session bookings remain separate from modern class reservations.
 
-## Visual Motifs
-- Grain texture overlay (`.grain-texture`)
-- Diagonal belt-stripe lines (`.belt-stripe`)
-- Neon glow effects (`.neon-glow`, `.neon-glow-purple`)
-- Gradient text utilities (`.gradient-text-cyan`, `.gradient-text-purple`, `.gradient-text-warm`)
-- Soft blur orbs for ambient lighting
+## AI integrations
 
-## Animations
-- **Framer Motion** for scroll-reveal sections, hero entrance, hover micro-interactions
-- Section wrapper component using `useInView` for scroll-triggered animation
-- FAQ accordion with animated height transitions
+### Management/provider API
 
-# System Architecture
+The existing `/api/ai/v1` API uses the scoped `LIME_AGENT_API_KEY` / `LIME_AGENT_API_SCOPES` service credential model. Missing scopes grant nothing.
 
-## Frontend Architecture
-- **React 18** with TypeScript
-- **Vite** build tool
-- **Wouter** for client-side routing
-- **Tailwind CSS** + **shadcn/ui** components
-- **Framer Motion** for animations
-- **TanStack Query** for server state
-- **React Hook Form** + **Zod** for forms
+### Delegated member self-service
 
-## Backend Architecture
-- **Express.js** with TypeScript
-- **Drizzle ORM** + PostgreSQL (Neon)
-- RESTful API endpoints for trainers, bookings, portal auth, contact, admin, coach, session notes
+The `/api/ai/member/v1` foundation lets an authenticated member create a short-lived, scoped delegation for an agent. Delegated tokens are stored only as hashes and are bound to the canonical Ground Up member identity.
 
-## Member Portal
-- Email/password auth with bcrypt password hashing
-- Session-based authentication via cookies
-- Role-based access control: admin, coach, member
-- Required intake forms: Personal Training Intake, Health/PAR-Q, Goals & Preferences
-- Auto-save every 2 seconds on forms
-- Members can view their submitted form answers from the dashboard
-- Booking system: sessions 8am–5pm, auto-selected trainer (Raymi Gonzalez)
-- Same-day cancellations allowed with $10 fee warning
+This feature is **default off**. Production activation requires:
 
-## Admin Dashboard (/portal/admin)
-- Stats cards: Total Users, New Users (30d), Active Memberships, Upcoming Sessions (7d), Monthly Revenue
-- Member list with search and pagination (15 per page)
-- Full member profiles with tabbed interface: Forms, Bookings, Session Notes, Admin Settings
-- Role management (admin/coach/member), belt rank, attendance count
-- Admin internal notes per member
-- Session notes CRUD (visible to admin and coach)
-- Form response viewer with detailed answers
+1. the member-AI migration to be applied,
+2. schema readiness to pass,
+3. acceptance/security tests to pass,
+4. explicit `MEMBER_AI_SELF_SERVICE_ENABLED=true`.
 
-## Coach Center (/portal/coach)
-- View assigned members (members with assignedCoachId matching coach's userId)
-- Add session notes for members
-- Update belt rank and attendance count
-- Admins see all members in coach view
+The delegated API never allows an agent to sign the liability waiver. Waiver acceptance remains a human action in the member portal. Booking creation requires explicit confirmation and idempotency and is re-authorized at the Ground Up reservation transaction boundary.
 
-## Calendly Integration
-- Webhook endpoint: POST /webhook/calendly
-- Supports native Calendly invitee.created events
-- Auto-creates users by email if they don't exist
-- Creates bookings with default trainer
+## Database migrations
 
-## Database Tables
-- users: id, email, passwordHash, firstName, lastName, phone, role (admin/coach/member), beltRank, attendanceCount, assignedCoachId, adminNotes, createdAt
-- memberships: id, userId, type, status, priceCents, startDate, endDate, createdAt
-- session_notes: id, userId, coachId, notes, sessionDate, createdAt
-- bookings: id, userId, trainerId, customerName/Email/Phone, sessionType, start, end, status, amountCents, currency, stripeSessionId, calendlyEventId, paymentStatus, notes, createdAt
-- trainers: id, name, bio, photoUrl, specialties, beltRank, availability
-- forms: id, slug, title, description, fields, isRequired
-- form_responses: id, userId, formId, answers, status, submittedAt, updatedAt, createdAt
-- admin_users: legacy admin auth table
+Committed migrations live in `migrations/`. The delegated member-AI schema is introduced by:
 
-## Admin Credentials
-- admin@groundupbjj.com (role=admin in users table)
+`migrations/20260927_member_ai_self_service.sql`
 
-## Payment Integration
-- **Stripe** integration (configured via integration)
+Do not run schema changes against an unconfirmed database target.
 
-## Pages
-- Home (single-page with Hero, Trust strip, Programs, Coach, Testimonials, Pricing, FAQ, CTA)
-- Personal Training (info + CTA to portal)
-- Coaches (Raymi Gonzalez spotlight)
-- Programs (Start Here funnel — no pricing shown)
-- Contact (form + info)
-- Portal: Login, Dashboard, Forms, Booking, Admin, Coach
+## Development
 
-## PWA (Progressive Web App)
-- Installable on iPhone/Android via "Add to Home Screen"
-- manifest.json at client/public/manifest.json
-- Icons at client/public/icons/ (192x192, 512x512, 180x180 apple-touch-icon)
-- Apple meta tags in client/index.html (apple-mobile-web-app-capable, theme-color, status-bar-style)
-- App name: "Ground Up BJJ", display: standalone, theme: #0B0F14
+Install dependencies and run:
 
-## Business Info
-- Phone: (786) 757-1175
-- Email: info@groundupbjj.com
-- Location: Oxnard, CA
-- Trainer: Raymi Gonzalez, Purple Belt 3rd Degree
-- Sessions: 8am–5pm
+`npm run check`
 
-# External Dependencies
-- Neon Database (PostgreSQL)
-- Stripe (payment processing)
-- Tailwind CSS + Radix UI + shadcn/ui
-- Framer Motion (animations)
-- Lucide React + react-icons (icons)
-- Google Fonts (Inter + Oswald)
-- date-fns (date utilities)
+`npm test`
+
+`npm run build`
+
+## Security
+
+- Never commit environment files or production credentials.
+- Store production secrets in the deployment platform.
+- Do not expose member session cookies or delegated bearer tokens in logs.
+- Customer-specific agent actions must use delegated identity; a service credential alone must never select a member by arbitrary email or user ID.
+- Ground Up remains authoritative for booking eligibility and waiver state.
+
+## Repository workflow
+
+Normal development should use a feature/fix branch and pull request. Keep `main` reviewable and deployable.
