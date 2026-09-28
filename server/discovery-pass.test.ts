@@ -89,6 +89,7 @@ test("Discovery bookings bypass membership after activation and provider cancell
   let passId: string | undefined;
   let skillTypeId: string | undefined;
   let strengthTypeId: string | undefined;
+  let connectionId: string | undefined;
   const occurrenceIds: string[] = [];
   try {
     const requiredForms = await db.select({ id: forms.id }).from(forms).where(eq(forms.requiredBeforeBooking, true));
@@ -147,8 +148,13 @@ test("Discovery bookings bypass membership after activation and provider cancell
     assert.equal(strengthEligibility.code, "ELIGIBLE");
     assert.equal(strengthEligibility.source, "discovery");
 
-    const [connection] = await db.select().from(calendarConnections).limit(1);
-    assert.ok(connection, "a calendar connection is required for booking fixtures");
+    const [connection] = await db.insert(calendarConnections).values({
+      provider: `test-discovery-${suffix}`,
+      calendarId: "discovery-qa-calendar",
+      calendarName: "Discovery QA offline calendar",
+      status: "connected",
+    }).returning();
+    connectionId = connection.id;
     const makeOccurrence = async (classTypeId: string, label: string, dayOffset: number) => {
       const [created] = await db.insert(classOccurrences).values({
         calendarConnectionId: connection.id,
@@ -253,6 +259,7 @@ test("Discovery bookings bypass membership after activation and provider cancell
     }
     if (occurrenceIds.length) await db.delete(classOccurrences).where(eq(classOccurrences.id, occurrenceIds[0]));
     if (occurrenceIds.length > 1) await db.delete(classOccurrences).where(eq(classOccurrences.id, occurrenceIds[1]));
+    if (connectionId) await db.delete(calendarConnections).where(eq(calendarConnections.id, connectionId));
     if (skillTypeId) await db.delete(classTypes).where(eq(classTypes.id, skillTypeId));
     if (strengthTypeId) await db.delete(classTypes).where(eq(classTypes.id, strengthTypeId));
     await db.delete(users).where(eq(users.id, user.id));

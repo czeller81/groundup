@@ -7,7 +7,7 @@
     "dev": "NODE_ENV=development tsx server/index.ts",
     "build": "vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
     "start": "NODE_ENV=production node dist/index.js",
-    "test": "tsx --test server/security.test.ts server/account-security.test.ts server/member-entitlements.test.ts server/minor-booking.test.ts server/schedule-cutover.test.ts server/member-system-evidence.test.ts server/stripe-membership.test.ts server/discovery-pass.test.ts server/email.test.ts server/meta-conversions.test.ts server/ai-management-api.test.ts server/ai-member-self-service.test.ts server/ai-member-self-service.integration.test.ts server/class-booking-idempotency.test.ts server/waiver-acceptance.test.ts client/src/lib/meta-pixel.test.ts client/src/lib/locale.test.ts",
+    "test": "tsx --test --test-concurrency=1 server/security.test.ts server/account-security.test.ts server/member-entitlements.test.ts server/minor-booking.test.ts server/schedule-cutover.test.ts server/member-system-evidence.test.ts server/stripe-membership.test.ts server/discovery-pass.test.ts server/email.test.ts server/meta-conversions.test.ts server/ai-management-api.test.ts server/ai-member-self-service.test.ts server/ai-member-self-service.integration.test.ts server/class-booking-idempotency.test.ts server/waiver-acceptance.test.ts client/src/lib/meta-pixel.test.ts client/src/lib/locale.test.ts",
     "test:evidence": "NODE_ENV=development tsx --test server/cutover-evidence.test.ts",
     "audit:account-cleanup": "tsx scripts/generate-account-cleanup-report.ts",
     "browser:qa": "node scripts/stripe-browser-rehearsal.mjs",
@@ -61,7 +61,7 @@
     "cmdk": "^1.1.1",
     "connect-pg-simple": "^10.0.0",
     "date-fns": "^3.6.0",
-    "drizzle-orm": "^0.39.1",
+    "drizzle-orm": "^0.45.3",
     "drizzle-zod": "^0.7.0",
     "embla-carousel-react": "^8.6.0",
     "express": "^4.21.2",
@@ -71,7 +71,7 @@
     "lucide-react": "^0.453.0",
     "memoizee": "^0.4.17",
     "memorystore": "^1.6.7",
-    "nanoid": "^5.1.5",
+    "nanoid": "^5.1.16",
     "next-themes": "^0.4.6",
     "openid-client": "^6.8.0",
     "passport": "^0.7.0",
@@ -86,13 +86,13 @@
     "recharts": "^2.15.2",
     "stripe": "^18.5.0",
     "tailwind-merge": "^2.6.0",
-    "tailwindcss-animate": "^1.0.7",
     "tw-animate-css": "^1.2.5",
     "vaul": "^1.1.2",
     "wouter": "^3.3.5",
-    "ws": "^8.18.0",
+    "ws": "^8.22.0",
     "zod": "^3.24.2",
-    "zod-validation-error": "^3.4.0"
+    "zod-validation-error": "^3.4.0",
+    "pg": "^8.13.1"
   },
   "devDependencies": {
     "@replit/vite-plugin-cartographer": "^0.6.1",
@@ -113,13 +113,25 @@
     "autoprefixer": "^10.4.20",
     "drizzle-kit": "^0.31.4",
     "esbuild": "^0.25.0",
-    "postcss": "^8.4.47",
-    "tailwindcss": "^3.4.17",
+    "postcss": "^8.5.28",
     "tsx": "^4.20.5",
     "typescript": "5.6.3",
-    "vite": "^5.4.20"
+    "vite": "^5.4.20",
+    "@types/pg": "^8.11.6",
+    "tailwindcss-animate": "^1.0.7"
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.8"
+  },
+  "overrides": {
+    "qs": "^6.15.4",
+    "yaml": "^2.8.3",
+    "lodash": "^4.17.24",
+    "minimatch": "^9.0.7",
+    "on-headers": "^1.1.0",
+    "path-to-regexp": "^0.1.13",
+    "picomatch": "^2.3.2",
+    "postcss-selector-parser": "^6.1.3",
+    "body-parser": "1.20.6"
   }
 }

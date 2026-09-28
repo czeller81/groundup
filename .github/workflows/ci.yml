@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: groundup
+          POSTGRES_PASSWORD: groundup
+          POSTGRES_DB: groundup_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U groundup -d groundup_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      NODE_ENV: test
+      DATABASE_URL: postgresql://groundup:groundup@127.0.0.1:5432/groundup_test
+      NEON_DATABASE_URL: postgresql://groundup:groundup@127.0.0.1:5432/groundup_test
+      SESSION_SECRET: ci-only-session-secret-not-for-production
+      MEMBER_AI_SELF_SERVICE_ENABLED: "false"
+      GROUNDUP_LOCAL_POSTGRES: "true"
+      LIME_AGENT_API_SCOPES: ""
+      BOOKING_NOTIFICATIONS_ENABLED: "false"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type and route checks
+        run: npm run check
+
+      - name: Validate committed member-AI migration in isolated database
+        env:
+          PGPASSWORD: groundup
+        run: |
+          createdb -h 127.0.0.1 -U groundup groundup_migration_check
+          psql -h 127.0.0.1 -U groundup -d groundup_migration_check -v ON_ERROR_STOP=1 <<'SQL'
+          CREATE TABLE users (id varchar PRIMARY KEY);
+          CREATE TABLE forms (id varchar PRIMARY KEY);
+          SQL
+          psql -h 127.0.0.1 -U groundup -d groundup_migration_check -v ON_ERROR_STOP=1 -f migrations/20260927_member_ai_self_service.sql
+          psql -h 127.0.0.1 -U groundup -d groundup_migration_check -v ON_ERROR_STOP=1 -c "\\d waiver_acceptances"
+          psql -h 127.0.0.1 -U groundup -d groundup_migration_check -v ON_ERROR_STOP=1 -c "\\d member_ai_delegations"
+
+      - name: Prepare disposable test schema
+        run: npm run db:push -- --force
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build
