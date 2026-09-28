@@ -5,6 +5,8 @@ import { drizzle as drizzlePg } from "drizzle-orm/node-postgres";
 import ws from "ws";
 import * as schema from "@shared/schema";
 
+neonConfig.webSocketConstructor = ws;
+
 const databaseUrl = process.env.NEON_DATABASE_URL || process.env.DATABASE_URL;
 
 if (!databaseUrl) {
@@ -17,19 +19,23 @@ const useLocalPostgres =
   process.env.GROUNDUP_LOCAL_POSTGRES === "true" &&
   process.env.NODE_ENV !== "production";
 
-let selectedPool: any;
-let selectedDb: any;
+type GroundUpDb = ReturnType<typeof drizzleNeon>;
+
+let selectedPool: NeonPool;
+let selectedDb: GroundUpDb;
 
 if (useLocalPostgres) {
-  selectedPool = new PgPool({ connectionString: databaseUrl });
-  selectedDb = drizzlePg(selectedPool, { schema });
+  // CI/test-only transport. Preserve the application's existing typed Drizzle
+  // surface while swapping only the underlying PostgreSQL connection driver.
+  const localPool = new PgPool({ connectionString: databaseUrl });
+  const localDb = drizzlePg(localPool, { schema });
+  selectedPool = localPool as unknown as NeonPool;
+  selectedDb = localDb as unknown as GroundUpDb;
 } else {
-  neonConfig.webSocketConstructor = ws;
-  selectedPool = new NeonPool({ connectionString: databaseUrl });
-  selectedDb = drizzleNeon({ client: selectedPool, schema });
+  const neonPool = new NeonPool({ connectionString: databaseUrl });
+  selectedPool = neonPool;
+  selectedDb = drizzleNeon({ client: neonPool, schema });
 }
 
-// Production remains on the Neon driver. The node-postgres path exists only
-// for explicit non-production/CI execution against disposable PostgreSQL.
 export const pool = selectedPool;
 export const db = selectedDb;
