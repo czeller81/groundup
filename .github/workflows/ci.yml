@@ -32,6 +32,7 @@ jobs:
       NEON_DATABASE_URL: postgresql://groundup:groundup@127.0.0.1:5432/groundup_test
       SESSION_SECRET: ci-only-session-secret-not-for-production
       MEMBER_AI_SELF_SERVICE_ENABLED: "false"
+      GROUNDUP_LOCAL_POSTGRES: "true"
       LIME_AGENT_API_SCOPES: ""
       BOOKING_NOTIFICATIONS_ENABLED: "false"
 
@@ -61,6 +62,9 @@ jobs:
           psql -h 127.0.0.1 -U groundup -d groundup_migration_check -v ON_ERROR_STOP=1 -f migrations/20260927_member_ai_self_service.sql
           psql -h 127.0.0.1 -U groundup -d groundup_migration_check -v ON_ERROR_STOP=1 -c "\\d waiver_acceptances"
           psql -h 127.0.0.1 -U groundup -d groundup_migration_check -v ON_ERROR_STOP=1 -c "\\d member_ai_delegations"
+
+      - name: Prepare disposable test schema
+        run: npm run db:push -- --force
 
       - name: Test
         run: npm test
