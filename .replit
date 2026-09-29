@@ -69,3 +69,8 @@ waitForPort = 5000
 [postMerge]
 path = "scripts/post-merge.sh"
 timeoutMs = 20000
+
+[userenv]
+
+[userenv.shared]
+VITE_TURNSTILE_SITE_KEY = "0x4AAAAAAFIbADFQzY2brlhi"
