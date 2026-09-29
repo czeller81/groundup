@@ -1,10 +1,21 @@
 import { sql, relations } from "drizzle-orm";
-import { check, pgTable, text, varchar, integer, timestamp, jsonb, boolean, uniqueIndex, index } from "drizzle-orm/pg-core";
+import { check, pgTable, text, varchar, integer, timestamp, json, jsonb, boolean, uniqueIndex, index, primaryKey } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 export const accountStatuses = ["unverified", "legitimate", "needs_review", "suspicious", "archived"] as const;
 export type AccountStatus = typeof accountStatuses[number];
+
+// Keep the connect-pg-simple table in the schema tracked by Replit Publish.
+// Otherwise a production-only session table can be treated as a drop.
+export const userSessions = pgTable("user_sessions", {
+  sid: varchar("sid").notNull(),
+  sess: json("sess").notNull(),
+  expire: timestamp("expire", { precision: 6 }).notNull(),
+}, (table) => ({
+  sessionPrimaryKey: primaryKey({ columns: [table.sid], name: "session_pkey" }),
+  expirationIndex: index("IDX_user_sessions_expire").on(table.expire),
+}));
 
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),

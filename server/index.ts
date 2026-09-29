@@ -7,7 +7,7 @@ import { createOriginProtection, createScannerProbeGuard } from "./route-securit
 import { applySecurityHeaders } from "./security-headers";
 import { createRequire } from "module";
 import { storage } from "./storage";
-import { db } from "./db";
+import { db, databaseUrl } from "./db";
 import { sql } from "drizzle-orm";
 import Stripe from "stripe";
 import {
@@ -22,7 +22,6 @@ import { startNotificationOutboxMaintenance } from "./notification-outbox";
 const MemStore = MemoryStore(session);
 const require = createRequire(import.meta.url);
 const PgSession = require("connect-pg-simple")(session);
-const databaseUrl = process.env.NEON_DATABASE_URL || process.env.DATABASE_URL;
 const STRIPE_CHECKOUT_RECONCILIATION_INTERVAL_MS = 15 * 60 * 1000;
 
 const app = express();

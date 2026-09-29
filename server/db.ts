@@ -9,7 +9,7 @@ import * as schema from "@shared/schema";
 neonConfig.webSocketConstructor = ws;
 
 
-const databaseUrl = process.env.NEON_DATABASE_URL || process.env.DATABASE_URL;
+export const databaseUrl = process.env.NEON_DATABASE_URL || process.env.DATABASE_URL;
 
 
 if (!databaseUrl) {
