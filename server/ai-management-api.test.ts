@@ -283,6 +283,14 @@ test("Lime provider credentials enforce scopes while the legacy AI key remains b
     const legacyStillWorks = await fetch(`${baseUrl}/operations/payments`, { headers: authHeaders() });
     assert.equal(legacyStillWorks.status, 200, "the existing AI key retains backward-compatible access");
 
+    const legacyWrite = await fetch(`${baseUrl}/operations/reservations`, {
+      method: "POST",
+      headers: { ...authHeaders(), "Content-Type": "application/json", "Idempotency-Key": "legacy-write-test" },
+      body: JSON.stringify({}),
+    });
+    assert.equal(legacyWrite.status, 403, "legacy broad credentials may not create reservations");
+    assert.equal((await legacyWrite.json()).code, "AI_PROVIDER_CREDENTIAL_REQUIRED");
+
     delete process.env.LIME_AGENT_API_SCOPES;
     const missingScopeConfig = await fetch(`${baseUrl}/operations/schedule`, {
       headers: { Authorization: `Bearer ${TEST_PROVIDER_KEY}` },
@@ -320,6 +328,85 @@ test("Lime provider credentials enforce scopes while the legacy AI key remains b
     else process.env.LIME_AGENT_API_SCOPES = previousProviderScopes;
     if (previousLegacyKey === undefined) delete process.env.AI_MANAGEMENT_API_KEY;
     else process.env.AI_MANAGEMENT_API_KEY = previousLegacyKey;
+    await new Promise<void>((resolve) => server.close(() => resolve()));
+  }
+});
+
+test("scoped reservation provider contract forwards idempotency and redacts visitor details", { concurrency: false }, async () => {
+  const previousProviderKey = process.env.LIME_AGENT_API_KEY;
+  const previousProviderScopes = process.env.LIME_AGENT_API_SCOPES;
+  const previousReserve = storage.reserveClassOccurrence;
+  const seen: Record<string, unknown> = {};
+  process.env.LIME_AGENT_API_KEY = TEST_PROVIDER_KEY;
+  process.env.LIME_AGENT_API_SCOPES = "reservation:create";
+  storage.reserveClassOccurrence = async (input) => {
+    Object.assign(seen, input);
+    return {
+      reservation: {
+        id: "reservation-1",
+        occurrenceId: input.occurrenceId,
+        status: "confirmed",
+        waitlistPosition: null,
+        createdAt: new Date("2026-10-02T20:00:00.000Z"),
+      },
+      occurrence: {
+        id: input.occurrenceId,
+        title: "Adult Jiu-Jitsu",
+        start: new Date("2026-10-05T17:00:00.000Z"),
+        end: new Date("2026-10-05T18:00:00.000Z"),
+        location: "Ground Up BJJ",
+        capacity: 6,
+        bookingEnabled: true,
+        firstVisitEligible: true,
+      },
+    } as Awaited<ReturnType<typeof storage.reserveClassOccurrence>>;
+  };
+  const { server, baseUrl } = await startManagementApp();
+  try {
+    const body = {
+      occurrenceId: "00000000-0000-4000-8000-000000000001",
+      firstName: "Alex",
+      lastName: "Visitor",
+      email: "alex@example.com",
+      phone: "5555555555",
+      locale: "en",
+    };
+    const missingKey = await fetch(`${baseUrl}/operations/reservations`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${TEST_PROVIDER_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    assert.equal(missingKey.status, 400);
+    assert.equal((await missingKey.json()).code, "IDEMPOTENCY_KEY_REQUIRED");
+
+    const response = await fetch(`${baseUrl}/operations/reservations`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${TEST_PROVIDER_KEY}`,
+        "Content-Type": "application/json",
+        "Idempotency-Key": "reservation-contract-1",
+      },
+      body: JSON.stringify(body),
+    });
+    assert.equal(response.status, 201);
+    const payload = await response.json();
+    assert.deepEqual(payload.reservation, {
+      id: "reservation-1",
+      occurrenceId: body.occurrenceId,
+      status: "confirmed",
+      waitlistPosition: null,
+      createdAt: "2026-10-02T20:00:00.000Z",
+    });
+    assert.equal(payload.occurrence.title, "Adult Jiu-Jitsu");
+    assert.equal("email" in payload.reservation, false);
+    assert.equal(seen.idempotencyKey, "reservation-contract-1");
+    assert.equal(seen.source, "lime_agent");
+  } finally {
+    storage.reserveClassOccurrence = previousReserve;
+    if (previousProviderKey === undefined) delete process.env.LIME_AGENT_API_KEY;
+    else process.env.LIME_AGENT_API_KEY = previousProviderKey;
+    if (previousProviderScopes === undefined) delete process.env.LIME_AGENT_API_SCOPES;
+    else process.env.LIME_AGENT_API_SCOPES = previousProviderScopes;
     await new Promise<void>((resolve) => server.close(() => resolve()));
   }
 });
