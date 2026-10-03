@@ -1,8 +1,9 @@
 import { Router, type Express, type Request, type Response, type NextFunction } from "express";
 import crypto from "node:crypto";
 import { and, count, desc, eq, gte, ilike, isNull, lte, not, or } from "drizzle-orm";
+import { z } from "zod";
 import { db } from "./db";
-import { storage } from "./storage";
+import { ClassBookingError, storage } from "./storage";
 import {
   bookings,
   contactStatuses,
@@ -23,6 +24,7 @@ const AI_PROVIDER_SCOPES = [
   "booking:read",
   "booking:status:update",
   "reservation:read",
+  "reservation:create",
   "membership:read",
   "payment:read",
   "payment:reconciliation:read",
@@ -41,6 +43,7 @@ const AI_API_ROUTE_SCOPES: Record<string, readonly AiProviderScope[]> = {
   "GET /operations/members": ["member:read"],
   "GET /operations/bookings": ["booking:read"],
   "GET /operations/reservations": ["reservation:read"],
+  "POST /operations/reservations": ["reservation:create"],
   "PATCH /operations/bookings/:id/status": ["booking:status:update"],
   "GET /operations/memberships": ["membership:read"],
   "GET /operations/payments": ["payment:read"],
@@ -206,6 +209,14 @@ function authorizeAiRoute(_req: Request, res: Response, next: NextFunction) {
     return res.status(401).json({
       code: "AI_MANAGEMENT_UNAUTHORIZED",
       message: "A valid bearer credential is required.",
+      requestId: res.locals.aiRequestId,
+    });
+  }
+  if (auth.credential === "legacy_broad" && requiredScopes.includes("reservation:create")) {
+    return res.status(403).json({
+      code: "AI_PROVIDER_CREDENTIAL_REQUIRED",
+      message: "Reservation writes require the dedicated scoped provider credential.",
+      requiredScopes,
       requestId: res.locals.aiRequestId,
     });
   }
@@ -397,6 +408,38 @@ function publicScheduleOccurrence(occurrence: Awaited<ReturnType<typeof storage.
   };
 }
 
+const agentReservationSchema = z.object({
+  occurrenceId: z.string().uuid(),
+  firstName: z.string().trim().min(1).max(80),
+  lastName: z.string().trim().min(1).max(80),
+  email: z.string().trim().email().max(254),
+  phone: z.string().trim().min(7).max(30),
+  experience: z.string().trim().max(500).optional(),
+  locale: z.enum(["en", "es"]).optional(),
+}).strict();
+
+function agentReservationResponse(result: Awaited<ReturnType<typeof storage.reserveClassOccurrence>>) {
+  return {
+    reservation: {
+      id: result.reservation.id,
+      occurrenceId: result.reservation.occurrenceId,
+      status: result.reservation.status,
+      waitlistPosition: result.reservation.waitlistPosition,
+      createdAt: result.reservation.createdAt,
+    },
+    occurrence: {
+      id: result.occurrence.id,
+      title: result.occurrence.title,
+      start: result.occurrence.start,
+      end: result.occurrence.end,
+      location: result.occurrence.location,
+      capacity: result.occurrence.capacity,
+      bookingEnabled: result.occurrence.bookingEnabled,
+      firstVisitEligible: result.occurrence.firstVisitEligible,
+    },
+  };
+}
+
 const openApiTemplate = {
   openapi: "3.0.3",
   info: {
@@ -480,6 +523,38 @@ const openApiTemplate = {
           { name: "to", in: "query", schema: { type: "string", format: "date-time" } },
         ],
         responses: { "200": { description: "Class reservation records that back schedule counts" } },
+      },
+      post: {
+        tags: ["Operations"],
+        security: [{ bearerAuth: [] }],
+        parameters: [{
+          name: "Idempotency-Key",
+          in: "header",
+          required: true,
+          schema: { type: "string", minLength: 1, maxLength: 180 },
+        }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                additionalProperties: false,
+                required: ["occurrenceId", "firstName", "lastName", "email", "phone"],
+                properties: {
+                  occurrenceId: { type: "string", format: "uuid" },
+                  firstName: { type: "string", minLength: 1, maxLength: 80 },
+                  lastName: { type: "string", minLength: 1, maxLength: 80 },
+                  email: { type: "string", format: "email", maxLength: 254 },
+                  phone: { type: "string", minLength: 7, maxLength: 30 },
+                  experience: { type: "string", maxLength: 500 },
+                  locale: { type: "string", enum: ["en", "es"] },
+                },
+              },
+            },
+          },
+        },
+        responses: { "201": { description: "Confirmed or waitlisted reservation" } },
       },
     },
     "/api/ai/v1/operations/bookings/{id}/status": {
@@ -746,6 +821,46 @@ export function registerAiManagementRoutes(app: Express) {
       });
     } catch (error) {
       sendServerError(res, "Failed to load class reservations.", error);
+    }
+  });
+
+  router.post("/operations/reservations", async (req: Request, res: Response) => {
+    const idempotencyKey = req.get("Idempotency-Key")?.trim();
+    if (!idempotencyKey || idempotencyKey.length > 180 || !/^[A-Za-z0-9._:-]+$/.test(idempotencyKey)) {
+      return res.status(400).json({
+        code: "IDEMPOTENCY_KEY_REQUIRED",
+        message: "A valid Idempotency-Key header is required for reservation writes.",
+        requestId: res.locals.aiRequestId,
+      });
+    }
+    try {
+      const data = agentReservationSchema.parse(req.body);
+      const manageToken = crypto.randomBytes(32).toString("base64url");
+      const result = await storage.reserveClassOccurrence({
+        ...data,
+        manageTokenHash: crypto.createHash("sha256").update(manageToken).digest("hex"),
+        manageToken,
+        idempotencyKey,
+        source: "lime_agent",
+      });
+      return res.status(201).json(agentReservationResponse(result));
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          code: "INVALID_REQUEST",
+          message: "Reservation input is invalid.",
+          errors: error.flatten(),
+          requestId: res.locals.aiRequestId,
+        });
+      }
+      if (error instanceof ClassBookingError) {
+        return res.status(error.status).json({
+          code: error.code,
+          message: error.message,
+          requestId: res.locals.aiRequestId,
+        });
+      }
+      return sendServerError(res, "Failed to create reservation.", error);
     }
   });
 
